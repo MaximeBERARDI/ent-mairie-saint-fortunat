@@ -1,0 +1,128 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400&family=Caveat:wght@500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-green: #6ab123;
+  --color-green-light: #f2f9e8;
+  --color-green-mid: #c4e18a;
+  --color-slate: #4d5e6c;
+  --color-slate-light: #f0f3f5;
+  --color-slate-dark: #2e3b45;
+  --color-terra: #c4793a;
+  --color-terra-light: #fdf4ec;
+  --color-bg: #f4f6f1;
+  --color-white: #ffffff;
+  --color-border: #dde4e9;
+  --color-fg: #1f2a31;
+  --color-muted: #4d5e6c;
+  --color-subtle: #94aab7;
+  --color-ph: #e2e6e3;
+  --color-success: #2d9c6e;
+  --color-success-light: #e8f7f1;
+  --color-warning: #d4860a;
+  --color-warning-light: #fef5e4;
+  --color-danger: #c4393a;
+  --color-danger-light: #fdeaea;
+  --color-info: #2563a8;
+  --color-info-light: #eaf1fb;
+
+  /* Theme vars (overridden by data-theme attribute) */
+  --sidebar-bg: #2e3b45;
+  --sidebar-active: rgba(106,177,35,0.2);
+  --sidebar-text: rgba(255,255,255,0.9);
+  --sidebar-muted: rgba(255,255,255,0.45);
+  --accent: #6ab123;
+  --accent-light: #f2f9e8;
+  --accent-text: #fff;
+  --page-bg: #f4f6f1;
+  --surface: #ffffff;
+  --topbar-bg: #ffffff;
+  --topbar-text: #1f2a31;
+  --card-border: #dde4e9;
+  --text-fg: #1f2a31;
+  --text-muted: #4d5e6c;
+  --text-subtle: #94aab7;
+
+  /* Density vars */
+  --content-pad: 20px;
+  --card-pad: 12px;
+  --gap: 12px;
+  --topbar-h: 50px;
+  --sidebar-w: 212px;
+}
+
+[data-theme="institutionnel"] {
+  --sidebar-bg: #132d4e;
+  --sidebar-active: rgba(37,99,168,0.25);
+  --sidebar-text: rgba(255,255,255,0.92);
+  --sidebar-muted: rgba(255,255,255,0.42);
+  --accent: #2563a8;
+  --accent-light: #eaf1fb;
+  --page-bg: #eef2f7;
+  --surface: #ffffff;
+  --topbar-bg: #ffffff;
+  --topbar-text: #0f2033;
+  --card-border: #ccd8e5;
+  --text-fg: #0f2033;
+  --text-muted: #2e4a68;
+  --text-subtle: #7090b0;
+}
+
+[data-theme="sombre"] {
+  --sidebar-bg: #0d1210;
+  --sidebar-active: rgba(106,177,35,0.18);
+  --sidebar-text: rgba(255,255,255,0.85);
+  --sidebar-muted: rgba(255,255,255,0.35);
+  --accent: #6ab123;
+  --accent-light: #1c2a14;
+  --page-bg: #181f1a;
+  --surface: #222c24;
+  --topbar-bg: #1a2420;
+  --topbar-text: #dce8dc;
+  --card-border: #2c3a2e;
+  --text-fg: #dce8dc;
+  --text-muted: #8aab8e;
+  --text-subtle: #556b58;
+}
+
+[data-density="compact"] {
+  --content-pad: 12px;
+  --card-pad: 8px;
+  --gap: 8px;
+  --topbar-h: 42px;
+}
+
+[data-density="aere"] {
+  --content-pad: 28px;
+  --card-pad: 18px;
+  --gap: 16px;
+  --topbar-h: 62px;
+}
+
+[data-nav="icons"] {
+  --sidebar-w: 54px;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  background: var(--page-bg);
+  color: var(--text-fg);
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #4d5e6c40; border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: #4d5e6c80; }
+
+.font-mono { font-family: 'JetBrains Mono', monospace; }
+.font-handwriting { font-family: 'Caveat', cursive; }
