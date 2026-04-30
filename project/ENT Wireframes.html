@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ENT Mairie — Wireframes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400&family=Caveat:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: #1a1f1c; overflow: hidden; height: 100vh; }
+  ::-webkit-scrollbar { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #4d5e6c; border-radius: 9999px; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" src="wf-shared.jsx"></script>
+<script type="text/babel" src="wf-screens-1.jsx"></script>
+<script type="text/babel" src="wf-screens-2.jsx"></script>
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="wf-tweaks-config.jsx"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+
+<script type="text/babel">
+const { useState } = React;
+const {
+  DesignCanvas, DCSection, DCArtboard,
+  LoginA, LoginB, LoginC,
+  DashA, DashB, DashC,
+  TasksA, TasksB, TasksC,
+  CommA, CommB, CommC,
+  CRIA_A, CRIA_B, CRIA_C,
+  RH_A, RH_B, RH_C,
+  Fin_A, Fin_B, Fin_C,
+  TweakCtx, THEMES, DENSITIES,
+  TweaksPanel, TweakSection, TweakRadio, useTweaks,
+} = window;
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "theme": "ardeche",
+  "density": "comfortable",
+  "nav": "sidebar"
+}/*EDITMODE-END*/;
+
+const W = 1280;
+const H = 780;
+
+function App() {
+  const [tweaks, setTweak] = useTweaks(TWEAK_DEFAULTS);
+
+  return (
+    <TweakCtx.Provider value={tweaks}>
+      <DesignCanvas title="ENT Mairie — Wireframes">
+
+        <DCSection id="login" title="01 — Connexion / 2FA">
+          <DCArtboard id="la" label="A — Split branding" width={W} height={H}><LoginA /></DCArtboard>
+          <DCArtboard id="lb" label="B — Wizard centré" width={W} height={H}><LoginB /></DCArtboard>
+          <DCArtboard id="lc" label="C — Fond immersif + card verre" width={W} height={H}><LoginC /></DCArtboard>
+        </DCSection>
+
+        <DCSection id="dashboard" title="02 — Tableau de bord">
+          <DCArtboard id="da" label="A — KPIs + tâches + agenda" width={W} height={H}><DashA /></DCArtboard>
+          <DCArtboard id="db" label="B — Focus « Aujourd'hui »" width={W} height={H}><DashB /></DCArtboard>
+          <DCArtboard id="dc" label="C — Vue pilotage / management" width={W} height={H}><DashC /></DCArtboard>
+        </DCSection>
+
+        <DCSection id="tasks" title="03 — Module Tâches">
+          <DCArtboard id="ta" label="A — Liste filtrée + panneau détail" width={W} height={H}><TasksA /></DCArtboard>
+          <DCArtboard id="tb" label="B — Kanban colonnes" width={W} height={H}><TasksB /></DCArtboard>
+          <DCArtboard id="tc" label="C — Groupé par échéance + progression" width={W} height={H}><TasksC /></DCArtboard>
+        </DCSection>
+
+        <DCSection id="commissions" title="04 — Module Commissions">
+          <DCArtboard id="ca" label="A — Grille de cartes" width={W} height={H}><CommA /></DCArtboard>
+          <DCArtboard id="cb" label="B — Liste + panneau détail" width={W} height={H}><CommB /></DCArtboard>
+          <DCArtboard id="cc" label="C — Timeline Gantt" width={W} height={H}><CommC /></DCArtboard>
+        </DCSection>
+
+        <DCSection id="cria" title="05 — Comptes rendus + IA">
+          <DCArtboard id="cria-a" label="A — Upload → extraction → validation" width={W} height={H}><CRIA_A /></DCArtboard>
+          <DCArtboard id="cria-b" label="B — Split document | tâches extraites" width={W} height={H}><CRIA_B /></DCArtboard>
+          <DCArtboard id="cria-c" label="C — Wizard étapes" width={W} height={H}><CRIA_C /></DCArtboard>
+        </DCSection>
+
+        <DCSection id="rh" title="06 — Ressources humaines">
+          <DCArtboard id="rh-a" label="A — Table employés + actions" width={W} height={H}><RH_A /></DCArtboard>
+          <DCArtboard id="rh-b" label="B — Calendrier absences + masse salariale" width={W} height={H}><RH_B /></DCArtboard>
+          <DCArtboard id="rh-c" label="C — Dashboard KPIs + fiche agent" width={W} height={H}><RH_C /></DCArtboard>
+        </DCSection>
+
+        <DCSection id="finance" title="07 — Finances / Factures">
+          <DCArtboard id="fin-a" label="A — Circuit facture + validation" width={W} height={H}><Fin_A /></DCArtboard>
+          <DCArtboard id="fin-b" label="B — Budget / plan comptable" width={W} height={H}><Fin_B /></DCArtboard>
+          <DCArtboard id="fin-c" label="C — Annuaire fournisseurs" width={W} height={H}><Fin_C /></DCArtboard>
+        </DCSection>
+
+      </DesignCanvas>
+
+      <TweaksPanel>
+        <TweakSection title="Ambiance">
+          <TweakRadio
+            label="Thème"
+            value={tweaks.theme === 'ardeche' ? 'Ardèche' : tweaks.theme === 'institutionnel' ? 'Institutionnel' : 'Sombre'}
+            options={['Ardèche', 'Institutionnel', 'Sombre']}
+            onChange={v => setTweak('theme', v === 'Ardèche' ? 'ardeche' : v === 'Institutionnel' ? 'institutionnel' : 'sombre')}
+          />
+        </TweakSection>
+
+        <TweakSection title="Densité d'interface">
+          <TweakRadio
+            label="Densité"
+            value={tweaks.density === 'compact' ? 'Compacte' : tweaks.density === 'aere' ? 'Aérée' : 'Confortable'}
+            options={['Compacte', 'Confortable', 'Aérée']}
+            onChange={v => setTweak('density', v === 'Compacte' ? 'compact' : v === 'Aérée' ? 'aere' : 'comfortable')}
+          />
+        </TweakSection>
+
+        <TweakSection title="Structure de navigation">
+          <TweakRadio
+            label="Navigation"
+            value={tweaks.nav === 'sidebar' ? 'Sidebar' : tweaks.nav === 'icons' ? 'Icônes' : 'Top bar'}
+            options={['Sidebar', 'Icônes', 'Top bar']}
+            onChange={v => setTweak('nav', v === 'Sidebar' ? 'sidebar' : v === 'Icônes' ? 'icons' : 'top')}
+          />
+        </TweakSection>
+      </TweaksPanel>
+    </TweakCtx.Provider>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
