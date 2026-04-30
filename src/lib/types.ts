@@ -27,14 +27,19 @@ export interface Commission {
   color: string
 }
 
+export type TaskPriority = 'Urgent' | 'Normal' | 'Faible'
+export type TaskStatus = 'À faire' | 'En cours' | 'En attente validation' | 'Terminé'
+
 export interface Task {
   id: string
   label: string
+  description?: string
   commission?: string
   assignee: string
   dueDate: string
-  priority: 'Urgent' | 'Normal' | 'Faible'
-  status: 'À faire' | 'En cours' | 'En attente validation' | 'Terminé'
+  priority: TaskPriority
+  status: TaskStatus
+  createdAt: string
 }
 
 export interface Employee {

@@ -1,26 +1,26 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Shell } from '@/components/layout/Shell'
 import { Card } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Tag } from '@/components/ui/Tag'
 import { Separator } from '@/components/ui/Separator'
-import { SectionHeader } from '@/components/ui/SectionHeader'
 import { Progress } from '@/components/ui/Progress'
 import { COLORS as C } from '@/lib/theme'
-import { TASKS } from '@/lib/data'
-import type { Task } from '@/lib/types'
+import { TaskForm } from '@/components/tasks/TaskForm'
+import { useTasks } from '@/hooks/useTasks'
+import type { Task, TaskStatus } from '@/lib/types'
 
 type TaskView = 'liste' | 'kanban' | 'echeances'
 type TaskFilter = 'toutes' | 'mes' | 'en-attente' | 'terminees'
 
-const STATUS_COLORS: Record<string, string> = {
-  'À faire': C.subtle,
-  'En cours': C.warning,
-  'En attente validation': C.info,
-  'Terminé': C.success,
+const STATUS_VARIANTS: Record<TaskStatus, 'warning' | 'info' | 'success' | 'default' | 'terra'> = {
+  'À faire': 'default',
+  'En cours': 'warning',
+  'En attente validation': 'terra',
+  'Terminé': 'success',
 }
 
 const PRIORITY_VARIANTS: Record<string, 'danger' | 'warning' | 'default'> = {
@@ -29,29 +29,71 @@ const PRIORITY_VARIANTS: Record<string, 'danger' | 'warning' | 'default'> = {
   Faible: 'default',
 }
 
-const STATUS_VARIANTS: Record<string, 'warning' | 'info' | 'success' | 'default' | 'terra'> = {
-  'À faire': 'default',
-  'En cours': 'warning',
-  'En attente validation': 'terra',
-  'Terminé': 'success',
-}
+const ME = 'Jean Martin'
 
 export default function TachesPage() {
+  const { tasks, hydrated, createTask, updateTask, deleteTask } = useTasks()
   const [view, setView] = useState<TaskView>('liste')
-  const [filter, setFilter] = useState<TaskFilter>('mes')
-  const [selectedTask, setSelectedTask] = useState<Task | null>(TASKS[0])
+  const [filter, setFilter] = useState<TaskFilter>('toutes')
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [formOpen, setFormOpen] = useState(false)
+  const [editingTask, setEditingTask] = useState<Task | null>(null)
 
-  const filteredTasks = TASKS.filter(t => {
-    if (filter === 'mes') return t.assignee === 'Jean Martin'
-    if (filter === 'en-attente') return t.status === 'En attente validation'
-    if (filter === 'terminees') return t.status === 'Terminé'
-    return true
-  })
+  const counts = useMemo(() => ({
+    toutes: tasks.length,
+    mes: tasks.filter(t => t.assignee === ME).length,
+    enAttente: tasks.filter(t => t.status === 'En attente validation').length,
+    terminees: tasks.filter(t => t.status === 'Terminé').length,
+  }), [tasks])
+
+  const filteredTasks = useMemo(() => {
+    return tasks.filter(t => {
+      if (filter === 'mes') return t.assignee === ME
+      if (filter === 'en-attente') return t.status === 'En attente validation'
+      if (filter === 'terminees') return t.status === 'Terminé'
+      return true
+    })
+  }, [tasks, filter])
+
+  const selected = selectedId ? tasks.find(t => t.id === selectedId) ?? null : null
+
+  const openCreate = () => { setEditingTask(null); setFormOpen(true) }
+  const openEdit = (task: Task) => { setEditingTask(task); setFormOpen(true) }
+  const handleSubmit = (data: Omit<Task, 'id' | 'createdAt'>) => {
+    if (editingTask) {
+      updateTask(editingTask.id, data)
+    } else {
+      const created = createTask(data)
+      setSelectedId(created.id)
+    }
+  }
+  const handleDelete = () => {
+    if (!editingTask) return
+    deleteTask(editingTask.id)
+    if (selectedId === editingTask.id) setSelectedId(null)
+    setFormOpen(false)
+  }
+
+  const cycleStatus = (task: Task) => {
+    const order: TaskStatus[] = ['À faire', 'En cours', 'En attente validation', 'Terminé']
+    const next = order[(order.indexOf(task.status) + 1) % order.length]
+    updateTask(task.id, { status: next })
+  }
+
+  if (!hydrated) {
+    return (
+      <Shell title="Mes tâches" notif={5}>
+        <div style={{ padding: 40, textAlign: 'center', color: C.subtle, fontSize: 13 }}>
+          Chargement…
+        </div>
+      </Shell>
+    )
+  }
 
   return (
     <Shell title="Mes tâches" notif={5}>
       {/* View toggle */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16, alignItems: 'center' }}>
         <div style={{ display: 'flex', gap: 4, background: C.ph, borderRadius: 8, padding: 3 }}>
           {([['liste', 'Liste'], ['kanban', 'Kanban'], ['echeances', 'Échéances']] as [TaskView, string][]).map(([v, label]) => (
             <button
@@ -73,32 +115,65 @@ export default function TachesPage() {
           ))}
         </div>
         <div style={{ flex: 1 }} />
-        <Button variant="primary" size="sm">+ Nouvelle tâche</Button>
-        <div style={{ width: 140, height: 32, border: `1px solid ${C.border}`, borderRadius: 6, display: 'flex', alignItems: 'center', padding: '0 10px' }}>
-          <span style={{ fontSize: 11, color: C.subtle }}>Commission…</span>
-        </div>
+        <Button variant="primary" size="sm" onClick={openCreate}>+ Nouvelle tâche</Button>
       </div>
 
       {view === 'liste' && (
-        <ListeView tasks={filteredTasks} filter={filter} setFilter={setFilter} selected={selectedTask} setSelected={setSelectedTask} />
+        <ListeView
+          tasks={filteredTasks}
+          counts={counts}
+          filter={filter}
+          setFilter={setFilter}
+          selected={selected}
+          setSelected={(t) => setSelectedId(t?.id ?? null)}
+          onEdit={openEdit}
+          onUpdate={updateTask}
+          onCycleStatus={cycleStatus}
+        />
       )}
-      {view === 'kanban' && <KanbanView />}
-      {view === 'echeances' && <EcheancesView tasks={filteredTasks} />}
+      {view === 'kanban' && (
+        <KanbanView tasks={tasks} onEdit={openEdit} onCycleStatus={cycleStatus} />
+      )}
+      {view === 'echeances' && (
+        <EcheancesView tasks={tasks} onEdit={openEdit} onCycleStatus={cycleStatus} />
+      )}
+
+      <TaskForm
+        open={formOpen}
+        onClose={() => setFormOpen(false)}
+        onSubmit={handleSubmit}
+        onDelete={editingTask ? handleDelete : undefined}
+        initial={editingTask ?? undefined}
+      />
     </Shell>
   )
 }
 
-function ListeView({ tasks, filter, setFilter, selected, setSelected }: {
+// ── Vue Liste ─────────────────────────────────────────────────────────────────
+
+function ListeView({
+  tasks, counts, filter, setFilter, selected, setSelected, onEdit, onUpdate, onCycleStatus,
+}: {
   tasks: Task[]
+  counts: { toutes: number; mes: number; enAttente: number; terminees: number }
   filter: TaskFilter
   setFilter: (f: TaskFilter) => void
   selected: Task | null
-  setSelected: (t: Task) => void
+  setSelected: (t: Task | null) => void
+  onEdit: (t: Task) => void
+  onUpdate: (id: string, patch: Partial<Task>) => void
+  onCycleStatus: (t: Task) => void
 }) {
-  const FILTERS: [TaskFilter, string][] = [['toutes', 'Toutes (34)'], ['mes', 'Mes tâches (12)'], ['en-attente', 'En attente (5)'], ['terminees', 'Terminées (17)']]
+  const FILTERS: [TaskFilter, string][] = [
+    ['toutes', `Toutes (${counts.toutes})`],
+    ['mes', `Mes tâches (${counts.mes})`],
+    ['en-attente', `En attente (${counts.enAttente})`],
+    ['terminees', `Terminées (${counts.terminees})`],
+  ]
+
   return (
     <>
-      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
         {FILTERS.map(([v, label]) => (
           <button
             key={v}
@@ -124,32 +199,48 @@ function ListeView({ tasks, filter, setFilter, selected, setSelected }: {
               <span key={i} style={{ flex: [3, 2, 1.5, 1.2, 1, 1.2][i], fontSize: 10, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{h}</span>
             ))}
           </div>
-          {tasks.map((t, i) => (
-            <div
-              key={t.id}
-              onClick={() => setSelected(t)}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 0, padding: '10px 14px',
-                borderBottom: i < tasks.length - 1 ? `1px solid ${C.border}` : 'none',
-                background: selected?.id === t.id ? `${C.green}08` : '#fff',
-                cursor: 'pointer',
-              }}
-            >
-              <div style={{ flex: 3 }}><p style={{ fontSize: 12, color: C.fg, fontWeight: selected?.id === t.id ? 600 : 400 }}>{t.label}</p></div>
-              <div style={{ flex: 2 }}>{t.commission ? <Tag label={t.commission} /> : <span style={{ fontSize: 11, color: C.subtle }}>—</span>}</div>
-              <div style={{ flex: 1.5 }}><p style={{ fontSize: 11, color: C.muted }}>{t.assignee}</p></div>
-              <div style={{ flex: 1.2 }}><p style={{ fontSize: 11, color: C.muted }}>{t.dueDate}</p></div>
-              <div style={{ flex: 1 }}><Badge label={t.priority} variant={PRIORITY_VARIANTS[t.priority]} /></div>
-              <div style={{ flex: 1.2 }}><Badge label={t.status} variant={STATUS_VARIANTS[t.status] as any} /></div>
+          {tasks.length === 0 ? (
+            <div style={{ padding: 40, textAlign: 'center', color: C.subtle, fontSize: 12 }}>
+              Aucune tâche dans cette vue.
             </div>
-          ))}
+          ) : (
+            tasks.map((t, i) => (
+              <div
+                key={t.id}
+                onClick={() => setSelected(t)}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 0, padding: '10px 14px',
+                  borderBottom: i < tasks.length - 1 ? `1px solid ${C.border}` : 'none',
+                  background: selected?.id === t.id ? `${C.green}08` : '#fff',
+                  cursor: 'pointer',
+                  opacity: t.status === 'Terminé' ? 0.6 : 1,
+                }}
+              >
+                <div style={{ flex: 3 }}>
+                  <p style={{ fontSize: 12, color: C.fg, fontWeight: selected?.id === t.id ? 600 : 400, textDecoration: t.status === 'Terminé' ? 'line-through' : 'none' }}>{t.label}</p>
+                </div>
+                <div style={{ flex: 2 }}>{t.commission ? <Tag label={t.commission} /> : <span style={{ fontSize: 11, color: C.subtle }}>—</span>}</div>
+                <div style={{ flex: 1.5 }}><p style={{ fontSize: 11, color: C.muted }}>{t.assignee}</p></div>
+                <div style={{ flex: 1.2 }}><p style={{ fontSize: 11, color: C.muted }}>{t.dueDate}</p></div>
+                <div style={{ flex: 1 }}><Badge label={t.priority} variant={PRIORITY_VARIANTS[t.priority]} /></div>
+                <div style={{ flex: 1.2 }}><Badge label={t.status} variant={STATUS_VARIANTS[t.status]} /></div>
+              </div>
+            ))
+          )}
         </Card>
 
         {/* Detail panel */}
-        {selected && (
+        {selected ? (
           <Card style={{ flex: 1.8 }} padding={16}>
-            <p style={{ fontSize: 13, color: C.fg, fontWeight: 700, marginBottom: 8 }}>{selected.label}</p>
-            <Badge label={selected.status} variant={STATUS_VARIANTS[selected.status] as any} />
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 8 }}>
+              <p style={{ flex: 1, fontSize: 13, color: C.fg, fontWeight: 700 }}>{selected.label}</p>
+              <button
+                onClick={() => setSelected(null)}
+                aria-label="Fermer"
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: C.subtle, fontSize: 18, lineHeight: 1 }}
+              >×</button>
+            </div>
+            <Badge label={selected.status} variant={STATUS_VARIANTS[selected.status]} />
             <Separator my={12} />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
               {[
@@ -166,18 +257,45 @@ function ListeView({ tasks, filter, setFilter, selected, setSelected }: {
             </div>
             <Separator my={12} />
             <p style={{ fontSize: 11, color: C.muted, fontWeight: 600, marginBottom: 8 }}>Description</p>
-            <div style={{ height: 60, background: C.ph, borderRadius: 6, marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ fontSize: 11, color: C.subtle }}>Description de la tâche…</span>
+            <div style={{
+              minHeight: 60, background: selected.description ? '#fff' : C.ph,
+              border: `1px solid ${C.border}`, borderRadius: 6, padding: 10,
+              marginBottom: 12, fontSize: 12, color: selected.description ? C.fg : C.subtle,
+              whiteSpace: 'pre-wrap', lineHeight: 1.4,
+            }}>
+              {selected.description || 'Aucune description.'}
             </div>
-            <p style={{ fontSize: 11, color: C.muted, fontWeight: 600, marginBottom: 8 }}>Commentaires</p>
-            <input
-              placeholder="Ajouter un commentaire…"
-              style={{ width: '100%', height: 40, border: `1px solid ${C.border}`, borderRadius: 6, padding: '0 12px', fontSize: 12, color: C.fg, outline: 'none', marginBottom: 10, fontFamily: "'DM Sans', sans-serif" }}
-            />
-            <div style={{ display: 'flex', gap: 6 }}>
-              <Button variant="primary" size="sm">Marquer terminée</Button>
-              <Button size="sm">Demander validation</Button>
+            <Separator my={12} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {selected.status !== 'Terminé' ? (
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => onUpdate(selected.id, { status: 'Terminé' })}
+                >
+                  ✓ Marquer terminée
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  onClick={() => onUpdate(selected.id, { status: 'En cours' })}
+                >
+                  ↺ Rouvrir la tâche
+                </Button>
+              )}
+              <Button size="sm" onClick={() => onCycleStatus(selected)}>
+                Changer le statut →
+              </Button>
+              <Button size="sm" onClick={() => onEdit(selected)}>
+                ✎ Modifier
+              </Button>
             </div>
+          </Card>
+        ) : (
+          <Card style={{ flex: 1.8 }} padding={20}>
+            <p style={{ fontSize: 12, color: C.subtle, textAlign: 'center', padding: '20px 0' }}>
+              Sélectionnez une tâche pour voir le détail.
+            </p>
           </Card>
         )}
       </div>
@@ -185,65 +303,118 @@ function ListeView({ tasks, filter, setFilter, selected, setSelected }: {
   )
 }
 
-function KanbanView() {
-  const COLUMNS = [
-    { status: 'À faire', count: 6, color: C.subtle, tasks: [
-      { t: 'Préparer OJ Conseil 8 mai', tag: 'Admin', prio: 'Normal' },
-      { t: 'Signer convention CC Pays de Vernoux', tag: 'Partenariat', prio: 'Normal' },
-      { t: 'Mise à jour site internet — actu mai', tag: 'Communication', prio: 'Faible' },
-    ]},
-    { status: 'En cours', count: 5, color: C.warning, tasks: [
-      { t: 'Répondre demande PLU secteur Nord', tag: 'Travaux', prio: 'Urgent' },
-      { t: 'Mise à jour registre état civil Q1', tag: 'Admin', prio: 'Faible' },
-      { t: 'Suivi chantier route des Combes', tag: 'Travaux', prio: 'Normal' },
-    ]},
-    { status: 'En attente validation', count: 3, color: C.info, tasks: [
-      { t: 'Signer devis éclairage public', tag: 'Travaux', prio: 'Normal' },
-      { t: 'Valider délibération 2026-015', tag: 'Admin', prio: 'Urgent' },
-    ]},
-    { status: 'Terminé', count: 17, color: C.success, tasks: [
-      { t: 'Budget primitif 2026 adopté', tag: 'Finance', prio: '—' },
-      { t: 'CR commission du 12 avril', tag: 'Admin', prio: '—' },
-    ]},
+// ── Vue Kanban ────────────────────────────────────────────────────────────────
+
+function KanbanView({
+  tasks, onEdit, onCycleStatus,
+}: {
+  tasks: Task[]
+  onEdit: (t: Task) => void
+  onCycleStatus: (t: Task) => void
+}) {
+  const COLUMNS: { status: TaskStatus; color: string }[] = [
+    { status: 'À faire', color: C.subtle },
+    { status: 'En cours', color: C.warning },
+    { status: 'En attente validation', color: C.info },
+    { status: 'Terminé', color: C.success },
   ]
 
   return (
     <div style={{ display: 'flex', gap: 'var(--gap)', height: 'calc(100vh - 220px)' }}>
-      {COLUMNS.map(col => (
-        <div key={col.status} style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: col.color }} />
-            <p style={{ fontSize: 12, color: C.fg, fontWeight: 600 }}>{col.status}</p>
-            <div style={{ marginLeft: 'auto', background: C.ph, borderRadius: 9999, padding: '1px 7px' }}>
-              <p style={{ fontSize: 10, color: C.muted, fontWeight: 600 }}>{col.count}</p>
+      {COLUMNS.map(col => {
+        const columnTasks = tasks.filter(t => t.status === col.status)
+        return (
+          <div key={col.status} style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: col.color }} />
+              <p style={{ fontSize: 12, color: C.fg, fontWeight: 600 }}>{col.status}</p>
+              <div style={{ marginLeft: 'auto', background: C.ph, borderRadius: 9999, padding: '1px 7px' }}>
+                <p style={{ fontSize: 10, color: C.muted, fontWeight: 600 }}>{columnTasks.length}</p>
+              </div>
+            </div>
+            <div style={{
+              flex: 1, background: `${col.color}10`, borderRadius: 8, padding: 8,
+              display: 'flex', flexDirection: 'column', gap: 8,
+              border: `1px dashed ${col.color}40`, overflowY: 'auto',
+            }}>
+              {columnTasks.length === 0 && (
+                <p style={{ fontSize: 11, color: C.subtle, textAlign: 'center', padding: '12px 0' }}>
+                  —
+                </p>
+              )}
+              {columnTasks.map(card => (
+                <Card
+                  key={card.id}
+                  padding={10}
+                  style={{
+                    cursor: 'pointer',
+                    opacity: card.status === 'Terminé' ? 0.7 : 1,
+                  }}
+                >
+                  <div onClick={() => onEdit(card)}>
+                    <p style={{ fontSize: 12, color: C.fg, fontWeight: 500, marginBottom: 4 }}>{card.label}</p>
+                    {card.assignee && (
+                      <p style={{ fontSize: 10, color: C.subtle, marginBottom: 8 }}>
+                        {card.assignee} · {card.dueDate}
+                      </p>
+                    )}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                      {card.commission && <Tag label={card.commission} />}
+                      <Badge label={card.priority} variant={PRIORITY_VARIANTS[card.priority]} />
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 4, marginTop: 8 }}>
+                    <Button
+                      size="sm"
+                      style={{ flex: 1, fontSize: 10, padding: '3px 6px' }}
+                      onClick={() => onCycleStatus(card)}
+                    >
+                      → Suivant
+                    </Button>
+                  </div>
+                </Card>
+              ))}
             </div>
           </div>
-          <div style={{ flex: 1, background: `${col.color}10`, borderRadius: 8, padding: 8, display: 'flex', flexDirection: 'column', gap: 8, border: `1px dashed ${col.color}40`, overflowY: 'auto' }}>
-            {col.tasks.map((card, i) => (
-              <Card key={i} padding={10} style={{ cursor: 'pointer' }}>
-                <p style={{ fontSize: 12, color: C.fg, fontWeight: 500, marginBottom: 8 }}>{card.t}</p>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <Tag label={card.tag} />
-                  <Badge label={card.prio} variant={card.prio === 'Urgent' ? 'danger' : 'default'} />
-                </div>
-              </Card>
-            ))}
-            <button style={{ padding: '6px 0', textAlign: 'center', cursor: 'pointer', background: 'none', border: 'none', color: col.color, fontSize: 11, fontWeight: 500, fontFamily: "'DM Sans', sans-serif" }}>
-              + Ajouter une tâche
-            </button>
-          </div>
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }
 
-function EcheancesView({ tasks }: { tasks: Task[] }) {
-  const groups = [
-    { heading: "Aujourd'hui", items: tasks.filter(t => t.dueDate === '2 mai' || t.dueDate === '5 mai').slice(0, 2) },
-    { heading: 'Cette semaine', items: tasks.filter(t => t.dueDate === '8 mai' || t.dueDate === '10 mai') },
-    { heading: 'Plus tard', items: tasks.filter(t => t.dueDate === '15 mai' || t.dueDate === '30 mai') },
-  ]
+// ── Vue Échéances ────────────────────────────────────────────────────────────
+
+function EcheancesView({
+  tasks, onEdit, onCycleStatus,
+}: {
+  tasks: Task[]
+  onEdit: (t: Task) => void
+  onCycleStatus: (t: Task) => void
+}) {
+  const groups = useMemo(() => {
+    const today: Task[] = []
+    const thisWeek: Task[] = []
+    const later: Task[] = []
+    const done: Task[] = []
+    tasks.forEach(t => {
+      if (t.status === 'Terminé') return done.push(t)
+      const d = t.dueDate.toLowerCase()
+      if (d.includes('1 mai') || d.includes('2 mai') || d.includes('3 mai')) today.push(t)
+      else if (d.includes('mai')) thisWeek.push(t)
+      else later.push(t)
+    })
+    return [
+      { heading: "Aujourd'hui & demain", items: today },
+      { heading: 'Cette semaine', items: thisWeek },
+      { heading: 'Plus tard', items: later },
+      { heading: 'Terminées', items: done },
+    ]
+  }, [tasks])
+
+  const totalActive = tasks.filter(t => t.status !== 'Terminé').length
+  const totalDone = tasks.filter(t => t.status === 'Terminé').length
+  const total = totalActive + totalDone
+  const progress = total > 0 ? Math.round((totalDone / total) * 100) : 0
 
   return (
     <div style={{ display: 'flex', gap: 'var(--gap)' }}>
@@ -255,44 +426,95 @@ function EcheancesView({ tasks }: { tasks: Task[] }) {
               <div style={{ flex: 1, height: 1, background: C.border }} />
               <p style={{ fontSize: 10, color: C.subtle }}>{group.items.length} tâche{group.items.length > 1 ? 's' : ''}</p>
             </div>
-            {group.items.map((item, i) => (
-              <Card key={i} padding={12} style={{ marginBottom: 6, display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
-                <div style={{ width: 18, height: 18, borderRadius: 4, border: `2px solid ${C.border}`, flexShrink: 0 }} />
-                <p style={{ fontSize: 12, color: C.fg, fontWeight: 500, flex: 1 }}>{item.label}</p>
-                {item.commission && <Tag label={item.commission} />}
-                <Badge label={item.dueDate} variant={item.priority === 'Urgent' ? 'danger' : 'default'} />
-              </Card>
-            ))}
+            {group.items.length === 0 ? (
+              <p style={{ fontSize: 11, color: C.subtle, padding: '4px 0 12px' }}>—</p>
+            ) : (
+              group.items.map(item => (
+                <Card
+                  key={item.id}
+                  padding={12}
+                  style={{
+                    marginBottom: 6,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    cursor: 'pointer',
+                    opacity: item.status === 'Terminé' ? 0.6 : 1,
+                  }}
+                >
+                  <button
+                    onClick={() => onCycleStatus(item)}
+                    aria-label="Changer le statut"
+                    style={{
+                      width: 18, height: 18, borderRadius: 4,
+                      border: `2px solid ${item.status === 'Terminé' ? C.success : C.border}`,
+                      background: item.status === 'Terminé' ? C.success : 'transparent',
+                      flexShrink: 0,
+                      cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      color: '#fff', fontSize: 11, fontWeight: 700,
+                    }}
+                  >
+                    {item.status === 'Terminé' ? '✓' : ''}
+                  </button>
+                  <div onClick={() => onEdit(item)} style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <p style={{ flex: 1, fontSize: 12, color: C.fg, fontWeight: 500, textDecoration: item.status === 'Terminé' ? 'line-through' : 'none' }}>{item.label}</p>
+                    {item.commission && <Tag label={item.commission} />}
+                    <Badge label={item.dueDate} variant={item.priority === 'Urgent' ? 'danger' : 'default'} />
+                  </div>
+                </Card>
+              ))
+            )}
           </div>
         ))}
       </div>
       <div style={{ flex: 1.5, display: 'flex', flexDirection: 'column', gap: 'var(--gap)' }}>
         <Card padding={14}>
-          <p style={{ fontSize: 12, color: C.fg, fontWeight: 600, marginBottom: 10 }}>Progression hebdomadaire</p>
+          <p style={{ fontSize: 12, color: C.fg, fontWeight: 600, marginBottom: 10 }}>Progression</p>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
             <div style={{ width: 56, height: 56, borderRadius: '50%', border: `4px solid ${C.green}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <p style={{ fontSize: 14, color: C.green, fontWeight: 700 }}>60%</p>
+              <p style={{ fontSize: 14, color: C.green, fontWeight: 700 }}>{progress}%</p>
             </div>
             <div>
-              <p style={{ fontSize: 12, color: C.fg, fontWeight: 600 }}>6 / 10 terminées</p>
-              <p style={{ fontSize: 10, color: C.subtle }}>cette semaine</p>
+              <p style={{ fontSize: 12, color: C.fg, fontWeight: 600 }}>{totalDone} / {total} terminées</p>
+              <p style={{ fontSize: 10, color: C.subtle }}>{totalActive} en cours</p>
             </div>
           </div>
-          <Progress pct={60} color={C.green} />
+          <Progress pct={progress} color={C.green} />
         </Card>
         <Card padding={14}>
-          <p style={{ fontSize: 12, color: C.fg, fontWeight: 600, marginBottom: 8 }}>Tâches par commission</p>
-          {[['Travaux', 6, C.terra], ['Admin', 4, C.slate], ['Finance', 2, C.green]].map(([n, v, c], i) => (
-            <div key={i} style={{ marginBottom: 8 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
-                <p style={{ fontSize: 11, color: C.fg }}>{n}</p>
-                <p style={{ fontSize: 11, color: C.subtle, fontWeight: 600 }}>{v}</p>
-              </div>
-              <Progress pct={Number(v) / 6 * 100} color={String(c)} />
-            </div>
-          ))}
+          <p style={{ fontSize: 12, color: C.fg, fontWeight: 600, marginBottom: 8 }}>Tâches actives par commission</p>
+          <CommissionStats tasks={tasks} />
         </Card>
       </div>
     </div>
+  )
+}
+
+function CommissionStats({ tasks }: { tasks: Task[] }) {
+  const byCommission = new Map<string, number>()
+  tasks.filter(t => t.status !== 'Terminé').forEach(t => {
+    const key = t.commission || 'Sans commission'
+    byCommission.set(key, (byCommission.get(key) ?? 0) + 1)
+  })
+  const entries = Array.from(byCommission.entries()).sort((a, b) => b[1] - a[1])
+  const max = Math.max(1, ...entries.map(([, v]) => v))
+  const palette = [C.terra, C.slate, C.green, C.info, C.warning]
+
+  if (entries.length === 0) {
+    return <p style={{ fontSize: 11, color: C.subtle }}>Aucune tâche active.</p>
+  }
+  return (
+    <>
+      {entries.map(([n, v], i) => (
+        <div key={n} style={{ marginBottom: 8 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
+            <p style={{ fontSize: 11, color: C.fg }}>{n}</p>
+            <p style={{ fontSize: 11, color: C.subtle, fontWeight: 600 }}>{v}</p>
+          </div>
+          <Progress pct={(v / max) * 100} color={palette[i % palette.length]} />
+        </div>
+      ))}
+    </>
   )
 }
