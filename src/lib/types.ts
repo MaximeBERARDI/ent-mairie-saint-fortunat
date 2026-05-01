@@ -30,15 +30,26 @@ export interface Commission {
 export type TaskPriority = 'Urgent' | 'Normal' | 'Faible'
 export type TaskStatus = 'À faire' | 'En cours' | 'En attente validation' | 'Terminé'
 
+export interface TaskDocument {
+  id: string
+  name: string
+  size: number
+  type: string
+  dataUrl: string  // base64 — limité aux petits fichiers (< 1 Mo)
+  uploadedAt: string
+}
+
 export interface Task {
   id: string
   label: string
   description?: string
-  commission?: string
-  assignee: string
-  dueDate: string
+  commissionId?: string  // référence Commission.id
+  assigneeId: string     // référence Person.id
+  validatorId?: string   // référence Person.id (pour les tâches "En attente validation")
+  dueDate?: string       // ISO date (YYYY-MM-DD) — optionnelle
   priority: TaskPriority
   status: TaskStatus
+  documents?: TaskDocument[]
   createdAt: string
 }
 

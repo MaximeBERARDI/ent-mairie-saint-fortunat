@@ -3,8 +3,10 @@
 import { useEffect, useState, useRef } from 'react'
 import { COLORS as C } from '@/lib/theme'
 import { COMMISSIONS } from '@/lib/data'
+import { PEOPLE, ROLE_LABELS, getPerson } from '@/lib/people'
 import { Button } from '@/components/ui/Button'
-import type { Task, TaskPriority, TaskStatus } from '@/lib/types'
+import { Avatar } from '@/components/ui/Avatar'
+import type { Task, TaskPriority, TaskStatus, TaskDocument } from '@/lib/types'
 
 interface TaskFormProps {
   open: boolean
@@ -18,26 +20,49 @@ interface TaskFormProps {
 const PRIORITIES: TaskPriority[] = ['Urgent', 'Normal', 'Faible']
 const STATUSES: TaskStatus[] = ['À faire', 'En cours', 'En attente validation', 'Terminé']
 
+const MAX_FILE_SIZE = 1024 * 1024  // 1 Mo par fichier
+const MAX_TOTAL_SIZE = 4 * 1024 * 1024  // 4 Mo total
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} o`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} Ko`
+  return `${(bytes / 1024 / 1024).toFixed(1)} Mo`
+}
+
+function readFileAsDataURL(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = () => reject(reader.error)
+    reader.readAsDataURL(file)
+  })
+}
+
 export function TaskForm({ open, onClose, onSubmit, onDelete, initial, title }: TaskFormProps) {
   const [label, setLabel] = useState('')
   const [description, setDescription] = useState('')
-  const [commission, setCommission] = useState<string>('')
-  const [assignee, setAssignee] = useState('Jean Martin')
-  const [dueDate, setDueDate] = useState('')
+  const [commissionId, setCommissionId] = useState<string>('')
+  const [assigneeId, setAssigneeId] = useState<string>('p-jm')
+  const [validatorId, setValidatorId] = useState<string>('')
+  const [dueDate, setDueDate] = useState<string>('')
   const [priority, setPriority] = useState<TaskPriority>('Normal')
   const [status, setStatus] = useState<TaskStatus>('À faire')
+  const [documents, setDocuments] = useState<TaskDocument[]>([])
   const [error, setError] = useState<string | null>(null)
   const labelInputRef = useRef<HTMLInputElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (!open) return
     setLabel(initial?.label ?? '')
     setDescription(initial?.description ?? '')
-    setCommission(initial?.commission ?? '')
-    setAssignee(initial?.assignee ?? 'Jean Martin')
+    setCommissionId(initial?.commissionId ?? '')
+    setAssigneeId(initial?.assigneeId ?? 'p-jm')
+    setValidatorId(initial?.validatorId ?? '')
     setDueDate(initial?.dueDate ?? '')
     setPriority(initial?.priority ?? 'Normal')
     setStatus(initial?.status ?? 'À faire')
+    setDocuments(initial?.documents ?? [])
     setError(null)
     setTimeout(() => labelInputRef.current?.focus(), 50)
   }, [open, initial])
@@ -51,26 +76,74 @@ export function TaskForm({ open, onClose, onSubmit, onDelete, initial, title }: 
     return () => document.removeEventListener('keydown', onKey)
   }, [open, onClose])
 
+  // Si on passe en "En attente validation" sans validateur → pré-sélectionne
+  useEffect(() => {
+    if (status === 'En attente validation' && !validatorId) {
+      // Par défaut: maire si l'assigné n'est pas le maire, sinon adjoint finances
+      const fallback = assigneeId === 'p-jm' ? 'p-rg' : 'p-jm'
+      setValidatorId(fallback)
+    }
+  }, [status, assigneeId, validatorId])
+
   if (!open) return null
+
+  const handleFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0) return
+    setError(null)
+    const currentTotal = documents.reduce((s, d) => s + d.size, 0)
+    let total = currentTotal
+    const newDocs: TaskDocument[] = []
+    for (const file of Array.from(files)) {
+      if (file.size > MAX_FILE_SIZE) {
+        setError(`"${file.name}" dépasse 1 Mo (limite localStorage). Pour les gros fichiers, on basculera vers un vrai stockage cloud plus tard.`)
+        continue
+      }
+      if (total + file.size > MAX_TOTAL_SIZE) {
+        setError(`Le total des pièces jointes dépasserait 4 Mo. Retirez-en avant d'en ajouter d'autres.`)
+        break
+      }
+      try {
+        const dataUrl = await readFileAsDataURL(file)
+        newDocs.push({
+          id: `doc-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          name: file.name,
+          size: file.size,
+          type: file.type || 'application/octet-stream',
+          dataUrl,
+          uploadedAt: new Date().toISOString(),
+        })
+        total += file.size
+      } catch {
+        setError(`Impossible de lire "${file.name}".`)
+      }
+    }
+    if (newDocs.length > 0) {
+      setDocuments(prev => [...prev, ...newDocs])
+    }
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  const removeDoc = (id: string) => {
+    setDocuments(prev => prev.filter(d => d.id !== id))
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!label.trim()) {
-      setError('Le titre de la tâche est obligatoire')
-      return
-    }
-    if (!assignee.trim()) {
-      setError("L'assignation est obligatoire")
-      return
+    if (!label.trim()) return setError('Le titre de la tâche est obligatoire.')
+    if (!assigneeId) return setError("L'assignation est obligatoire.")
+    if (status === 'En attente validation' && !validatorId) {
+      return setError('Indiquez la personne qui doit valider cette tâche.')
     }
     onSubmit({
       label: label.trim(),
       description: description.trim() || undefined,
-      commission: commission.trim() || undefined,
-      assignee: assignee.trim(),
-      dueDate: dueDate.trim() || '—',
+      commissionId: commissionId || undefined,
+      assigneeId,
+      validatorId: status === 'En attente validation' ? validatorId : (validatorId || undefined),
+      dueDate: dueDate || undefined,
       priority,
       status,
+      documents: documents.length > 0 ? documents : undefined,
     })
     onClose()
   }
@@ -97,6 +170,34 @@ export function TaskForm({ open, onClose, onSubmit, onDelete, initial, title }: 
     letterSpacing: '0.04em',
   }
 
+  // Groupes pour l'affichage des personnes
+  const elus = PEOPLE.filter(p => p.role !== 'agent')
+  const agents = PEOPLE.filter(p => p.role === 'agent')
+
+  const PersonOption = ({ id, label }: { id: string; label?: string }) => {
+    const p = getPerson(id)
+    if (!p) return null
+    return <option value={p.id}>{label ?? `${p.fullName} — ${p.poste}`}</option>
+  }
+
+  const renderPersonSelect = (
+    value: string, onChange: (v: string) => void,
+    placeholder?: string,
+  ) => (
+    <select value={value} onChange={e => onChange(e.target.value)} style={inputStyle}>
+      {placeholder !== undefined && <option value="">{placeholder}</option>}
+      <optgroup label="Élus">
+        {elus.map(p => <PersonOption key={p.id} id={p.id} />)}
+      </optgroup>
+      <optgroup label="Agents">
+        {agents.map(p => <PersonOption key={p.id} id={p.id} />)}
+      </optgroup>
+    </select>
+  )
+
+  const assignee = getPerson(assigneeId)
+  const validator = getPerson(validatorId)
+
   return (
     <div
       onClick={onClose}
@@ -117,7 +218,7 @@ export function TaskForm({ open, onClose, onSubmit, onDelete, initial, title }: 
         onSubmit={handleSubmit}
         style={{
           width: '100%',
-          maxWidth: 540,
+          maxWidth: 600,
           background: '#fff',
           borderRadius: 12,
           boxShadow: '0 24px 64px rgba(0,0,0,0.25)',
@@ -141,9 +242,7 @@ export function TaskForm({ open, onClose, onSubmit, onDelete, initial, title }: 
               borderRadius: 6, cursor: 'pointer', fontSize: 20, color: C.subtle,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
-          >
-            ×
-          </button>
+          >×</button>
         </div>
 
         {/* Body */}
@@ -174,26 +273,20 @@ export function TaskForm({ open, onClose, onSubmit, onDelete, initial, title }: 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div>
               <label style={labelStyle}>Commission (optionnel)</label>
-              <select
-                value={commission}
-                onChange={e => setCommission(e.target.value)}
-                style={inputStyle}
-              >
+              <select value={commissionId} onChange={e => setCommissionId(e.target.value)} style={inputStyle}>
                 <option value="">— Sans commission —</option>
-                {COMMISSIONS.map(c => (
-                  <option key={c.id} value={c.name.split(' ')[0]}>{c.name}</option>
-                ))}
+                {COMMISSIONS.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
             <div>
               <label style={labelStyle}>Assigné à <span style={{ color: C.danger }}>*</span></label>
-              <input
-                type="text"
-                value={assignee}
-                onChange={e => setAssignee(e.target.value)}
-                placeholder="Nom du responsable"
-                style={inputStyle}
-              />
+              {renderPersonSelect(assigneeId, setAssigneeId)}
+              {assignee && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6, fontSize: 11, color: C.subtle }}>
+                  <Avatar initials={assignee.initials} size={20} color={assignee.color} />
+                  <span>{ROLE_LABELS[assignee.role]} · {assignee.poste}</span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -201,32 +294,97 @@ export function TaskForm({ open, onClose, onSubmit, onDelete, initial, title }: 
             <div>
               <label style={labelStyle}>Échéance</label>
               <input
-                type="text"
+                type="date"
                 value={dueDate}
                 onChange={e => setDueDate(e.target.value)}
-                placeholder="Ex : 15 mai"
                 style={inputStyle}
               />
             </div>
             <div>
               <label style={labelStyle}>Priorité</label>
-              <select
-                value={priority}
-                onChange={e => setPriority(e.target.value as TaskPriority)}
-                style={inputStyle}
-              >
+              <select value={priority} onChange={e => setPriority(e.target.value as TaskPriority)} style={inputStyle}>
                 {PRIORITIES.map(p => <option key={p} value={p}>{p}</option>)}
               </select>
             </div>
             <div>
               <label style={labelStyle}>Statut</label>
-              <select
-                value={status}
-                onChange={e => setStatus(e.target.value as TaskStatus)}
-                style={inputStyle}
-              >
+              <select value={status} onChange={e => setStatus(e.target.value as TaskStatus)} style={inputStyle}>
                 {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
+            </div>
+          </div>
+
+          {/* Validateur — visible quand le statut est "En attente validation" */}
+          {status === 'En attente validation' && (
+            <div style={{ background: C.warningLight, border: `1px solid ${C.warning}40`, borderRadius: 8, padding: 12 }}>
+              <label style={{ ...labelStyle, color: C.warning }}>
+                Validateur de la tâche <span style={{ color: C.danger }}>*</span>
+              </label>
+              {renderPersonSelect(validatorId, setValidatorId, '— Sélectionnez la personne qui doit valider —')}
+              {validator && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6, fontSize: 11, color: C.muted }}>
+                  <Avatar initials={validator.initials} size={20} color={validator.color} />
+                  <span>{validator.fullName} sera notifié(e) de la demande de validation.</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Documents */}
+          <div>
+            <label style={labelStyle}>Pièces jointes</label>
+            <div style={{
+              border: `1px dashed ${C.border}`,
+              borderRadius: 8,
+              padding: 12,
+              background: C.bg,
+            }}>
+              {documents.length === 0 && (
+                <p style={{ fontSize: 11, color: C.subtle, marginBottom: 8 }}>
+                  Aucun document — joignez devis, photos, courriers (max 1 Mo / fichier).
+                </p>
+              )}
+              {documents.length > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 8 }}>
+                  {documents.map(doc => (
+                    <div key={doc.id} style={{
+                      display: 'flex', alignItems: 'center', gap: 8,
+                      background: '#fff', border: `1px solid ${C.border}`,
+                      borderRadius: 6, padding: '6px 8px',
+                    }}>
+                      <span style={{ fontSize: 16 }}>📎</span>
+                      <a
+                        href={doc.dataUrl}
+                        download={doc.name}
+                        style={{ flex: 1, fontSize: 12, color: C.fg, textDecoration: 'none', fontWeight: 500 }}
+                      >{doc.name}</a>
+                      <span style={{ fontSize: 10, color: C.subtle }}>{formatBytes(doc.size)}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeDoc(doc.id)}
+                        aria-label="Retirer"
+                        style={{
+                          background: 'transparent', border: 'none', cursor: 'pointer',
+                          color: C.danger, fontSize: 14, padding: '0 4px',
+                        }}
+                      >×</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                onChange={e => handleFiles(e.target.files)}
+                style={{ display: 'none' }}
+              />
+              <Button
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                + Ajouter un document
+              </Button>
             </div>
           </div>
 
