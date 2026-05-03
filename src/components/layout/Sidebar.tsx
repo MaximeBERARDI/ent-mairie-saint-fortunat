@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useSettings } from '@/context/SettingsContext'
 import { Avatar } from '@/components/ui/Avatar'
 import { COLORS as C } from '@/lib/theme'
+import { getPerson, ROLE_LABELS, CURRENT_USER_ID } from '@/lib/people'
 
 const NAV_ITEMS = [
   { label: 'Tableau de bord', href: '/dashboard', icon: '⊞' },
@@ -107,24 +108,39 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* User */}
-      {!isIcons ? (
-        <div style={{
-          padding: '10px 12px',
-          borderTop: '1px solid rgba(255,255,255,0.08)',
-          display: 'flex', alignItems: 'center', gap: 8,
-        }}>
-          <Avatar initials="JM" size={28} color={C.terra} />
-          <div>
-            <p style={{ fontSize: 11, color: 'var(--sidebar-text)', fontWeight: 500 }}>Jean Martin</p>
-            <p style={{ fontSize: 9, color: 'var(--sidebar-muted)' }}>Conseiller</p>
-          </div>
-        </div>
-      ) : (
-        <div style={{ padding: '10px 0', borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', justifyContent: 'center' }}>
-          <Avatar initials="JM" size={26} color={C.terra} />
-        </div>
-      )}
+      {/* User courant — toujours rendu depuis PEOPLE (les modifs équipe le mettront à jour) */}
+      {(() => {
+        const me = getPerson(CURRENT_USER_ID)
+        const initials = me?.initials ?? 'JM'
+        const fullName = me?.fullName ?? 'Jean Martin'
+        const roleLabel = me ? ROLE_LABELS[me.role] : 'Conseiller'
+        const color = me?.color ?? C.terra
+        if (!isIcons) {
+          return (
+            <Link href="/equipe" style={{ textDecoration: 'none' }}>
+              <div style={{
+                padding: '10px 12px',
+                borderTop: '1px solid rgba(255,255,255,0.08)',
+                display: 'flex', alignItems: 'center', gap: 8,
+                cursor: 'pointer',
+              }}>
+                <Avatar initials={initials} size={28} color={color} />
+                <div style={{ minWidth: 0 }}>
+                  <p style={{ fontSize: 11, color: 'var(--sidebar-text)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{fullName}</p>
+                  <p style={{ fontSize: 9, color: 'var(--sidebar-muted)' }}>{roleLabel}</p>
+                </div>
+              </div>
+            </Link>
+          )
+        }
+        return (
+          <Link href="/equipe" style={{ textDecoration: 'none' }}>
+            <div style={{ padding: '10px 0', borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', justifyContent: 'center', cursor: 'pointer' }}>
+              <Avatar initials={initials} size={26} color={color} />
+            </div>
+          </Link>
+        )
+      })()}
     </div>
   )
 }

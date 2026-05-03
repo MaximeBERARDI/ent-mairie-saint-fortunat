@@ -14,8 +14,9 @@ import { Tag } from '@/components/ui/Tag'
 import { COLORS as C } from '@/lib/theme'
 import { COMMISSIONS } from '@/lib/data'
 import { useTasks } from '@/hooks/useTasks'
+import { useTeam } from '@/hooks/useTeam'
 import { TaskForm } from '@/components/tasks/TaskForm'
-import { getPerson, PEOPLE } from '@/lib/people'
+import { getPerson, PEOPLE, ROLE_LABELS, type Person } from '@/lib/people'
 import { formatShortFR } from '@/lib/dateUtils'
 import type { Commission, Task, TaskStatus } from '@/lib/types'
 
@@ -45,11 +46,26 @@ const COMMISSION_MEMBERS: Record<string, string[]> = {
 
 export default function CommissionsPage() {
   const { tasks, hydrated, createTask, updateTask, deleteTask } = useTasks()
+  const { people, hydrated: teamHydrated } = useTeam()
   const [view, setView] = useState<CommView>('grille')
   const [selected, setSelected] = useState<Commission | null>(null)
   const [formOpen, setFormOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [prefillCommissionId, setPrefillCommissionId] = useState<string | undefined>()
+
+  // Index : commissionId -> liste des référent(e)s
+  const responsiblesByCommission = useMemo(() => {
+    const map = new Map<string, Person[]>()
+    people.forEach(p => {
+      if (!p.active) return
+      p.responsibleCommissions.forEach(cid => {
+        const arr = map.get(cid) ?? []
+        arr.push(p)
+        map.set(cid, arr)
+      })
+    })
+    return map
+  }, [people])
 
   const tasksByCommission = useMemo(() => {
     const map = new Map<string, Task[]>()
@@ -99,7 +115,7 @@ export default function CommissionsPage() {
 
   const initialFormData = editingTask ?? (prefillCommissionId ? { commissionId: prefillCommissionId } as Partial<Task> : undefined)
 
-  if (!hydrated) {
+  if (!hydrated || !teamHydrated) {
     return (
       <Shell title="Commissions">
         <div style={{ padding: 40, textAlign: 'center', color: C.subtle, fontSize: 13 }}>Chargement…</div>
@@ -137,6 +153,7 @@ export default function CommissionsPage() {
         <GrilleView
           commissions={commissionsWithStats}
           tasks={tasks}
+          responsiblesByCommission={responsiblesByCommission}
           onSelect={setSelected}
         />
       )}
@@ -145,6 +162,7 @@ export default function CommissionsPage() {
           commission={selected}
           allCommissions={commissionsWithStats}
           commissionTasks={tasksByCommission.get(selected.id) ?? []}
+          responsibles={responsiblesByCommission.get(selected.id) ?? []}
           onBack={() => setSelected(null)}
           onSelectOther={setSelected}
           onCreateTask={() => handleOpenCreateFor(selected.id)}
@@ -170,10 +188,11 @@ export default function CommissionsPage() {
 // ── Vue Grille ────────────────────────────────────────────────────────────────
 
 function GrilleView({
-  commissions, tasks, onSelect,
+  commissions, tasks, responsiblesByCommission, onSelect,
 }: {
   commissions: Commission[]
   tasks: Task[]
+  responsiblesByCommission: Map<string, Person[]>
   onSelect: (c: Commission) => void
 }) {
   // Activité récente : tâches les plus récemment créées avec une commission
@@ -186,36 +205,57 @@ function GrilleView({
     <div>
       <SectionHeader title="Mes commissions" />
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--gap)', marginBottom: 'var(--gap)' }}>
-        {commissions.map(com => (
-          <Card
-            key={com.id}
-            padding={16}
-            hover
-            style={{ cursor: 'pointer', borderTop: `3px solid ${com.color}` }}
-            onClick={() => onSelect(com)}
-          >
-            <p style={{ fontSize: 13, color: C.fg, fontWeight: 700, marginBottom: 12 }}>{com.name}</p>
-            <div style={{ display: 'flex', gap: 16, marginBottom: 12 }}>
-              <div>
-                <p style={{ fontSize: 20, color: com.color, fontWeight: 700, lineHeight: 1 }}>{com.tasks}</p>
-                <p style={{ fontSize: 9, color: C.subtle }}>Tâches actives</p>
+        {commissions.map(com => {
+          const responsibles = responsiblesByCommission.get(com.id) ?? []
+          return (
+            <Card
+              key={com.id}
+              padding={16}
+              hover
+              style={{ cursor: 'pointer', borderTop: `3px solid ${com.color}` }}
+              onClick={() => onSelect(com)}
+            >
+              <p style={{ fontSize: 13, color: C.fg, fontWeight: 700, marginBottom: 12 }}>{com.name}</p>
+
+              {/* Référents */}
+              {responsibles.length > 0 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
+                  <span style={{ fontSize: 9, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                    Référent{responsibles.length > 1 ? 's' : ''}
+                  </span>
+                  <div style={{ display: 'flex', gap: 4, flex: 1, flexWrap: 'wrap' }}>
+                    {responsibles.map(p => (
+                      <div key={p.id} title={p.fullName} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <Avatar initials={p.initials} color={p.color} size={20} />
+                        <span style={{ fontSize: 10, color: C.fg, fontWeight: 500 }}>{p.prenom}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: 16, marginBottom: 12 }}>
+                <div>
+                  <p style={{ fontSize: 20, color: com.color, fontWeight: 700, lineHeight: 1 }}>{com.tasks}</p>
+                  <p style={{ fontSize: 9, color: C.subtle }}>Tâches actives</p>
+                </div>
+                <div>
+                  <p style={{ fontSize: 20, color: com.color, fontWeight: 700, lineHeight: 1 }}>{com.members}</p>
+                  <p style={{ fontSize: 9, color: C.subtle }}>Membres</p>
+                </div>
+                <div>
+                  <p style={{ fontSize: 20, color: com.color, fontWeight: 700, lineHeight: 1 }}>{com.docs}</p>
+                  <p style={{ fontSize: 9, color: C.subtle }}>Documents</p>
+                </div>
               </div>
-              <div>
-                <p style={{ fontSize: 20, color: com.color, fontWeight: 700, lineHeight: 1 }}>{com.members}</p>
-                <p style={{ fontSize: 9, color: C.subtle }}>Membres</p>
+              <Separator my={10} />
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <p style={{ fontSize: 11, color: C.subtle }}>Prochaine réunion</p>
+                <Badge label={com.nextMeeting} variant={com.tasks > 8 ? 'danger' : 'default'} />
               </div>
-              <div>
-                <p style={{ fontSize: 20, color: com.color, fontWeight: 700, lineHeight: 1 }}>{com.docs}</p>
-                <p style={{ fontSize: 9, color: C.subtle }}>Documents</p>
-              </div>
-            </div>
-            <Separator my={10} />
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <p style={{ fontSize: 11, color: C.subtle }}>Prochaine réunion</p>
-              <Badge label={com.nextMeeting} variant={com.tasks > 8 ? 'danger' : 'default'} />
-            </div>
-          </Card>
-        ))}
+            </Card>
+          )
+        })}
         <div style={{ border: `2px dashed ${C.border}`, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 140 }}>
           <p style={{ fontSize: 12, color: C.subtle }}>+ Nouvelle commission</p>
         </div>
@@ -251,12 +291,13 @@ function GrilleView({
 // ── Vue Détail ────────────────────────────────────────────────────────────────
 
 function DetailView({
-  commission, allCommissions, commissionTasks,
+  commission, allCommissions, commissionTasks, responsibles,
   onBack, onSelectOther, onCreateTask, onEditTask, onUpdateTask,
 }: {
   commission: Commission
   allCommissions: Commission[]
   commissionTasks: Task[]
+  responsibles: Person[]
   onBack: () => void
   onSelectOther: (c: Commission) => void
   onCreateTask: () => void
@@ -301,6 +342,27 @@ function DetailView({
               <Badge label={`${activeTasks.length} tâches actives`} variant={activeTasks.length > 8 ? 'danger' : 'default'} />
             </div>
             <p style={{ fontSize: 12, color: C.subtle }}>Prochaine réunion : {commission.nextMeeting} · 14h00</p>
+            {responsibles.length > 0 && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: 11, color: C.subtle, fontWeight: 600 }}>
+                  Référent{responsibles.length > 1 ? 's' : ''} :
+                </span>
+                {responsibles.map(p => (
+                  <Link key={p.id} href="/equipe" style={{
+                    display: 'flex', alignItems: 'center', gap: 5,
+                    padding: '3px 8px 3px 3px',
+                    background: `${p.color}10`,
+                    border: `1px solid ${p.color}40`,
+                    borderRadius: 16,
+                    textDecoration: 'none',
+                  }}>
+                    <Avatar initials={p.initials} color={p.color} size={20} />
+                    <span style={{ fontSize: 11, color: C.fg, fontWeight: 500 }}>{p.fullName}</span>
+                    <span style={{ fontSize: 10, color: C.subtle }}>· {ROLE_LABELS[p.role]}</span>
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
           <div style={{ display: 'flex', gap: 6 }}>
             <Link href="/comptes-rendus"><Button size="sm">Comptes rendus</Button></Link>
@@ -356,19 +418,37 @@ function DetailView({
         )}
         {activeTab === 'membres' && (
           <Card padding={14}>
-            <SectionHeader title="Membres" />
+            <SectionHeader
+              title={`Membres (${members.length})`}
+              actions={<Link href="/equipe"><Button size="sm">Gérer l&apos;équipe →</Button></Link>}
+            />
             {members.length === 0 ? (
               <p style={{ fontSize: 12, color: C.subtle, padding: '10px 0' }}>Aucun membre défini.</p>
-            ) : members.map((p, i) => (
-              <div key={p!.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0', borderBottom: i < members.length - 1 ? `1px solid ${C.border}` : 'none' }}>
-                <Avatar initials={p!.initials} size={28} color={p!.color} />
-                <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: 12, color: C.fg, fontWeight: 500 }}>{p!.fullName}</p>
-                  <p style={{ fontSize: 10, color: C.subtle }}>{p!.poste}</p>
-                </div>
-                <Badge label={p!.role === 'maire' ? 'Maire' : p!.role === 'adjoint' ? 'Adjoint(e)' : p!.role === 'elu' ? 'Élu(e)' : 'Agent'} variant={p!.role === 'agent' ? 'default' : 'primary'} />
-              </div>
-            ))}
+            ) : members.map((p, i) => {
+              const isResponsible = responsibles.some(r => r.id === p!.id)
+              return (
+                <Link
+                  key={p!.id}
+                  href="/equipe"
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 10,
+                    padding: '10px 0', textDecoration: 'none',
+                    borderBottom: i < members.length - 1 ? `1px solid ${C.border}` : 'none',
+                  }}
+                >
+                  <Avatar initials={p!.initials} size={32} color={p!.color} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                      <p style={{ fontSize: 12, color: C.fg, fontWeight: 600 }}>{p!.fullName}</p>
+                      {isResponsible && <Badge label="Référent(e)" variant="primary" />}
+                      {p!.canSign && <Badge label="✍ Signataire" variant="terra" />}
+                    </div>
+                    <p style={{ fontSize: 10, color: C.subtle }}>{p!.poste}</p>
+                  </div>
+                  <Badge label={ROLE_LABELS[p!.role]} variant={p!.role === 'agent' ? 'default' : 'primary'} />
+                </Link>
+              )
+            })}
           </Card>
         )}
         {activeTab === 'ged' && (
