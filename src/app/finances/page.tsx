@@ -1,20 +1,39 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Shell } from '@/components/layout/Shell'
 import { Card, KpiCard } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
-import { Row } from '@/components/ui/Row'
 import { Tag } from '@/components/ui/Tag'
 import { SectionHeader } from '@/components/ui/SectionHeader'
 import { Separator } from '@/components/ui/Separator'
 import { Avatar } from '@/components/ui/Avatar'
 import { Progress } from '@/components/ui/Progress'
 import { COLORS as C } from '@/lib/theme'
-import { FACTURES } from '@/lib/data'
+import { useFactures } from '@/hooks/useFactures'
+import { useFournisseurs } from '@/hooks/useFournisseurs'
+import { useBudget } from '@/hooks/useBudget'
+import { useTeam } from '@/hooks/useTeam'
+import { hasPermission } from '@/lib/permissions'
+import type { Facture, FactureStatut, Fournisseur, PosteBudget, BudgetCategorie } from '@/lib/types'
 
 type FinView = 'factures' | 'budget' | 'fournisseurs'
+
+// Pas encore de système d'auth réel : on simule la session du maire (Jean Martin)
+const CURRENT_USER_ID = 'p-jm'
+
+const fmtMontant = (v: number) =>
+  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v)
+
+const fmtMontantDecimal = (v: number) =>
+  new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v)
+
+const fmtDateShort = (iso: string) =>
+  new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })
+
+const fmtDateTime = (iso: string) =>
+  new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
 
 export default function FinancesPage() {
   const [view, setView] = useState<FinView>('factures')
@@ -38,88 +57,165 @@ export default function FinancesPage() {
   )
 }
 
-function FacturesView() {
-  const [selected, setSelected] = useState(FACTURES[0])
-  const [filter, setFilter] = useState<'toutes' | 'attente' | 'validees' | 'rejetees'>('toutes')
+// ─── Vue Factures ────────────────────────────────────────────────────
 
-  const filtered = FACTURES.filter(f => {
-    if (filter === 'attente') return f.statut === 'En attente'
-    if (filter === 'validees') return f.statut === 'Validée'
-    if (filter === 'rejetees') return f.statut === 'Rejetée'
-    return true
-  })
+function FacturesView() {
+  const { factures, hydrated, submitFacture, validateFacture, rejectFacture, reopenFacture, deleteFacture } = useFactures()
+  const { fournisseurs } = useFournisseurs()
+  const { postes } = useBudget()
+  const { people } = useTeam()
+
+  const currentUser = people.find(p => p.id === CURRENT_USER_ID)
+  const canValidate = currentUser ? hasPermission(currentUser.authLevel, 'finance.validate-invoices', currentUser.customPermissions) : false
+
+  const [filter, setFilter] = useState<'toutes' | FactureStatut>('toutes')
+  const [selectedId, setSelectedId] = useState<string | null>(factures[0]?.id ?? null)
+  const [showSubmitForm, setShowSubmitForm] = useState(false)
+
+  const filtered = useMemo(() => {
+    return factures.filter(f => filter === 'toutes' || f.statut === filter)
+  }, [factures, filter])
+
+  const selected = factures.find(f => f.id === selectedId) ?? null
+
+  // KPIs calculés à partir des vraies factures
+  const kpis = useMemo(() => {
+    const enAttente = factures.filter(f => f.statut === 'En attente validation')
+    const validees = factures.filter(f => f.statut === 'Validée')
+    const rejetees = factures.filter(f => f.statut === 'Rejetée')
+    const totalAttente = enAttente.reduce((acc, f) => acc + f.montantTTC, 0)
+    const totalValidees = validees.reduce((acc, f) => acc + f.montantTTC, 0)
+    return {
+      enAttenteCount: enAttente.length,
+      enAttenteMontant: totalAttente,
+      valideesCount: validees.length,
+      valideesMontant: totalValidees,
+      rejeteesCount: rejetees.length,
+      total: totalValidees,
+    }
+  }, [factures])
+
+  const counts = {
+    toutes: factures.length,
+    'À soumettre': factures.filter(f => f.statut === 'À soumettre').length,
+    'En attente validation': factures.filter(f => f.statut === 'En attente validation').length,
+    'Validée': factures.filter(f => f.statut === 'Validée').length,
+    'Rejetée': factures.filter(f => f.statut === 'Rejetée').length,
+  }
+
+  if (!hydrated) {
+    return <p style={{ padding: 20, fontSize: 12, color: C.subtle }}>Chargement…</p>
+  }
 
   return (
     <div>
       <div style={{ display: 'flex', gap: 'var(--gap)', marginBottom: 'var(--gap)' }}>
-        <KpiCard label="En attente validation" value="2" sub="1 627 € à valider" color={C.warning} />
-        <KpiCard label="Validées ce mois" value="8" sub="12 340 € imputés" color={C.success} />
-        <KpiCard label="Rejetées" value="1" sub="commentaire requis" color={C.danger} />
-        <KpiCard label="Total dépensé / mois" value="13 967 €" sub="sur budget engagé" color={C.slate} />
+        <KpiCard label="En attente validation" value={String(kpis.enAttenteCount)} sub={`${fmtMontant(kpis.enAttenteMontant)} à valider`} color={C.warning} />
+        <KpiCard label="Validées ce mois" value={String(kpis.valideesCount)} sub={`${fmtMontant(kpis.valideesMontant)} imputés`} color={C.success} />
+        <KpiCard label="Rejetées" value={String(kpis.rejeteesCount)} sub={kpis.rejeteesCount > 0 ? 'commentaire requis' : '—'} color={C.danger} />
+        <KpiCard label="Total dépensé / mois" value={fmtMontant(kpis.total)} sub="sur factures imputées" color={C.slate} />
       </div>
 
       <div style={{ display: 'flex', gap: 'var(--gap)' }}>
         <div style={{ flex: 3 }}>
-          <div style={{ display: 'flex', gap: 8, marginBottom: 12, alignItems: 'center' }}>
-            {([['toutes', 'Toutes'], ['attente', 'En attente (2)'], ['validees', 'Validées'], ['rejetees', 'Rejetées']] as const).map(([v, label]) => (
+          <div style={{ display: 'flex', gap: 8, marginBottom: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+            {([
+              ['toutes', `Toutes (${counts.toutes})`],
+              ['En attente validation', `En attente (${counts['En attente validation']})`],
+              ['Validée', `Validées (${counts['Validée']})`],
+              ['Rejetée', `Rejetées (${counts['Rejetée']})`],
+            ] as [typeof filter, string][]).map(([v, label]) => (
               <button key={v} onClick={() => setFilter(v)} style={{ padding: '5px 12px', borderRadius: 20, background: v === filter ? C.green : '#fff', border: `1px solid ${v === filter ? C.green : C.border}`, color: v === filter ? '#fff' : C.muted, fontSize: 11, fontWeight: v === filter ? 600 : 400, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}>
                 {label}
               </button>
             ))}
             <div style={{ flex: 1 }} />
-            <Button variant="primary" size="sm">+ Soumettre une facture</Button>
+            <Button variant="primary" size="sm" onClick={() => setShowSubmitForm(s => !s)}>
+              {showSubmitForm ? 'Annuler' : '+ Soumettre une facture'}
+            </Button>
           </div>
 
-          <Card padding={0}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr 0.8fr 1.2fr 0.7fr 0.9fr 0.8fr', padding: '8px 14px', background: C.bg, borderBottom: `1px solid ${C.border}` }}>
-              {['N°', 'Fournisseur', 'Montant', 'Poste comptable', 'Date', 'Statut', 'Action'].map(h => (
-                <p key={h} style={{ fontSize: 10, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</p>
-              ))}
-            </div>
-            {filtered.map((f, i) => (
-              <div key={i} onClick={() => setSelected(f)} style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr 0.8fr 1.2fr 0.7fr 0.9fr 0.8fr', padding: '10px 14px', borderBottom: i < filtered.length - 1 ? `1px solid ${C.border}` : 'none', background: selected.id === f.id ? `${C.green}06` : (f.statut === 'En attente' ? `${C.warning}06` : '#fff'), alignItems: 'center', cursor: 'pointer' }}>
-                <p style={{ fontSize: 11, color: C.subtle, fontFamily: "'JetBrains Mono', monospace" }}>{f.id}</p>
-                <p style={{ fontSize: 12, color: C.fg, fontWeight: 500 }}>{f.fournisseur}</p>
-                <p style={{ fontSize: 12, color: C.fg, fontWeight: 600 }}>{f.montant}</p>
-                <Tag label={f.poste} color={C.slate} />
-                <p style={{ fontSize: 11, color: C.subtle }}>{f.date}</p>
-                <Badge label={f.statut} variant={f.statut === 'En attente' ? 'warning' : f.statut === 'Validée' ? 'success' : 'danger'} />
-                {f.statut === 'En attente'
-                  ? <div style={{ display: 'flex', gap: 4 }}>
-                      <button style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.success}`, background: C.successLight, color: C.success, cursor: 'pointer', fontSize: 12 }}>✓</button>
-                      <button style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.danger}`, background: C.dangerLight, color: C.danger, cursor: 'pointer', fontSize: 12 }}>✕</button>
-                    </div>
-                  : <Button size="sm">Voir</Button>
+          {showSubmitForm && (
+            <SubmitFactureForm
+              fournisseurs={fournisseurs}
+              postes={postes}
+              onSubmit={(data) => {
+                const created = submitFacture(data)
+                if (created) {
+                  setSelectedId(created.id)
+                  setFilter('En attente validation')
                 }
+                setShowSubmitForm(false)
+              }}
+              onCancel={() => setShowSubmitForm(false)}
+            />
+          )}
+
+          {filtered.length === 0 ? (
+            <Card padding={24} style={{ textAlign: 'center' }}>
+              <p style={{ fontSize: 13, color: C.subtle }}>Aucune facture à afficher pour ce filtre.</p>
+            </Card>
+          ) : (
+            <Card padding={0}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr 0.8fr 1.2fr 0.7fr 0.9fr 0.8fr', padding: '8px 14px', background: C.bg, borderBottom: `1px solid ${C.border}` }}>
+                {['N°', 'Fournisseur', 'Montant', 'Poste comptable', 'Date', 'Statut', 'Action'].map(h => (
+                  <p key={h} style={{ fontSize: 10, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</p>
+                ))}
               </div>
-            ))}
-          </Card>
+              {filtered.map((f, i) => {
+                const fournisseur = fournisseurs.find(x => x.id === f.fournisseurId)
+                const poste = postes.find(p => p.code === f.posteCode)
+                const isSelected = selectedId === f.id
+                return (
+                  <div key={f.id} onClick={() => setSelectedId(f.id)} style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr 0.8fr 1.2fr 0.7fr 0.9fr 0.8fr', padding: '10px 14px', borderBottom: i < filtered.length - 1 ? `1px solid ${C.border}` : 'none', background: isSelected ? `${C.green}06` : (f.statut === 'En attente validation' ? `${C.warning}06` : '#fff'), alignItems: 'center', cursor: 'pointer' }}>
+                    <p style={{ fontSize: 11, color: C.subtle, fontFamily: "'JetBrains Mono', monospace" }}>{f.numero}</p>
+                    <p style={{ fontSize: 12, color: C.fg, fontWeight: 500 }}>{fournisseur?.nom ?? '—'}</p>
+                    <p style={{ fontSize: 12, color: C.fg, fontWeight: 600 }}>{fmtMontant(f.montantTTC)}</p>
+                    <Tag label={poste ? `${poste.code} ${poste.label}` : f.posteCode} color={C.slate} />
+                    <p style={{ fontSize: 11, color: C.subtle }}>{fmtDateShort(f.dateFacture)}</p>
+                    <Badge
+                      label={statutShortLabel(f.statut)}
+                      variant={statutBadgeVariant(f.statut)}
+                    />
+                    {f.statut === 'En attente validation' && canValidate ? (
+                      <div style={{ display: 'flex', gap: 4 }}>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); validateFacture(f.id, CURRENT_USER_ID); setSelectedId(f.id) }}
+                          style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.success}`, background: C.successLight, color: C.success, cursor: 'pointer', fontSize: 12 }}
+                          title="Valider"
+                        >✓</button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setSelectedId(f.id) /* commentaire saisi dans le panneau */ }}
+                          style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.danger}`, background: C.dangerLight, color: C.danger, cursor: 'pointer', fontSize: 12 }}
+                          title="Voir / rejeter"
+                        >✕</button>
+                      </div>
+                    ) : (
+                      <Button size="sm">Voir</Button>
+                    )}
+                  </div>
+                )
+              })}
+            </Card>
+          )}
         </div>
 
-        {/* Detail */}
+        {/* Panneau détail */}
         <Card style={{ flex: 1.8 }} padding={14}>
-          <p style={{ fontSize: 13, color: C.fg, fontWeight: 700, marginBottom: 6 }}>{selected.id} — {selected.fournisseur.split(' ')[0]}</p>
-          <Badge label={selected.statut} variant={selected.statut === 'En attente' ? 'warning' : selected.statut === 'Validée' ? 'success' : 'danger'} />
-          <Separator my={12} />
-          {[['Fournisseur', selected.fournisseur], ['Montant TTC', selected.montant], ['Poste', selected.poste], ['Date', selected.date], ['Soumis par', 'Pierre Roche']].map(([k, v], i) => (
-            <div key={i} style={{ display: 'flex', gap: 8, padding: '5px 0', borderBottom: i < 4 ? `1px solid ${C.border}` : 'none' }}>
-              <p style={{ fontSize: 10, color: C.subtle, width: 90, flexShrink: 0 }}>{k}</p>
-              <p style={{ fontSize: 11, color: C.fg, fontWeight: 500 }}>{v}</p>
-            </div>
-          ))}
-          <Separator my={12} />
-          <div style={{ height: 80, background: C.ph, borderRadius: 6, marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ fontSize: 11, color: C.subtle }}>Aperçu de la facture</span>
-          </div>
-          <p style={{ fontSize: 11, color: C.muted, fontWeight: 600, marginBottom: 6 }}>Commentaire (obligatoire si rejet)</p>
-          <textarea
-            placeholder="Votre commentaire…"
-            style={{ width: '100%', height: 56, border: `1px solid ${C.border}`, borderRadius: 6, padding: 8, fontSize: 12, resize: 'none', outline: 'none', fontFamily: "'DM Sans', sans-serif", color: C.fg, marginBottom: 10 }}
-          />
-          {selected.statut === 'En attente' && (
-            <div style={{ display: 'flex', gap: 6 }}>
-              <Button variant="primary" style={{ flex: 1, justifyContent: 'center' }}>Valider</Button>
-              <Button variant="danger" style={{ flex: 1, justifyContent: 'center' }}>Rejeter</Button>
+          {selected ? (
+            <FactureDetailPanel
+              facture={selected}
+              fournisseurs={fournisseurs}
+              postes={postes}
+              canValidate={canValidate}
+              onValidate={() => validateFacture(selected.id, CURRENT_USER_ID)}
+              onReject={(reason) => rejectFacture(selected.id, CURRENT_USER_ID, reason)}
+              onReopen={() => reopenFacture(selected.id)}
+              onDelete={() => { deleteFacture(selected.id); setSelectedId(null) }}
+            />
+          ) : (
+            <div style={{ padding: 32, textAlign: 'center', color: C.subtle, fontSize: 12 }}>
+              Sélectionnez une facture pour voir le détail
             </div>
           )}
         </Card>
@@ -128,79 +224,354 @@ function FacturesView() {
   )
 }
 
-function BudgetView() {
-  const cats = [
-    { cat: 'Dépenses de personnel', postes: [
-      { code: '6411', label: 'Salaires titulaires', budget: 130000, conso: 60800, pct: 46 },
-      { code: '6413', label: 'Salaires contractuels', budget: 32000, conso: 14800, pct: 46 },
-      { code: '6451', label: 'Cotisations URSSAF', budget: 28000, conso: 13000, pct: 46 },
-    ]},
-    { cat: 'Dépenses de fonctionnement', postes: [
-      { code: '60611', label: 'Énergie — électricité', budget: 18000, conso: 6240, pct: 34 },
-      { code: '60612', label: 'Eau & assainissement', budget: 5000, conso: 1548, pct: 31 },
-    ]},
-    { cat: "Dépenses d'équipement & travaux", postes: [
-      { code: '2315', label: 'Voirie — travaux', budget: 95000, conso: 68400, pct: 72 },
-      { code: '2313', label: 'Bâtiments communaux', budget: 42000, conso: 37380, pct: 89 },
-      { code: '2188', label: 'Matériels divers', budget: 12000, conso: 3600, pct: 30 },
-    ]},
+// ─── Sous-composant : formulaire de soumission ───────────────────────
+
+function SubmitFactureForm({
+  fournisseurs, postes, onSubmit, onCancel,
+}: {
+  fournisseurs: Fournisseur[]
+  postes: PosteBudget[]
+  onSubmit: (data: {
+    fournisseurId: string; montantTTC: number; posteCode: string;
+    dateFacture: string; dateEcheance?: string; submittedById: string; notes?: string;
+  }) => void
+  onCancel: () => void
+}) {
+  const { people } = useTeam()
+  const [fournisseurId, setFournisseurId] = useState('')
+  const [montant, setMontant] = useState('')
+  const [posteCode, setPosteCode] = useState('')
+  const [dateFacture, setDateFacture] = useState(new Date().toISOString().slice(0, 10))
+  const [dateEcheance, setDateEcheance] = useState('')
+  const [submittedById, setSubmittedById] = useState(CURRENT_USER_ID)
+  const [notes, setNotes] = useState('')
+
+  // Pré-remplir le poste comptable depuis le fournisseur sélectionné
+  const handleFournisseurChange = (id: string) => {
+    setFournisseurId(id)
+    const f = fournisseurs.find(x => x.id === id)
+    if (f?.posteParDefaut && !posteCode) setPosteCode(f.posteParDefaut)
+  }
+
+  const valid = fournisseurId && montant && parseFloat(montant) > 0 && posteCode && dateFacture && submittedById
+
+  return (
+    <Card padding={14} style={{ marginBottom: 12, background: C.greenLight, borderColor: C.green }}>
+      <SectionHeader title="Soumettre une nouvelle facture" />
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
+        <Field label="Fournisseur *">
+          <select value={fournisseurId} onChange={e => handleFournisseurChange(e.target.value)} style={inputStyle}>
+            <option value="">— Sélectionner —</option>
+            {fournisseurs.filter(f => f.active).map(f => (
+              <option key={f.id} value={f.id}>{f.nom}</option>
+            ))}
+          </select>
+        </Field>
+        <Field label="Montant TTC (€) *">
+          <input type="number" step="0.01" min="0" value={montant} onChange={e => setMontant(e.target.value)} placeholder="ex: 1240.00" style={inputStyle} />
+        </Field>
+        <Field label="Poste comptable *">
+          <select value={posteCode} onChange={e => setPosteCode(e.target.value)} style={inputStyle}>
+            <option value="">— Sélectionner —</option>
+            {postes.map(p => (
+              <option key={p.code} value={p.code}>{p.code} — {p.label}</option>
+            ))}
+          </select>
+        </Field>
+        <Field label="Date de facture *">
+          <input type="date" value={dateFacture} onChange={e => setDateFacture(e.target.value)} style={inputStyle} />
+        </Field>
+        <Field label="Date d'échéance">
+          <input type="date" value={dateEcheance} onChange={e => setDateEcheance(e.target.value)} style={inputStyle} />
+        </Field>
+        <Field label="Soumis par *">
+          <select value={submittedById} onChange={e => setSubmittedById(e.target.value)} style={inputStyle}>
+            {people.filter(p => p.active).map(p => (
+              <option key={p.id} value={p.id}>{p.fullName}</option>
+            ))}
+          </select>
+        </Field>
+      </div>
+      <Field label="Notes (facultatif)">
+        <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Référence interne, commande, contexte…" rows={2} style={{ ...inputStyle, height: 'auto', resize: 'vertical' as const, padding: 8 }} />
+      </Field>
+      <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 12 }}>
+        <Button onClick={onCancel}>Annuler</Button>
+        <Button
+          variant="primary"
+          disabled={!valid}
+          onClick={() => valid && onSubmit({
+            fournisseurId,
+            montantTTC: parseFloat(montant),
+            posteCode,
+            dateFacture,
+            dateEcheance: dateEcheance || undefined,
+            submittedById,
+            notes: notes || undefined,
+          })}
+        >
+          Soumettre la facture
+        </Button>
+      </div>
+    </Card>
+  )
+}
+
+// ─── Sous-composant : panneau détail d'une facture ───────────────────
+
+function FactureDetailPanel({
+  facture, fournisseurs, postes, canValidate,
+  onValidate, onReject, onReopen, onDelete,
+}: {
+  facture: Facture
+  fournisseurs: Fournisseur[]
+  postes: PosteBudget[]
+  canValidate: boolean
+  onValidate: () => void
+  onReject: (reason: string) => void
+  onReopen: () => void
+  onDelete: () => void
+}) {
+  const { people } = useTeam()
+  const [comment, setComment] = useState('')
+  const fournisseur = fournisseurs.find(f => f.id === facture.fournisseurId)
+  const poste = postes.find(p => p.code === facture.posteCode)
+  const submitter = people.find(p => p.id === facture.submittedById)
+  const validator = facture.validatedById ? people.find(p => p.id === facture.validatedById) : null
+  const rejector = facture.rejectedById ? people.find(p => p.id === facture.rejectedById) : null
+
+  const handleReject = () => {
+    const reason = comment.trim()
+    if (!reason) {
+      alert('Le motif du rejet est obligatoire.')
+      return
+    }
+    onReject(reason)
+    setComment('')
+  }
+
+  const lines: [string, string][] = [
+    ['Fournisseur', fournisseur?.nom ?? '—'],
+    ['Montant TTC', fmtMontantDecimal(facture.montantTTC)],
+    ['Poste', poste ? `${poste.code} — ${poste.label}` : facture.posteCode],
+    ['Date facture', new Date(facture.dateFacture).toLocaleDateString('fr-FR')],
   ]
+  if (facture.dateEcheance) lines.push(['Échéance', new Date(facture.dateEcheance).toLocaleDateString('fr-FR')])
+
+  return (
+    <>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+        <div>
+          <p style={{ fontSize: 13, color: C.fg, fontWeight: 700, marginBottom: 2 }}>{facture.numero}</p>
+          <p style={{ fontSize: 11, color: C.subtle }}>{fournisseur?.nom ?? '—'}</p>
+        </div>
+        <Badge label={statutShortLabel(facture.statut)} variant={statutBadgeVariant(facture.statut)} />
+      </div>
+      <Separator my={12} />
+
+      {lines.map(([k, v], i) => (
+        <div key={i} style={{ display: 'flex', gap: 8, padding: '5px 0', borderBottom: i < lines.length - 1 ? `1px solid ${C.border}` : 'none' }}>
+          <p style={{ fontSize: 10, color: C.subtle, width: 90, flexShrink: 0 }}>{k}</p>
+          <p style={{ fontSize: 11, color: C.fg, fontWeight: 500 }}>{v}</p>
+        </div>
+      ))}
+
+      <Separator my={12} />
+
+      {/* Soumission */}
+      {submitter && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+          <Avatar initials={submitter.initials} size={20} color={submitter.color} />
+          <div style={{ flex: 1 }}>
+            <p style={{ fontSize: 11, color: C.fg, fontWeight: 500 }}>Soumis par {submitter.fullName}</p>
+            <p style={{ fontSize: 9, color: C.subtle }}>{fmtDateTime(facture.submittedAt)}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Décision : validée */}
+      {validator && facture.validatedAt && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, padding: 8, background: C.successLight, borderRadius: 6 }}>
+          <Avatar initials={validator.initials} size={20} color={validator.color} />
+          <div style={{ flex: 1 }}>
+            <p style={{ fontSize: 11, color: C.success, fontWeight: 600 }}>Validée par {validator.fullName}</p>
+            <p style={{ fontSize: 9, color: C.muted }}>{fmtDateTime(facture.validatedAt)} — imputée sur le poste {facture.posteCode}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Décision : rejetée */}
+      {rejector && facture.rejectedAt && (
+        <div style={{ marginBottom: 8, padding: 8, background: C.dangerLight, borderRadius: 6 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+            <Avatar initials={rejector.initials} size={20} color={rejector.color} />
+            <div style={{ flex: 1 }}>
+              <p style={{ fontSize: 11, color: C.danger, fontWeight: 600 }}>Rejetée par {rejector.fullName}</p>
+              <p style={{ fontSize: 9, color: C.muted }}>{fmtDateTime(facture.rejectedAt)}</p>
+            </div>
+          </div>
+          {facture.rejectionReason && (
+            <p style={{ fontSize: 11, color: C.fg, fontStyle: 'italic', paddingLeft: 26 }}>« {facture.rejectionReason} »</p>
+          )}
+        </div>
+      )}
+
+      {/* Aperçu (placeholder, le document n'est pas géré ici) */}
+      <div style={{ height: 80, background: C.ph, borderRadius: 6, marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <span style={{ fontSize: 11, color: C.subtle }}>Aperçu du PDF (à brancher)</span>
+      </div>
+
+      {/* Actions selon statut + permissions */}
+      {facture.statut === 'En attente validation' && canValidate && (
+        <>
+          <p style={{ fontSize: 11, color: C.muted, fontWeight: 600, marginBottom: 6 }}>Commentaire (obligatoire si rejet)</p>
+          <textarea
+            value={comment}
+            onChange={e => setComment(e.target.value)}
+            placeholder="Motif du rejet…"
+            style={{ width: '100%', height: 56, border: `1px solid ${C.border}`, borderRadius: 6, padding: 8, fontSize: 12, resize: 'none', outline: 'none', fontFamily: "'DM Sans', sans-serif", color: C.fg, marginBottom: 10 }}
+          />
+          <div style={{ display: 'flex', gap: 6 }}>
+            <Button variant="primary" style={{ flex: 1, justifyContent: 'center' }} onClick={onValidate}>Valider</Button>
+            <Button variant="danger" style={{ flex: 1, justifyContent: 'center' }} onClick={handleReject}>Rejeter</Button>
+          </div>
+        </>
+      )}
+
+      {facture.statut === 'En attente validation' && !canValidate && (
+        <p style={{ fontSize: 11, color: C.subtle, padding: '8px 0', fontStyle: 'italic' }}>
+          Vous n&apos;avez pas la permission de valider cette facture.
+        </p>
+      )}
+
+      {(facture.statut === 'Validée' || facture.statut === 'Rejetée') && canValidate && (
+        <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+          <Button style={{ flex: 1, justifyContent: 'center' }} onClick={onReopen}>↺ Rouvrir</Button>
+          <Button variant="danger" style={{ flex: 1, justifyContent: 'center' }} onClick={() => { if (confirm('Supprimer définitivement cette facture ?')) onDelete() }}>Supprimer</Button>
+        </div>
+      )}
+    </>
+  )
+}
+
+// ─── Vue Budget : KPIs et postes calculés depuis les factures ────────
+
+function BudgetView() {
+  const { factures } = useFactures()
+  const { postes, hydrated, computePosteWithConsumption } = useBudget()
+
+  const enriched = useMemo(
+    () => postes.map(p => computePosteWithConsumption(p, factures)),
+    [postes, factures, computePosteWithConsumption],
+  )
+
+  const totals = useMemo(() => {
+    const total = enriched.reduce((acc, p) => acc + p.budgetAlloue, 0)
+    const conso = enriched.reduce((acc, p) => acc + p.consommationTotale, 0)
+    const reste = total - conso
+    const enAlerte = enriched.filter(p => p.enAlerte).length
+    const pct = total > 0 ? Math.round((conso / total) * 100) : 0
+    return { total, conso, reste, enAlerte, pct }
+  }, [enriched])
+
+  const byCategorie = useMemo(() => {
+    const groups: Record<BudgetCategorie, typeof enriched> = {
+      'Personnel': [], 'Fonctionnement': [], 'Équipement': [], 'Recettes': [],
+    }
+    enriched.forEach(p => {
+      if (groups[p.categorie]) groups[p.categorie].push(p)
+    })
+    return groups
+  }, [enriched])
+
+  const repartition = useMemo(() => {
+    const cats: BudgetCategorie[] = ['Personnel', 'Fonctionnement', 'Équipement']
+    return cats.map(cat => {
+      const items = byCategorie[cat]
+      const conso = items.reduce((acc, p) => acc + p.consommationTotale, 0)
+      const pct = totals.conso > 0 ? Math.round((conso / totals.conso) * 100) : 0
+      return { cat, conso, pct, color: cat === 'Personnel' ? C.slate : cat === 'Fonctionnement' ? C.green : C.terra }
+    })
+  }, [byCategorie, totals.conso])
+
+  const alertes = enriched.filter(p => p.enAlerte).sort((a, b) => b.pctConsomme - a.pctConsomme)
+
+  if (!hydrated) {
+    return <p style={{ padding: 20, fontSize: 12, color: C.subtle }}>Chargement…</p>
+  }
 
   return (
     <div>
       <div style={{ display: 'flex', gap: 'var(--gap)', marginBottom: 'var(--gap)' }}>
-        <KpiCard label="Budget total 2026" value="380 000 €" color={C.slate} />
-        <KpiCard label="Consommé" value="159 600 €" sub="42% du budget" color={C.green} />
-        <KpiCard label="Reste à engager" value="220 400 €" color={C.muted} />
-        <KpiCard label="Postes en alerte" value="2" sub="> 80% consommés" color={C.danger} />
+        <KpiCard label="Budget total 2026" value={fmtMontant(totals.total)} color={C.slate} />
+        <KpiCard label="Consommé" value={fmtMontant(totals.conso)} sub={`${totals.pct}% du budget`} color={C.green} />
+        <KpiCard label="Reste à engager" value={fmtMontant(totals.reste)} color={C.muted} />
+        <KpiCard label="Postes en alerte" value={String(totals.enAlerte)} sub="> 80% consommés" color={totals.enAlerte > 0 ? C.danger : C.subtle} />
       </div>
 
       <div style={{ display: 'flex', gap: 'var(--gap)' }}>
         <Card style={{ flex: 3 }} padding={16}>
           <SectionHeader title="Plan comptable — Suivi par poste budgétaire" actions={<><Button size="sm">Rapport</Button><Button size="sm">Exporter</Button></>} />
-          {cats.map((cat, ci) => (
-            <div key={ci} style={{ marginBottom: 18 }}>
-              <p style={{ fontSize: 11, color: C.slate, fontWeight: 700, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{cat.cat}</p>
-              {cat.postes.map((p, pi) => (
-                <div key={pi} style={{ display: 'grid', gridTemplateColumns: '0.6fr 2fr 1fr 1.5fr 0.8fr', gap: 10, alignItems: 'center', padding: '7px 0', borderBottom: `1px solid ${C.border}` }}>
-                  <p style={{ fontSize: 10, color: C.subtle, fontFamily: "'JetBrains Mono', monospace" }}>{p.code}</p>
-                  <p style={{ fontSize: 12, color: C.fg }}>{p.label}</p>
-                  <p style={{ fontSize: 11, color: C.subtle }}>{p.budget.toLocaleString()} €</p>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div style={{ flex: 1 }}><Progress pct={p.pct} /></div>
-                    <p style={{ fontSize: 11, color: p.pct > 85 ? C.danger : p.pct > 65 ? C.warning : C.success, fontWeight: 600, minWidth: 34 }}>{p.pct}%</p>
+          {(['Personnel', 'Fonctionnement', 'Équipement'] as BudgetCategorie[]).map((cat) => {
+            const items = byCategorie[cat]
+            if (items.length === 0) return null
+            return (
+              <div key={cat} style={{ marginBottom: 18 }}>
+                <p style={{ fontSize: 11, color: C.slate, fontWeight: 700, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Dépenses de {cat.toLowerCase()}</p>
+                {items.map(p => (
+                  <div key={p.code} style={{ display: 'grid', gridTemplateColumns: '0.6fr 2fr 1fr 1.5fr 0.8fr', gap: 10, alignItems: 'center', padding: '7px 0', borderBottom: `1px solid ${C.border}` }}>
+                    <p style={{ fontSize: 10, color: C.subtle, fontFamily: "'JetBrains Mono', monospace" }}>{p.code}</p>
+                    <div>
+                      <p style={{ fontSize: 12, color: C.fg }}>{p.label}</p>
+                      {p.consommationFactures > 0 && (
+                        <p style={{ fontSize: 9, color: C.subtle, marginTop: 1 }}>
+                          dont {fmtMontant(p.consommationFactures)} via factures app
+                        </p>
+                      )}
+                    </div>
+                    <p style={{ fontSize: 11, color: C.subtle }}>{fmtMontant(p.budgetAlloue)}</p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ flex: 1 }}><Progress pct={p.pctConsomme} /></div>
+                      <p style={{ fontSize: 11, color: p.pctConsomme > 85 ? C.danger : p.pctConsomme > 65 ? C.warning : C.success, fontWeight: 600, minWidth: 34 }}>{p.pctConsomme}%</p>
+                    </div>
+                    <p style={{ fontSize: 11, color: C.fg, fontWeight: 600 }}>{fmtMontant(p.consommationTotale)}</p>
                   </div>
-                  <p style={{ fontSize: 11, color: C.fg, fontWeight: 600 }}>{p.conso.toLocaleString()} €</p>
-                </div>
-              ))}
-            </div>
-          ))}
+                ))}
+              </div>
+            )
+          })}
         </Card>
 
         <div style={{ flex: 1.5, display: 'flex', flexDirection: 'column', gap: 'var(--gap)' }}>
           <Card padding={14}>
             <p style={{ fontSize: 12, color: C.fg, fontWeight: 700, marginBottom: 10 }}>Synthèse globale</p>
-            <div style={{ height: 100, background: C.ph, borderRadius: 8, marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ fontSize: 11, color: C.subtle }}>Graphique : 42% consommé</span>
+            {/* Barre de répartition */}
+            <div style={{ height: 8, background: C.ph, borderRadius: 4, overflow: 'hidden', display: 'flex', marginBottom: 12 }}>
+              {repartition.map(r => (
+                <div key={r.cat} style={{ width: `${r.pct}%`, background: r.color, transition: 'width 0.2s' }} title={`${r.cat}: ${r.pct}%`} />
+              ))}
             </div>
-            {[['Personnel', '50%', C.slate], ['Fonct.', '10%', C.green], ['Équipement', '40%', C.terra]].map(([l, p, c], i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                <div style={{ width: 10, height: 10, borderRadius: '50%', background: String(c) }} />
-                <p style={{ fontSize: 11, color: C.fg, flex: 1 }}>{l}</p>
-                <p style={{ fontSize: 11, color: C.muted, fontWeight: 600 }}>{p}</p>
+            {repartition.map(r => (
+              <div key={r.cat} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                <div style={{ width: 10, height: 10, borderRadius: '50%', background: r.color }} />
+                <p style={{ fontSize: 11, color: C.fg, flex: 1 }}>{r.cat}</p>
+                <p style={{ fontSize: 11, color: C.muted, fontWeight: 600 }}>{r.pct}%</p>
               </div>
             ))}
           </Card>
           <Card padding={14}>
             <p style={{ fontSize: 12, color: C.fg, fontWeight: 600, marginBottom: 10 }}>⚠ Postes en alerte</p>
-            {[{ label: 'Bâtiments communaux', pct: 89, budget: '42 000 €' }, { label: 'Voirie — travaux', pct: 72, budget: '95 000 €' }].map((p, i) => (
-              <div key={i} style={{ marginBottom: 12 }}>
+            {alertes.length === 0 && (
+              <p style={{ fontSize: 11, color: C.subtle, fontStyle: 'italic' }}>Aucun poste en alerte 👌</p>
+            )}
+            {alertes.map(p => (
+              <div key={p.code} style={{ marginBottom: 12 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
                   <p style={{ fontSize: 11, color: C.fg, fontWeight: 500 }}>{p.label}</p>
-                  <p style={{ fontSize: 11, color: p.pct > 85 ? C.danger : C.warning, fontWeight: 700 }}>{p.pct}%</p>
+                  <p style={{ fontSize: 11, color: p.pctConsomme > 95 ? C.danger : C.warning, fontWeight: 700 }}>{p.pctConsomme}%</p>
                 </div>
-                <Progress pct={p.pct} />
-                <p style={{ fontSize: 9, color: C.subtle, marginTop: 2 }}>{p.budget} alloués</p>
+                <Progress pct={p.pctConsomme} />
+                <p style={{ fontSize: 9, color: C.subtle, marginTop: 2 }}>{fmtMontant(p.budgetAlloue)} alloués · reste {fmtMontant(p.reste)}</p>
               </div>
             ))}
           </Card>
@@ -211,94 +582,299 @@ function BudgetView() {
   )
 }
 
-function FournisseursView() {
-  const suppliers = [
-    { name: 'EDF Collectivités', total: '14 880 €', cat: 'Énergie', active: true },
-    { name: 'SAUR — Eau potable', total: '4 644 €', cat: 'Eau', active: false },
-    { name: 'Matériaux du Vivarais', total: '68 400 €', cat: 'Travaux', active: false },
-    { name: 'Signaux Girod', total: '3 680 €', cat: 'Voirie', active: false },
-    { name: 'La Poste Pro', total: '1 740 €', cat: 'Courrier', active: false },
-    { name: 'OVHcloud', total: '960 €', cat: 'Informatique', active: false },
-    { name: 'Communauté de Communes', total: '8 200 €', cat: 'Partenariat', active: false },
-  ]
+// ─── Vue Fournisseurs ────────────────────────────────────────────────
 
-  const [selected, setSelected] = useState(suppliers[0])
+function FournisseursView() {
+  const { fournisseurs, hydrated, createFournisseur, updateFournisseur, deleteFournisseur } = useFournisseurs()
+  const { factures } = useFactures()
+  const { postes } = useBudget()
+
+  const [search, setSearch] = useState('')
+  const [selectedId, setSelectedId] = useState<string | null>(fournisseurs[0]?.id ?? null)
+  const [showNewForm, setShowNewForm] = useState(false)
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    if (!q) return fournisseurs
+    return fournisseurs.filter(f =>
+      f.nom.toLowerCase().includes(q) ||
+      f.categorie.toLowerCase().includes(q) ||
+      (f.siret ?? '').includes(q),
+    )
+  }, [fournisseurs, search])
+
+  // Calculs sur le fournisseur sélectionné
+  const selected = fournisseurs.find(f => f.id === selectedId) ?? null
+  const stats = useMemo(() => {
+    if (!selected) return null
+    const ours = factures.filter(f => f.fournisseurId === selected.id)
+    const total = ours.filter(f => f.statut === 'Validée').reduce((acc, f) => acc + f.montantTTC, 0)
+    const enAttente = ours.filter(f => f.statut === 'En attente validation').reduce((acc, f) => acc + f.montantTTC, 0)
+    const sorted = [...ours].sort((a, b) => b.dateFacture.localeCompare(a.dateFacture))
+    return {
+      ours: sorted,
+      total,
+      enAttente,
+      derniere: sorted[0] ?? null,
+    }
+  }, [selected, factures])
+
+  // Total facturé par fournisseur (pour la liste latérale)
+  const totalParFournisseur = useMemo(() => {
+    const map = new Map<string, number>()
+    factures.forEach(f => {
+      if (f.statut !== 'Rejetée') {
+        map.set(f.fournisseurId, (map.get(f.fournisseurId) ?? 0) + f.montantTTC)
+      }
+    })
+    return map
+  }, [factures])
+
+  if (!hydrated) {
+    return <p style={{ padding: 20, fontSize: 12, color: C.subtle }}>Chargement…</p>
+  }
 
   return (
     <div style={{ display: 'flex', gap: 'var(--gap)', height: 'calc(100vh - 160px)' }}>
-      {/* Supplier list */}
-      <div style={{ width: 260, flexShrink: 0 }}>
-        <div style={{ marginBottom: 10 }}>
-          <div style={{ width: '100%', height: 34, border: `1px solid ${C.border}`, borderRadius: 20, background: '#fff', display: 'flex', alignItems: 'center', padding: '0 14px', marginBottom: 8 }}>
-            <span style={{ fontSize: 11, color: C.subtle }}>Rechercher un fournisseur…</span>
-          </div>
-          <Button size="sm" style={{ width: '100%', justifyContent: 'center' }}>+ Nouveau fournisseur</Button>
+      {/* Liste fournisseurs */}
+      <div style={{ width: 260, flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
+        <input
+          type="text"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          placeholder="Rechercher un fournisseur…"
+          style={{ width: '100%', height: 34, border: `1px solid ${C.border}`, borderRadius: 20, background: '#fff', padding: '0 14px', fontSize: 11, color: C.fg, marginBottom: 8, outline: 'none', fontFamily: "'DM Sans', sans-serif" }}
+        />
+        <Button size="sm" style={{ width: '100%', justifyContent: 'center', marginBottom: 8 }} onClick={() => setShowNewForm(true)}>
+          + Nouveau fournisseur
+        </Button>
+        <div style={{ flex: 1, overflow: 'auto' }}>
+          {filtered.length === 0 && (
+            <p style={{ fontSize: 11, color: C.subtle, padding: 12, fontStyle: 'italic' }}>Aucun résultat</p>
+          )}
+          {filtered.map(s => {
+            const isSel = selectedId === s.id
+            const total = totalParFournisseur.get(s.id) ?? 0
+            return (
+              <div key={s.id} onClick={() => setSelectedId(s.id)} style={{ padding: '9px 10px', borderRadius: 6, cursor: 'pointer', background: isSel ? 'var(--accent-light)' : 'transparent', border: `1px solid ${isSel ? 'var(--accent)' : C.border}`, marginBottom: 4 }}>
+                <p style={{ fontSize: 12, color: isSel ? 'var(--accent)' : C.fg, fontWeight: isSel ? 600 : 400 }}>
+                  {s.nom} {!s.active && <span style={{ fontSize: 9, color: C.subtle }}>(inactif)</span>}
+                </p>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 2 }}>
+                  <Tag label={s.categorie} color={isSel ? C.green : C.slate} />
+                  <p style={{ fontSize: 10, color: C.subtle, fontWeight: 600 }}>{fmtMontant(total)}</p>
+                </div>
+              </div>
+            )
+          })}
         </div>
-        {suppliers.map((s, i) => (
-          <div key={i} onClick={() => setSelected(s)} style={{ padding: '9px 10px', borderRadius: 6, cursor: 'pointer', background: selected.name === s.name ? 'var(--accent-light)' : 'transparent', border: `1px solid ${selected.name === s.name ? 'var(--accent)' : C.border}`, marginBottom: 4 }}>
-            <p style={{ fontSize: 12, color: selected.name === s.name ? 'var(--accent)' : C.fg, fontWeight: selected.name === s.name ? 600 : 400 }}>{s.name}</p>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 2 }}>
-              <Tag label={s.cat} color={selected.name === s.name ? C.green : C.slate} />
-              <p style={{ fontSize: 10, color: C.subtle, fontWeight: 600 }}>{s.total}</p>
-            </div>
-          </div>
-        ))}
       </div>
 
-      {/* Supplier detail */}
+      {/* Détail fournisseur */}
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 'var(--gap)', overflow: 'auto' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-          <div style={{ flex: 1 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-              <Avatar initials={selected.name.slice(0, 3).toUpperCase()} size={36} color={C.warning} />
-              <div>
-                <p style={{ fontSize: 17, color: C.fg, fontWeight: 700 }}>{selected.name}</p>
-                <p style={{ fontSize: 11, color: C.subtle }}>Fournisseur · {selected.cat} — Compte 60611</p>
+        {showNewForm && (
+          <NewFournisseurForm
+            postes={postes}
+            onCreate={(data) => {
+              const f = createFournisseur(data)
+              setSelectedId(f.id)
+              setShowNewForm(false)
+            }}
+            onCancel={() => setShowNewForm(false)}
+          />
+        )}
+
+        {selected && stats && (
+          <>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10 }}>
+                <Avatar initials={selected.nom.slice(0, 3).toUpperCase()} size={36} color={C.warning} />
+                <div>
+                  <p style={{ fontSize: 17, color: C.fg, fontWeight: 700 }}>{selected.nom}</p>
+                  <p style={{ fontSize: 11, color: C.subtle }}>
+                    {selected.categorie}
+                    {selected.posteParDefaut && ` — Poste ${selected.posteParDefaut}`}
+                  </p>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 6 }}>
+                <Button size="sm" onClick={() => updateFournisseur(selected.id, { active: !selected.active })}>
+                  {selected.active ? 'Désactiver' : 'Réactiver'}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="danger"
+                  onClick={() => {
+                    if (stats.ours.length > 0) {
+                      alert(`Impossible : ${stats.ours.length} facture(s) liée(s).`)
+                      return
+                    }
+                    if (confirm(`Supprimer le fournisseur ${selected.nom} ?`)) {
+                      deleteFournisseur(selected.id)
+                      setSelectedId(null)
+                    }
+                  }}
+                >Supprimer</Button>
               </div>
             </div>
-          </div>
-          <div style={{ display: 'flex', gap: 6 }}>
-            <Button size="sm">Modifier</Button>
-            <Button variant="primary" size="sm">+ Facture</Button>
-          </div>
-        </div>
 
-        <div style={{ display: 'flex', gap: 'var(--gap)' }}>
-          <KpiCard label="Total facturé 2026" value="14 880 €" />
-          <KpiCard label="En attente" value="1 240 €" color={C.warning} />
-          <KpiCard label="Dernière facture" value="28 avr." color={C.slate} />
-        </div>
-
-        <Card padding={14}>
-          <SectionHeader title="Historique des factures" />
-          {[
-            { id: 'FAC-2026-042', montant: '1 240 €', date: '28 avr.', statut: 'En attente' as const },
-            { id: 'FAC-2026-035', montant: '1 240 €', date: '31 mars', statut: 'Validée' as const },
-            { id: 'FAC-2026-021', montant: '1 240 €', date: '28 fév.', statut: 'Validée' as const },
-            { id: 'FAC-2026-008', montant: '1 240 €', date: '31 jan.', statut: 'Validée' as const },
-          ].map((f, i) => (
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: i < 3 ? `1px solid ${C.border}` : 'none' }}>
-              <p style={{ fontSize: 11, color: C.subtle, fontFamily: "'JetBrains Mono', monospace", flex: 1 }}>{f.id}</p>
-              <p style={{ fontSize: 12, color: C.fg, fontWeight: 600 }}>{f.montant}</p>
-              <p style={{ fontSize: 11, color: C.subtle }}>{f.date}</p>
-              <Badge label={f.statut} variant={f.statut === 'En attente' ? 'warning' : 'success'} />
-              <Button size="sm">Voir</Button>
+            <div style={{ display: 'flex', gap: 'var(--gap)' }}>
+              <KpiCard label="Total facturé 2026" value={fmtMontant(stats.total)} />
+              <KpiCard label="En attente" value={fmtMontant(stats.enAttente)} color={C.warning} />
+              <KpiCard label="Dernière facture" value={stats.derniere ? fmtDateShort(stats.derniere.dateFacture) : '—'} color={C.slate} />
             </div>
-          ))}
-        </Card>
 
-        <Card padding={14}>
-          <SectionHeader title="Coordonnées & infos contrat" />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-            {[['SIRET', '552 081 317 04116'], ['N° client', 'COL-SFE-2019-004'], ['Contact', 'edf-collectivites.fr'], ['Délai paiement', '30 jours']].map(([k, v]) => (
-              <div key={k} style={{ padding: '6px 8px', background: 'var(--page-bg)', borderRadius: 6 }}>
-                <p style={{ fontSize: 9, color: C.subtle, fontWeight: 600, marginBottom: 2 }}>{k}</p>
-                <p style={{ fontSize: 11, color: C.fg, fontWeight: 500 }}>{v}</p>
+            <Card padding={14}>
+              <SectionHeader title={`Historique des factures (${stats.ours.length})`} />
+              {stats.ours.length === 0 ? (
+                <p style={{ fontSize: 12, color: C.subtle, padding: 12, textAlign: 'center', fontStyle: 'italic' }}>
+                  Aucune facture pour ce fournisseur
+                </p>
+              ) : stats.ours.map((f, i) => (
+                <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: i < stats.ours.length - 1 ? `1px solid ${C.border}` : 'none' }}>
+                  <p style={{ fontSize: 11, color: C.subtle, fontFamily: "'JetBrains Mono', monospace", flex: 1 }}>{f.numero}</p>
+                  <p style={{ fontSize: 12, color: C.fg, fontWeight: 600 }}>{fmtMontant(f.montantTTC)}</p>
+                  <p style={{ fontSize: 11, color: C.subtle }}>{fmtDateShort(f.dateFacture)}</p>
+                  <Badge label={statutShortLabel(f.statut)} variant={statutBadgeVariant(f.statut)} />
+                </div>
+              ))}
+            </Card>
+
+            <Card padding={14}>
+              <SectionHeader title="Coordonnées & infos contrat" />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                {[
+                  ['SIRET', selected.siret ?? '—'],
+                  ['N° client', selected.numClient ?? '—'],
+                  ['Email', selected.email ?? '—'],
+                  ['Délai paiement', selected.delaiPaiement ? `${selected.delaiPaiement} jours` : '—'],
+                ].map(([k, v]) => (
+                  <div key={k} style={{ padding: '6px 8px', background: 'var(--page-bg)', borderRadius: 6 }}>
+                    <p style={{ fontSize: 9, color: C.subtle, fontWeight: 600, marginBottom: 2 }}>{k}</p>
+                    <p style={{ fontSize: 11, color: C.fg, fontWeight: 500 }}>{v}</p>
+                  </div>
+                ))}
               </div>
-            ))}
+            </Card>
+          </>
+        )}
+
+        {!selected && !showNewForm && (
+          <div style={{ padding: 32, textAlign: 'center', color: C.subtle, fontSize: 12 }}>
+            Sélectionnez un fournisseur pour voir ses informations
           </div>
-        </Card>
+        )}
       </div>
     </div>
   )
+}
+
+// ─── Sous-composant : nouveau fournisseur ────────────────────────────
+
+function NewFournisseurForm({
+  postes, onCreate, onCancel,
+}: {
+  postes: PosteBudget[]
+  onCreate: (data: Omit<Fournisseur, 'id' | 'createdAt'>) => void
+  onCancel: () => void
+}) {
+  const [nom, setNom] = useState('')
+  const [categorie, setCategorie] = useState('')
+  const [siret, setSiret] = useState('')
+  const [email, setEmail] = useState('')
+  const [posteParDefaut, setPosteParDefaut] = useState('')
+  const [delaiPaiement, setDelaiPaiement] = useState('30')
+
+  const valid = nom.trim() && categorie.trim()
+
+  return (
+    <Card padding={14} style={{ background: C.greenLight, borderColor: C.green }}>
+      <SectionHeader title="Nouveau fournisseur" />
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+        <Field label="Nom *">
+          <input type="text" value={nom} onChange={e => setNom(e.target.value)} style={inputStyle} />
+        </Field>
+        <Field label="Catégorie *">
+          <input type="text" value={categorie} onChange={e => setCategorie(e.target.value)} placeholder="Énergie, Voirie…" style={inputStyle} />
+        </Field>
+        <Field label="SIRET">
+          <input type="text" value={siret} onChange={e => setSiret(e.target.value)} style={inputStyle} />
+        </Field>
+        <Field label="Email">
+          <input type="email" value={email} onChange={e => setEmail(e.target.value)} style={inputStyle} />
+        </Field>
+        <Field label="Poste comptable par défaut">
+          <select value={posteParDefaut} onChange={e => setPosteParDefaut(e.target.value)} style={inputStyle}>
+            <option value="">Aucun</option>
+            {postes.map(p => (
+              <option key={p.code} value={p.code}>{p.code} — {p.label}</option>
+            ))}
+          </select>
+        </Field>
+        <Field label="Délai paiement (jours)">
+          <input type="number" min="0" value={delaiPaiement} onChange={e => setDelaiPaiement(e.target.value)} style={inputStyle} />
+        </Field>
+      </div>
+      <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 12 }}>
+        <Button onClick={onCancel}>Annuler</Button>
+        <Button
+          variant="primary"
+          disabled={!valid}
+          onClick={() => valid && onCreate({
+            nom: nom.trim(),
+            categorie: categorie.trim(),
+            siret: siret.trim() || undefined,
+            email: email.trim() || undefined,
+            posteParDefaut: posteParDefaut || undefined,
+            delaiPaiement: parseInt(delaiPaiement, 10) || undefined,
+            active: true,
+          })}
+        >
+          Créer le fournisseur
+        </Button>
+      </div>
+    </Card>
+  )
+}
+
+// ─── Helpers UI ──────────────────────────────────────────────────────
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <p style={{ fontSize: 10, color: C.subtle, fontWeight: 600, marginBottom: 4 }}>{label}</p>
+      {children}
+    </div>
+  )
+}
+
+const inputStyle: React.CSSProperties = {
+  width: '100%',
+  height: 32,
+  border: `1px solid ${C.border}`,
+  borderRadius: 6,
+  background: '#fff',
+  padding: '0 10px',
+  fontSize: 12,
+  color: C.fg,
+  fontFamily: "'DM Sans', sans-serif",
+  outline: 'none',
+}
+
+function statutShortLabel(s: FactureStatut): string {
+  switch (s) {
+    case 'En attente validation': return 'En attente'
+    case 'Validée': return 'Validée'
+    case 'Rejetée': return 'Rejetée'
+    case 'À soumettre': return 'Brouillon'
+  }
+}
+
+function statutBadgeVariant(s: FactureStatut): 'warning' | 'success' | 'danger' | 'default' {
+  switch (s) {
+    case 'En attente validation': return 'warning'
+    case 'Validée': return 'success'
+    case 'Rejetée': return 'danger'
+    case 'À soumettre': return 'default'
+  }
 }

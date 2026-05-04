@@ -1,4 +1,7 @@
-import type { Commission, Task, Employee, Invoice } from './types'
+import type {
+  Commission, Task, Employee, Invoice,
+  Fournisseur, PosteBudget, Facture,
+} from './types'
 import { COLORS as C } from './theme'
 
 export const COMMISSIONS: Commission[] = [
@@ -33,10 +36,79 @@ export const EMPLOYES: Employee[] = [
   { id: '7', nom: 'Claude Viard', poste: 'Services généraux', statut: 'Présent', conges: 10, rtt: 1, contrat: 'Titulaire', salaire: 2200 },
 ]
 
-export const FACTURES: Invoice[] = [
-  { id: 'FAC-2026-042', fournisseur: 'EDF Collectivités', montant: '1 240 €', poste: 'Énergie', date: '28 avr.', statut: 'En attente' },
-  { id: 'FAC-2026-041', fournisseur: 'SAUR — Eau potable', montant: '387 €', poste: 'Eau & assainissement', date: '25 avr.', statut: 'En attente' },
-  { id: 'FAC-2026-040', fournisseur: 'Matériaux du Vivarais', montant: '4 850 €', poste: 'Voirie', date: '20 avr.', statut: 'Validée' },
-  { id: 'FAC-2026-039', fournisseur: 'Signaux Girod', montant: '920 €', poste: 'Voirie', date: '15 avr.', statut: 'Validée' },
-  { id: 'FAC-2026-038', fournisseur: 'La Poste Pro', montant: '145 €', poste: 'Fonctionnement', date: '12 avr.', statut: 'Rejetée' },
+// Conservé pour rétrocompatibilité éventuelle (ancien shape Invoice non utilisé)
+export const FACTURES_LEGACY: Invoice[] = []
+
+// ─── Fournisseurs (seed) ──────────────────────────────────────────
+
+export const FOURNISSEURS: Fournisseur[] = [
+  { id: 'four-edf',     nom: 'EDF Collectivités',        categorie: 'Énergie',       siret: '552 081 317 04116', numClient: 'COL-SFE-2019-004', email: 'collectivites@edf.fr',     posteParDefaut: '60611', delaiPaiement: 30, active: true,  createdAt: '2025-09-01T08:00:00Z' },
+  { id: 'four-saur',    nom: 'SAUR — Eau potable',       categorie: 'Eau',           siret: '339 379 984 00050', numClient: 'SF-2018-127',     email: 'collectivites@saur.fr',    posteParDefaut: '60612', delaiPaiement: 30, active: true,  createdAt: '2025-09-01T08:00:00Z' },
+  { id: 'four-mvv',     nom: 'Matériaux du Vivarais',    categorie: 'Travaux',       siret: '410 233 891 00018', email: 'devis@mvivarais.fr',                                       posteParDefaut: '2315',  delaiPaiement: 45, active: true,  createdAt: '2025-09-01T08:00:00Z' },
+  { id: 'four-girod',   nom: 'Signaux Girod',            categorie: 'Voirie',        siret: '378 500 165 00028', email: 'commande@signaux-girod.fr',                                posteParDefaut: '2315',  delaiPaiement: 45, active: true,  createdAt: '2025-09-01T08:00:00Z' },
+  { id: 'four-poste',   nom: 'La Poste Pro',             categorie: 'Courrier',      siret: '356 000 000 00012', email: 'pro@laposte.fr',                                           posteParDefaut: '6262',  delaiPaiement: 30, active: true,  createdAt: '2025-09-01T08:00:00Z' },
+  { id: 'four-ovh',     nom: 'OVHcloud',                 categorie: 'Informatique',  siret: '424 761 419 00045', email: 'support@ovhcloud.com',                                     posteParDefaut: '2188',  delaiPaiement: 30, active: true,  createdAt: '2025-09-01T08:00:00Z' },
+  { id: 'four-ccpv',    nom: 'CC Pays de Vernoux',       categorie: 'Partenariat',                                                                                                  posteParDefaut: '6068',  delaiPaiement: 60, active: true,  createdAt: '2025-09-01T08:00:00Z' },
+]
+
+// ─── Postes budgétaires (seed) ────────────────────────────────────
+
+export const POSTES_BUDGET: PosteBudget[] = [
+  // Personnel
+  { code: '6411',  label: 'Salaires titulaires',         categorie: 'Personnel',     budgetAlloue: 130_000, consommationInitiale: 60_800 },
+  { code: '6413',  label: 'Salaires contractuels',       categorie: 'Personnel',     budgetAlloue:  32_000, consommationInitiale: 14_800 },
+  { code: '6451',  label: 'Cotisations URSSAF',          categorie: 'Personnel',     budgetAlloue:  28_000, consommationInitiale: 13_000 },
+  // Fonctionnement
+  { code: '60611', label: 'Énergie — électricité',       categorie: 'Fonctionnement',budgetAlloue:  18_000, consommationInitiale:  5_000 },
+  { code: '60612', label: 'Eau & assainissement',        categorie: 'Fonctionnement',budgetAlloue:   5_000, consommationInitiale:  1_161 },
+  { code: '6262',  label: 'Télécom & courrier',          categorie: 'Fonctionnement',budgetAlloue:   3_000, consommationInitiale:    600 },
+  { code: '6068',  label: 'Fournitures administratives', categorie: 'Fonctionnement',budgetAlloue:   4_000, consommationInitiale:  1_200 },
+  // Équipement
+  { code: '2315',  label: 'Voirie — travaux',            categorie: 'Équipement',    budgetAlloue:  95_000, consommationInitiale: 62_630 },
+  { code: '2313',  label: 'Bâtiments communaux',         categorie: 'Équipement',    budgetAlloue:  42_000, consommationInitiale: 37_380 },
+  { code: '2188',  label: 'Matériels divers',            categorie: 'Équipement',    budgetAlloue:  12_000, consommationInitiale:  3_600 },
+]
+
+// ─── Factures (seed) ──────────────────────────────────────────────
+
+export const FACTURES: Facture[] = [
+  {
+    id: 'fact-042', numero: 'FAC-2026-042', fournisseurId: 'four-edf', montantTTC: 1240, posteCode: '60611',
+    dateFacture: '2026-04-28', dateEcheance: '2026-05-28',
+    statut: 'En attente validation',
+    submittedById: 'p-pr', submittedAt: '2026-04-29T09:15:00Z',
+    createdAt: '2026-04-29T09:15:00Z',
+  },
+  {
+    id: 'fact-041', numero: 'FAC-2026-041', fournisseurId: 'four-saur', montantTTC: 387, posteCode: '60612',
+    dateFacture: '2026-04-25', dateEcheance: '2026-05-25',
+    statut: 'En attente validation',
+    submittedById: 'p-pr', submittedAt: '2026-04-26T10:00:00Z',
+    createdAt: '2026-04-26T10:00:00Z',
+  },
+  {
+    id: 'fact-040', numero: 'FAC-2026-040', fournisseurId: 'four-mvv', montantTTC: 4850, posteCode: '2315',
+    dateFacture: '2026-04-20', dateEcheance: '2026-06-04',
+    statut: 'Validée',
+    submittedById: 'p-pr', submittedAt: '2026-04-21T08:30:00Z',
+    validatedById: 'p-jm', validatedAt: '2026-04-22T14:10:00Z',
+    createdAt: '2026-04-21T08:30:00Z',
+  },
+  {
+    id: 'fact-039', numero: 'FAC-2026-039', fournisseurId: 'four-girod', montantTTC: 920, posteCode: '2315',
+    dateFacture: '2026-04-15', dateEcheance: '2026-05-30',
+    statut: 'Validée',
+    submittedById: 'p-pr', submittedAt: '2026-04-16T09:00:00Z',
+    validatedById: 'p-md', validatedAt: '2026-04-17T11:00:00Z',
+    createdAt: '2026-04-16T09:00:00Z',
+  },
+  {
+    id: 'fact-038', numero: 'FAC-2026-038', fournisseurId: 'four-poste', montantTTC: 145, posteCode: '6262',
+    dateFacture: '2026-04-12', dateEcheance: '2026-05-12',
+    statut: 'Rejetée',
+    submittedById: 'p-im', submittedAt: '2026-04-13T15:00:00Z',
+    rejectedById: 'p-jm', rejectedAt: '2026-04-14T08:30:00Z',
+    rejectionReason: 'Numéro client erroné, demander un avoir au fournisseur.',
+    createdAt: '2026-04-13T15:00:00Z',
+  },
 ]
