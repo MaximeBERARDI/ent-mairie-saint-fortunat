@@ -2,6 +2,7 @@ import type {
   Commission, Task, Employee, Invoice,
   Fournisseur, PosteBudget, Facture,
 } from './types'
+import { COMPTES_M14 } from './m14-plan'
 import { COLORS as C } from './theme'
 
 export const COMMISSIONS: Commission[] = [
@@ -52,22 +53,10 @@ export const FOURNISSEURS: Fournisseur[] = [
 ]
 
 // ─── Postes budgétaires (seed) ────────────────────────────────────
+// Le plan comptable M14 développé est défini dans m14-plan.ts.
+// On le ré-exporte ici sous le nom POSTES_BUDGET pour rétrocompatibilité.
 
-export const POSTES_BUDGET: PosteBudget[] = [
-  // Personnel
-  { code: '6411',  label: 'Salaires titulaires',         categorie: 'Personnel',     budgetAlloue: 130_000, consommationInitiale: 60_800 },
-  { code: '6413',  label: 'Salaires contractuels',       categorie: 'Personnel',     budgetAlloue:  32_000, consommationInitiale: 14_800 },
-  { code: '6451',  label: 'Cotisations URSSAF',          categorie: 'Personnel',     budgetAlloue:  28_000, consommationInitiale: 13_000 },
-  // Fonctionnement
-  { code: '60611', label: 'Énergie — électricité',       categorie: 'Fonctionnement',budgetAlloue:  18_000, consommationInitiale:  5_000 },
-  { code: '60612', label: 'Eau & assainissement',        categorie: 'Fonctionnement',budgetAlloue:   5_000, consommationInitiale:  1_161 },
-  { code: '6262',  label: 'Télécom & courrier',          categorie: 'Fonctionnement',budgetAlloue:   3_000, consommationInitiale:    600 },
-  { code: '6068',  label: 'Fournitures administratives', categorie: 'Fonctionnement',budgetAlloue:   4_000, consommationInitiale:  1_200 },
-  // Équipement
-  { code: '2315',  label: 'Voirie — travaux',            categorie: 'Équipement',    budgetAlloue:  95_000, consommationInitiale: 62_630 },
-  { code: '2313',  label: 'Bâtiments communaux',         categorie: 'Équipement',    budgetAlloue:  42_000, consommationInitiale: 37_380 },
-  { code: '2188',  label: 'Matériels divers',            categorie: 'Équipement',    budgetAlloue:  12_000, consommationInitiale:  3_600 },
-]
+export const POSTES_BUDGET: PosteBudget[] = COMPTES_M14
 
 // ─── Factures (seed) ──────────────────────────────────────────────
 

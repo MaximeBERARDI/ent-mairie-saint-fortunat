@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { Shell } from '@/components/layout/Shell'
 import { Card, KpiCard } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
@@ -14,9 +14,11 @@ import { COLORS as C } from '@/lib/theme'
 import { useFactures } from '@/hooks/useFactures'
 import { useFournisseurs } from '@/hooks/useFournisseurs'
 import { useBudget } from '@/hooks/useBudget'
+import { useEcritures } from '@/hooks/useEcritures'
 import { useTeam } from '@/hooks/useTeam'
 import { hasPermission } from '@/lib/permissions'
-import type { Facture, FactureStatut, Fournisseur, PosteBudget, BudgetCategorie } from '@/lib/types'
+import type { Facture, FactureStatut, Fournisseur, PosteBudget, TaskDocument } from '@/lib/types'
+import { BudgetM14View } from '@/components/finances/BudgetM14View'
 
 type FinView = 'factures' | 'budget' | 'fournisseurs'
 
@@ -35,6 +37,24 @@ const fmtDateShort = (iso: string) =>
 const fmtDateTime = (iso: string) =>
   new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
 
+const MAX_FILE_SIZE = 1024 * 1024            // 1 Mo / fichier
+const MAX_TOTAL_SIZE = 4 * 1024 * 1024       // 4 Mo total
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} o`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} Ko`
+  return `${(bytes / 1024 / 1024).toFixed(1)} Mo`
+}
+
+function readFileAsDataURL(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = () => reject(reader.error)
+    reader.readAsDataURL(file)
+  })
+}
+
 export default function FinancesPage() {
   const [view, setView] = useState<FinView>('factures')
 
@@ -51,7 +71,7 @@ export default function FinancesPage() {
       </div>
 
       {view === 'factures' && <FacturesView />}
-      {view === 'budget' && <BudgetView />}
+      {view === 'budget' && <BudgetM14View />}
       {view === 'fournisseurs' && <FournisseursView />}
     </Shell>
   )
@@ -63,7 +83,24 @@ function FacturesView() {
   const { factures, hydrated, submitFacture, validateFacture, rejectFacture, reopenFacture, deleteFacture } = useFactures()
   const { fournisseurs } = useFournisseurs()
   const { postes } = useBudget()
+  const { generateEngagementFromFacture, deleteEcrituresByFacture } = useEcritures()
   const { people } = useTeam()
+
+  // Wraps : valider une facture déclenche aussi l'écriture d'engagement.
+  const handleValidate = (factureId: string) => {
+    validateFacture(factureId, CURRENT_USER_ID)
+    const f = factures.find(x => x.id === factureId)
+    if (f) generateEngagementFromFacture(f, CURRENT_USER_ID)
+  }
+  // Réouvrir / supprimer : on retire aussi les écritures liées
+  const handleReopen = (factureId: string) => {
+    reopenFacture(factureId)
+    deleteEcrituresByFacture(factureId)
+  }
+  const handleDelete = (factureId: string) => {
+    deleteFacture(factureId)
+    deleteEcrituresByFacture(factureId)
+  }
 
   const currentUser = people.find(p => p.id === CURRENT_USER_ID)
   const canValidate = currentUser ? hasPermission(currentUser.authLevel, 'finance.validate-invoices', currentUser.customPermissions) : false
@@ -180,7 +217,7 @@ function FacturesView() {
                     {f.statut === 'En attente validation' && canValidate ? (
                       <div style={{ display: 'flex', gap: 4 }}>
                         <button
-                          onClick={(e) => { e.stopPropagation(); validateFacture(f.id, CURRENT_USER_ID); setSelectedId(f.id) }}
+                          onClick={(e) => { e.stopPropagation(); handleValidate(f.id); setSelectedId(f.id) }}
                           style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.success}`, background: C.successLight, color: C.success, cursor: 'pointer', fontSize: 12 }}
                           title="Valider"
                         >✓</button>
@@ -208,10 +245,10 @@ function FacturesView() {
               fournisseurs={fournisseurs}
               postes={postes}
               canValidate={canValidate}
-              onValidate={() => validateFacture(selected.id, CURRENT_USER_ID)}
+              onValidate={() => handleValidate(selected.id)}
               onReject={(reason) => rejectFacture(selected.id, CURRENT_USER_ID, reason)}
-              onReopen={() => reopenFacture(selected.id)}
-              onDelete={() => { deleteFacture(selected.id); setSelectedId(null) }}
+              onReopen={() => handleReopen(selected.id)}
+              onDelete={() => { handleDelete(selected.id); setSelectedId(null) }}
             />
           ) : (
             <div style={{ padding: 32, textAlign: 'center', color: C.subtle, fontSize: 12 }}>
@@ -233,7 +270,8 @@ function SubmitFactureForm({
   postes: PosteBudget[]
   onSubmit: (data: {
     fournisseurId: string; montantTTC: number; posteCode: string;
-    dateFacture: string; dateEcheance?: string; submittedById: string; notes?: string;
+    dateFacture: string; dateEcheance?: string; submittedById: string;
+    notes?: string; documents?: TaskDocument[];
   }) => void
   onCancel: () => void
 }) {
@@ -245,12 +283,53 @@ function SubmitFactureForm({
   const [dateEcheance, setDateEcheance] = useState('')
   const [submittedById, setSubmittedById] = useState(CURRENT_USER_ID)
   const [notes, setNotes] = useState('')
+  const [documents, setDocuments] = useState<TaskDocument[]>([])
+  const [fileError, setFileError] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Pré-remplir le poste comptable depuis le fournisseur sélectionné
   const handleFournisseurChange = (id: string) => {
     setFournisseurId(id)
     const f = fournisseurs.find(x => x.id === id)
     if (f?.posteParDefaut && !posteCode) setPosteCode(f.posteParDefaut)
+  }
+
+  const handleFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0) return
+    setFileError(null)
+    const currentTotal = documents.reduce((s, d) => s + d.size, 0)
+    let total = currentTotal
+    const newDocs: TaskDocument[] = []
+    for (const file of Array.from(files)) {
+      if (file.size > MAX_FILE_SIZE) {
+        setFileError(`"${file.name}" dépasse 1 Mo (limite localStorage).`)
+        continue
+      }
+      if (total + file.size > MAX_TOTAL_SIZE) {
+        setFileError(`Total des pièces jointes > 4 Mo. Retirez-en avant d'en ajouter.`)
+        break
+      }
+      try {
+        const dataUrl = await readFileAsDataURL(file)
+        newDocs.push({
+          id: `doc-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          name: file.name,
+          size: file.size,
+          type: file.type || 'application/octet-stream',
+          dataUrl,
+          uploadedAt: new Date().toISOString(),
+        })
+        total += file.size
+      } catch {
+        setFileError(`Impossible de lire "${file.name}".`)
+      }
+    }
+    if (newDocs.length > 0) setDocuments(prev => [...prev, ...newDocs])
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
+
+  const removeDoc = (id: string) => {
+    setDocuments(prev => prev.filter(d => d.id !== id))
   }
 
   const valid = fournisseurId && montant && parseFloat(montant) > 0 && posteCode && dateFacture && submittedById
@@ -292,9 +371,45 @@ function SubmitFactureForm({
           </select>
         </Field>
       </div>
-      <Field label="Notes (facultatif)">
+      <Field label="Notes / commentaires (facultatif)">
         <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Référence interne, commande, contexte…" rows={2} style={{ ...inputStyle, height: 'auto', resize: 'vertical' as const, padding: 8 }} />
       </Field>
+
+      <div style={{ marginTop: 12 }}>
+        <p style={{ fontSize: 10, color: C.subtle, fontWeight: 600, marginBottom: 6 }}>Pièces justificatives (PDF, photos…)</p>
+        <div style={{ border: `1px dashed ${C.border}`, borderRadius: 6, padding: 10, background: '#fff' }}>
+          {documents.length === 0 && (
+            <p style={{ fontSize: 11, color: C.subtle, marginBottom: 8 }}>
+              Aucune pièce — joignez la facture PDF, devis, bon de livraison… (max 1 Mo / fichier, 4 Mo total).
+            </p>
+          )}
+          {documents.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 8 }}>
+              {documents.map(doc => (
+                <div key={doc.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: C.bg, border: `1px solid ${C.border}`, borderRadius: 6, padding: '6px 8px' }}>
+                  <span style={{ fontSize: 16 }}>📎</span>
+                  <a href={doc.dataUrl} download={doc.name} style={{ flex: 1, fontSize: 12, color: C.fg, textDecoration: 'none', fontWeight: 500 }}>{doc.name}</a>
+                  <span style={{ fontSize: 10, color: C.subtle }}>{formatBytes(doc.size)}</span>
+                  <button type="button" onClick={() => removeDoc(doc.id)} aria-label="Retirer" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: C.danger, fontSize: 14, padding: '0 4px' }}>×</button>
+                </div>
+              ))}
+            </div>
+          )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept=".pdf,image/*"
+            onChange={e => handleFiles(e.target.files)}
+            style={{ display: 'none' }}
+          />
+          <Button size="sm" onClick={() => fileInputRef.current?.click()}>+ Ajouter une pièce jointe</Button>
+        </div>
+        {fileError && (
+          <p style={{ fontSize: 11, color: C.danger, marginTop: 6 }}>{fileError}</p>
+        )}
+      </div>
+
       <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 12 }}>
         <Button onClick={onCancel}>Annuler</Button>
         <Button
@@ -307,7 +422,8 @@ function SubmitFactureForm({
             dateFacture,
             dateEcheance: dateEcheance || undefined,
             submittedById,
-            notes: notes || undefined,
+            notes: notes.trim() || undefined,
+            documents: documents.length > 0 ? documents : undefined,
           })}
         >
           Soumettre la facture
@@ -416,10 +532,42 @@ function FactureDetailPanel({
         </div>
       )}
 
-      {/* Aperçu (placeholder, le document n'est pas géré ici) */}
-      <div style={{ height: 80, background: C.ph, borderRadius: 6, marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <span style={{ fontSize: 11, color: C.subtle }}>Aperçu du PDF (à brancher)</span>
-      </div>
+      {/* Notes / commentaires saisis à la soumission */}
+      {facture.notes && (
+        <div style={{ padding: 8, background: C.bg, border: `1px solid ${C.border}`, borderRadius: 6, marginBottom: 10 }}>
+          <p style={{ fontSize: 9, color: C.subtle, fontWeight: 600, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Commentaire</p>
+          <p style={{ fontSize: 11, color: C.fg, whiteSpace: 'pre-wrap', lineHeight: 1.4 }}>{facture.notes}</p>
+        </div>
+      )}
+
+      {/* Pièces jointes */}
+      {facture.documents && facture.documents.length > 0 ? (
+        <div style={{ marginBottom: 12 }}>
+          <p style={{ fontSize: 9, color: C.subtle, fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            Pièces jointes ({facture.documents.length})
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+            {facture.documents.map(doc => (
+              <a
+                key={doc.id}
+                href={doc.dataUrl}
+                download={doc.name}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 8px', background: C.bg, border: `1px solid ${C.border}`, borderRadius: 6, textDecoration: 'none', color: C.fg, fontSize: 11 }}
+              >
+                <span style={{ fontSize: 14 }}>📎</span>
+                <span style={{ flex: 1, fontWeight: 500 }}>{doc.name}</span>
+                <span style={{ fontSize: 9, color: C.subtle }}>{formatBytes(doc.size)}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      ) : (
+        <div style={{ height: 56, background: C.ph, borderRadius: 6, marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <span style={{ fontSize: 11, color: C.subtle }}>Aucune pièce jointe</span>
+        </div>
+      )}
 
       {/* Actions selon statut + permissions */}
       {facture.statut === 'En attente validation' && canValidate && (
@@ -454,133 +602,6 @@ function FactureDetailPanel({
   )
 }
 
-// ─── Vue Budget : KPIs et postes calculés depuis les factures ────────
-
-function BudgetView() {
-  const { factures } = useFactures()
-  const { postes, hydrated, computePosteWithConsumption } = useBudget()
-
-  const enriched = useMemo(
-    () => postes.map(p => computePosteWithConsumption(p, factures)),
-    [postes, factures, computePosteWithConsumption],
-  )
-
-  const totals = useMemo(() => {
-    const total = enriched.reduce((acc, p) => acc + p.budgetAlloue, 0)
-    const conso = enriched.reduce((acc, p) => acc + p.consommationTotale, 0)
-    const reste = total - conso
-    const enAlerte = enriched.filter(p => p.enAlerte).length
-    const pct = total > 0 ? Math.round((conso / total) * 100) : 0
-    return { total, conso, reste, enAlerte, pct }
-  }, [enriched])
-
-  const byCategorie = useMemo(() => {
-    const groups: Record<BudgetCategorie, typeof enriched> = {
-      'Personnel': [], 'Fonctionnement': [], 'Équipement': [], 'Recettes': [],
-    }
-    enriched.forEach(p => {
-      if (groups[p.categorie]) groups[p.categorie].push(p)
-    })
-    return groups
-  }, [enriched])
-
-  const repartition = useMemo(() => {
-    const cats: BudgetCategorie[] = ['Personnel', 'Fonctionnement', 'Équipement']
-    return cats.map(cat => {
-      const items = byCategorie[cat]
-      const conso = items.reduce((acc, p) => acc + p.consommationTotale, 0)
-      const pct = totals.conso > 0 ? Math.round((conso / totals.conso) * 100) : 0
-      return { cat, conso, pct, color: cat === 'Personnel' ? C.slate : cat === 'Fonctionnement' ? C.green : C.terra }
-    })
-  }, [byCategorie, totals.conso])
-
-  const alertes = enriched.filter(p => p.enAlerte).sort((a, b) => b.pctConsomme - a.pctConsomme)
-
-  if (!hydrated) {
-    return <p style={{ padding: 20, fontSize: 12, color: C.subtle }}>Chargement…</p>
-  }
-
-  return (
-    <div>
-      <div style={{ display: 'flex', gap: 'var(--gap)', marginBottom: 'var(--gap)' }}>
-        <KpiCard label="Budget total 2026" value={fmtMontant(totals.total)} color={C.slate} />
-        <KpiCard label="Consommé" value={fmtMontant(totals.conso)} sub={`${totals.pct}% du budget`} color={C.green} />
-        <KpiCard label="Reste à engager" value={fmtMontant(totals.reste)} color={C.muted} />
-        <KpiCard label="Postes en alerte" value={String(totals.enAlerte)} sub="> 80% consommés" color={totals.enAlerte > 0 ? C.danger : C.subtle} />
-      </div>
-
-      <div style={{ display: 'flex', gap: 'var(--gap)' }}>
-        <Card style={{ flex: 3 }} padding={16}>
-          <SectionHeader title="Plan comptable — Suivi par poste budgétaire" actions={<><Button size="sm">Rapport</Button><Button size="sm">Exporter</Button></>} />
-          {(['Personnel', 'Fonctionnement', 'Équipement'] as BudgetCategorie[]).map((cat) => {
-            const items = byCategorie[cat]
-            if (items.length === 0) return null
-            return (
-              <div key={cat} style={{ marginBottom: 18 }}>
-                <p style={{ fontSize: 11, color: C.slate, fontWeight: 700, marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Dépenses de {cat.toLowerCase()}</p>
-                {items.map(p => (
-                  <div key={p.code} style={{ display: 'grid', gridTemplateColumns: '0.6fr 2fr 1fr 1.5fr 0.8fr', gap: 10, alignItems: 'center', padding: '7px 0', borderBottom: `1px solid ${C.border}` }}>
-                    <p style={{ fontSize: 10, color: C.subtle, fontFamily: "'JetBrains Mono', monospace" }}>{p.code}</p>
-                    <div>
-                      <p style={{ fontSize: 12, color: C.fg }}>{p.label}</p>
-                      {p.consommationFactures > 0 && (
-                        <p style={{ fontSize: 9, color: C.subtle, marginTop: 1 }}>
-                          dont {fmtMontant(p.consommationFactures)} via factures app
-                        </p>
-                      )}
-                    </div>
-                    <p style={{ fontSize: 11, color: C.subtle }}>{fmtMontant(p.budgetAlloue)}</p>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <div style={{ flex: 1 }}><Progress pct={p.pctConsomme} /></div>
-                      <p style={{ fontSize: 11, color: p.pctConsomme > 85 ? C.danger : p.pctConsomme > 65 ? C.warning : C.success, fontWeight: 600, minWidth: 34 }}>{p.pctConsomme}%</p>
-                    </div>
-                    <p style={{ fontSize: 11, color: C.fg, fontWeight: 600 }}>{fmtMontant(p.consommationTotale)}</p>
-                  </div>
-                ))}
-              </div>
-            )
-          })}
-        </Card>
-
-        <div style={{ flex: 1.5, display: 'flex', flexDirection: 'column', gap: 'var(--gap)' }}>
-          <Card padding={14}>
-            <p style={{ fontSize: 12, color: C.fg, fontWeight: 700, marginBottom: 10 }}>Synthèse globale</p>
-            {/* Barre de répartition */}
-            <div style={{ height: 8, background: C.ph, borderRadius: 4, overflow: 'hidden', display: 'flex', marginBottom: 12 }}>
-              {repartition.map(r => (
-                <div key={r.cat} style={{ width: `${r.pct}%`, background: r.color, transition: 'width 0.2s' }} title={`${r.cat}: ${r.pct}%`} />
-              ))}
-            </div>
-            {repartition.map(r => (
-              <div key={r.cat} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                <div style={{ width: 10, height: 10, borderRadius: '50%', background: r.color }} />
-                <p style={{ fontSize: 11, color: C.fg, flex: 1 }}>{r.cat}</p>
-                <p style={{ fontSize: 11, color: C.muted, fontWeight: 600 }}>{r.pct}%</p>
-              </div>
-            ))}
-          </Card>
-          <Card padding={14}>
-            <p style={{ fontSize: 12, color: C.fg, fontWeight: 600, marginBottom: 10 }}>⚠ Postes en alerte</p>
-            {alertes.length === 0 && (
-              <p style={{ fontSize: 11, color: C.subtle, fontStyle: 'italic' }}>Aucun poste en alerte 👌</p>
-            )}
-            {alertes.map(p => (
-              <div key={p.code} style={{ marginBottom: 12 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                  <p style={{ fontSize: 11, color: C.fg, fontWeight: 500 }}>{p.label}</p>
-                  <p style={{ fontSize: 11, color: p.pctConsomme > 95 ? C.danger : C.warning, fontWeight: 700 }}>{p.pctConsomme}%</p>
-                </div>
-                <Progress pct={p.pctConsomme} />
-                <p style={{ fontSize: 9, color: C.subtle, marginTop: 2 }}>{fmtMontant(p.budgetAlloue)} alloués · reste {fmtMontant(p.reste)}</p>
-              </div>
-            ))}
-          </Card>
-          <Button style={{ width: '100%', justifyContent: 'center' }}>Générer rapport budgétaire</Button>
-        </div>
-      </div>
-    </div>
-  )
-}
 
 // ─── Vue Fournisseurs ────────────────────────────────────────────────
 

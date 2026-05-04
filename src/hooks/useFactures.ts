@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import type { Facture } from '@/lib/types'
+import type { Facture, TaskDocument } from '@/lib/types'
 import { FACTURES } from '@/lib/data'
 
 const STORAGE_KEY = 'ent-mairie:factures:v1'
@@ -47,6 +47,7 @@ export interface NewFactureInput {
   dateEcheance?: string
   submittedById: string
   notes?: string
+  documents?: TaskDocument[]
 }
 
 export function useFactures() {

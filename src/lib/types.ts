@@ -120,20 +120,77 @@ export interface Fournisseur {
   createdAt: string
 }
 
+// ─── Plan comptable M14 (instruction budgétaire et comptable des communes) ─
+
+// Section budgétaire
+export type Section = 'fonctionnement' | 'investissement'
+// Sens : Dépense ou Recette
+export type Sens = 'D' | 'R'
+
+// Chapitre budgétaire (ex: 011, 012, 65, 21, 23…)
+export interface ChapitreM14 {
+  code: string                  // ex: '011', '012', '65', '21'
+  label: string                 // ex: 'Charges à caractère général'
+  section: Section
+  sens: Sens
+}
+
+// Article comptable (ancien PosteBudget renommé pour clarté M14)
+// Le code est par nature : 60611, 6411, 2315, 7311, 1641…
+// budgetAlloue / consommationInitiale = budget primitif voté + ce qui a déjà
+// été consommé hors application (pour adoption en cours d'exercice).
+export interface CompteM14 {
+  code: string
+  label: string
+  chapitreCode: string
+  section: Section
+  sens: Sens
+  budgetAlloue: number
+  consommationInitiale: number
+}
+
+// Catégorie héritée — conservée pour les fournisseurs / dashboard legacy
 export type BudgetCategorie =
   | 'Personnel'
   | 'Fonctionnement'
   | 'Équipement'
   | 'Recettes'
 
-export interface PosteBudget {
-  code: string                  // ex: '60611' (clé unique)
-  label: string                 // ex: 'Énergie — électricité'
-  categorie: BudgetCategorie
-  budgetAlloue: number          // en euros, alloué pour l'année
-  // Consommation déjà existante avant l'utilisation de l'app (pour adoption en cours d'exercice).
-  // La consommation totale réelle = consommationInitiale + sum(factures Validées sur ce poste)
-  consommationInitiale: number
+// Alias rétrocompatible : l'ancien type PosteBudget reste utilisable mais
+// pointe désormais sur la nouvelle structure M14.
+export type PosteBudget = CompteM14
+
+// ─── Écritures comptables (double partie) ──────────────────────────
+
+// Journaux M14 standards
+export type JournalCode =
+  | 'AC'   // Achats / engagements de dépenses
+  | 'BQ'   // Banque (paiements / encaissements)
+  | 'OD'   // Opérations diverses
+  | 'AN'   // Reports à nouveau
+  | 'CA'   // Caisse
+
+export interface LigneEcriture {
+  id: string
+  compteCode: string            // ref CompteM14.code (ou compte de tiers / trésorerie : 401, 411, 515…)
+  libelle?: string              // précision libre
+  debit: number                 // 0 si crédit
+  credit: number                // 0 si débit
+}
+
+// Une écriture = un mouvement comptable équilibré (sum debits === sum credits).
+export interface Ecriture {
+  id: string
+  numero: number                // séquentiel par exercice (ex: 124)
+  exercice: number              // ex: 2026
+  date: string                  // ISO YYYY-MM-DD
+  journal: JournalCode
+  libelle: string
+  pieceRef?: string             // n° de mandat / titre / pièce justificative
+  factureId?: string            // lien éventuel vers une facture
+  lignes: LigneEcriture[]
+  createdAt: string
+  createdBy: string             // Person.id
 }
 
 // ─── Comptes rendus : extraction IA ────────────────────────────────
