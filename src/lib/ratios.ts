@@ -154,6 +154,59 @@ export function computeRatios(
   }
 }
 
+// ─── Ratios calculés depuis les agrégats d'un exercice clôturé ─────
+
+// Quand on importe un exercice passé (sans plan comptable détaillé), on
+// dispose seulement des grands totaux. Cette fonction calcule les mêmes
+// ratios que computeRatios mais à partir de ces agrégats.
+export function computeRatiosFromAggregates(h: import('./types').ExerciceHistorique): RatiosM14 {
+  const drf = h.drf
+  const rrf = h.rrf
+  const charges011 = h.charges011
+  const charges012 = h.charges012
+  const charges66 = h.charges66
+  const capital16D = h.capitalRembourse
+  const encoursDette = h.encoursDette
+  const equipementBrut = h.depEquipement
+  const drInv = equipementBrut + capital16D
+  const rrInv = h.recettesInvest
+
+  const cafBrute = rrf - drf
+  const cafNette = cafBrute - capital16D
+  // L'agrégat ne sépare pas les produits/charges exceptionnels (chap. 67/77)
+  // → on approxime l'épargne de gestion comme CAF brute + intérêts.
+  const epargneGestion = cafBrute + charges66
+  const tauxEpargneBrute = rrf > 0 ? Math.round((cafBrute / rrf) * 1000) / 10 : 0
+  const capaciteDesendettement = cafBrute > 0 ? Math.round((encoursDette / cafBrute) * 10) / 10 : 0
+
+  const safeDiv = (n: number, d: number) => (d > 0 ? n / d : 0)
+  const pct = (n: number, d: number) => (d > 0 ? Math.round((n / d) * 1000) / 10 : 0)
+
+  return {
+    population: h.population,
+    drf, rrf, drInv, rrInv,
+    charges011, charges012, produits73: h.produits73, produits74: h.produits74,
+    produits7411: h.produits7411, charges66, capital16D, encoursDette,
+
+    ratio1_drfParHab: Math.round(safeDiv(drf, h.population)),
+    ratio2_produitImpotsDirectsParHab: Math.round(safeDiv(h.produits7311, h.population)),
+    ratio3_rrfParHab: Math.round(safeDiv(rrf, h.population)),
+    ratio4_equipementParHab: Math.round(safeDiv(equipementBrut, h.population)),
+    ratio5_encoursDetteParHab: Math.round(safeDiv(encoursDette, h.population)),
+    ratio6_dgfParHab: Math.round(safeDiv(h.produits7411, h.population)),
+    ratio7_personnelSurDrf: pct(charges012, drf),
+    ratio9_rigidite: pct(drf + capital16D, rrf),
+    ratio10_equipementSurRrf: pct(equipementBrut, rrf),
+    ratio11_detteSurRrf: pct(encoursDette, rrf),
+
+    epargneGestion,
+    cafBrute,
+    cafNette,
+    tauxEpargneBrute,
+    capaciteDesendettement,
+  }
+}
+
 // Couleur d'alerte pour un ratio donné, selon les seuils communément retenus.
 export function ratioStatus(ratio: keyof RatiosM14, value: number): 'good' | 'warning' | 'danger' {
   switch (ratio) {

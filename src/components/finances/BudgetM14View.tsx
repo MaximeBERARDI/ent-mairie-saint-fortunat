@@ -18,6 +18,7 @@ import { CHAPITRES_M14, COMPTE_LABEL, COMPTES_TIERS } from '@/lib/m14-plan'
 import { computeRatios, ratioStatus } from '@/lib/ratios'
 import { exportPlanComptable, exportGrandLivre, exportRapportBudgetaire } from '@/lib/excel-export'
 import type { Section, Sens, Ecriture, JournalCode, LigneEcriture } from '@/lib/types'
+import { HistoriqueView } from './HistoriqueView'
 
 const CURRENT_USER_ID = 'p-jm'
 
@@ -51,7 +52,7 @@ const inputStyle: React.CSSProperties = {
   outline: 'none',
 }
 
-type BudgetTab = 'plan' | 'ecritures' | 'ratios'
+type BudgetTab = 'plan' | 'ecritures' | 'ratios' | 'historique'
 
 export function BudgetM14View() {
   const { factures } = useFactures()
@@ -130,6 +131,7 @@ export function BudgetM14View() {
             ['plan', 'Plan comptable'],
             ['ecritures', `Écritures (${ecritures.length})`],
             ['ratios', 'Ratios & analyse'],
+            ['historique', 'Historique & évolution'],
           ] as [BudgetTab, string][]).map(([v, label]) => (
             <button
               key={v}
@@ -203,6 +205,10 @@ export function BudgetM14View() {
           }}
           enriched={enriched}
         />
+      )}
+
+      {tab === 'historique' && (
+        <HistoriqueView currentRatios={ratios} />
       )}
     </div>
   )

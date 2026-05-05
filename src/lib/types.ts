@@ -217,3 +217,37 @@ export interface CompteRendu {
   taskIds: string[]                 // tâches créées suite à validation
   pdfDataUrl?: string               // base64 si < 1 Mo
 }
+
+// ─── Historique budgétaire — agrégats par exercice ─────────────────
+
+// Saisie simple par exercice (compte administratif clôturé d'une année).
+// Permet l'analyse pluriannuelle et le calcul des ratios sans avoir à
+// re-saisir tout le plan comptable de l'année.
+export interface ExerciceHistorique {
+  id: string                  // unique
+  exercice: number            // ex: 2024
+  population: number          // pour ratios par habitant
+
+  // Section fonctionnement
+  rrf: number                 // recettes réelles de fonctionnement
+  drf: number                 // dépenses réelles de fonctionnement
+  charges011: number          // charges à caractère général
+  charges012: number          // charges de personnel
+  charges65: number           // autres charges de gestion
+  charges66: number           // charges financières (intérêts dette)
+  produits73: number          // impôts et taxes
+  produits74: number          // dotations, subv., participations
+  produits7411: number        // dont DGF (dotation forfaitaire)
+  produits7311: number        // contributions directes (4 taxes)
+
+  // Section investissement
+  depEquipement: number       // chap. 20 + 21 + 23
+  recettesInvest: number      // chap. 10 + 13 + 16R + 024
+
+  // Dette
+  encoursDette: number        // au 31/12 (compte 1641 + 165)
+  capitalRembourse: number    // chap. 16D — capital remboursé sur l'exercice
+
+  notes?: string
+  importedAt: string          // ISO timestamp
+}
