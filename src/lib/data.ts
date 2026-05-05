@@ -1,6 +1,7 @@
 import type {
   Commission, Task, Employee, Invoice,
   Fournisseur, PosteBudget, Facture,
+  EmployeeRecord, LeaveRequest, Mission,
 } from './types'
 import { COMPTES_M14 } from './m14-plan'
 import { COLORS as C } from './theme'
@@ -99,5 +100,194 @@ export const FACTURES: Facture[] = [
     rejectedById: 'p-jm', rejectedAt: '2026-04-14T08:30:00Z',
     rejectionReason: 'Numéro client erroné, demander un avoir au fournisseur.',
     createdAt: '2026-04-13T15:00:00Z',
+  },
+]
+
+// ─── RH : fiches agents (seed) ────────────────────────────────────
+// Lié aux Person de PEOPLE dont role='agent'. Les valeurs de cadre/grade
+// sont des exemples plausibles pour une commune de ~900 habitants.
+
+export const EMPLOYEE_RECORDS: EmployeeRecord[] = [
+  {
+    personId: 'p-pr',                  // Pierre Roche — Secrétariat
+    numAgent: 'AG-2018-001',
+    contrat: 'Titulaire',
+    cadre: 'C', grade: 'Adjoint administratif principal de 2ᵉ classe', echelon: 8,
+    tempsTravailHeures: 35,
+    dateEmbauche: '2018-09-03',
+    salaireBrut: 2100, primes: 180, ifse: 280,
+    congesAnnuelsAcquis: 25, congesAnnuelsPris: 13,
+    rttAcquis: 8, rttPris: 5,
+    joursMaladie: 2,
+    notes: 'Référent état civil',
+    createdAt: '2025-01-01T00:00:00Z',
+  },
+  {
+    personId: 'p-im',                  // Isabelle Morel — Adjointe administrative
+    numAgent: 'AG-2015-002',
+    contrat: 'Titulaire',
+    cadre: 'B', grade: 'Rédacteur principal de 1ʳᵉ classe', echelon: 6,
+    tempsTravailHeures: 35,
+    dateEmbauche: '2015-04-15',
+    salaireBrut: 2400, primes: 220, ifse: 360,
+    congesAnnuelsAcquis: 25, congesAnnuelsPris: 21,
+    rttAcquis: 8, rttPris: 8,
+    joursMaladie: 0,
+    createdAt: '2025-01-01T00:00:00Z',
+  },
+  {
+    personId: 'p-tg',                  // Thomas Girard — Agent technique
+    numAgent: 'AG-2020-003',
+    contrat: 'Titulaire',
+    cadre: 'C', grade: 'Adjoint technique principal de 2ᵉ classe', echelon: 5,
+    tempsTravailHeures: 35,
+    dateEmbauche: '2020-01-06',
+    salaireBrut: 1950, primes: 150, ifse: 200,
+    congesAnnuelsAcquis: 25, congesAnnuelsPris: 7,
+    rttAcquis: 8, rttPris: 3,
+    joursMaladie: 0,
+    createdAt: '2025-01-01T00:00:00Z',
+  },
+  {
+    personId: 'p-lb',                  // Lucie Bernard — ATSEM
+    numAgent: 'AG-2022-004',
+    contrat: 'Contractuel CDD',
+    cadre: 'C', grade: 'ATSEM principale de 2ᵉ classe',
+    tempsTravailHeures: 28,            // 80% temps annualisé école
+    dateEmbauche: '2022-09-01',
+    dateFinContrat: '2026-08-31',
+    salaireBrut: 1750, primes: 0, ifse: 0,
+    congesAnnuelsAcquis: 25, congesAnnuelsPris: 17,
+    rttAcquis: 0, rttPris: 0,
+    joursMaladie: 1,
+    notes: 'CDD à reconduire avant le 30 juin 2026',
+    createdAt: '2025-01-01T00:00:00Z',
+  },
+  {
+    personId: 'p-mf',                  // Marc Faure — Voirie
+    numAgent: 'AG-2012-005',
+    contrat: 'Titulaire',
+    cadre: 'C', grade: 'Adjoint technique principal de 1ʳᵉ classe', echelon: 9,
+    tempsTravailHeures: 35,
+    dateEmbauche: '2012-06-04',
+    salaireBrut: 2050, primes: 180, ifse: 220,
+    congesAnnuelsAcquis: 25, congesAnnuelsPris: 3,
+    rttAcquis: 8, rttPris: 1,
+    joursMaladie: 0,
+    notes: 'RTT à régulariser avant juin',
+    createdAt: '2025-01-01T00:00:00Z',
+  },
+  {
+    personId: 'p-ad',                  // Anne Dupont — Agent technique
+    numAgent: 'AG-2024-006',
+    contrat: 'Contractuel CDD',
+    cadre: 'C', grade: 'Adjoint technique',
+    tempsTravailHeures: 35,
+    dateEmbauche: '2024-07-01',
+    dateFinContrat: '2026-06-30',
+    salaireBrut: 1850, primes: 80, ifse: 0,
+    congesAnnuelsAcquis: 25, congesAnnuelsPris: 10,
+    rttAcquis: 8, rttPris: 5,
+    joursMaladie: 0,
+    notes: 'Contrat à renouveler avant le 30 juin 2026',
+    createdAt: '2025-01-01T00:00:00Z',
+  },
+  {
+    personId: 'p-cv',                  // Claude Viard — Services généraux
+    numAgent: 'AG-2010-007',
+    contrat: 'Titulaire',
+    cadre: 'C', grade: 'Adjoint technique principal de 1ʳᵉ classe', echelon: 10,
+    tempsTravailHeures: 35,
+    dateEmbauche: '2010-03-15',
+    salaireBrut: 2200, primes: 200, ifse: 240,
+    congesAnnuelsAcquis: 25, congesAnnuelsPris: 15,
+    rttAcquis: 8, rttPris: 7,
+    joursMaladie: 0,
+    createdAt: '2025-01-01T00:00:00Z',
+  },
+]
+
+// ─── Demandes d'absence (seed) ────────────────────────────────────
+
+export const LEAVE_REQUESTS: LeaveRequest[] = [
+  {
+    id: 'lr-001',
+    personId: 'p-mf',                  // Marc Faure — congé en attente
+    type: 'Congés annuels',
+    dateDebut: '2026-05-20', dateFin: '2026-05-28',
+    nbJoursOuvres: 7,
+    motif: 'Vacances en famille',
+    statut: 'En attente',
+    submittedAt: '2026-04-28T14:30:00Z',
+    createdAt: '2026-04-28T14:30:00Z',
+  },
+  {
+    id: 'lr-002',
+    personId: 'p-lb',                  // Lucie Bernard — RTT en attente
+    type: 'RTT',
+    dateDebut: '2026-05-15', dateFin: '2026-05-15',
+    nbJoursOuvres: 1,
+    statut: 'En attente',
+    submittedAt: '2026-04-30T09:15:00Z',
+    createdAt: '2026-04-30T09:15:00Z',
+  },
+  {
+    id: 'lr-003',
+    personId: 'p-im',                  // Isabelle Morel — en cours (approuvé)
+    type: 'Congés annuels',
+    dateDebut: '2026-05-04', dateFin: '2026-05-09',
+    nbJoursOuvres: 5,
+    statut: 'Approuvée',
+    submittedAt: '2026-04-15T10:00:00Z',
+    decidedById: 'p-jm',
+    decidedAt: '2026-04-16T08:30:00Z',
+    createdAt: '2026-04-15T10:00:00Z',
+  },
+  {
+    id: 'lr-004',
+    personId: 'p-tg',                  // Thomas Girard — passé (approuvé)
+    type: 'Congés annuels',
+    dateDebut: '2026-04-13', dateFin: '2026-04-17',
+    nbJoursOuvres: 5,
+    statut: 'Approuvée',
+    submittedAt: '2026-03-25T15:00:00Z',
+    decidedById: 'p-jm',
+    decidedAt: '2026-03-26T08:00:00Z',
+    createdAt: '2026-03-25T15:00:00Z',
+  },
+  {
+    id: 'lr-005',
+    personId: 'p-pr',                  // Pierre Roche — maladie historique
+    type: 'Maladie',
+    dateDebut: '2026-03-09', dateFin: '2026-03-10',
+    nbJoursOuvres: 2,
+    motif: 'Grippe',
+    statut: 'Approuvée',
+    submittedAt: '2026-03-09T08:00:00Z',
+    decidedById: 'p-jm',
+    decidedAt: '2026-03-09T09:00:00Z',
+    createdAt: '2026-03-09T08:00:00Z',
+  },
+]
+
+// ─── Missions (seed) ──────────────────────────────────────────────
+
+export const MISSIONS: Mission[] = [
+  {
+    id: 'm-001',
+    personId: 'p-mf',
+    label: 'Réfection signalétique route des Combes',
+    description: 'Pose de panneaux STOP + marquage au sol après les travaux de voirie.',
+    dateDebut: '2026-05-12', dateFin: '2026-05-16',
+    lieu: 'Route des Combes',
+    createdAt: '2026-04-20T09:00:00Z',
+  },
+  {
+    id: 'm-002',
+    personId: 'p-tg',
+    label: 'Maintenance préventive — chaufferie école',
+    dateDebut: '2026-05-05',
+    lieu: 'École communale',
+    createdAt: '2026-04-22T11:00:00Z',
   },
 ]

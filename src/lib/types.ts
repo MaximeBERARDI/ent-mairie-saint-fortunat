@@ -218,7 +218,103 @@ export interface CompteRendu {
   pdfDataUrl?: string               // base64 si < 1 Mo
 }
 
-// ─── Historique budgétaire — agrégats par exercice ─────────────────
+// ─── RH : ressources humaines (agents) ─────────────────────────────
+
+// Catégorie hiérarchique de la fonction publique territoriale
+export type CadreFP = 'A' | 'B' | 'C'
+
+export type TypeContrat =
+  | 'Titulaire'
+  | 'Contractuel CDI'
+  | 'Contractuel CDD'
+  | 'Stagiaire'
+  | 'Apprenti'
+
+export type StatutEmploi =
+  | 'Actif'
+  | 'En congé'
+  | 'Maladie'
+  | 'Formation'
+  | 'Inactif'
+
+// Données RH d'un agent : lié à Person via personId.
+// Person reste le référentiel d'identité + accès, EmployeeRecord stocke
+// uniquement ce qui concerne le contrat de travail et le suivi RH.
+export interface EmployeeRecord {
+  personId: string                  // FK vers Person.id (uniquement role='agent')
+  numAgent: string                  // ex: 'AG-2024-001'
+
+  // Contrat
+  contrat: TypeContrat
+  cadre?: CadreFP
+  grade?: string                    // ex: 'Adjoint administratif principal de 2e classe'
+  echelon?: number
+  tempsTravailHeures: number        // heures hebdo (35 = temps plein)
+  dateEmbauche: string              // ISO YYYY-MM-DD
+  dateFinContrat?: string           // ISO YYYY-MM-DD si CDD / Stagiaire / Apprenti
+
+  // Rémunération (mensuelle)
+  salaireBrut: number               // €
+  primes?: number                   // € (mensuel)
+  ifse?: number                     // indemnité de fonctions, sujétions, expertise
+
+  // Compteurs (en jours, sur l'exercice en cours)
+  congesAnnuelsAcquis: number       // total acquis pour l'année
+  congesAnnuelsPris: number         // déjà consommés
+  rttAcquis: number
+  rttPris: number
+  joursMaladie: number              // cumul depuis le 01/01
+
+  documents?: TaskDocument[]        // contrat, fiches de paie, certifs…
+  notes?: string
+  createdAt: string
+}
+
+// ─── Demandes d'absence ────────────────────────────────────────────
+
+export type LeaveType =
+  | 'Congés annuels'
+  | 'RTT'
+  | 'Maladie'
+  | 'Sans solde'
+  | 'Formation'
+  | 'Évènement familial'
+  | 'Maternité / Paternité'
+
+export type LeaveStatut = 'En attente' | 'Approuvée' | 'Refusée' | 'Annulée'
+
+export interface LeaveRequest {
+  id: string
+  personId: string                  // demandeur (Person.id, role='agent')
+  type: LeaveType
+  dateDebut: string                 // ISO YYYY-MM-DD
+  dateFin: string                   // ISO YYYY-MM-DD (incluse)
+  nbJoursOuvres: number             // calculé à la création (lun-ven, hors fériés simples)
+  motif?: string
+
+  statut: LeaveStatut
+  submittedAt: string               // ISO
+  decidedById?: string              // Person.id
+  decidedAt?: string                // ISO
+  decisionMotif?: string            // motif de refus si Refusée
+
+  documents?: TaskDocument[]        // certif méd., justificatif…
+  createdAt: string
+}
+
+// ─── Missions ponctuelles ──────────────────────────────────────────
+
+export interface Mission {
+  id: string
+  personId: string
+  label: string
+  description?: string
+  dateDebut: string                 // ISO
+  dateFin?: string                  // ISO (vide = en cours)
+  lieu?: string
+  documents?: TaskDocument[]
+  createdAt: string
+}
 
 // Saisie simple par exercice (compte administratif clôturé d'une année).
 // Permet l'analyse pluriannuelle et le calcul des ratios sans avoir à
