@@ -9,7 +9,8 @@ import { Avatar } from '@/components/ui/Avatar'
 import { Separator } from '@/components/ui/Separator'
 import { COLORS as C } from '@/lib/theme'
 import { COMMISSIONS } from '@/lib/data'
-import { ROLE_LABELS, ROLE_COLORS, CURRENT_USER_ID, type Person, type PersonRole } from '@/lib/people'
+import { ROLE_LABELS, ROLE_COLORS, type Person, type PersonRole } from '@/lib/people'
+import { useCurrentUser } from '@/hooks/useCurrentUser'
 import {
   AUTH_LEVEL_LABELS, PERMISSION_LABELS, SIGNATURE_LABELS,
   ROLE_PERMISSIONS, ALL_PERMISSIONS,
@@ -33,11 +34,16 @@ type TeamFilter = 'tous' | 'elus' | 'agents' | 'signataires' | 'inactifs'
 export default function EquipePage() {
   const { people, hydrated, updatePerson, createPerson, deletePerson } = useTeam()
   const { tasks } = useTasks()
+  const { currentUserId, can } = useCurrentUser()
   const [filter, setFilter] = useState<TeamFilter>('tous')
   const [search, setSearch] = useState('')
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [formOpen, setFormOpen] = useState(false)
   const [editingPerson, setEditingPerson] = useState<Person | null>(null)
+
+  // Permissions équipe : seuls les administrateurs peuvent éditer les rôles,
+  // inviter ou désactiver. Les autres peuvent uniquement consulter.
+  const canManage = can('team.edit-roles') || can('team.invite') || can('team.deactivate')
 
   const filtered = useMemo(() => {
     return people.filter(p => {
@@ -76,7 +82,7 @@ export default function EquipePage() {
   }
   const handleDelete = () => {
     if (!editingPerson) return
-    if (editingPerson.id === CURRENT_USER_ID) {
+    if (editingPerson.id === currentUserId) {
       alert('Impossible de supprimer votre propre compte.')
       return
     }
@@ -137,7 +143,7 @@ export default function EquipePage() {
           }}
         />
         <div style={{ flex: 1 }} />
-        <Button variant="primary" size="sm" onClick={openCreate}>+ Nouveau membre</Button>
+        {canManage && <Button variant="primary" size="sm" onClick={openCreate}>+ Nouveau membre</Button>}
       </div>
 
       <div style={{ display: 'flex', gap: 'var(--gap)' }}>
@@ -151,7 +157,7 @@ export default function EquipePage() {
                 </p>
               </div>
               {elus.map(p => (
-                <PersonListRow key={p.id} person={p} selected={selected?.id === p.id} onSelect={() => setSelectedId(p.id)} />
+                <PersonListRow key={p.id} person={p} selected={selected?.id === p.id} onSelect={() => setSelectedId(p.id)} currentUserId={currentUserId} />
               ))}
             </Card>
           )}
@@ -163,7 +169,7 @@ export default function EquipePage() {
                 </p>
               </div>
               {agents.map(p => (
-                <PersonListRow key={p.id} person={p} selected={selected?.id === p.id} onSelect={() => setSelectedId(p.id)} />
+                <PersonListRow key={p.id} person={p} selected={selected?.id === p.id} onSelect={() => setSelectedId(p.id)} currentUserId={currentUserId} />
               ))}
             </Card>
           )}
@@ -180,6 +186,8 @@ export default function EquipePage() {
             <PersonDetail
               person={selected}
               tasks={tasks}
+              canManage={canManage}
+              currentUserId={currentUserId}
               onEdit={() => openEdit(selected)}
               onToggleActive={() => updatePerson(selected.id, { active: !selected.active })}
             />
@@ -210,10 +218,11 @@ export default function EquipePage() {
 
 // ── Item de la liste ─────────────────────────────────────────────────────────
 
-function PersonListRow({ person, selected, onSelect }: {
+function PersonListRow({ person, selected, onSelect, currentUserId }: {
   person: Person
   selected: boolean
   onSelect: () => void
+  currentUserId: string
 }) {
   return (
     <button
@@ -235,7 +244,7 @@ function PersonListRow({ person, selected, onSelect }: {
           <p style={{ fontSize: 12, color: C.fg, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {person.fullName}
           </p>
-          {person.id === CURRENT_USER_ID && <Badge label="Vous" variant="primary" />}
+          {person.id === currentUserId && <Badge label="Vous" variant="primary" />}
         </div>
         <p style={{ fontSize: 10, color: C.subtle, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {person.poste}
@@ -252,9 +261,11 @@ function PersonListRow({ person, selected, onSelect }: {
 
 // ── Fiche détaillée ──────────────────────────────────────────────────────────
 
-function PersonDetail({ person, tasks, onEdit, onToggleActive }: {
+function PersonDetail({ person, tasks, canManage, currentUserId, onEdit, onToggleActive }: {
   person: Person
   tasks: ReturnType<typeof useTasks>['tasks']
+  canManage: boolean
+  currentUserId: string
   onEdit: () => void
   onToggleActive: () => void
 }) {
@@ -280,7 +291,7 @@ function PersonDetail({ person, tasks, onEdit, onToggleActive }: {
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
               <h2 style={{ fontSize: 20, color: C.fg, fontWeight: 700 }}>{person.fullName}</h2>
               <Badge label={ROLE_LABELS[person.role]} variant="primary" />
-              {person.id === CURRENT_USER_ID && <Badge label="Vous" variant="success" />}
+              {person.id === currentUserId && <Badge label="Vous" variant="success" />}
               {!person.active && <Badge label="Désactivé" variant="danger" />}
             </div>
             <p style={{ fontSize: 13, color: C.muted, fontWeight: 500 }}>{person.poste}</p>
@@ -300,12 +311,16 @@ function PersonDetail({ person, tasks, onEdit, onToggleActive }: {
               )}
             </div>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <Button variant="primary" size="sm" onClick={onEdit}>✎ Modifier</Button>
-            <Button size="sm" onClick={onToggleActive}>
-              {person.active ? '⊘ Désactiver' : '✓ Réactiver'}
-            </Button>
-          </div>
+          {canManage && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <Button variant="primary" size="sm" onClick={onEdit}>✎ Modifier</Button>
+              {person.id !== currentUserId && (
+                <Button size="sm" onClick={onToggleActive}>
+                  {person.active ? '⊘ Désactiver' : '✓ Réactiver'}
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       </Card>
 

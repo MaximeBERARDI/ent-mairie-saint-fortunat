@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useRef } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import { Shell } from '@/components/layout/Shell'
 import { Card, KpiCard } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
@@ -12,6 +12,7 @@ import { Avatar } from '@/components/ui/Avatar'
 import { Progress } from '@/components/ui/Progress'
 import { COLORS as C } from '@/lib/theme'
 import { useTeam } from '@/hooks/useTeam'
+import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { useEmployees } from '@/hooks/useEmployees'
 import { useLeaveRequests, applyLeaveOnEmployee, countOuvres } from '@/hooks/useLeaveRequests'
 import { useMissions } from '@/hooks/useMissions'
@@ -21,9 +22,6 @@ import type {
   TypeContrat, CadreFP, TaskDocument, Mission,
 } from '@/lib/types'
 import type { Person } from '@/lib/people'
-
-// On simule encore la session — Jean Martin, le maire
-const CURRENT_USER_ID = 'p-jm'
 
 type RHTab = 'agents' | 'demandes' | 'calendrier' | 'paies' | 'missions'
 
@@ -68,18 +66,40 @@ function fmtBytes(b: number): string {
 }
 
 export default function RHPage() {
+  const { currentUser, currentUserId, can } = useCurrentUser()
+
+  // Permissions RH :
+  // - hr.view-all : voit tous les agents (sinon, voit uniquement sa fiche)
+  // - hr.manage : peut éditer les fiches agents
+  // - hr.validate-leaves : peut valider les demandes de congés
+  // - hr.generate-payslips : accède à l'onglet Paies
+  const canViewAll = can('hr.view-all') || can('hr.manage')
+  const canSeeFinances = can('hr.generate-payslips') || can('hr.manage')
+  const canManage = can('hr.manage')
+  const canValidate = can('hr.validate-leaves')
+
+  // Onglets accessibles selon les permissions
+  const visibleTabs: [RHTab, string][] = [
+    ['agents', canViewAll ? 'Agents' : 'Mon profil'],
+    ['demandes', 'Congés & RTT'],
+    ['calendrier', 'Calendrier'],
+    canSeeFinances ? (['paies', 'Paies'] as [RHTab, string]) : null,
+    canManage ? (['missions', 'Missions'] as [RHTab, string]) : null,
+  ].filter((x): x is [RHTab, string] => x !== null)
+
   const [tab, setTab] = useState<RHTab>('agents')
+
+  // Reset l'onglet si l'utilisateur n'a plus accès
+  useEffect(() => {
+    if (!visibleTabs.some(([v]) => v === tab)) setTab(visibleTabs[0]?.[0] ?? 'agents')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUserId])
+
   return (
     <Shell title="Ressources humaines">
       <div style={{ display: 'flex', gap: 8, marginBottom: 16, alignItems: 'center' }}>
         <div style={{ display: 'flex', gap: 4, background: C.ph, borderRadius: 8, padding: 3 }}>
-          {([
-            ['agents', 'Agents'],
-            ['demandes', 'Congés & RTT'],
-            ['calendrier', 'Calendrier'],
-            ['paies', 'Paies'],
-            ['missions', 'Missions'],
-          ] as [RHTab, string][]).map(([v, label]) => (
+          {visibleTabs.map(([v, label]) => (
             <button key={v} onClick={() => setTab(v)} style={{ padding: '5px 12px', borderRadius: 6, background: v === tab ? '#fff' : 'transparent', border: 'none', color: v === tab ? C.fg : C.muted, fontSize: 12, fontWeight: v === tab ? 600 : 400, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", boxShadow: v === tab ? '0 1px 2px rgba(0,0,0,0.1)' : 'none' }}>
               {label}
             </button>
@@ -87,11 +107,11 @@ export default function RHPage() {
         </div>
       </div>
 
-      {tab === 'agents' && <AgentsView />}
-      {tab === 'demandes' && <DemandesView />}
+      {tab === 'agents' && <AgentsView currentUserId={currentUserId} canViewAll={canViewAll} canManage={canManage} />}
+      {tab === 'demandes' && <DemandesView currentUserId={currentUserId} canValidate={canValidate} canViewAll={canViewAll} />}
       {tab === 'calendrier' && <CalendrierView />}
-      {tab === 'paies' && <PaiesView />}
-      {tab === 'missions' && <MissionsView />}
+      {tab === 'paies' && canSeeFinances && <PaiesView />}
+      {tab === 'missions' && canManage && <MissionsView />}
     </Shell>
   )
 }
@@ -127,17 +147,30 @@ function HRKpis({ records, leaves, people }: { records: EmployeeRecord[]; leaves
 
 // ─── Onglet Agents : liste + fiche détaillée ──────────────────────────
 
-function AgentsView() {
+function AgentsView({ currentUserId, canViewAll, canManage }: { currentUserId: string; canViewAll: boolean; canManage: boolean }) {
   const { people } = useTeam()
   const { records, hydrated, updateEmployee, upsertEmployee } = useEmployees()
   const { leaves } = useLeaveRequests()
   const { missions } = useMissions()
 
-  const agents = useMemo(() => people.filter(p => p.role === 'agent' && p.active), [people])
+  // Si l'utilisateur n'a pas le droit de voir tous les agents, on ne montre
+  // que sa propre fiche (mode "Mon profil").
+  const agents = useMemo(() => {
+    const all = people.filter(p => p.role === 'agent' && p.active)
+    if (canViewAll) return all
+    return all.filter(p => p.id === currentUserId)
+  }, [people, canViewAll, currentUserId])
 
   const [selectedId, setSelectedId] = useState<string | null>(agents[0]?.id ?? null)
   const [editing, setEditing] = useState(false)
   const [search, setSearch] = useState('')
+
+  // Si l'utilisateur change et n'a pas accès, on cible son profil par défaut
+  useEffect(() => {
+    if (!canViewAll) setSelectedId(currentUserId)
+    else if (!selectedId && agents[0]) setSelectedId(agents[0].id)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUserId, canViewAll])
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -152,57 +185,74 @@ function AgentsView() {
     return <p style={{ padding: 20, fontSize: 12, color: C.subtle }}>Chargement…</p>
   }
 
+  // Si pas un agent, on lui dit qu'il n'a pas de fiche RH (les élus n'en ont pas)
+  if (!canViewAll && agents.length === 0) {
+    return (
+      <Card padding={32} style={{ textAlign: 'center' }}>
+        <p style={{ fontSize: 13, color: C.fg, fontWeight: 600, marginBottom: 6 }}>
+          Aucune fiche RH associée à votre profil
+        </p>
+        <p style={{ fontSize: 11, color: C.subtle }}>
+          Les fiches RH ne concernent que les agents. Vous restez disponible
+          dans le référentiel Équipe.
+        </p>
+      </Card>
+    )
+  }
+
   return (
     <div>
-      <HRKpis records={records} leaves={leaves} people={people} />
+      {canViewAll && <HRKpis records={records} leaves={leaves} people={people} />}
 
       <div style={{ display: 'flex', gap: 'var(--gap)' }}>
         {/* Liste agents */}
-        <div style={{ width: 280, flexShrink: 0 }}>
-          <input
-            type="text"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Rechercher un agent…"
-            style={{ ...inputStyle, marginBottom: 8 }}
-          />
-          <Card padding={0}>
-            {filtered.map((a, i) => {
-              const r = records.find(x => x.personId === a.id)
-              const isAbsent = leaves.some(l => l.personId === a.id && l.statut === 'Approuvée' && new Date().toISOString().slice(0, 10) >= l.dateDebut && new Date().toISOString().slice(0, 10) <= l.dateFin)
-              return (
-                <button
-                  key={a.id}
-                  onClick={() => { setSelectedId(a.id); setEditing(false) }}
-                  style={{
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    padding: '10px 12px',
-                    background: selectedId === a.id ? `${C.green}10` : 'transparent',
-                    border: 'none',
-                    borderBottom: i < filtered.length - 1 ? `1px solid ${C.border}` : 'none',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontFamily: "'DM Sans', sans-serif",
-                  }}
-                >
-                  <Avatar initials={a.initials} size={28} color={isAbsent ? C.terra : C.green} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: 12, color: C.fg, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.fullName}</p>
-                    <p style={{ fontSize: 10, color: C.subtle, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.poste}</p>
-                  </div>
-                  {r && (
-                    <Tag label={r.contrat === 'Titulaire' ? 'Tit.' : r.contrat.startsWith('Contractuel') ? 'CDD' : r.contrat[0]} color={r.contrat === 'Titulaire' ? C.slate : C.terra} />
-                  )}
-                  {isAbsent && <Badge label="Absent" variant="terra" />}
-                </button>
-              )
-            })}
-            {filtered.length === 0 && <p style={{ fontSize: 11, color: C.subtle, padding: 12, fontStyle: 'italic' }}>Aucun résultat</p>}
-          </Card>
-        </div>
+        {canViewAll && (
+          <div style={{ width: 280, flexShrink: 0 }}>
+            <input
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Rechercher un agent…"
+              style={{ ...inputStyle, marginBottom: 8 }}
+            />
+            <Card padding={0}>
+              {filtered.map((a, i) => {
+                const r = records.find(x => x.personId === a.id)
+                const isAbsent = leaves.some(l => l.personId === a.id && l.statut === 'Approuvée' && new Date().toISOString().slice(0, 10) >= l.dateDebut && new Date().toISOString().slice(0, 10) <= l.dateFin)
+                return (
+                  <button
+                    key={a.id}
+                    onClick={() => { setSelectedId(a.id); setEditing(false) }}
+                    style={{
+                      width: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      padding: '10px 12px',
+                      background: selectedId === a.id ? `${C.green}10` : 'transparent',
+                      border: 'none',
+                      borderBottom: i < filtered.length - 1 ? `1px solid ${C.border}` : 'none',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      fontFamily: "'DM Sans', sans-serif",
+                    }}
+                  >
+                    <Avatar initials={a.initials} size={28} color={isAbsent ? C.terra : C.green} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontSize: 12, color: C.fg, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.fullName}</p>
+                      <p style={{ fontSize: 10, color: C.subtle, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.poste}</p>
+                    </div>
+                    {r && (
+                      <Tag label={r.contrat === 'Titulaire' ? 'Tit.' : r.contrat.startsWith('Contractuel') ? 'CDD' : r.contrat[0]} color={r.contrat === 'Titulaire' ? C.slate : C.terra} />
+                    )}
+                    {isAbsent && <Badge label="Absent" variant="terra" />}
+                  </button>
+                )
+              })}
+              {filtered.length === 0 && <p style={{ fontSize: 11, color: C.subtle, padding: 12, fontStyle: 'italic' }}>Aucun résultat</p>}
+            </Card>
+          </div>
+        )}
 
         {/* Détail agent */}
         <div style={{ flex: 1 }}>
@@ -212,7 +262,8 @@ function AgentsView() {
               record={selectedRecord}
               missions={missions.filter(m => m.personId === selected.id)}
               leaves={leaves.filter(l => l.personId === selected.id)}
-              editing={editing}
+              editing={editing && canManage}
+              canManage={canManage}
               onToggleEdit={() => setEditing(e => !e)}
               onSaveRecord={(data) => {
                 upsertEmployee(data)
@@ -236,7 +287,7 @@ function AgentsView() {
 // ─── Fiche employé détaillée ──────────────────────────────────────────
 
 function EmployeeDetail({
-  person, record, missions, leaves, editing, onToggleEdit, onSaveRecord, onUpdateField,
+  person, record, missions, leaves, editing, onToggleEdit, onSaveRecord, onUpdateField, canManage,
 }: {
   person: Person
   record: EmployeeRecord | null
@@ -246,6 +297,7 @@ function EmployeeDetail({
   onToggleEdit: () => void
   onSaveRecord: (data: Omit<EmployeeRecord, 'createdAt'>) => void
   onUpdateField: (patch: Partial<EmployeeRecord>) => void
+  canManage: boolean
 }) {
   if (!record) {
     return (
@@ -314,7 +366,7 @@ function EmployeeDetail({
           </div>
         </div>
         <div style={{ display: 'flex', gap: 6 }}>
-          <Button size="sm" onClick={onToggleEdit}>✎ Modifier</Button>
+          {canManage && <Button size="sm" onClick={onToggleEdit}>✎ Modifier</Button>}
         </div>
       </div>
 
@@ -628,12 +680,12 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 // ─── Onglet Demandes : workflow congés / RTT ──────────────────────────
 
-function DemandesView() {
+function DemandesView({ currentUserId, canValidate, canViewAll }: { currentUserId: string; canValidate: boolean; canViewAll: boolean }) {
   const { people } = useTeam()
   const { records, updateEmployee } = useEmployees()
 
   // On crée le hook avec callbacks pour décrémenter les compteurs employé.
-  const { leaves, hydrated, submitLeave, approveLeave, rejectLeave, reopenLeave, deleteLeave } = useLeaveRequests({
+  const { leaves: allLeaves, hydrated, submitLeave, approveLeave, rejectLeave, reopenLeave, deleteLeave } = useLeaveRequests({
     onApprove: (leave) => {
       const emp = records.find(r => r.personId === leave.personId)
       if (emp) {
@@ -650,8 +702,8 @@ function DemandesView() {
     },
   })
 
-  const currentUser = people.find(p => p.id === CURRENT_USER_ID)
-  const canValidate = currentUser ? hasPermission(currentUser.authLevel, 'hr.validate-leaves', currentUser.customPermissions) : false
+  // Si l'utilisateur n'a pas hr.view-all, on ne lui montre que ses propres demandes
+  const leaves = useMemo(() => canViewAll ? allLeaves : allLeaves.filter(l => l.personId === currentUserId), [allLeaves, canViewAll, currentUserId])
 
   const [filter, setFilter] = useState<LeaveStatut | 'toutes'>('En attente')
   const [showForm, setShowForm] = useState(false)
@@ -710,6 +762,7 @@ function DemandesView() {
             <LeaveRequestForm
               agents={agents}
               records={records}
+              defaultPersonId={currentUserId}
               onSubmit={(data) => {
                 const created = submitLeave(data)
                 setSelectedId(created.id)
@@ -750,7 +803,7 @@ function DemandesView() {
                     {l.statut === 'En attente' && canValidate ? (
                       <div style={{ display: 'flex', gap: 4 }}>
                         <button
-                          onClick={(e) => { e.stopPropagation(); approveLeave(l.id, CURRENT_USER_ID) }}
+                          onClick={(e) => { e.stopPropagation(); approveLeave(l.id, currentUserId) }}
                           style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.success}`, background: C.successLight, color: C.success, cursor: 'pointer', fontSize: 12 }}
                           title="Approuver"
                         >✓</button>
@@ -779,10 +832,10 @@ function DemandesView() {
               canValidate={canValidate}
               comment={comment}
               setComment={setComment}
-              onApprove={() => { approveLeave(selected.id, CURRENT_USER_ID); setComment('') }}
+              onApprove={() => { approveLeave(selected.id, currentUserId); setComment('') }}
               onReject={() => {
                 if (!comment.trim()) { alert('Le motif du refus est obligatoire.'); return }
-                rejectLeave(selected.id, CURRENT_USER_ID, comment.trim())
+                rejectLeave(selected.id, currentUserId, comment.trim())
                 setComment('')
               }}
               onReopen={() => reopenLeave(selected.id)}
@@ -899,13 +952,14 @@ function LeaveDetailPanel({
 
 // ─── Formulaire de demande ────────────────────────────────────────────
 
-function LeaveRequestForm({ agents, records, onSubmit, onCancel }: {
+function LeaveRequestForm({ agents, records, defaultPersonId, onSubmit, onCancel }: {
   agents: Person[]
   records: EmployeeRecord[]
+  defaultPersonId: string
   onSubmit: (data: { personId: string; type: LeaveType; dateDebut: string; dateFin: string; motif?: string }) => void
   onCancel: () => void
 }) {
-  const [personId, setPersonId] = useState(CURRENT_USER_ID)
+  const [personId, setPersonId] = useState(defaultPersonId)
   const [type, setType] = useState<LeaveType>('Congés annuels')
   const [dateDebut, setDateDebut] = useState(new Date().toISOString().slice(0, 10))
   const [dateFin, setDateFin] = useState(new Date().toISOString().slice(0, 10))

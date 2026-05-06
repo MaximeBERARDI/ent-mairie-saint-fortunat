@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Shell } from '@/components/layout/Shell'
 import { Card, KpiCard } from '@/components/ui/Card'
@@ -21,7 +21,9 @@ import { useEmployees } from '@/hooks/useEmployees'
 import { useLeaveRequests } from '@/hooks/useLeaveRequests'
 import { useMissions } from '@/hooks/useMissions'
 import { useTeam } from '@/hooks/useTeam'
-import { PEOPLE, getPerson, CURRENT_USER_ID } from '@/lib/people'
+import { useCurrentUser } from '@/hooks/useCurrentUser'
+import { PEOPLE, getPerson } from '@/lib/people'
+import { hasPermission } from '@/lib/permissions'
 import { computeRatios } from '@/lib/ratios'
 import { CHAPITRES_M14 } from '@/lib/m14-plan'
 import { formatShortFR, daysUntil, FRENCH_MONTHS } from '@/lib/dateUtils'
@@ -87,6 +89,38 @@ function getUpcomingMeetings(commissions: typeof COMMISSIONS) {
 export default function DashboardPage() {
   const [view, setView] = useState<DashView>('conseiller')
   const { tasks, hydrated, updateTask } = useTasks()
+  const { currentUser, currentUserId, can } = useCurrentUser()
+
+  // Vue "Maire / Pilotage" : visible uniquement aux personnes avec un
+  // rôle de pilotage / signature / validation. Sinon le bouton est masqué.
+  const canPilot = currentUser?.role === 'maire'
+    || currentUser?.role === 'adjoint'
+    || can('finance.validate-invoices')
+    || can('hr.validate-leaves')
+    || can('tasks.validate')
+    || (currentUser?.canSign ?? false)
+
+  // Vue "Élu / Conseiller" : visible aux élus (maire/adjoint/elu).
+  const canConsult = currentUser?.role === 'maire'
+    || currentUser?.role === 'adjoint'
+    || currentUser?.role === 'elu'
+
+  // Vue par défaut : la plus pertinente selon le rôle
+  const defaultView: DashView = canPilot ? 'maire' : canConsult ? 'conseiller' : 'agent'
+
+  // Recalibrer la vue si l'utilisateur change
+  useEffect(() => {
+    if (view === 'maire' && !canPilot) setView(defaultView)
+    if (view === 'conseiller' && !canConsult) setView(defaultView)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUserId, canPilot, canConsult])
+
+  // Onglets visibles selon les permissions
+  const visibleViews: [DashView, string][] = [
+    canConsult ? (['conseiller', VIEW_LABELS.conseiller] as [DashView, string]) : null,
+    ['agent', VIEW_LABELS.agent] as [DashView, string],
+    canPilot ? (['maire', VIEW_LABELS.maire] as [DashView, string]) : null,
+  ].filter((x): x is [DashView, string] => x !== null)
 
   if (!hydrated) {
     return (
@@ -99,7 +133,7 @@ export default function DashboardPage() {
   return (
     <Shell title="Tableau de bord" notif={3}>
       <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
-        {(Object.entries(VIEW_LABELS) as [DashView, string][]).map(([v, label]) => (
+        {visibleViews.map(([v, label]) => (
           <button
             key={v}
             onClick={() => setView(v)}
@@ -120,32 +154,32 @@ export default function DashboardPage() {
         ))}
       </div>
 
-      {view === 'conseiller' && <DashConseiller tasks={tasks} updateTask={updateTask} />}
-      {view === 'agent' && <DashAgent tasks={tasks} updateTask={updateTask} />}
-      {view === 'maire' && <DashMaire tasks={tasks} />}
+      {view === 'conseiller' && <DashConseiller tasks={tasks} updateTask={updateTask} currentUserId={currentUserId} />}
+      {view === 'agent' && <DashAgent tasks={tasks} updateTask={updateTask} currentUserId={currentUserId} />}
+      {view === 'maire' && <DashMaire tasks={tasks} currentUserId={currentUserId} />}
     </Shell>
   )
 }
 
 // ── Vue Élu / Conseiller ──────────────────────────────────────────────────────
 
-function DashConseiller({ tasks, updateTask }: { tasks: Task[]; updateTask: (id: string, p: Partial<Task>) => void }) {
-  const me = getPerson(CURRENT_USER_ID)
+function DashConseiller({ tasks, updateTask, currentUserId }: { tasks: Task[]; updateTask: (id: string, p: Partial<Task>) => void; currentUserId: string }) {
+  const me = getPerson(currentUserId)
   const { factures } = useFactures()
   const { leaves } = useLeaveRequests()
   const { people } = useTeam()
 
   // Mes tâches actives
   const myTasks = useMemo(
-    () => tasks.filter(t => t.assigneeId === CURRENT_USER_ID && t.status !== 'Terminé'),
-    [tasks],
+    () => tasks.filter(t => t.assigneeId === currentUserId && t.status !== 'Terminé'),
+    [tasks, currentUserId],
   )
   const myUrgent = myTasks.filter(t => t.priority === 'Urgent').length
 
   // Mes tâches à valider (en tant que validateur)
   const toValidate = useMemo(
-    () => tasks.filter(t => t.validatorId === CURRENT_USER_ID && t.status === 'En attente validation'),
-    [tasks],
+    () => tasks.filter(t => t.validatorId === currentUserId && t.status === 'En attente validation'),
+    [tasks, currentUserId],
   )
 
   // Si l'utilisateur a la permission, factures et congés en attente.
@@ -357,23 +391,26 @@ function DashboardTaskRow({
 
 // ── Vue Agent (focus "Aujourd'hui") ───────────────────────────────────────────
 
-function DashAgent({ tasks, updateTask }: { tasks: Task[]; updateTask: (id: string, p: Partial<Task>) => void }) {
-  const me = getPerson(CURRENT_USER_ID)
+function DashAgent({ tasks, updateTask, currentUserId }: { tasks: Task[]; updateTask: (id: string, p: Partial<Task>) => void; currentUserId: string }) {
+  const me = getPerson(currentUserId)
   const { records, findByPersonId } = useEmployees()
   const { leaves, byPerson: leavesByPerson } = useLeaveRequests()
   const { byPerson: missionsByPerson } = useMissions()
+  // Permissions : on n'affiche les actions rapides que si l'utilisateur a les droits
+  const canSubmitFacture = me?.role !== 'agent' || hasPermission(me.authLevel, 'finance.view-all', me.customPermissions)
+  const canUploadCR = me ? hasPermission(me.authLevel, 'cr.upload', me.customPermissions) : false
 
   // Données RH personnelles (si l'utilisateur est un agent avec une fiche)
-  const myRecord = findByPersonId(CURRENT_USER_ID)
-  const myLeaves = leavesByPerson(CURRENT_USER_ID).filter(l => l.statut !== 'Refusée' && l.statut !== 'Annulée')
+  const myRecord = findByPersonId(currentUserId)
+  const myLeaves = leavesByPerson(currentUserId).filter(l => l.statut !== 'Refusée' && l.statut !== 'Annulée')
   const myUpcomingLeaves = myLeaves.filter(l => l.dateFin >= new Date().toISOString().slice(0, 10)).sort((a, b) => a.dateDebut.localeCompare(b.dateDebut)).slice(0, 3)
-  const myMissions = missionsByPerson(CURRENT_USER_ID)
+  const myMissions = missionsByPerson(currentUserId)
   const myActiveMissions = myMissions.filter(m => !m.dateFin || m.dateFin >= new Date().toISOString().slice(0, 10))
 
   // Tâches "à faire aujourd'hui" : assignées à moi, échéance ≤ aujourd'hui + 1, non terminées
   const todayTasks = useMemo(() => {
     return tasks.filter(t => {
-      if (t.assigneeId !== CURRENT_USER_ID) return false
+      if (t.assigneeId !== currentUserId) return false
       if (t.status === 'Terminé') return false
       const days = daysUntil(t.dueDate)
       // Si pas de date : considérer comme "à faire" si urgent
@@ -385,7 +422,7 @@ function DashAgent({ tasks, updateTask }: { tasks: Task[]; updateTask: (id: stri
   // Tâches "cette semaine" : assignées à moi, ≤ 7 jours
   const weekTasks = useMemo(() => {
     return tasks.filter(t => {
-      if (t.assigneeId !== CURRENT_USER_ID) return false
+      if (t.assigneeId !== currentUserId) return false
       if (t.status === 'Terminé') return false
       const days = daysUntil(t.dueDate)
       if (days === null) return false
@@ -492,7 +529,7 @@ function DashAgent({ tasks, updateTask }: { tasks: Task[]; updateTask: (id: stri
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 'var(--gap)' }}>
           <Card padding={14}>
             <SectionHeader title="Notifications" />
-            <NotificationsList tasks={tasks} />
+            <NotificationsList tasks={tasks} currentUserId={currentUserId} />
           </Card>
 
           {myRecord && (
@@ -542,8 +579,12 @@ function DashAgent({ tasks, updateTask }: { tasks: Task[]; updateTask: (id: stri
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               <Link href="/taches"><Button style={{ width: '100%' }}>+ Créer une tâche</Button></Link>
               <Link href="/rh"><Button style={{ width: '100%' }}>Poser un congé</Button></Link>
-              <Link href="/comptes-rendus"><Button style={{ width: '100%' }}>Uploader un compte rendu</Button></Link>
-              <Link href="/finances"><Button style={{ width: '100%' }}>Soumettre une facture</Button></Link>
+              {canUploadCR && (
+                <Link href="/comptes-rendus"><Button style={{ width: '100%' }}>Uploader un compte rendu</Button></Link>
+              )}
+              {canSubmitFacture && (
+                <Link href="/finances"><Button style={{ width: '100%' }}>Soumettre une facture</Button></Link>
+              )}
             </div>
           </Card>
         </div>
@@ -552,19 +593,19 @@ function DashAgent({ tasks, updateTask }: { tasks: Task[]; updateTask: (id: stri
   )
 }
 
-function NotificationsList({ tasks }: { tasks: Task[] }) {
+function NotificationsList({ tasks, currentUserId }: { tasks: Task[]; currentUserId: string }) {
   // Notifications dynamiques :
   // - tâches en attente de ma validation
   // - tâches en retard pour moi
   // - tâches récemment créées par d'autres
-  const toValidate = tasks.filter(t => t.validatorId === CURRENT_USER_ID && t.status === 'En attente validation')
+  const toValidate = tasks.filter(t => t.validatorId === currentUserId && t.status === 'En attente validation')
   const overdue = tasks.filter(t => {
-    if (t.assigneeId !== CURRENT_USER_ID || t.status === 'Terminé') return false
+    if (t.assigneeId !== currentUserId || t.status === 'Terminé') return false
     const d = daysUntil(t.dueDate)
     return d !== null && d < 0
   })
   const recentByOthers = [...tasks]
-    .filter(t => t.assigneeId === CURRENT_USER_ID)
+    .filter(t => t.assigneeId === currentUserId)
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     .slice(0, 1)
 
@@ -620,7 +661,8 @@ function NotificationsList({ tasks }: { tasks: Task[] }) {
 
 // ── Vue Maire / Pilotage ──────────────────────────────────────────────────────
 
-function DashMaire({ tasks }: { tasks: Task[] }) {
+function DashMaire({ tasks, currentUserId }: { tasks: Task[]; currentUserId: string }) {
+  void currentUserId  // disponible pour personalisation future (à toi/équipe)
   // Sources de données réelles
   const { factures } = useFactures()
   const { postes, computePosteWithConsumption } = useBudget()

@@ -2,9 +2,13 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useState, useRef, useEffect } from 'react'
 import { useSettings } from '@/context/SettingsContext'
 import { Avatar } from '@/components/ui/Avatar'
 import { COLORS as C } from '@/lib/theme'
+import { PEOPLE } from '@/lib/people'
+import { AUTH_LEVEL_LABELS } from '@/lib/permissions'
+import { useCurrentUser } from '@/hooks/useCurrentUser'
 
 const NAV_ITEMS = [
   { label: 'Tableau de bord', href: '/dashboard' },
@@ -25,6 +29,24 @@ export function TopBar({ title, notif = 2 }: TopBarProps) {
   const pathname = usePathname()
   const { nav } = useSettings()
   const isTopNav = nav === 'top'
+  const { currentUser, currentUserId, setCurrentUserId } = useCurrentUser()
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const userMenuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!userMenuOpen) return
+    const onClick = (e: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setUserMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', onClick)
+    return () => document.removeEventListener('mousedown', onClick)
+  }, [userMenuOpen])
+
+  // Personnes actives groupées par rôle (pour le sélecteur démo)
+  const elus = PEOPLE.filter(p => p.active && p.role !== 'agent')
+  const agents = PEOPLE.filter(p => p.active && p.role === 'agent')
 
   return (
     <div style={{
@@ -91,7 +113,77 @@ export function TopBar({ title, notif = 2 }: TopBarProps) {
         )}
       </div>
 
-      <Avatar initials="JM" size={30} color={C.terra} />
+      {/* Profil utilisateur courant + sélecteur démo */}
+      <div ref={userMenuRef} style={{ position: 'relative', flexShrink: 0 }}>
+        <button
+          onClick={() => setUserMenuOpen(o => !o)}
+          aria-label="Mon profil / changer d'utilisateur"
+          title={currentUser ? `${currentUser.fullName} — ${AUTH_LEVEL_LABELS[currentUser.authLevel]}` : 'Profil'}
+          style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
+        >
+          <Avatar
+            initials={currentUser?.initials ?? 'JM'}
+            size={30}
+            color={currentUser?.color ?? C.terra}
+          />
+        </button>
+        {userMenuOpen && (
+          <div style={{
+            position: 'absolute',
+            top: 36,
+            right: 0,
+            width: 280,
+            background: '#fff',
+            border: `1px solid ${C.border}`,
+            borderRadius: 8,
+            boxShadow: '0 6px 24px rgba(0,0,0,0.12)',
+            zIndex: 50,
+            overflow: 'hidden',
+          }}>
+            {currentUser && (
+              <div style={{ padding: '12px 14px', borderBottom: `1px solid ${C.border}`, background: C.bg }}>
+                <p style={{ fontSize: 13, color: C.fg, fontWeight: 700 }}>{currentUser.fullName}</p>
+                <p style={{ fontSize: 11, color: C.subtle }}>{currentUser.poste}</p>
+                <p style={{ fontSize: 10, color: C.muted, marginTop: 4 }}>
+                  {AUTH_LEVEL_LABELS[currentUser.authLevel]}
+                </p>
+              </div>
+            )}
+            <div style={{ padding: '6px 0', maxHeight: 320, overflowY: 'auto' }}>
+              <p style={{ fontSize: 9, color: C.subtle, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', padding: '6px 14px' }}>
+                Démo — Changer d'utilisateur
+              </p>
+              {[...elus, ...agents].map(p => (
+                <button
+                  key={p.id}
+                  onClick={() => { setCurrentUserId(p.id); setUserMenuOpen(false) }}
+                  style={{
+                    width: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    padding: '6px 14px',
+                    background: p.id === currentUserId ? `${C.green}10` : 'transparent',
+                    border: 'none',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    fontFamily: "'DM Sans', sans-serif",
+                  }}
+                >
+                  <Avatar initials={p.initials} size={22} color={p.color} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontSize: 11, color: C.fg, fontWeight: p.id === currentUserId ? 700 : 500 }}>{p.fullName}</p>
+                    <p style={{ fontSize: 9, color: C.subtle, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {AUTH_LEVEL_LABELS[p.authLevel]}
+                    </p>
+                  </div>
+                  {p.id === currentUserId && <span style={{ fontSize: 12, color: C.green }}>✓</span>}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
