@@ -16,7 +16,8 @@ import { COMMISSIONS } from '@/lib/data'
 import { useTasks } from '@/hooks/useTasks'
 import { useTeam } from '@/hooks/useTeam'
 import { TaskForm } from '@/components/tasks/TaskForm'
-import { getPerson, PEOPLE, ROLE_LABELS, type Person } from '@/lib/people'
+import { TaskDetailModal } from '@/components/tasks/TaskDetail'
+import { getPerson, PEOPLE, ROLE_LABELS, CURRENT_USER_ID, type Person } from '@/lib/people'
 import { formatShortFR } from '@/lib/dateUtils'
 import type { Commission, Task, TaskStatus } from '@/lib/types'
 
@@ -45,13 +46,14 @@ const COMMISSION_MEMBERS: Record<string, string[]> = {
 }
 
 export default function CommissionsPage() {
-  const { tasks, hydrated, createTask, updateTask, deleteTask } = useTasks()
+  const { tasks, hydrated, createTask, updateTask, deleteTask, addComment, deleteComment } = useTasks()
   const { people, hydrated: teamHydrated } = useTeam()
   const [view, setView] = useState<CommView>('grille')
   const [selected, setSelected] = useState<Commission | null>(null)
   const [formOpen, setFormOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
   const [prefillCommissionId, setPrefillCommissionId] = useState<string | undefined>()
+  const [detailOpenId, setDetailOpenId] = useState<string | null>(null)
 
   // Index : commissionId -> liste des référent(e)s
   const responsiblesByCommission = useMemo(() => {
@@ -95,7 +97,14 @@ export default function CommissionsPage() {
     setPrefillCommissionId(commissionId)
     setFormOpen(true)
   }
+  // Clic sur une tâche → ouvre le panneau de détail (modal).
+  // L'édition réelle (formulaire) passe désormais par le bouton "✎ Modifier"
+  // à l'intérieur de ce panneau.
   const handleEdit = (task: Task) => {
+    setDetailOpenId(task.id)
+  }
+  const handleOpenForm = (task: Task) => {
+    setDetailOpenId(null)
     setEditingTask(task)
     setPrefillCommissionId(undefined)
     setFormOpen(true)
@@ -181,6 +190,28 @@ export default function CommissionsPage() {
         onDelete={editingTask?.id ? handleDelete : undefined}
         initial={initialFormData}
       />
+
+      {(() => {
+        const t = detailOpenId ? tasks.find(x => x.id === detailOpenId) : null
+        if (!t) return null
+        return (
+          <TaskDetailModal
+            open={!!t}
+            task={t}
+            currentUserId={CURRENT_USER_ID}
+            onClose={() => setDetailOpenId(null)}
+            onUpdate={(patch) => updateTask(t.id, patch)}
+            onCycleStatus={() => {
+              const order: Task['status'][] = ['À faire', 'En cours', 'En attente validation', 'Terminé']
+              updateTask(t.id, { status: order[(order.indexOf(t.status) + 1) % order.length] })
+            }}
+            onEdit={() => handleOpenForm(t)}
+            onDelete={() => { deleteTask(t.id); setDetailOpenId(null) }}
+            onAddComment={(content) => addComment(t.id, CURRENT_USER_ID, content)}
+            onDeleteComment={(commentId) => deleteComment(t.id, commentId)}
+          />
+        )
+      })()}
     </Shell>
   )
 }

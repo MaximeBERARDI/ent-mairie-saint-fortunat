@@ -194,9 +194,9 @@ function FacturesView() {
             </Card>
           ) : (
             <Card padding={0}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr 0.8fr 1.2fr 0.7fr 0.9fr 0.8fr', padding: '8px 14px', background: C.bg, borderBottom: `1px solid ${C.border}` }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '110px 1.4fr 90px 1.6fr 70px 90px 80px', gap: 10, padding: '8px 14px', background: C.bg, borderBottom: `1px solid ${C.border}`, alignItems: 'center' }}>
                 {['N°', 'Fournisseur', 'Montant', 'Poste comptable', 'Date', 'Statut', 'Action'].map(h => (
-                  <p key={h} style={{ fontSize: 10, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</p>
+                  <p key={h} style={{ fontSize: 10, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', minWidth: 0 }}>{h}</p>
                 ))}
               </div>
               {filtered.map((f, i) => {
@@ -204,32 +204,38 @@ function FacturesView() {
                 const poste = postes.find(p => p.code === f.posteCode)
                 const isSelected = selectedId === f.id
                 return (
-                  <div key={f.id} onClick={() => setSelectedId(f.id)} style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr 0.8fr 1.2fr 0.7fr 0.9fr 0.8fr', padding: '10px 14px', borderBottom: i < filtered.length - 1 ? `1px solid ${C.border}` : 'none', background: isSelected ? `${C.green}06` : (f.statut === 'En attente validation' ? `${C.warning}06` : '#fff'), alignItems: 'center', cursor: 'pointer' }}>
-                    <p style={{ fontSize: 11, color: C.subtle, fontFamily: "'JetBrains Mono', monospace" }}>{f.numero}</p>
-                    <p style={{ fontSize: 12, color: C.fg, fontWeight: 500 }}>{fournisseur?.nom ?? '—'}</p>
-                    <p style={{ fontSize: 12, color: C.fg, fontWeight: 600 }}>{fmtMontant(f.montantTTC)}</p>
-                    <Tag label={poste ? `${poste.code} ${poste.label}` : f.posteCode} color={C.slate} />
-                    <p style={{ fontSize: 11, color: C.subtle }}>{fmtDateShort(f.dateFacture)}</p>
-                    <Badge
-                      label={statutShortLabel(f.statut)}
-                      variant={statutBadgeVariant(f.statut)}
-                    />
-                    {f.statut === 'En attente validation' && canValidate ? (
-                      <div style={{ display: 'flex', gap: 4 }}>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handleValidate(f.id); setSelectedId(f.id) }}
-                          style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.success}`, background: C.successLight, color: C.success, cursor: 'pointer', fontSize: 12 }}
-                          title="Valider"
-                        >✓</button>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setSelectedId(f.id) /* commentaire saisi dans le panneau */ }}
-                          style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.danger}`, background: C.dangerLight, color: C.danger, cursor: 'pointer', fontSize: 12 }}
-                          title="Voir / rejeter"
-                        >✕</button>
-                      </div>
-                    ) : (
-                      <Button size="sm">Voir</Button>
-                    )}
+                  <div key={f.id} onClick={() => setSelectedId(f.id)} style={{ display: 'grid', gridTemplateColumns: '110px 1.4fr 90px 1.6fr 70px 90px 80px', gap: 10, padding: '10px 14px', borderBottom: i < filtered.length - 1 ? `1px solid ${C.border}` : 'none', background: isSelected ? `${C.green}06` : (f.statut === 'En attente validation' ? `${C.warning}06` : '#fff'), alignItems: 'center', cursor: 'pointer' }}>
+                    <p style={{ fontSize: 11, color: C.subtle, fontFamily: "'JetBrains Mono', monospace", minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.numero}</p>
+                    <p style={{ fontSize: 12, color: C.fg, fontWeight: 500, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{fournisseur?.nom ?? '—'}</p>
+                    <p style={{ fontSize: 12, color: C.fg, fontWeight: 600, minWidth: 0 }}>{fmtMontant(f.montantTTC)}</p>
+                    <div style={{ minWidth: 0, overflow: 'hidden' }}>
+                      <Tag label={poste ? `${poste.code} ${poste.label}` : f.posteCode} color={C.slate} truncate />
+                    </div>
+                    <p style={{ fontSize: 11, color: C.subtle, minWidth: 0 }}>{fmtDateShort(f.dateFacture)}</p>
+                    <div style={{ minWidth: 0 }}>
+                      <Badge
+                        label={statutShortLabel(f.statut)}
+                        variant={statutBadgeVariant(f.statut)}
+                      />
+                    </div>
+                    <div style={{ minWidth: 0 }}>
+                      {f.statut === 'En attente validation' && canValidate ? (
+                        <div style={{ display: 'flex', gap: 4 }}>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleValidate(f.id); setSelectedId(f.id) }}
+                            style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.success}`, background: C.successLight, color: C.success, cursor: 'pointer', fontSize: 12 }}
+                            title="Valider"
+                          >✓</button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setSelectedId(f.id) }}
+                            style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.danger}`, background: C.dangerLight, color: C.danger, cursor: 'pointer', fontSize: 12 }}
+                            title="Voir / rejeter"
+                          >✕</button>
+                        </div>
+                      ) : (
+                        <Button size="sm">Voir</Button>
+                      )}
+                    </div>
                   </div>
                 )
               })}

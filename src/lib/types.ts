@@ -39,6 +39,13 @@ export interface TaskDocument {
   uploadedAt: string
 }
 
+export interface TaskComment {
+  id: string
+  authorId: string                  // Person.id
+  content: string                   // texte libre, multilignes possibles
+  createdAt: string                 // ISO timestamp
+}
+
 export interface Task {
   id: string
   label: string
@@ -50,7 +57,10 @@ export interface Task {
   priority: TaskPriority
   status: TaskStatus
   documents?: TaskDocument[]
+  comments?: TaskComment[]          // fil de commentaires chronologique
   createdAt: string
+  updatedAt?: string                // ISO timestamp — touché à chaque mutation
+  createdById?: string              // Person.id (auteur de la création) — optionnel pour rétro-compat
 }
 
 export interface Employee {

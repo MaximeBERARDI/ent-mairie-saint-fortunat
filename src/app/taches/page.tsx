@@ -12,6 +12,7 @@ import { Avatar } from '@/components/ui/Avatar'
 import { COLORS as C } from '@/lib/theme'
 import { TaskForm } from '@/components/tasks/TaskForm'
 import { TaskCalendar } from '@/components/tasks/TaskCalendar'
+import { TaskDetailContent, TaskDetailModal } from '@/components/tasks/TaskDetail'
 import { useTasks } from '@/hooks/useTasks'
 import { COMMISSIONS } from '@/lib/data'
 import { getPerson, getPersonName, CURRENT_USER_ID } from '@/lib/people'
@@ -50,12 +51,13 @@ function getCommissionColor(id?: string): string {
 }
 
 export default function TachesPage() {
-  const { tasks, hydrated, createTask, updateTask, deleteTask } = useTasks()
+  const { tasks, hydrated, createTask, updateTask, deleteTask, addComment, deleteComment } = useTasks()
   const [view, setView] = useState<TaskView>('liste')
   const [filter, setFilter] = useState<TaskFilter>('toutes')
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [formOpen, setFormOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | null>(null)
+  const [detailOpenId, setDetailOpenId] = useState<string | null>(null)
 
   const counts = useMemo(() => ({
     toutes: tasks.length,
@@ -144,6 +146,9 @@ export default function TachesPage() {
           onEdit={openEdit}
           onUpdate={updateTask}
           onCycleStatus={cycleStatus}
+          onDelete={(id) => { deleteTask(id); if (selectedId === id) setSelectedId(null) }}
+          onAddComment={addComment}
+          onDeleteComment={deleteComment}
         />
       )}
       {view === 'kanban' && (
@@ -152,7 +157,7 @@ export default function TachesPage() {
       {view === 'calendrier' && (
         <TaskCalendar
           tasks={tasks}
-          onTaskClick={t => { setSelectedId(t.id); openEdit(t) }}
+          onTaskClick={t => setDetailOpenId(t.id)}
           onCreateForDate={(iso) => {
             setEditingTask({ dueDate: iso } as Task)
             setFormOpen(true)
@@ -167,6 +172,25 @@ export default function TachesPage() {
         onDelete={editingTask?.id ? handleDelete : undefined}
         initial={editingTask ?? undefined}
       />
+
+      {(() => {
+        const t = detailOpenId ? tasks.find(x => x.id === detailOpenId) : null
+        if (!t) return null
+        return (
+          <TaskDetailModal
+            open={!!t}
+            task={t}
+            currentUserId={CURRENT_USER_ID}
+            onClose={() => setDetailOpenId(null)}
+            onUpdate={(patch) => updateTask(t.id, patch)}
+            onCycleStatus={() => cycleStatus(t)}
+            onEdit={() => { setDetailOpenId(null); openEdit(t) }}
+            onDelete={() => { deleteTask(t.id); setDetailOpenId(null) }}
+            onAddComment={(content) => addComment(t.id, CURRENT_USER_ID, content)}
+            onDeleteComment={(commentId) => deleteComment(t.id, commentId)}
+          />
+        )
+      })()}
     </Shell>
   )
 }
@@ -175,6 +199,7 @@ export default function TachesPage() {
 
 function ListeView({
   tasks, counts, filter, setFilter, selected, setSelected, onEdit, onUpdate, onCycleStatus,
+  onDelete, onAddComment, onDeleteComment,
 }: {
   tasks: Task[]
   counts: { toutes: number; mes: number; enAttente: number; terminees: number }
@@ -185,6 +210,9 @@ function ListeView({
   onEdit: (t: Task) => void
   onUpdate: (id: string, patch: Partial<Task>) => void
   onCycleStatus: (t: Task) => void
+  onDelete: (id: string) => void
+  onAddComment: (taskId: string, authorId: string, content: string) => void
+  onDeleteComment: (taskId: string, commentId: string) => void
 }) {
   const FILTERS: [TaskFilter, string][] = [
     ['toutes', `Toutes (${counts.toutes})`],
@@ -264,13 +292,20 @@ function ListeView({
         </Card>
 
         {selected ? (
-          <DetailPanel
-            task={selected}
-            onClose={() => setSelected(null)}
-            onEdit={() => onEdit(selected)}
-            onUpdate={(patch) => onUpdate(selected.id, patch)}
-            onCycleStatus={() => onCycleStatus(selected)}
-          />
+          <Card style={{ flex: 1.8 }} padding={16}>
+            <TaskDetailContent
+              task={selected}
+              currentUserId={CURRENT_USER_ID}
+              onClose={() => setSelected(null)}
+              onEdit={() => onEdit(selected)}
+              onUpdate={(patch) => onUpdate(selected.id, patch)}
+              onCycleStatus={() => onCycleStatus(selected)}
+              onDelete={() => onDelete(selected.id)}
+              onAddComment={(content) => onAddComment(selected.id, CURRENT_USER_ID, content)}
+              onDeleteComment={(commentId) => onDeleteComment(selected.id, commentId)}
+              compact
+            />
+          </Card>
         ) : (
           <Card style={{ flex: 1.8 }} padding={20}>
             <p style={{ fontSize: 12, color: C.subtle, textAlign: 'center', padding: '20px 0' }}>
@@ -280,133 +315,6 @@ function ListeView({
         )}
       </div>
     </>
-  )
-}
-
-// ── Panneau de détail ─────────────────────────────────────────────────────────
-
-function DetailPanel({
-  task, onClose, onEdit, onUpdate, onCycleStatus,
-}: {
-  task: Task
-  onClose: () => void
-  onEdit: () => void
-  onUpdate: (patch: Partial<Task>) => void
-  onCycleStatus: () => void
-}) {
-  const assignee = getPerson(task.assigneeId)
-  const validator = getPerson(task.validatorId)
-  const commName = getCommissionName(task.commissionId)
-
-  return (
-    <Card style={{ flex: 1.8 }} padding={16}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 8 }}>
-        <p style={{ flex: 1, fontSize: 13, color: C.fg, fontWeight: 700 }}>{task.label}</p>
-        <button
-          onClick={onClose}
-          aria-label="Fermer"
-          style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: C.subtle, fontSize: 18, lineHeight: 1 }}
-        >×</button>
-      </div>
-      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
-        <Badge label={task.status} variant={STATUS_VARIANTS[task.status]} />
-        <Badge label={task.priority} variant={PRIORITY_VARIANTS[task.priority]} />
-      </div>
-
-      <Separator my={10} />
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 12 }}>
-        <DetailRow label="Commission" value={commName ?? 'Sans commission'} />
-        <DetailRow
-          label="Assigné à"
-          value={assignee ? (
-            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Avatar initials={assignee.initials} size={20} color={assignee.color} />
-              {assignee.fullName}
-            </span>
-          ) : '—'}
-        />
-        {task.status === 'En attente validation' && validator && (
-          <DetailRow
-            label="Validateur"
-            value={
-              <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Avatar initials={validator.initials} size={20} color={validator.color} />
-                {validator.fullName}
-              </span>
-            }
-          />
-        )}
-        <DetailRow label="Échéance" value={formatLongFR(task.dueDate)} />
-      </div>
-
-      {task.description && (
-        <>
-          <Separator my={10} />
-          <p style={{ fontSize: 11, color: C.muted, fontWeight: 600, marginBottom: 6 }}>Description</p>
-          <div style={{
-            background: '#fff', border: `1px solid ${C.border}`, borderRadius: 6,
-            padding: 10, fontSize: 12, color: C.fg, whiteSpace: 'pre-wrap', lineHeight: 1.4,
-          }}>
-            {task.description}
-          </div>
-        </>
-      )}
-
-      {(task.documents?.length ?? 0) > 0 && (
-        <>
-          <Separator my={10} />
-          <p style={{ fontSize: 11, color: C.muted, fontWeight: 600, marginBottom: 6 }}>
-            Pièces jointes ({task.documents!.length})
-          </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            {task.documents!.map(doc => (
-              <a
-                key={doc.id}
-                href={doc.dataUrl}
-                download={doc.name}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 8,
-                  background: '#fff', border: `1px solid ${C.border}`,
-                  borderRadius: 6, padding: '6px 10px', textDecoration: 'none',
-                }}
-              >
-                <span style={{ fontSize: 14 }}>📎</span>
-                <span style={{ flex: 1, fontSize: 11, color: C.fg, fontWeight: 500 }}>{doc.name}</span>
-                <span style={{ fontSize: 10, color: C.subtle }}>
-                  {doc.size < 1024 ? `${doc.size} o` : doc.size < 1024 * 1024 ? `${(doc.size / 1024).toFixed(0)} Ko` : `${(doc.size / 1024 / 1024).toFixed(1)} Mo`}
-                </span>
-              </a>
-            ))}
-          </div>
-        </>
-      )}
-
-      <Separator my={12} />
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {task.status !== 'Terminé' ? (
-          <Button variant="primary" size="sm" onClick={() => onUpdate({ status: 'Terminé' })}>
-            ✓ Marquer terminée
-          </Button>
-        ) : (
-          <Button size="sm" onClick={() => onUpdate({ status: 'En cours' })}>
-            ↺ Rouvrir la tâche
-          </Button>
-        )}
-        <Button size="sm" onClick={onCycleStatus}>Changer le statut →</Button>
-        <Button size="sm" onClick={onEdit}>✎ Modifier</Button>
-      </div>
-    </Card>
-  )
-}
-
-function DetailRow({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-      <p style={{ fontSize: 11, color: C.subtle, width: 90, flexShrink: 0 }}>{label}</p>
-      <div style={{ fontSize: 12, color: C.fg, fontWeight: 500 }}>{value}</div>
-    </div>
   )
 }
 

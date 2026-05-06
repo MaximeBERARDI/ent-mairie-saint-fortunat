@@ -1,20 +1,30 @@
 interface TagProps {
   label: string
   color?: string
+  /** Si true, la balise peut tronquer avec "…" quand le parent contraint la largeur */
+  truncate?: boolean
 }
 
-export function Tag({ label, color = '#6ab123' }: TagProps) {
+export function Tag({ label, color = '#6ab123', truncate }: TagProps) {
   return (
-    <span style={{
-      padding: '2px 7px',
-      borderRadius: 3,
-      background: `${color}18`,
-      border: `1px solid ${color}40`,
-      fontSize: 10,
-      fontWeight: 600,
-      color,
-      whiteSpace: 'nowrap',
-    }}>
+    <span
+      title={truncate ? label : undefined}
+      style={{
+        display: 'inline-block',
+        maxWidth: '100%',
+        padding: '2px 7px',
+        borderRadius: 3,
+        background: `${color}18`,
+        border: `1px solid ${color}40`,
+        fontSize: 10,
+        fontWeight: 600,
+        color,
+        whiteSpace: 'nowrap',
+        overflow: truncate ? 'hidden' : undefined,
+        textOverflow: truncate ? 'ellipsis' : undefined,
+        verticalAlign: 'middle',
+      }}
+    >
       {label}
     </span>
   )

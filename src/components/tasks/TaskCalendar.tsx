@@ -113,10 +113,10 @@ export function TaskCalendar({ tasks, onTaskClick, onCreateForDate }: TaskCalend
         </div>
 
         {/* Grille des jours */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gridAutoRows: 'minmax(76px, 1fr)', gap: 4 }}>
           {grid.map((cell, idx) => {
             if (!cell.date || !cell.iso) {
-              return <div key={`empty-${idx}`} />
+              return <div key={`empty-${idx}`} style={{ background: C.ph, borderRadius: 6, opacity: 0.4 }} />
             }
             const dayTasks = tasksByDate.get(cell.iso) ?? []
             const isToday = cell.iso === todayISO

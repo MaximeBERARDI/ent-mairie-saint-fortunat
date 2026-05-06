@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import type { Task } from '@/lib/types'
+import type { Task, TaskComment } from '@/lib/types'
 import { TASKS } from '@/lib/data'
 import { PEOPLE } from '@/lib/people'
 import { COMMISSIONS } from '@/lib/data'
@@ -144,18 +144,45 @@ export function useTasks() {
     if (hydrated) saveToStorage(tasks)
   }, [tasks, hydrated])
 
-  const createTask = useCallback((data: Omit<Task, 'id' | 'createdAt'>) => {
+  const createTask = useCallback((data: Omit<Task, 'id' | 'createdAt'>, createdById?: string) => {
+    const now = new Date().toISOString()
     const newTask: Task = {
       ...data,
       id: `task-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-      createdAt: new Date().toISOString(),
+      createdAt: now,
+      updatedAt: now,
+      createdById,
     }
     setTasks(prev => [newTask, ...prev])
     return newTask
   }, [])
 
   const updateTask = useCallback((id: string, patch: Partial<Task>) => {
-    setTasks(prev => prev.map(t => (t.id === id ? { ...t, ...patch } : t)))
+    setTasks(prev => prev.map(t => (t.id === id ? { ...t, ...patch, updatedAt: new Date().toISOString() } : t)))
+  }, [])
+
+  const addComment = useCallback((taskId: string, authorId: string, content: string) => {
+    const trimmed = content.trim()
+    if (!trimmed) return
+    const comment: TaskComment = {
+      id: `cmt-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      authorId,
+      content: trimmed,
+      createdAt: new Date().toISOString(),
+    }
+    setTasks(prev => prev.map(t => (
+      t.id === taskId
+        ? { ...t, comments: [...(t.comments ?? []), comment], updatedAt: comment.createdAt }
+        : t
+    )))
+  }, [])
+
+  const deleteComment = useCallback((taskId: string, commentId: string) => {
+    setTasks(prev => prev.map(t => (
+      t.id === taskId
+        ? { ...t, comments: (t.comments ?? []).filter(c => c.id !== commentId), updatedAt: new Date().toISOString() }
+        : t
+    )))
   }, [])
 
   const deleteTask = useCallback((id: string) => {
@@ -167,5 +194,5 @@ export function useTasks() {
     saveToStorage(TASKS)
   }, [])
 
-  return { tasks, hydrated, createTask, updateTask, deleteTask, resetTasks }
+  return { tasks, hydrated, createTask, updateTask, addComment, deleteComment, deleteTask, resetTasks }
 }
