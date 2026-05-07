@@ -2,6 +2,7 @@ import type {
   Commission, Task, Employee, Invoice,
   Fournisseur, PosteBudget, Facture,
   EmployeeRecord, LeaveRequest, Mission,
+  BienImmobilier, Locataire, Bail, Quittance,
 } from './types'
 import { COMPTES_M14 } from './m14-plan'
 import { COLORS as C } from './theme'
@@ -290,4 +291,172 @@ export const MISSIONS: Mission[] = [
     lieu: 'École communale',
     createdAt: '2026-04-22T11:00:00Z',
   },
+]
+
+// ─── Parc immobilier (seed) ──────────────────────────────────────
+
+export const BIENS_IMMOBILIERS: BienImmobilier[] = [
+  {
+    id: 'imm-001',
+    reference: 'IMM-001',
+    nom: '12 rue de l\'Église — Logement T3',
+    type: 'Logement',
+    adresse: '12 rue de l\'Église, 07360 Saint-Fortunat-sur-Eyrieux',
+    surface: 68,
+    pieces: 3,
+    loyerMensuel: 480,
+    chargesMensuelles: 45,
+    notes: 'Logement social communal, conventionné PLUS.',
+    active: true,
+    createdAt: '2018-01-15T00:00:00Z',
+  },
+  {
+    id: 'imm-002',
+    reference: 'IMM-002',
+    nom: '3 place du Marché — Local commercial',
+    type: 'Local commercial',
+    adresse: '3 place du Marché, 07360 Saint-Fortunat-sur-Eyrieux',
+    surface: 42,
+    loyerMensuel: 380,
+    chargesMensuelles: 60,
+    notes: 'Boulangerie. Bail commercial 9 ans.',
+    active: true,
+    createdAt: '2020-06-01T00:00:00Z',
+  },
+  {
+    id: 'imm-003',
+    reference: 'IMM-003',
+    nom: '8 chemin des Lavoirs — Logement T2',
+    type: 'Logement',
+    adresse: '8 chemin des Lavoirs, 07360 Saint-Fortunat-sur-Eyrieux',
+    surface: 48,
+    pieces: 2,
+    loyerMensuel: 380,
+    chargesMensuelles: 35,
+    active: true,
+    createdAt: '2019-09-01T00:00:00Z',
+  },
+  {
+    id: 'imm-004',
+    reference: 'IMM-004',
+    nom: 'Atelier zone artisanale Les Combes',
+    type: 'Atelier',
+    adresse: 'Zone artisanale Les Combes, 07360 Saint-Fortunat-sur-Eyrieux',
+    surface: 120,
+    loyerMensuel: 600,
+    chargesMensuelles: 0,
+    notes: 'Loué à un artisan menuisier.',
+    active: true,
+    createdAt: '2022-03-01T00:00:00Z',
+  },
+]
+
+export const LOCATAIRES: Locataire[] = [
+  {
+    id: 'loc-001',
+    prenom: 'Sophie',
+    nom: 'Berger',
+    fullName: 'Sophie Berger',
+    email: 'sophie.berger@example.fr',
+    phone: '06 12 34 56 78',
+    createdAt: '2018-01-15T00:00:00Z',
+  },
+  {
+    id: 'loc-002',
+    prenom: 'Boulangerie',
+    nom: 'Vivarais',
+    fullName: 'Boulangerie du Vivarais (SARL)',
+    email: 'contact@boulangerie-vivarais.fr',
+    phone: '04 75 65 21 30',
+    adresseFacturation: '3 place du Marché, 07360 Saint-Fortunat-sur-Eyrieux',
+    notes: 'SARL — n° SIRET 821 458 632 00018',
+    createdAt: '2020-06-01T00:00:00Z',
+  },
+  {
+    id: 'loc-003',
+    prenom: 'Olivier',
+    nom: 'Renard',
+    fullName: 'Olivier Renard',
+    email: 'olivier.renard@example.fr',
+    phone: '06 87 45 12 09',
+    createdAt: '2024-09-01T00:00:00Z',
+  },
+  {
+    id: 'loc-004',
+    prenom: 'Atelier',
+    nom: 'Bois & Co',
+    fullName: 'SARL Bois & Co',
+    email: 'contact@bois-co.fr',
+    phone: '04 75 60 78 12',
+    notes: 'Menuisier ébéniste — n° SIRET 891 234 567 00021',
+    createdAt: '2022-03-01T00:00:00Z',
+  },
+]
+
+export const BAUX: Bail[] = [
+  {
+    id: 'bail-001',
+    bienId: 'imm-001',
+    locataireId: 'loc-001',
+    dateDebut: '2018-02-01',
+    loyerMensuel: 480,
+    chargesMensuelles: 45,
+    depotGarantie: 480,
+    statut: 'En cours',
+    createdAt: '2018-01-15T00:00:00Z',
+  },
+  {
+    id: 'bail-002',
+    bienId: 'imm-002',
+    locataireId: 'loc-002',
+    dateDebut: '2020-07-01',
+    dateFin: '2029-06-30',
+    loyerMensuel: 380,
+    chargesMensuelles: 60,
+    depotGarantie: 1140,
+    statut: 'En cours',
+    notes: 'Bail commercial 9 ans (3-6-9).',
+    createdAt: '2020-06-01T00:00:00Z',
+  },
+  {
+    id: 'bail-003',
+    bienId: 'imm-003',
+    locataireId: 'loc-003',
+    dateDebut: '2024-09-15',
+    loyerMensuel: 380,
+    chargesMensuelles: 35,
+    depotGarantie: 380,
+    statut: 'En cours',
+    createdAt: '2024-09-01T00:00:00Z',
+  },
+  {
+    id: 'bail-004',
+    bienId: 'imm-004',
+    locataireId: 'loc-004',
+    dateDebut: '2022-04-01',
+    loyerMensuel: 600,
+    chargesMensuelles: 0,
+    depotGarantie: 1200,
+    statut: 'En cours',
+    createdAt: '2022-03-01T00:00:00Z',
+  },
+]
+
+// Quittances émises sur les 4 derniers mois (mars→avril 2026, mai partiel)
+export const QUITTANCES: Quittance[] = [
+  // Bail 1 — Sophie Berger (loyer 480 + charges 45 = 525)
+  { id: 'q-001', bailId: 'bail-001', mois: '2026-03', numero: 'Q-2026-03-001', loyerHC: 480, charges: 45, total: 525, statut: 'Payée', emiseAt: '2026-03-01T08:00:00Z', payeeAt: '2026-03-04T10:00:00Z', modeReglement: 'Virement', createdAt: '2026-03-01T08:00:00Z' },
+  { id: 'q-002', bailId: 'bail-001', mois: '2026-04', numero: 'Q-2026-04-001', loyerHC: 480, charges: 45, total: 525, statut: 'Payée', emiseAt: '2026-04-01T08:00:00Z', payeeAt: '2026-04-03T10:00:00Z', modeReglement: 'Virement', createdAt: '2026-04-01T08:00:00Z' },
+
+  // Bail 2 — Boulangerie (380 + 60 = 440)
+  { id: 'q-003', bailId: 'bail-002', mois: '2026-03', numero: 'Q-2026-03-002', loyerHC: 380, charges: 60, total: 440, statut: 'Payée', emiseAt: '2026-03-01T08:00:00Z', payeeAt: '2026-03-05T14:00:00Z', modeReglement: 'Prélèvement', createdAt: '2026-03-01T08:00:00Z' },
+  { id: 'q-004', bailId: 'bail-002', mois: '2026-04', numero: 'Q-2026-04-002', loyerHC: 380, charges: 60, total: 440, statut: 'Payée', emiseAt: '2026-04-01T08:00:00Z', payeeAt: '2026-04-05T14:00:00Z', modeReglement: 'Prélèvement', createdAt: '2026-04-01T08:00:00Z' },
+
+  // Bail 3 — Olivier Renard (380 + 35 = 415) — mars OK, avril impayé
+  { id: 'q-005', bailId: 'bail-003', mois: '2026-03', numero: 'Q-2026-03-003', loyerHC: 380, charges: 35, total: 415, statut: 'Payée', emiseAt: '2026-03-01T08:00:00Z', payeeAt: '2026-03-08T11:00:00Z', modeReglement: 'Virement', createdAt: '2026-03-01T08:00:00Z' },
+  { id: 'q-006', bailId: 'bail-003', mois: '2026-04', numero: 'Q-2026-04-003', loyerHC: 380, charges: 35, total: 415, statut: 'Impayée', emiseAt: '2026-04-01T08:00:00Z', notes: 'Loyer impayé — relance à envoyer.', createdAt: '2026-04-01T08:00:00Z' },
+
+  // Bail 4 — Bois & Co (600 + 0 = 600)
+  { id: 'q-007', bailId: 'bail-004', mois: '2026-03', numero: 'Q-2026-03-004', loyerHC: 600, charges: 0, total: 600, statut: 'Payée', emiseAt: '2026-03-01T08:00:00Z', payeeAt: '2026-03-10T09:00:00Z', modeReglement: 'Virement', createdAt: '2026-03-01T08:00:00Z' },
+  { id: 'q-008', bailId: 'bail-004', mois: '2026-04', numero: 'Q-2026-04-004', loyerHC: 600, charges: 0, total: 600, statut: 'Payée', emiseAt: '2026-04-01T08:00:00Z', payeeAt: '2026-04-09T09:00:00Z', modeReglement: 'Virement', createdAt: '2026-04-01T08:00:00Z' },
 ]

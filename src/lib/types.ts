@@ -357,3 +357,78 @@ export interface ExerciceHistorique {
   notes?: string
   importedAt: string          // ISO timestamp
 }
+
+// ─── Parc immobilier (locations communales) ────────────────────────
+
+export type TypeBien =
+  | 'Logement'
+  | 'Local commercial'
+  | 'Atelier'
+  | 'Garage'
+  | 'Terrain'
+  | 'Autre'
+
+export interface BienImmobilier {
+  id: string
+  reference: string             // ex: 'IMM-001'
+  nom: string                   // ex: '12 rue de l\'Église — Logement T3'
+  type: TypeBien
+  adresse: string
+  surface: number               // m²
+  pieces?: number               // nombre de pièces (logements)
+  loyerMensuel: number          // € hors charges (loyer du bien — peut être surchargé par bail)
+  chargesMensuelles: number     // € (provisions sur charges)
+  notes?: string
+  documents?: TaskDocument[]    // bail-type, photos, état des lieux…
+  active: boolean               // false = sorti du parc
+  createdAt: string
+}
+
+export interface Locataire {
+  id: string
+  prenom: string
+  nom: string
+  fullName: string
+  email?: string
+  phone?: string
+  adresseFacturation?: string   // si différente du bien loué
+  notes?: string
+  createdAt: string
+}
+
+export type StatutBail = 'En cours' | 'Préavis' | 'Terminé'
+
+export interface Bail {
+  id: string
+  bienId: string                // ref BienImmobilier.id
+  locataireId: string           // ref Locataire.id
+  dateDebut: string             // ISO YYYY-MM-DD
+  dateFin?: string              // ISO YYYY-MM-DD (vide = bail à durée indéterminée)
+  loyerMensuel: number          // € HC — peut différer du loyer du bien (négocié)
+  chargesMensuelles: number     // €
+  depotGarantie: number         // € (versé à l'entrée)
+  statut: StatutBail
+  notes?: string
+  documents?: TaskDocument[]    // bail signé, état des lieux d'entrée
+  createdAt: string
+}
+
+export type StatutQuittance = 'À émettre' | 'Émise' | 'Payée' | 'Impayée' | 'Relancée'
+
+export type ModeReglement = 'Virement' | 'Chèque' | 'Espèces' | 'Prélèvement'
+
+export interface Quittance {
+  id: string
+  bailId: string
+  mois: string                  // 'YYYY-MM'
+  numero: string                // ex: 'Q-2026-05-001'
+  loyerHC: number               // hors charges
+  charges: number
+  total: number                 // loyerHC + charges
+  statut: StatutQuittance
+  emiseAt?: string              // ISO timestamp de génération
+  payeeAt?: string              // ISO timestamp d'encaissement
+  modeReglement?: ModeReglement
+  notes?: string
+  createdAt: string
+}

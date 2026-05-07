@@ -45,6 +45,12 @@ Chaque module suit le **même pattern** :
 | Demandes d'absence | `useLeaveRequests` | `LeaveRequest` | `:leaves:v1` |
 | Missions | `useMissions` | `Mission` | `:missions:v1` |
 | Comptes rendus | `useComptesRendus` | `CompteRendu` | `:comptes-rendus:v1` |
+| Biens immobiliers | `useParcImmobilier` | `BienImmobilier` | `:biens:v1` |
+| Locataires | `useParcImmobilier` | `Locataire` | `:locataires:v1` |
+| Baux | `useParcImmobilier` | `Bail` | `:baux:v1` |
+| Quittances | `useParcImmobilier` | `Quittance` | `:quittances:v1` |
+| Auth (mots de passe démo) | `useAuth` | — | `:auth:v1` |
+| Utilisateur courant | `useCurrentUser` | — | `:current-user-id:v1` |
 
 ### Lien Person ↔ EmployeeRecord
 
@@ -103,7 +109,7 @@ Toujours type-checker avant de commit. Le build inclut le type-check + le lint N
 - ✅ **Tâches** — CRUD complet, validation workflow, documents
 - ✅ **Comptes rendus** — extraction IA (Claude API), validation des tâches extraites
 - ✅ **Équipe** — fiches Person, niveaux d'autorisation, signature, délégations
-- ✅ **Finances** — module M14 complet (plan comptable, écritures, ratios, historique pluriannuel, exports Excel multi-feuilles)
+- ✅ **Finances** — module M14 complet (plan comptable, écritures, ratios, historique pluriannuel, exports Excel multi-feuilles) + Parc immobilier (biens, locataires, baux, quittances PDF, relances mail)
 - ✅ **RH** — agents/contrats/grades/IFSE, workflow congés avec maj auto compteurs, calendrier mensuel réel, paies M14, missions
 - ✅ **Dashboard** — câblé aux vraies données (3 vues Élu/Agent/Maire)
 - 🟡 **Commissions** — CRUD tâches OK, mais membres statiques, pas de planning réunions, GED mock
