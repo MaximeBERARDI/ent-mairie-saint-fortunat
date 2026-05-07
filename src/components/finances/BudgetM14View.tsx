@@ -19,6 +19,7 @@ import { computeRatios, ratioStatus } from '@/lib/ratios'
 import { exportPlanComptable, exportGrandLivre, exportRapportBudgetaire } from '@/lib/excel-export'
 import type { Section, Sens, Ecriture, JournalCode, LigneEcriture } from '@/lib/types'
 import { HistoriqueView } from './HistoriqueView'
+import { ProjectionView } from './ProjectionView'
 
 const CURRENT_USER_ID = 'p-jm'
 
@@ -52,7 +53,7 @@ const inputStyle: React.CSSProperties = {
   outline: 'none',
 }
 
-type BudgetTab = 'plan' | 'ecritures' | 'ratios' | 'historique'
+type BudgetTab = 'plan' | 'ecritures' | 'ratios' | 'historique' | 'projection'
 
 export function BudgetM14View() {
   const { factures } = useFactures()
@@ -132,6 +133,7 @@ export function BudgetM14View() {
             ['ecritures', `Écritures (${ecritures.length})`],
             ['ratios', 'Ratios & analyse'],
             ['historique', 'Historique & évolution'],
+            ['projection', 'Projection'],
           ] as [BudgetTab, string][]).map(([v, label]) => (
             <button
               key={v}
@@ -209,6 +211,10 @@ export function BudgetM14View() {
 
       {tab === 'historique' && (
         <HistoriqueView currentRatios={ratios} />
+      )}
+
+      {tab === 'projection' && (
+        <ProjectionView baseRatios={ratios} />
       )}
     </div>
   )

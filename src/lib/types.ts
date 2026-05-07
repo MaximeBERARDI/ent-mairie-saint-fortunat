@@ -523,3 +523,135 @@ export interface BulletinPaie {
   emisAt: string                // ISO timestamp de génération
   createdAt: string
 }
+
+// ─── Subventions reçues / demandes en cours ────────────────────────
+
+export type SourceSubvention =
+  | 'État (DETR)'                 // Dotation d'équipement des territoires ruraux
+  | 'État (DSIL)'                 // Dotation de soutien à l'investissement local
+  | 'État (FNADT)'                // Fonds national d'aménagement et de développement
+  | 'État (autre)'
+  | 'Région'
+  | 'Département'
+  | 'GFP / Intercommunalité'
+  | 'Europe (FEDER)'
+  | 'Europe (LEADER)'
+  | 'Autre organisme'
+
+export type StatutSubvention =
+  | 'Préparation'                 // dossier en cours de constitution
+  | 'Déposée'                     // remise officielle
+  | 'Instruction'                 // examen par le financeur
+  | 'Accordée'                    // décision favorable, attente versement
+  | 'Versement partiel'
+  | 'Versée'                      // soldée
+  | 'Refusée'
+  | 'Annulée'
+
+export interface DemandeSubvention {
+  id: string
+  reference: string               // ex: 'SUB-2026-001'
+  intitule: string                // ex: 'Réfection toiture école élémentaire'
+  description?: string
+
+  // Financeur
+  source: SourceSubvention
+  organisme: string               // précision (ex: 'Préfecture de l\'Ardèche')
+  contactNom?: string
+  contactEmail?: string
+
+  // Montants
+  montantProjet: number           // coût total HT du projet
+  montantDemande: number          // subvention sollicitée
+  montantAccorde?: number         // si statut >= Accordée (peut être < demande)
+  montantVerse?: number           // cumul des versements reçus
+
+  // Calendrier
+  dateDepot?: string              // ISO YYYY-MM-DD (vide si en préparation)
+  dateDecision?: string           // ISO YYYY-MM-DD
+  datePrevisionVersement?: string // ISO YYYY-MM-DD
+
+  // Statut
+  statut: StatutSubvention
+  motifRefus?: string
+
+  // Lien comptable
+  imputationCompte?: string       // ex: '1321' subvention État
+
+  // Documents
+  documents?: TaskDocument[]      // dossier de demande, courriers, conventions
+
+  notes?: string
+  createdAt: string
+  updatedAt?: string
+}
+
+// ─── Projets d'investissement (projection pluriannuelle) ───────────
+
+export type SourceFinancement =
+  | 'Emprunt'
+  | 'Subvention État'
+  | 'Subvention Région'
+  | 'Subvention Département'
+  | 'Subvention GFP'
+  | 'Subvention Europe'
+  | 'Autofinancement'
+  | 'FCTVA'
+
+export interface FinancementProjet {
+  id: string
+  source: SourceFinancement
+  organisme?: string              // précision si subvention
+  montant: number                 // €
+  // Pour les emprunts uniquement
+  dureeAnnees?: number            // ex: 15
+  tauxInteret?: number            // % ex: 3.50
+  // Pour les subventions
+  anneeVersement?: number         // ex: 2027 (versement attendu)
+  certitude?: 'Certaine' | 'Probable' | 'À demander'
+  subventionId?: string           // lien éventuel vers une DemandeSubvention
+}
+
+export interface Projet {
+  id: string
+  nom: string                     // ex: 'Réfection école élémentaire'
+  description?: string
+
+  // Investissement
+  coutTotal: number               // € TTC du projet
+  coutHT?: number                 // si on veut le FCTVA précis (HT × 16,4%)
+  imputationCompte: string        // ex: '21312' bâtiments scolaires
+
+  // Calendrier
+  anneeDebut: number              // ex: 2026
+  anneesEtalement: number         // 1 = tout l'année 1, 2 = 50/50 sur 2 ans, etc.
+
+  // Financement
+  financements: FinancementProjet[]
+
+  // Hypothèses globales
+  tauxFCTVA?: number              // 16.404% par défaut, récupéré 2 ans après
+
+  notes?: string
+  createdAt: string
+}
+
+// Résultat agrégé d'une projection sur une année
+export interface ProjectionAnnuelle {
+  annee: number
+  // Section investissement
+  depEquipement: number           // dépenses d'équipement de l'année (chap. 21+23)
+  recettesInvest: number          // subventions + emprunt + FCTVA reçus l'année
+  // Section fonctionnement (impact dette)
+  interetsDette: number           // chap. 66 supplémentaire
+  remboursementCapital: number    // chap. 16D supplémentaire
+  // Stock dette en fin d'année
+  encoursDetteEndAnnee: number    // cumul
+  // Ratios projetés (combinés avec base actuelle)
+  rrf: number
+  drf: number
+  cafBrute: number
+  capaciteDesendettement: number  // années
+  detteParHab: number             // €/hab
+  drfParHab: number               // €/hab
+}

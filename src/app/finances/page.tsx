@@ -20,8 +20,9 @@ import { hasPermission } from '@/lib/permissions'
 import type { Facture, FactureStatut, Fournisseur, PosteBudget, TaskDocument } from '@/lib/types'
 import { BudgetM14View } from '@/components/finances/BudgetM14View'
 import { ParcImmobilierView } from '@/components/finances/ParcImmobilierView'
+import { SubventionsView } from '@/components/finances/SubventionsView'
 
-type FinView = 'factures' | 'budget' | 'fournisseurs' | 'parc-immobilier'
+type FinView = 'factures' | 'budget' | 'fournisseurs' | 'parc-immobilier' | 'subventions'
 
 // Pas encore de système d'auth réel : on simule la session du maire (Jean Martin)
 const CURRENT_USER_ID = 'p-jm'
@@ -63,7 +64,7 @@ export default function FinancesPage() {
     <Shell title="Finances">
       <div style={{ display: 'flex', gap: 8, marginBottom: 20, alignItems: 'center' }}>
         <div style={{ display: 'flex', gap: 4, background: C.ph, borderRadius: 8, padding: 3 }}>
-          {([['factures', 'Factures'], ['budget', 'Budget'], ['fournisseurs', 'Fournisseurs'], ['parc-immobilier', 'Parc immobilier']] as [FinView, string][]).map(([v, label]) => (
+          {([['factures', 'Factures'], ['budget', 'Budget'], ['fournisseurs', 'Fournisseurs'], ['parc-immobilier', 'Parc immobilier'], ['subventions', 'Subventions']] as [FinView, string][]).map(([v, label]) => (
             <button key={v} onClick={() => setView(v)} style={{ padding: '5px 12px', borderRadius: 6, background: v === view ? '#fff' : 'transparent', border: 'none', color: v === view ? C.fg : C.muted, fontSize: 12, fontWeight: v === view ? 600 : 400, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", boxShadow: v === view ? '0 1px 2px rgba(0,0,0,0.1)' : 'none' }}>
               {label}
             </button>
@@ -75,6 +76,7 @@ export default function FinancesPage() {
       {view === 'budget' && <BudgetM14View />}
       {view === 'fournisseurs' && <FournisseursView />}
       {view === 'parc-immobilier' && <ParcImmobilierView />}
+      {view === 'subventions' && <SubventionsView />}
     </Shell>
   )
 }
