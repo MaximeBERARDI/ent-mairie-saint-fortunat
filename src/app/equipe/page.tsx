@@ -10,6 +10,7 @@ import { Separator } from '@/components/ui/Separator'
 import { COLORS as C } from '@/lib/theme'
 import { COMMISSIONS } from '@/lib/data'
 import { ROLE_LABELS, ROLE_COLORS, type Person, type PersonRole } from '@/lib/people'
+import { OrganigrammeView } from '@/components/team/OrganigrammeView'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import {
   AUTH_LEVEL_LABELS, PERMISSION_LABELS, SIGNATURE_LABELS,
@@ -30,11 +31,13 @@ const AUTH_BADGE_VARIANTS: Record<AuthLevel, 'success' | 'primary' | 'info' | 'w
 }
 
 type TeamFilter = 'tous' | 'elus' | 'agents' | 'signataires' | 'inactifs'
+type TeamView = 'liste' | 'organigramme'
 
 export default function EquipePage() {
   const { people, hydrated, updatePerson, createPerson, deletePerson } = useTeam()
   const { tasks } = useTasks()
   const { currentUserId, can } = useCurrentUser()
+  const [view, setView] = useState<TeamView>('liste')
   const [filter, setFilter] = useState<TeamFilter>('tous')
   const [search, setSearch] = useState('')
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -105,6 +108,44 @@ export default function EquipePage() {
 
   return (
     <Shell title="Équipe">
+      {/* Bascule vue Liste / Organigramme */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 14, alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: 4, background: C.ph, borderRadius: 8, padding: 3 }}>
+          {([['liste', '📋 Liste'], ['organigramme', '🌳 Organigramme']] as [TeamView, string][]).map(([v, label]) => (
+            <button
+              key={v}
+              onClick={() => setView(v)}
+              style={{
+                padding: '5px 12px', borderRadius: 6,
+                background: v === view ? '#fff' : 'transparent',
+                border: 'none',
+                color: v === view ? C.fg : C.muted,
+                fontSize: 12, fontWeight: v === view ? 600 : 400,
+                cursor: 'pointer', fontFamily: "'DM Sans', sans-serif",
+                boxShadow: v === view ? '0 1px 2px rgba(0,0,0,0.1)' : 'none',
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+        <p style={{ fontSize: 11, color: C.subtle, marginLeft: 4 }}>
+          {view === 'liste'
+            ? `${counts.tous} membre${counts.tous > 1 ? 's' : ''} actif${counts.tous > 1 ? 's' : ''}`
+            : 'Organisation hiérarchique de la commune'}
+        </p>
+      </div>
+
+      {view === 'organigramme' && (
+        <OrganigrammeView
+          people={people}
+          selectedId={selectedId}
+          onSelect={(id) => setSelectedId(id)}
+        />
+      )}
+
+      {view === 'liste' && (
+      <>
       {/* Filtres */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 16, alignItems: 'center', flexWrap: 'wrap' }}>
         {([
@@ -204,6 +245,22 @@ export default function EquipePage() {
           )}
         </div>
       </div>
+      </>
+      )}
+
+      {/* Détail sur clic depuis l'organigramme */}
+      {view === 'organigramme' && selected && (
+        <div style={{ marginTop: 'var(--gap)' }}>
+          <PersonDetail
+            person={selected}
+            tasks={tasks}
+            canManage={canManage}
+            currentUserId={currentUserId}
+            onEdit={() => openEdit(selected)}
+            onToggleActive={() => updatePerson(selected.id, { active: !selected.active })}
+          />
+        </div>
+      )}
 
       <PersonForm
         open={formOpen}
