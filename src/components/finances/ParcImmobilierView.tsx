@@ -10,6 +10,8 @@ import { SectionHeader } from '@/components/ui/SectionHeader'
 import { Separator } from '@/components/ui/Separator'
 import { COLORS as C } from '@/lib/theme'
 import { useParcImmobilier } from '@/hooks/useParcImmobilier'
+import { useEcritures } from '@/hooks/useEcritures'
+import { useCurrentUser } from '@/hooks/useCurrentUser'
 import {
   openQuittancePreview, buildMailto, buildRelanceMailto,
 } from '@/lib/quittance-pdf'
@@ -73,6 +75,31 @@ export function ParcImmobilierView() {
     markPayee, markImpayee, markRelancee, deleteQuittance,
     genererQuittancesDuMois,
   } = useParcImmobilier()
+  const { generateEncaissementLoyer, deleteEcrituresByQuittance } = useEcritures()
+  const { currentUserId } = useCurrentUser()
+
+  // Wraps : marquer payée déclenche aussi l'encaissement comptable.
+  const handleMarkPayee = (id: string, mode: ModeReglement) => {
+    const q = quittances.find(x => x.id === id)
+    if (!q) return
+    markPayee(id, mode)
+    generateEncaissementLoyer({
+      quittanceId: q.id,
+      numero: q.numero,
+      mois: q.mois,
+      total: q.total,
+      createdBy: currentUserId,
+      date: new Date().toISOString().slice(0, 10),
+    })
+  }
+  const handleMarkImpayee = (id: string) => {
+    markImpayee(id)
+    deleteEcrituresByQuittance(id)
+  }
+  const handleDeleteQuittance = (id: string) => {
+    deleteQuittance(id)
+    deleteEcrituresByQuittance(id)
+  }
 
   const [tab, setTab] = useState<Subview>('biens')
 
@@ -171,10 +198,10 @@ export function ParcImmobilierView() {
           baux={baux}
           biens={biens}
           locataires={locataires}
-          onMarkPayee={markPayee}
-          onMarkImpayee={markImpayee}
+          onMarkPayee={handleMarkPayee}
+          onMarkImpayee={handleMarkImpayee}
           onMarkRelancee={markRelancee}
-          onDelete={deleteQuittance}
+          onDelete={handleDeleteQuittance}
           onGenererMois={genererQuittancesDuMois}
         />
       )}

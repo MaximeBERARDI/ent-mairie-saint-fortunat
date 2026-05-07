@@ -25,6 +25,7 @@ import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { PEOPLE, getPerson } from '@/lib/people'
 import { hasPermission } from '@/lib/permissions'
 import { computeRatios } from '@/lib/ratios'
+import { InfoTooltip } from '@/components/ui/InfoTooltip'
 import { CHAPITRES_M14 } from '@/lib/m14-plan'
 import { formatShortFR, daysUntil, FRENCH_MONTHS } from '@/lib/dateUtils'
 import type { Task, TaskStatus, Facture, LeaveRequest, EmployeeRecord } from '@/lib/types'
@@ -840,10 +841,10 @@ function DashMaire({ tasks, currentUserId }: { tasks: Task[]; currentUserId: str
         <Card style={{ flex: 2 }} padding={14}>
           <SectionHeader title="Indicateurs financiers (R. 2313-1)" actions={<Link href="/finances"><Button size="sm">Détail</Button></Link>} />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
-            <RatioMini label="DRF / habitant" value={`${ratios.ratio1_drfParHab} €`} />
-            <RatioMini label="RRF / habitant" value={`${ratios.ratio3_rrfParHab} €`} />
-            <RatioMini label="Personnel / DRF" value={`${ratios.ratio7_personnelSurDrf}%`} />
-            <RatioMini label="Dette / habitant" value={`${ratios.ratio5_encoursDetteParHab} €`} />
+            <RatioMini helpKey="ratio1_drfParHab" label="DRF / habitant" value={`${ratios.ratio1_drfParHab} €`} />
+            <RatioMini helpKey="ratio3_rrfParHab" label="RRF / habitant" value={`${ratios.ratio3_rrfParHab} €`} />
+            <RatioMini helpKey="ratio7_personnelSurDrf" label="Personnel / DRF" value={`${ratios.ratio7_personnelSurDrf}%`} />
+            <RatioMini helpKey="ratio5_encoursDetteParHab" label="Dette / habitant" value={`${ratios.ratio5_encoursDetteParHab} €`} />
           </div>
           <p style={{ fontSize: 10, color: C.subtle, fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Postes en alerte</p>
           {postesEnAlerte.length === 0 ? (
@@ -919,10 +920,13 @@ function DashMaire({ tasks, currentUserId }: { tasks: Task[]; currentUserId: str
   )
 }
 
-function RatioMini({ label, value }: { label: string; value: string }) {
+function RatioMini({ label, value, helpKey }: { label: string; value: string; helpKey?: string }) {
   return (
     <div style={{ padding: 8, background: C.bg, borderRadius: 6 }}>
-      <p style={{ fontSize: 9, color: C.subtle, fontWeight: 600, marginBottom: 2, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</p>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+        <p style={{ fontSize: 9, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</p>
+        {helpKey && <InfoTooltip indicatorKey={helpKey} size={12} />}
+      </div>
       <p style={{ fontSize: 14, color: C.fg, fontWeight: 700 }}>{value}</p>
     </div>
   )

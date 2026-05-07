@@ -103,6 +103,106 @@ export function useEcritures() {
     setEcritures(prev => prev.filter(e => e.factureId !== factureId))
   }, [])
 
+  // Suppression de toutes les écritures liées à une quittance
+  const deleteEcrituresByQuittance = useCallback((quittanceId: string) => {
+    setEcritures(prev => prev.filter(e => e.quittanceId !== quittanceId))
+  }, [])
+
+  // Suppression de toutes les écritures liées à une subvention
+  const deleteEcrituresBySubvention = useCallback((subventionId: string) => {
+    setEcritures(prev => prev.filter(e => e.subventionId !== subventionId))
+  }, [])
+
+  // ─── Génération automatique de loyer encaissé ────────────────────
+  // Quand une quittance passe en "Payée", on génère :
+  //   D 515 Trésor — banque    montant TTC
+  //     C 752 Revenus des immeubles    montant TTC
+  const generateEncaissementLoyer = useCallback((
+    args: { quittanceId: string; numero: string; mois: string; total: number; createdBy: string; date: string },
+  ): Ecriture | null => {
+    const existing = ecritures.find(e => e.quittanceId === args.quittanceId && e.journal === 'BQ')
+    if (existing) return existing
+
+    const lignes: LigneEcriture[] = [
+      {
+        id: newId('lig'),
+        compteCode: '515',
+        libelle: `Encaissement loyer — ${args.numero}`,
+        debit: args.total,
+        credit: 0,
+      },
+      {
+        id: newId('lig'),
+        compteCode: '752',
+        libelle: `Loyer ${args.mois}`,
+        debit: 0,
+        credit: args.total,
+      },
+    ]
+    const exercice = new Date(args.date).getFullYear()
+    const now = new Date().toISOString()
+    const ecriture: Ecriture = {
+      id: newId('ec'),
+      numero: nextNumero(ecritures, exercice),
+      exercice,
+      date: args.date,
+      journal: 'BQ',
+      libelle: `Encaissement loyer ${args.numero}`,
+      pieceRef: args.numero,
+      quittanceId: args.quittanceId,
+      lignes,
+      createdAt: now,
+      createdBy: args.createdBy,
+    }
+    setEcritures(prev => [ecriture, ...prev])
+    return ecriture
+  }, [ecritures])
+
+  // ─── Génération automatique d'un versement de subvention ─────────
+  // Quand une subvention passe en "Versée" ou "Versement partiel", on génère :
+  //   D 515 Trésor — banque    montant versé
+  //     C [imputationCompte]   montant versé
+  // Une nouvelle écriture est créée pour CHAQUE versement (delta vs cumul précédent),
+  // pas une seule globale. Permet de tracer les versements partiels.
+  const generateVersementSubvention = useCallback((
+    args: { subventionId: string; reference: string; intitule: string; montantVersement: number; imputationCompte: string; createdBy: string; date: string },
+  ): Ecriture | null => {
+    if (args.montantVersement <= 0) return null
+    const lignes: LigneEcriture[] = [
+      {
+        id: newId('lig'),
+        compteCode: '515',
+        libelle: `Versement subvention — ${args.reference}`,
+        debit: args.montantVersement,
+        credit: 0,
+      },
+      {
+        id: newId('lig'),
+        compteCode: args.imputationCompte,
+        libelle: args.intitule,
+        debit: 0,
+        credit: args.montantVersement,
+      },
+    ]
+    const exercice = new Date(args.date).getFullYear()
+    const now = new Date().toISOString()
+    const ecriture: Ecriture = {
+      id: newId('ec'),
+      numero: nextNumero(ecritures, exercice),
+      exercice,
+      date: args.date,
+      journal: 'BQ',
+      libelle: `Versement subvention ${args.reference} — ${args.intitule}`,
+      pieceRef: args.reference,
+      subventionId: args.subventionId,
+      lignes,
+      createdAt: now,
+      createdBy: args.createdBy,
+    }
+    setEcritures(prev => [ecriture, ...prev])
+    return ecriture
+  }, [ecritures])
+
   // Génère une écriture d'engagement de dépense au moment où la facture est validée :
   //   D <compte de charge>      montant TTC
   //     C 4011 (Fournisseurs — exercice courant)   montant TTC
@@ -172,7 +272,11 @@ export function useEcritures() {
     addEcriture,
     deleteEcriture,
     deleteEcrituresByFacture,
+    deleteEcrituresByQuittance,
+    deleteEcrituresBySubvention,
     generateEngagementFromFacture,
+    generateEncaissementLoyer,
+    generateVersementSubvention,
     consommationParCompte,
     ecrituresParCompte,
   }

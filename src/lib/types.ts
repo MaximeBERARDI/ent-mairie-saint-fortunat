@@ -198,6 +198,8 @@ export interface Ecriture {
   libelle: string
   pieceRef?: string             // n° de mandat / titre / pièce justificative
   factureId?: string            // lien éventuel vers une facture
+  quittanceId?: string          // lien éventuel vers une quittance de loyer
+  subventionId?: string         // lien éventuel vers une demande de subvention
   lignes: LigneEcriture[]
   createdAt: string
   createdBy: string             // Person.id

@@ -9,6 +9,8 @@ import { SectionHeader } from '@/components/ui/SectionHeader'
 import { Separator } from '@/components/ui/Separator'
 import { COLORS as C } from '@/lib/theme'
 import { useSubventions } from '@/hooks/useSubventions'
+import { useEcritures } from '@/hooks/useEcritures'
+import { useCurrentUser } from '@/hooks/useCurrentUser'
 import type { DemandeSubvention, SourceSubvention, StatutSubvention, TaskDocument } from '@/lib/types'
 
 const fmtMontant = (v: number) =>
@@ -87,6 +89,36 @@ const fmtBytes = (b: number) =>
 
 export function SubventionsView() {
   const { subventions, hydrated, createSubvention, updateSubvention, deleteSubvention } = useSubventions()
+  const { generateVersementSubvention, deleteEcrituresBySubvention } = useEcritures()
+  const { currentUserId } = useCurrentUser()
+
+  // Wraps : enregistrer un versement déclenche automatiquement
+  // une écriture comptable D 515 / C [imputationCompte] et passe le
+  // statut en "Versement partiel" ou "Versée" selon le cumul.
+  const handleEnregistrerVersement = (s: DemandeSubvention, montantVersement: number) => {
+    if (!s.imputationCompte) {
+      alert('Cette subvention n\'a pas d\'imputation comptable. Renseignez-la avant d\'enregistrer le versement.')
+      return
+    }
+    const cumul = (s.montantVerse ?? 0) + montantVersement
+    const accordeNum = s.montantAccorde ?? 0
+    const newStatut: StatutSubvention = cumul >= accordeNum - 0.01 ? 'Versée' : 'Versement partiel'
+    updateSubvention(s.id, { montantVerse: cumul, statut: newStatut })
+    generateVersementSubvention({
+      subventionId: s.id,
+      reference: s.reference,
+      intitule: s.intitule,
+      montantVersement,
+      imputationCompte: s.imputationCompte,
+      createdBy: currentUserId,
+      date: new Date().toISOString().slice(0, 10),
+    })
+  }
+
+  const handleDeleteSubvention = (id: string) => {
+    deleteSubvention(id)
+    deleteEcrituresBySubvention(id)
+  }
   const [showForm, setShowForm] = useState(false)
   const [editing, setEditing] = useState<DemandeSubvention | null>(null)
   const [filterStatut, setFilterStatut] = useState<StatutSubvention | 'tous' | 'en-cours'>('tous')
@@ -252,7 +284,7 @@ export function SubventionsView() {
                         style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.border}`, background: '#fff', cursor: 'pointer', fontSize: 11 }}
                       >✎</button>
                       <button
-                        onClick={(e) => { e.stopPropagation(); if (confirm(`Supprimer ${s.reference} ?`)) deleteSubvention(s.id) }}
+                        onClick={(e) => { e.stopPropagation(); if (confirm(`Supprimer ${s.reference} ? Les écritures comptables liées seront aussi supprimées.`)) handleDeleteSubvention(s.id) }}
                         style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.danger}`, background: C.dangerLight, color: C.danger, cursor: 'pointer', fontSize: 11 }}
                       >×</button>
                     </div>
@@ -271,6 +303,7 @@ export function SubventionsView() {
               onClose={() => setSelectedId(null)}
               onEdit={() => { setEditing(selected); setShowForm(true) }}
               onUpdate={(patch) => updateSubvention(selected.id, patch)}
+              onEnregistrerVersement={(m) => handleEnregistrerVersement(selected, m)}
             />
           </Card>
         )}
@@ -279,11 +312,12 @@ export function SubventionsView() {
   )
 }
 
-function SubventionDetail({ subvention, onClose, onEdit, onUpdate }: {
+function SubventionDetail({ subvention, onClose, onEdit, onUpdate, onEnregistrerVersement }: {
   subvention: DemandeSubvention
   onClose: () => void
   onEdit: () => void
   onUpdate: (patch: Partial<DemandeSubvention>) => void
+  onEnregistrerVersement: (montant: number) => void
 }) {
   return (
     <>
@@ -410,10 +444,8 @@ function SubventionDetail({ subvention, onClose, onEdit, onUpdate }: {
               )
               if (!m) return
               const versement = parseFloat(m)
-              const cumul = (subvention.montantVerse ?? 0) + versement
-              const accordeNum = subvention.montantAccorde ?? 0
-              const newStatut: StatutSubvention = cumul >= accordeNum - 0.01 ? 'Versée' : 'Versement partiel'
-              onUpdate({ montantVerse: cumul, statut: newStatut })
+              if (Number.isNaN(versement) || versement <= 0) return
+              onEnregistrerVersement(versement)
             }}>
               € Enregistrer un versement
             </Button>

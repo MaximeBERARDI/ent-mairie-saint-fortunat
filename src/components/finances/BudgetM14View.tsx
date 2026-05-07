@@ -20,6 +20,7 @@ import { exportPlanComptable, exportGrandLivre, exportRapportBudgetaire } from '
 import type { Section, Sens, Ecriture, JournalCode, LigneEcriture } from '@/lib/types'
 import { HistoriqueView } from './HistoriqueView'
 import { ProjectionView } from './ProjectionView'
+import { InfoTooltip } from '@/components/ui/InfoTooltip'
 
 const CURRENT_USER_ID = 'p-jm'
 
@@ -284,6 +285,9 @@ function PlanComptableView({
               </button>
             ))}
           </div>
+          <p style={{ fontSize: 11, color: C.subtle, fontStyle: 'italic', marginLeft: 6 }}>
+            💡 Cliquez sur un article pour ouvrir son détail et modifier son budget alloué.
+          </p>
         </div>
 
         {/* Récap section */}
@@ -460,21 +464,40 @@ function DrillDownPanel({
 
       {/* KPI compte */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
-        <div style={{ padding: 8, background: C.bg, borderRadius: 6 }}>
-          <p style={{ fontSize: 9, color: C.subtle, fontWeight: 600, marginBottom: 2 }}>Budget alloué</p>
+        <div style={{ padding: 8, background: editing ? `${C.green}10` : C.bg, borderRadius: 6, border: `1px solid ${editing ? C.green : 'transparent'}` }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 2 }}>
+            <p style={{ fontSize: 9, color: C.subtle, fontWeight: 600 }}>Budget alloué</p>
+            {!editing && (
+              <button
+                onClick={() => setEditing(true)}
+                title="Modifier le budget alloué"
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: C.green, fontSize: 10, padding: 0 }}
+              >✎</button>
+            )}
+          </div>
           {editing ? (
             <div style={{ display: 'flex', gap: 4 }}>
               <input
                 type="number"
                 value={budgetVal}
                 onChange={e => setBudgetVal(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') { onUpdateBudget(parseFloat(budgetVal) || 0); setEditing(false) }
+                  if (e.key === 'Escape') { setBudgetVal(String(compte.budgetAlloue)); setEditing(false) }
+                }}
                 style={{ ...inputStyle, height: 24, fontSize: 11 }}
                 autoFocus
               />
               <button
                 onClick={() => { onUpdateBudget(parseFloat(budgetVal) || 0); setEditing(false) }}
+                title="Valider (Entrée)"
                 style={{ padding: '0 6px', fontSize: 10, background: C.success, color: '#fff', border: 'none', borderRadius: 3, cursor: 'pointer' }}
               >✓</button>
+              <button
+                onClick={() => { setBudgetVal(String(compte.budgetAlloue)); setEditing(false) }}
+                title="Annuler (Échap)"
+                style={{ padding: '0 6px', fontSize: 10, background: C.bg, color: C.subtle, border: `1px solid ${C.border}`, borderRadius: 3, cursor: 'pointer' }}
+              >×</button>
             </div>
           ) : (
             <p style={{ fontSize: 13, color: C.fg, fontWeight: 700, cursor: 'pointer' }} onClick={() => setEditing(true)} title="Cliquer pour modifier">
@@ -898,22 +921,24 @@ function RatiosView({
             </div>
           )}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
-            <RatioBlock label="Épargne de gestion" value={fmtMontant(ratios.epargneGestion)} sub="RRF (hors except.) − DRF (hors except. & int.)" color={ratios.epargneGestion >= 0 ? C.success : C.danger} />
-            <RatioBlock label="CAF brute" value={fmtMontant(ratios.cafBrute)} sub="RRF − DRF" color={ratios.cafBrute >= 0 ? C.success : C.danger} />
-            <RatioBlock label="CAF nette" value={fmtMontant(ratios.cafNette)} sub="CAF brute − remb. capital" color={ratios.cafNette >= 0 ? C.success : C.warning} />
+            <RatioBlock helpKey="epargneGestion" label="Épargne de gestion" value={fmtMontant(ratios.epargneGestion)} sub="RRF (hors except.) − DRF (hors except. & int.)" color={ratios.epargneGestion >= 0 ? C.success : C.danger} />
+            <RatioBlock helpKey="cafBrute" label="CAF brute" value={fmtMontant(ratios.cafBrute)} sub="RRF − DRF" color={ratios.cafBrute >= 0 ? C.success : C.danger} />
+            <RatioBlock helpKey="cafNette" label="CAF nette" value={fmtMontant(ratios.cafNette)} sub="CAF brute − remb. capital" color={ratios.cafNette >= 0 ? C.success : C.warning} />
             <RatioBlock
+              helpKey="tauxEpargneBrute"
               label="Taux d'épargne brute"
               value={`${ratios.tauxEpargneBrute}%`}
               sub={ratios.tauxEpargneBrute > 12 ? 'sain (> 12%)' : ratios.tauxEpargneBrute >= 8 ? 'à surveiller' : 'faible (< 8%)'}
               color={ratioStatus('tauxEpargneBrute', ratios.tauxEpargneBrute) === 'good' ? C.success : ratioStatus('tauxEpargneBrute', ratios.tauxEpargneBrute) === 'warning' ? C.warning : C.danger}
             />
             <RatioBlock
+              helpKey="capaciteDesendettement"
               label="Capacité de désendettement"
               value={ratios.capaciteDesendettement === 0 && ratios.cafBrute <= 0 ? '∞' : `${ratios.capaciteDesendettement} ans`}
               sub={ratios.capaciteDesendettement < 8 ? 'sain' : ratios.capaciteDesendettement <= 12 ? 'surveillance' : 'critique'}
               color={ratioStatus('capaciteDesendettement', ratios.capaciteDesendettement) === 'good' ? C.success : ratioStatus('capaciteDesendettement', ratios.capaciteDesendettement) === 'warning' ? C.warning : C.danger}
             />
-            <RatioBlock label="Encours de dette" value={fmtMontant(ratios.encoursDette)} sub={encoursDette > 0 ? 'saisi' : 'estimé (10 × remb. annuel)'} color={C.slate} />
+            <RatioBlock helpKey="encoursDette" label="Encours de dette" value={fmtMontant(ratios.encoursDette)} sub={encoursDette > 0 ? 'saisi' : 'estimé (10 × remb. annuel)'} color={C.slate} />
           </div>
         </Card>
 
@@ -929,7 +954,10 @@ function RatiosView({
               const color = status === 'good' ? C.success : status === 'warning' ? C.warning : C.danger
               return (
                 <div key={String(r.key)} style={{ padding: 10, border: `1px solid ${C.border}`, borderLeft: `3px solid ${color}`, borderRadius: 6, background: '#fff' }}>
-                  <p style={{ fontSize: 10, color: C.subtle, fontWeight: 600, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{r.label}</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                    <p style={{ fontSize: 10, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{r.label}</p>
+                    <InfoTooltip indicatorKey={String(r.key)} />
+                  </div>
                   <p style={{ fontSize: 16, color: C.fg, fontWeight: 700 }}>{r.value}</p>
                   {r.sub && <p style={{ fontSize: 10, color: C.subtle, marginTop: 2 }}>{r.sub}</p>}
                 </div>
@@ -981,10 +1009,13 @@ function RatiosView({
   )
 }
 
-function RatioBlock({ label, value, sub, color }: { label: string; value: string; sub?: string; color: string }) {
+function RatioBlock({ label, value, sub, color, helpKey }: { label: string; value: string; sub?: string; color: string; helpKey?: string }) {
   return (
     <div style={{ padding: 12, background: '#fff', border: `1px solid ${C.border}`, borderRadius: 6 }}>
-      <p style={{ fontSize: 10, color: C.subtle, fontWeight: 600, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</p>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+        <p style={{ fontSize: 10, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</p>
+        {helpKey && <InfoTooltip indicatorKey={helpKey} />}
+      </div>
       <p style={{ fontSize: 18, color, fontWeight: 700 }}>{value}</p>
       {sub && <p style={{ fontSize: 10, color: C.subtle, marginTop: 2 }}>{sub}</p>}
     </div>
