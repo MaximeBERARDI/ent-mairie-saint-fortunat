@@ -432,3 +432,38 @@ export interface Quittance {
   notes?: string
   createdAt: string
 }
+
+// ─── Pointage des agents (heures travaillées + heures sup.) ────────
+
+export type PointageType = 'entree' | 'sortie' | 'pause-debut' | 'pause-fin'
+
+export type PointageValidationStatut = 'En attente' | 'Approuvée' | 'Refusée'
+
+// Un événement de pointage. Les entrées/sorties s'apparient pour calculer
+// le temps de travail. Les saisies manuelles (oubli de badge) déclenchent
+// un workflow de validation par un responsable.
+export interface Pointage {
+  id: string
+  personId: string                  // FK Person.id (agent)
+  type: PointageType
+  timestamp: string                 // ISO timestamp précis (date + heure)
+  manuel: boolean                   // true = saisi a posteriori, false = badgé
+  motif?: string                    // requis si manuel : "oubli badge", "rdv extérieur", etc.
+
+  // Workflow de validation pour les saisies manuelles
+  validationStatut?: PointageValidationStatut
+  validateurId?: string             // Person.id du valideur
+  validatedAt?: string              // ISO timestamp
+  validationMotif?: string          // motif de refus
+
+  createdAt: string
+  createdById: string               // qui a créé l'enregistrement (l'agent ou un superviseur)
+}
+
+// Configuration des seuils d'heures supplémentaires (commune-globale)
+export interface ConfigHSup {
+  heuresHebdoReference: number      // 35 par défaut (temps plein)
+  seuilAlerteHebdo: number          // alerte si HSup hebdo > seuil (ex: 8 h)
+  seuilAlerteMensuel: number        // alerte si HSup cumulées du mois > seuil (ex: 25 h)
+  pauseDejeunerMinutes: number      // pause forfaitaire si pas badgée (60 min)
+}

@@ -17,13 +17,14 @@ import { useEmployees } from '@/hooks/useEmployees'
 import { useLeaveRequests, applyLeaveOnEmployee, countOuvres } from '@/hooks/useLeaveRequests'
 import { useMissions } from '@/hooks/useMissions'
 import { hasPermission } from '@/lib/permissions'
+import { PointageView } from '@/components/rh/PointageView'
 import type {
   EmployeeRecord, LeaveRequest, LeaveType, LeaveStatut,
   TypeContrat, CadreFP, TaskDocument, Mission,
 } from '@/lib/types'
 import type { Person } from '@/lib/people'
 
-type RHTab = 'agents' | 'demandes' | 'calendrier' | 'paies' | 'missions'
+type RHTab = 'agents' | 'demandes' | 'calendrier' | 'pointage' | 'paies' | 'missions'
 
 const fmtMontant = (v: number) =>
   new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v)
@@ -79,10 +80,18 @@ export default function RHPage() {
   const canValidate = can('hr.validate-leaves')
 
   // Onglets accessibles selon les permissions
+  // Validation pointage : maire OU responsable commission Admin Générale & Finances
+  // OU permission hr.validate-leaves (admin/super-admin)
+  const canValidatePointage =
+    currentUser?.role === 'maire'
+    || (currentUser?.responsibleCommissions ?? []).includes('admin-finance')
+    || can('hr.validate-leaves')
+
   const visibleTabs: [RHTab, string][] = [
     ['agents', canViewAll ? 'Agents' : 'Mon profil'],
     ['demandes', 'Congés & RTT'],
     ['calendrier', 'Calendrier'],
+    ['pointage', 'Pointage'],
     canSeeFinances ? (['paies', 'Paies'] as [RHTab, string]) : null,
     canManage ? (['missions', 'Missions'] as [RHTab, string]) : null,
   ].filter((x): x is [RHTab, string] => x !== null)
@@ -110,6 +119,14 @@ export default function RHPage() {
       {tab === 'agents' && <AgentsView currentUserId={currentUserId} canViewAll={canViewAll} canManage={canManage} />}
       {tab === 'demandes' && <DemandesView currentUserId={currentUserId} canValidate={canValidate} canViewAll={canViewAll} />}
       {tab === 'calendrier' && <CalendrierView />}
+      {tab === 'pointage' && (
+        <PointageView
+          currentUserId={currentUserId}
+          currentUser={currentUser}
+          canViewAll={canViewAll}
+          canValidate={canValidatePointage}
+        />
+      )}
       {tab === 'paies' && canSeeFinances && <PaiesView />}
       {tab === 'missions' && canManage && <MissionsView />}
     </Shell>

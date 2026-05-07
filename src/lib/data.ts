@@ -3,6 +3,7 @@ import type {
   Fournisseur, PosteBudget, Facture,
   EmployeeRecord, LeaveRequest, Mission,
   BienImmobilier, Locataire, Bail, Quittance,
+  Pointage, PointageType, ConfigHSup,
 } from './types'
 import { COMPTES_M14 } from './m14-plan'
 import { COLORS as C } from './theme'
@@ -459,4 +460,82 @@ export const QUITTANCES: Quittance[] = [
   // Bail 4 — Bois & Co (600 + 0 = 600)
   { id: 'q-007', bailId: 'bail-004', mois: '2026-03', numero: 'Q-2026-03-004', loyerHC: 600, charges: 0, total: 600, statut: 'Payée', emiseAt: '2026-03-01T08:00:00Z', payeeAt: '2026-03-10T09:00:00Z', modeReglement: 'Virement', createdAt: '2026-03-01T08:00:00Z' },
   { id: 'q-008', bailId: 'bail-004', mois: '2026-04', numero: 'Q-2026-04-004', loyerHC: 600, charges: 0, total: 600, statut: 'Payée', emiseAt: '2026-04-01T08:00:00Z', payeeAt: '2026-04-09T09:00:00Z', modeReglement: 'Virement', createdAt: '2026-04-01T08:00:00Z' },
+]
+
+// ─── Configuration heures supplémentaires (seed) ──────────────────
+
+export const DEFAULT_CONFIG_HSUP: ConfigHSup = {
+  heuresHebdoReference: 35,
+  seuilAlerteHebdo: 8,            // alerte au-delà de 8h sup. dans la semaine
+  seuilAlerteMensuel: 25,         // alerte au-delà de 25h sup. dans le mois
+  pauseDejeunerMinutes: 60,       // pause déjeuner forfaitaire si pas badgée
+}
+
+// ─── Pointages (seed) ─────────────────────────────────────────────
+// Quelques pointages d'exemple sur les jours ouvrés de la semaine en cours
+// (semaine du 4 mai 2026, lundi → vendredi).
+
+const day = (yyyy_mm_dd: string, hhmm: string): string => `${yyyy_mm_dd}T${hhmm}:00`
+
+function pointage(
+  id: string, personId: string, type: PointageType, timestamp: string,
+  opts: Partial<Pick<Pointage, 'manuel' | 'motif' | 'validationStatut' | 'validateurId' | 'validatedAt'>> = {},
+): Pointage {
+  return {
+    id, personId, type, timestamp,
+    manuel: opts.manuel ?? false,
+    motif: opts.motif,
+    validationStatut: opts.validationStatut,
+    validateurId: opts.validateurId,
+    validatedAt: opts.validatedAt,
+    createdAt: timestamp,
+    createdById: personId,
+  }
+}
+
+export const POINTAGES: Pointage[] = [
+  // ─── Pierre Roche (p-pr) — Secrétariat 35h ───
+  // Lundi 4 mai
+  pointage('pt-001', 'p-pr', 'entree', day('2026-05-04', '08:30')),
+  pointage('pt-002', 'p-pr', 'pause-debut', day('2026-05-04', '12:00')),
+  pointage('pt-003', 'p-pr', 'pause-fin', day('2026-05-04', '13:00')),
+  pointage('pt-004', 'p-pr', 'sortie', day('2026-05-04', '17:30')),
+  // Mardi 5 mai
+  pointage('pt-005', 'p-pr', 'entree', day('2026-05-05', '08:25')),
+  pointage('pt-006', 'p-pr', 'pause-debut', day('2026-05-05', '12:00')),
+  pointage('pt-007', 'p-pr', 'pause-fin', day('2026-05-05', '13:00')),
+  pointage('pt-008', 'p-pr', 'sortie', day('2026-05-05', '18:15')),  // a fini un peu plus tard
+
+  // ─── Thomas Girard (p-tg) — Agent technique 35h ───
+  // Lundi 4 — beaucoup d'heures (préparation chantier)
+  pointage('pt-010', 'p-tg', 'entree', day('2026-05-04', '07:30')),
+  pointage('pt-011', 'p-tg', 'pause-debut', day('2026-05-04', '12:00')),
+  pointage('pt-012', 'p-tg', 'pause-fin', day('2026-05-04', '12:45')),
+  pointage('pt-013', 'p-tg', 'sortie', day('2026-05-04', '18:30')),
+  // Mardi 5 — saisie manuelle pour oubli de badge à la sortie
+  pointage('pt-014', 'p-tg', 'entree', day('2026-05-05', '07:30')),
+  pointage('pt-015', 'p-tg', 'sortie', day('2026-05-05', '17:30'),
+    { manuel: true, motif: 'Oubli de badger en sortie — chantier route des Combes', validationStatut: 'En attente' }),
+
+  // ─── Marc Faure (p-mf) — Voirie 35h, fait pas mal d'heures sup ───
+  // Lundi
+  pointage('pt-020', 'p-mf', 'entree', day('2026-05-04', '07:00')),
+  pointage('pt-021', 'p-mf', 'pause-debut', day('2026-05-04', '12:30')),
+  pointage('pt-022', 'p-mf', 'pause-fin', day('2026-05-04', '13:15')),
+  pointage('pt-023', 'p-mf', 'sortie', day('2026-05-04', '19:00')),  // 11h45 → 11h
+  // Mardi
+  pointage('pt-024', 'p-mf', 'entree', day('2026-05-05', '07:00')),
+  pointage('pt-025', 'p-mf', 'sortie', day('2026-05-05', '18:30')),  // pause forfaitaire 1h
+
+  // ─── Lucie Bernard (p-lb) — ATSEM 28h (80%) ───
+  pointage('pt-030', 'p-lb', 'entree', day('2026-05-04', '08:00')),
+  pointage('pt-031', 'p-lb', 'sortie', day('2026-05-04', '16:30')),
+  pointage('pt-032', 'p-lb', 'entree', day('2026-05-05', '08:00')),
+  pointage('pt-033', 'p-lb', 'sortie', day('2026-05-05', '16:30')),
+
+  // ─── Claude Viard (p-cv) — Services généraux 35h ───
+  pointage('pt-040', 'p-cv', 'entree', day('2026-05-04', '08:00')),
+  pointage('pt-041', 'p-cv', 'pause-debut', day('2026-05-04', '12:00')),
+  pointage('pt-042', 'p-cv', 'pause-fin', day('2026-05-04', '13:00')),
+  pointage('pt-043', 'p-cv', 'sortie', day('2026-05-04', '17:00')),
 ]
