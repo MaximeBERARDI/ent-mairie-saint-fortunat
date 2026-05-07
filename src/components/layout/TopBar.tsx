@@ -150,6 +150,24 @@ export function TopBar({ title, notif = 2 }: TopBarProps) {
               </div>
             )}
             <div style={{ padding: '6px 0', maxHeight: 320, overflowY: 'auto' }}>
+              <Link
+                href="/profil"
+                onClick={() => setUserMenuOpen(false)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '8px 14px',
+                  textDecoration: 'none',
+                  color: C.fg,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  borderBottom: `1px solid ${C.border}`,
+                }}
+              >
+                <span style={{ fontSize: 14 }}>👤</span>
+                Voir mon profil
+              </Link>
               <p style={{ fontSize: 9, color: C.subtle, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', padding: '6px 14px' }}>
                 Démo — Changer d'utilisateur
               </p>
