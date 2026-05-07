@@ -467,3 +467,59 @@ export interface ConfigHSup {
   seuilAlerteMensuel: number        // alerte si HSup cumulées du mois > seuil (ex: 25 h)
   pauseDejeunerMinutes: number      // pause forfaitaire si pas badgée (60 min)
 }
+
+// ─── Bulletins de paie (format fonction publique) ──────────────────
+
+export type LigneCategory =
+  | 'remuneration'              // partie haute du bulletin (rémunérations)
+  | 'cotisation-salariale'      // retenues salariales
+  | 'cotisation-patronale'      // cotisations employeur (info)
+  | 'totaux'                    // lignes de totalisation
+
+export interface LigneBulletin {
+  libelle: string
+  base?: number                 // base de calcul (€)
+  taux?: number                 // taux en % (ex: 6.80)
+  aPayer?: number               // montant en colonne "à payer / brut"
+  aDeduire?: number             // montant en colonne "à déduire"
+  category: LigneCategory
+}
+
+export type BulletinStatut = 'Émis' | 'Distribué' | 'Annulé'
+
+export interface BulletinPaie {
+  id: string
+  personId: string              // FK Person.id (agent)
+  numero: string                // ex: 'PAIE-2026-05-001'
+  mois: string                  // 'YYYY-MM'
+
+  // Snapshot des données employé au moment du bulletin (immuable ensuite)
+  snapshot: {
+    fullName: string
+    numAgent: string
+    poste: string
+    grade?: string
+    cadre?: 'A' | 'B' | 'C'
+    echelon?: number
+    contrat: string
+    tempsTravailHeures: number
+    dateEmbauche: string
+    employeurNom: string
+    employeurAdresse: string
+    employeurSiret?: string
+  }
+
+  lignes: LigneBulletin[]
+
+  // Totaux pré-calculés (cohérents avec les lignes)
+  brutTotal: number             // somme des rémunérations (avant cotisations)
+  cotisationsSalariales: number // total à déduire
+  cotisationsPatronales: number // info employeur
+  netImposable: number          // brut - cotisations CSG-déductible / non-CSG
+  netAPayer: number             // brut - cotisations salariales
+  coutEmployeur: number         // brut + cotisations patronales
+
+  statut: BulletinStatut
+  emisAt: string                // ISO timestamp de génération
+  createdAt: string
+}

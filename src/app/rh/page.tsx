@@ -18,9 +18,11 @@ import { useLeaveRequests, applyLeaveOnEmployee, countOuvres } from '@/hooks/use
 import { useMissions } from '@/hooks/useMissions'
 import { hasPermission } from '@/lib/permissions'
 import { PointageView } from '@/components/rh/PointageView'
+import { useBulletins } from '@/hooks/useBulletins'
+import { openBulletinPreview, buildBulletinMailto } from '@/lib/bulletin-paie-pdf'
 import type {
   EmployeeRecord, LeaveRequest, LeaveType, LeaveStatut,
-  TypeContrat, CadreFP, TaskDocument, Mission,
+  TypeContrat, CadreFP, TaskDocument, Mission, BulletinPaie,
 } from '@/lib/types'
 import type { Person } from '@/lib/people'
 
@@ -1173,91 +1175,211 @@ function PaiesView() {
   const { people } = useTeam()
   const { records } = useEmployees()
   const { leaves } = useLeaveRequests()
+  const { bulletins, hydrated, genererBulletinsDuMois, deleteBulletin } = useBulletins()
 
   const agents = useMemo(() => people.filter(p => p.role === 'agent' && p.active), [people])
-  const TAUX_CHARGES = 0.50  // ~50% pour FP territoriale
-
-  const rows = agents.map(a => {
-    const r = records.find(x => x.personId === a.id)
-    if (!r) return null
-    const ratio = r.tempsTravailHeures / 35
-    const brut = (r.salaireBrut + (r.primes ?? 0) + (r.ifse ?? 0)) * ratio
-    const charges = brut * TAUX_CHARGES
-    return { person: a, record: r, brut, charges, total: brut + charges }
-  }).filter((x): x is NonNullable<typeof x> => x !== null)
-
-  const totals = {
-    brut: rows.reduce((acc, r) => acc + r.brut, 0),
-    charges: rows.reduce((acc, r) => acc + r.charges, 0),
-    total: rows.reduce((acc, r) => acc + r.total, 0),
-  }
 
   const today = new Date()
-  const monthLabel = today.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
+  const moisCourant = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`
+  const [moisSelected, setMoisSelected] = useState(moisCourant)
+  const [feedbackGen, setFeedbackGen] = useState<string | null>(null)
+
+  // Bulletins du mois sélectionné (live)
+  const bulletinsMois = bulletins.filter(b => b.mois === moisSelected)
+
+  // KPI : masse salariale calculée live (comme avant) — utile même sans bulletin émis
+  const liveStats = useMemo(() => {
+    let brut = 0, salariales = 0, patronales = 0, cout = 0
+    if (bulletinsMois.length > 0) {
+      bulletinsMois.forEach(b => {
+        brut += b.brutTotal
+        salariales += b.cotisationsSalariales
+        patronales += b.cotisationsPatronales
+        cout += b.coutEmployeur
+      })
+    } else {
+      // Estimation à partir des fiches RH si pas encore de bulletin
+      agents.forEach(a => {
+        const r = records.find(x => x.personId === a.id)
+        if (!r) return
+        const ratio = r.tempsTravailHeures / 35
+        const b = (r.salaireBrut + (r.primes ?? 0) + (r.ifse ?? 0)) * ratio
+        brut += b
+        const cotPat = b * 0.50  // estimation
+        patronales += cotPat
+        cout += b + cotPat
+      })
+    }
+    return { brut, salariales, patronales, cout }
+  }, [bulletinsMois, agents, records])
+
+  const moisLabel = (() => {
+    const [y, m] = moisSelected.split('-').map(Number)
+    return new Date(y, m - 1, 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
+  })()
+
+  const handleGenerer = () => {
+    const created = genererBulletinsDuMois(moisSelected, agents, records)
+    setFeedbackGen(
+      created.length > 0
+        ? `${created.length} bulletin${created.length > 1 ? 's' : ''} généré${created.length > 1 ? 's' : ''} pour ${moisLabel}.`
+        : `Tous les agents ont déjà un bulletin pour ${moisLabel}.`,
+    )
+    setTimeout(() => setFeedbackGen(null), 5000)
+  }
+
+  if (!hydrated) {
+    return <p style={{ padding: 20, fontSize: 12, color: C.subtle }}>Chargement…</p>
+  }
 
   return (
     <div>
       <HRKpis records={records} leaves={leaves} people={people} />
 
       <div style={{ display: 'flex', gap: 'var(--gap)', marginBottom: 'var(--gap)' }}>
-        <KpiCard label="Masse salariale brute" value={fmtMontant(totals.brut)} sub={`mensuel · ${monthLabel}`} color={C.slate} />
-        <KpiCard label="Charges patronales" value={fmtMontant(totals.charges)} sub={`~${Math.round(TAUX_CHARGES * 100)}% du brut`} color={C.warning} />
-        <KpiCard label="Coût total mensuel" value={fmtMontant(totals.total)} sub="brut + charges" color={C.danger} />
-        <KpiCard label="Coût annualisé" value={fmtMontant(totals.total * 12)} sub="estimation 12 mois" />
+        <KpiCard label="Masse salariale brute" value={fmtMontant(liveStats.brut)} sub={`mensuel · ${moisLabel}`} color={C.slate} />
+        <KpiCard label="Cotisations patronales" value={fmtMontant(liveStats.patronales)} sub="charges employeur" color={C.warning} />
+        <KpiCard label="Coût total mensuel" value={fmtMontant(liveStats.cout)} sub="brut + cotis. patronales" color={C.danger} />
+        <KpiCard label="Coût annualisé" value={fmtMontant(liveStats.cout * 12)} sub="estimation 12 mois" />
       </div>
 
+      {/* Génération mensuelle */}
+      <Card padding={14} style={{ marginBottom: 'var(--gap)', background: `${C.green}08`, borderColor: `${C.green}40` }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <p style={{ fontSize: 13, color: C.fg, fontWeight: 600, flex: 1, minWidth: 200 }}>
+            Générer les bulletins de paie pour le mois
+          </p>
+          <input
+            type="month"
+            value={moisSelected}
+            onChange={e => setMoisSelected(e.target.value)}
+            style={{ ...inputStyle, width: 160 }}
+          />
+          <Button variant="primary" size="sm" onClick={handleGenerer}>
+            🧾 Générer pour {moisLabel}
+          </Button>
+        </div>
+        {feedbackGen && (
+          <p style={{ fontSize: 12, color: C.success, fontWeight: 600, marginTop: 8 }}>✓ {feedbackGen}</p>
+        )}
+      </Card>
+
       <Card padding={0}>
-        <div style={{ padding: '8px 14px', borderBottom: `1px solid ${C.border}`, background: C.bg, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <p style={{ flex: 1, fontSize: 12, color: C.fg, fontWeight: 700 }}>Détail paie {monthLabel}</p>
-          <Button size="sm">📊 Exporter</Button>
-          <Button variant="primary" size="sm">Générer fiches de paie</Button>
+        <div style={{ padding: '8px 14px', borderBottom: `1px solid ${C.border}`, background: C.bg }}>
+          <p style={{ fontSize: 12, color: C.fg, fontWeight: 700, textTransform: 'capitalize' }}>
+            Bulletins de {moisLabel} ({bulletinsMois.length})
+          </p>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 0.8fr 1fr 1fr 1fr 1.2fr', padding: '8px 14px', background: '#fff', borderBottom: `1px solid ${C.border}` }}>
-          {['Agent', 'Contrat', 'Temps', 'Brut', 'Charges (~50%)', 'Coût total', 'Imputation'].map(h => (
-            <p key={h} style={{ fontSize: 10, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</p>
-          ))}
-        </div>
-        {rows.map((row, i) => (
-          <div key={row.person.id} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 0.8fr 1fr 1fr 1fr 1.2fr', padding: '10px 14px', borderBottom: i < rows.length - 1 ? `1px solid ${C.border}` : 'none', alignItems: 'center', fontSize: 12 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <Avatar initials={row.person.initials} size={26} color={row.person.color} />
-              <div>
-                <p style={{ fontSize: 12, color: C.fg, fontWeight: 500 }}>{row.person.fullName}</p>
-                <p style={{ fontSize: 10, color: C.subtle }}>{row.record.numAgent} · {row.person.poste}</p>
-              </div>
-            </div>
-            <Badge label={row.record.contrat} variant={row.record.contrat === 'Titulaire' ? 'primary' : 'terra'} />
-            <p style={{ color: row.record.tempsTravailHeures < 35 ? C.warning : C.fg }}>{Math.round((row.record.tempsTravailHeures / 35) * 100)}%</p>
-            <p style={{ fontWeight: 600, color: C.fg }}>{fmtMontant(row.brut)}</p>
-            <p style={{ color: C.muted }}>{fmtMontant(row.charges)}</p>
-            <p style={{ fontWeight: 700, color: C.fg }}>{fmtMontant(row.total)}</p>
-            <p style={{ fontSize: 10, color: C.subtle, fontFamily: "'JetBrains Mono', monospace" }}>
-              {row.record.contrat === 'Titulaire' ? '6411 + cotis.' : '6413 + cotis.'}
+        {bulletinsMois.length === 0 ? (
+          <div style={{ padding: 32, textAlign: 'center' }}>
+            <p style={{ fontSize: 13, color: C.fg, fontWeight: 600, marginBottom: 6 }}>
+              Aucun bulletin émis pour {moisLabel}
+            </p>
+            <p style={{ fontSize: 12, color: C.subtle }}>
+              Cliquez sur « Générer pour {moisLabel} » pour créer les bulletins de tous les agents actifs.
             </p>
           </div>
-        ))}
-        {/* Total */}
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 0.8fr 1fr 1fr 1fr 1.2fr', padding: '10px 14px', background: C.bg, alignItems: 'center', fontSize: 12 }}>
-          <p style={{ fontWeight: 700, color: C.fg }}>TOTAL ({rows.length} agents)</p>
-          <span /><span />
-          <p style={{ fontWeight: 700, color: C.fg }}>{fmtMontant(totals.brut)}</p>
-          <p style={{ fontWeight: 700, color: C.muted }}>{fmtMontant(totals.charges)}</p>
-          <p style={{ fontWeight: 700, color: C.danger }}>{fmtMontant(totals.total)}</p>
-          <span />
-        </div>
+        ) : (
+          <>
+            <div style={{ display: 'grid', gridTemplateColumns: '130px 1.8fr 100px 90px 100px 110px 110px 130px', gap: 10, padding: '8px 14px', background: '#fff', borderBottom: `1px solid ${C.border}` }}>
+              {['N°', 'Agent', 'Contrat', 'Temps', 'Brut', 'Net à payer', 'Coût employ.', 'Actions'].map(h => (
+                <p key={h} style={{ fontSize: 10, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</p>
+              ))}
+            </div>
+            {bulletinsMois.map((b, i) => {
+              const person = people.find(p => p.id === b.personId)
+              return (
+                <div key={b.id} style={{ display: 'grid', gridTemplateColumns: '130px 1.8fr 100px 90px 100px 110px 110px 130px', gap: 10, padding: '10px 14px', borderBottom: i < bulletinsMois.length - 1 ? `1px solid ${C.border}` : 'none', alignItems: 'center', fontSize: 12 }}>
+                  <p style={{ fontFamily: "'JetBrains Mono', monospace", color: C.subtle, fontSize: 10 }}>{b.numero}</p>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                    {person && <Avatar initials={person.initials} size={26} color={person.color} />}
+                    <div style={{ minWidth: 0 }}>
+                      <p style={{ color: C.fg, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {b.snapshot.fullName}
+                      </p>
+                      <p style={{ fontSize: 10, color: C.subtle, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {b.snapshot.numAgent} · {b.snapshot.poste}
+                      </p>
+                    </div>
+                  </div>
+                  <Badge label={b.snapshot.contrat} variant={b.snapshot.contrat === 'Titulaire' ? 'primary' : 'terra'} />
+                  <p style={{ color: b.snapshot.tempsTravailHeures < 35 ? C.warning : C.fg }}>{Math.round((b.snapshot.tempsTravailHeures / 35) * 100)}%</p>
+                  <p style={{ fontWeight: 600, color: C.fg }}>{fmtMontant(b.brutTotal)}</p>
+                  <p style={{ fontWeight: 700, color: C.success }}>{fmtMontant(b.netAPayer)}</p>
+                  <p style={{ fontWeight: 600, color: C.muted }}>{fmtMontant(b.coutEmployeur)}</p>
+                  <BulletinActions bulletin={b} agentEmail={person?.email} onDelete={() => deleteBulletin(b.id)} />
+                </div>
+              )
+            })}
+          </>
+        )}
       </Card>
+
+      {bulletinsMois.length > 0 && (
+        <Card padding={14} style={{ marginTop: 'var(--gap)', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+          <div>
+            <p style={{ fontSize: 9, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Total brut</p>
+            <p style={{ fontSize: 16, color: C.fg, fontWeight: 700 }}>{fmtMontant(liveStats.brut)}</p>
+          </div>
+          <div>
+            <p style={{ fontSize: 9, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Total cot. salariales</p>
+            <p style={{ fontSize: 16, color: C.warning, fontWeight: 700 }}>{fmtMontant(liveStats.salariales)}</p>
+          </div>
+          <div>
+            <p style={{ fontSize: 9, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Total cot. patronales</p>
+            <p style={{ fontSize: 16, color: C.muted, fontWeight: 700 }}>{fmtMontant(liveStats.patronales)}</p>
+          </div>
+          <div>
+            <p style={{ fontSize: 9, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Coût total employeur</p>
+            <p style={{ fontSize: 16, color: C.danger, fontWeight: 700 }}>{fmtMontant(liveStats.cout)}</p>
+          </div>
+        </Card>
+      )}
 
       <Card padding={14} style={{ marginTop: 'var(--gap)' }}>
         <SectionHeader title="Imputation comptable (M14)" />
         <p style={{ fontSize: 11, color: C.subtle, marginBottom: 8 }}>
-          La masse salariale s'impute sur le chapitre 012 — Charges de personnel.
-          Les comptes 6411 (titulaires) et 6413 (contractuels) reçoivent les rémunérations.
-          Les cotisations vont sur 6451 (URSSAF), 6453 (retraite), 6454 (ASSEDIC).
+          La masse salariale s'impute sur le chapitre <strong>012 — Charges de personnel</strong>.
+          Les comptes <strong>6411</strong> (titulaires) et <strong>6413</strong> (contractuels)
+          reçoivent les rémunérations brutes. Les cotisations patronales se ventilent sur
+          <strong> 6451</strong> (URSSAF), <strong>6453</strong> (CNRACL/IRCANTEC), <strong>6454</strong> (Pôle Emploi),
+          et <strong>6455</strong> (assurance du personnel).
         </p>
         <p style={{ fontSize: 11, color: C.fg }}>
-          Annualisé estimé : <strong>{fmtMontant(totals.total * 12)}</strong> — à comparer au budget alloué chap. 012 dans le module Finances.
+          Annualisé estimé : <strong>{fmtMontant(liveStats.cout * 12)}</strong> — à comparer
+          au budget alloué chap. 012 dans le module Finances.
         </p>
       </Card>
+    </div>
+  )
+}
+
+function BulletinActions({ bulletin, agentEmail, onDelete }: {
+  bulletin: BulletinPaie
+  agentEmail: string | undefined
+  onDelete: () => void
+}) {
+  return (
+    <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+      <button
+        onClick={() => openBulletinPreview(bulletin)}
+        title="Aperçu / Imprimer / PDF"
+        style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.border}`, background: '#fff', cursor: 'pointer', fontSize: 11 }}
+      >🧾</button>
+      <button
+        onClick={() => {
+          if (!agentEmail) { alert("L'agent n'a pas d'email enregistré."); return }
+          window.location.href = buildBulletinMailto(bulletin, agentEmail)
+        }}
+        title="Envoyer par email"
+        disabled={!agentEmail}
+        style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.border}`, background: '#fff', cursor: agentEmail ? 'pointer' : 'not-allowed', opacity: agentEmail ? 1 : 0.5, fontSize: 11 }}
+      >✉</button>
+      <button
+        onClick={() => { if (confirm(`Supprimer le bulletin ${bulletin.numero} ?`)) onDelete() }}
+        title="Supprimer"
+        style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.danger}`, background: C.dangerLight, color: C.danger, cursor: 'pointer', fontSize: 11 }}
+      >×</button>
     </div>
   )
 }

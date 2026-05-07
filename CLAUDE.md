@@ -51,6 +51,7 @@ Chaque module suit le **même pattern** :
 | Quittances | `useParcImmobilier` | `Quittance` | `:quittances:v1` |
 | Pointages | `usePointages` | `Pointage` | `:pointages:v1` |
 | Config HSup | `usePointages` | `ConfigHSup` | `:hsup-config:v1` |
+| Bulletins de paie | `useBulletins` | `BulletinPaie` | `:bulletins:v1` |
 | Auth (mots de passe démo) | `useAuth` | — | `:auth:v1` |
 | Utilisateur courant | `useCurrentUser` | — | `:current-user-id:v1` |
 
@@ -112,7 +113,7 @@ Toujours type-checker avant de commit. Le build inclut le type-check + le lint N
 - ✅ **Comptes rendus** — extraction IA (Claude API), validation des tâches extraites
 - ✅ **Équipe** — fiches Person, niveaux d'autorisation, signature, délégations
 - ✅ **Finances** — module M14 complet (plan comptable, écritures, ratios, historique pluriannuel, exports Excel multi-feuilles) + Parc immobilier (biens, locataires, baux, quittances PDF, relances mail)
-- ✅ **RH** — agents/contrats/grades/IFSE, workflow congés avec maj auto compteurs, calendrier mensuel réel, paies M14, missions, pointage des heures + suivi heures supplémentaires (workflow validation des saisies manuelles par maire / responsable Admin & Finances)
+- ✅ **RH** — agents/contrats/grades/IFSE, workflow congés avec maj auto compteurs, calendrier mensuel réel, paies M14, missions, pointage des heures + suivi heures supplémentaires (workflow validation des saisies manuelles par maire / responsable Admin & Finances), génération de bulletins de paie format fonction publique territoriale (CSG/CRDS, CNRACL ou IRCANTEC, RAFP, etc.) en PDF imprimable
 - ✅ **Dashboard** — câblé aux vraies données (3 vues Élu/Agent/Maire)
 - 🟡 **Commissions** — CRUD tâches OK, mais membres statiques, pas de planning réunions, GED mock
 - ❌ **Auth réelle** — pas de NextAuth/Clerk, `CURRENT_USER_ID` codé en dur
