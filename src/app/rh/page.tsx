@@ -3,6 +3,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { Shell } from '@/components/layout/Shell'
 import { Card, KpiCard } from '@/components/ui/Card'
+import { DataList } from '@/components/ui/DataList'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Tag } from '@/components/ui/Tag'
@@ -1280,38 +1281,85 @@ function PaiesView() {
             </p>
           </div>
         ) : (
-          <>
-            <div style={{ display: 'grid', gridTemplateColumns: '130px 1.8fr 100px 90px 100px 110px 110px 130px', gap: 10, padding: '8px 14px', background: '#fff', borderBottom: `1px solid ${C.border}` }}>
-              {['N°', 'Agent', 'Contrat', 'Temps', 'Brut', 'Net à payer', 'Coût employ.', 'Actions'].map(h => (
-                <p key={h} style={{ fontSize: 10, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</p>
-              ))}
-            </div>
-            {bulletinsMois.map((b, i) => {
-              const person = people.find(p => p.id === b.personId)
-              return (
-                <div key={b.id} style={{ display: 'grid', gridTemplateColumns: '130px 1.8fr 100px 90px 100px 110px 110px 130px', gap: 10, padding: '10px 14px', borderBottom: i < bulletinsMois.length - 1 ? `1px solid ${C.border}` : 'none', alignItems: 'center', fontSize: 12 }}>
-                  <p style={{ fontFamily: "'JetBrains Mono', monospace", color: C.subtle, fontSize: 10 }}>{b.numero}</p>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-                    {person && <Avatar initials={person.initials} size={26} color={person.color} />}
-                    <div style={{ minWidth: 0 }}>
-                      <p style={{ color: C.fg, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {b.snapshot.fullName}
-                      </p>
-                      <p style={{ fontSize: 10, color: C.subtle, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {b.snapshot.numAgent} · {b.snapshot.poste}
-                      </p>
+          <DataList
+            rows={bulletinsMois}
+            rowKey={(b) => b.id}
+            columns={[
+              {
+                key: 'numero',
+                label: 'N°',
+                width: '130px',
+                render: (b) => <span style={{ fontFamily: "'JetBrains Mono', monospace", color: C.subtle, fontSize: 11 }}>{b.numero}</span>,
+              },
+              {
+                key: 'agent',
+                label: 'Agent',
+                width: '1.6fr',
+                primaryOnMobile: true,
+                render: (b) => {
+                  const person = people.find(p => p.id === b.personId)
+                  return (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                      {person && <Avatar initials={person.initials} size={28} color={person.color} />}
+                      <div style={{ minWidth: 0 }}>
+                        <p style={{ color: C.fg, fontWeight: 600 }}>{b.snapshot.fullName}</p>
+                        <p style={{ fontSize: 10, color: C.subtle }}>
+                          {b.snapshot.numAgent} · {b.snapshot.poste}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                  <Badge label={b.snapshot.contrat} variant={b.snapshot.contrat === 'Titulaire' ? 'primary' : 'terra'} />
-                  <p style={{ color: b.snapshot.tempsTravailHeures < 35 ? C.warning : C.fg }}>{Math.round((b.snapshot.tempsTravailHeures / 35) * 100)}%</p>
-                  <p style={{ fontWeight: 600, color: C.fg }}>{fmtMontant(b.brutTotal)}</p>
-                  <p style={{ fontWeight: 700, color: C.success }}>{fmtMontant(b.netAPayer)}</p>
-                  <p style={{ fontWeight: 600, color: C.muted }}>{fmtMontant(b.coutEmployeur)}</p>
-                  <BulletinActions bulletin={b} agentEmail={person?.email} onDelete={() => deleteBulletin(b.id)} />
-                </div>
-              )
-            })}
-          </>
+                  )
+                },
+              },
+              {
+                key: 'contrat',
+                label: 'Contrat',
+                width: '110px',
+                hideOnMedium: true,
+                render: (b) => <Badge label={b.snapshot.contrat} variant={b.snapshot.contrat === 'Titulaire' ? 'primary' : 'terra'} />,
+              },
+              {
+                key: 'temps',
+                label: 'Temps',
+                width: '70px',
+                align: 'right',
+                hideOnMedium: true,
+                render: (b) => <span style={{ color: b.snapshot.tempsTravailHeures < 35 ? C.warning : C.fg }}>{Math.round((b.snapshot.tempsTravailHeures / 35) * 100)}%</span>,
+              },
+              {
+                key: 'brut',
+                label: 'Brut',
+                width: '100px',
+                align: 'right',
+                render: (b) => <span style={{ fontWeight: 700, color: C.fg }}>{fmtMontant(b.brutTotal)}</span>,
+              },
+              {
+                key: 'net',
+                label: 'Net à payer',
+                width: '120px',
+                align: 'right',
+                render: (b) => <span style={{ fontWeight: 700, color: C.success }}>{fmtMontant(b.netAPayer)}</span>,
+              },
+              {
+                key: 'cout',
+                label: 'Coût employ.',
+                width: '120px',
+                align: 'right',
+                hideOnMedium: true,
+                render: (b) => <span style={{ fontWeight: 600, color: C.muted }}>{fmtMontant(b.coutEmployeur)}</span>,
+              },
+              {
+                key: 'actions',
+                label: 'Actions',
+                width: '130px',
+                align: 'right',
+                render: (b) => {
+                  const person = people.find(p => p.id === b.personId)
+                  return <BulletinActions bulletin={b} agentEmail={person?.email} onDelete={() => deleteBulletin(b.id)} />
+                },
+              },
+            ]}
+          />
         )}
       </Card>
 

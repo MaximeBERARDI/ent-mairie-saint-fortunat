@@ -40,10 +40,31 @@ interface KpiCardProps {
 
 export function KpiCard({ label, value, sub, color = '#6ab123', style }: KpiCardProps) {
   return (
-    <Card style={{ flex: 1, minWidth: 0, ...style }}>
-      <p style={{ fontSize: 10, color: 'var(--text-subtle)', marginBottom: 4 }}>{label}</p>
-      <p style={{ fontSize: 26, color, fontWeight: 700, lineHeight: 1.1, marginBottom: 2 }}>{value}</p>
-      {sub && <p style={{ fontSize: 10, color: 'var(--text-subtle)' }}>{sub}</p>}
+    <Card padding={16} style={{ flex: '1 1 200px', minWidth: 180, ...style }}>
+      <p style={{ fontSize: 10, color: 'var(--text-subtle)', marginBottom: 6, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</p>
+      <p style={{ fontSize: 24, color, fontWeight: 700, lineHeight: 1.1, marginBottom: 4 }}>{value}</p>
+      {sub && <p style={{ fontSize: 11, color: 'var(--text-subtle)' }}>{sub}</p>}
     </Card>
+  )
+}
+
+interface KpiBarProps {
+  children: ReactNode
+}
+
+/**
+ * Conteneur pour aligner des KpiCard avec wrap automatique au-delà de 3-4
+ * cartes selon la largeur disponible.
+ */
+export function KpiBar({ children }: KpiBarProps) {
+  return (
+    <div style={{
+      display: 'flex',
+      flexWrap: 'wrap',
+      gap: 'var(--gap)',
+      marginBottom: 'var(--gap)',
+    }}>
+      {children}
+    </div>
   )
 }

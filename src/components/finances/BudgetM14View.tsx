@@ -127,29 +127,29 @@ export function BudgetM14View() {
       </div>
 
       {/* Onglets sous-vue */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 14, alignItems: 'center', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', gap: 4, background: C.ph, borderRadius: 8, padding: 3 }}>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 18, alignItems: 'center', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 4, background: C.ph, borderRadius: 10, padding: 4 }}>
           {([
-            ['plan', 'Plan comptable'],
-            ['ecritures', `Écritures (${ecritures.length})`],
-            ['ratios', 'Ratios & analyse'],
-            ['historique', 'Historique & évolution'],
-            ['projection', 'Projection'],
+            ['plan', '📋 Plan comptable'],
+            ['ecritures', `📒 Écritures (${ecritures.length})`],
+            ['ratios', '📊 Indicateurs'],
+            ['historique', '📈 Historique'],
+            ['projection', '🎯 Projection'],
           ] as [BudgetTab, string][]).map(([v, label]) => (
             <button
               key={v}
               onClick={() => setTab(v)}
               style={{
-                padding: '5px 12px',
-                borderRadius: 6,
+                padding: '7px 16px',
+                borderRadius: 8,
                 background: v === tab ? '#fff' : 'transparent',
                 border: 'none',
                 color: v === tab ? C.fg : C.muted,
-                fontSize: 12,
-                fontWeight: v === tab ? 600 : 400,
+                fontSize: 13,
+                fontWeight: v === tab ? 600 : 500,
                 cursor: 'pointer',
                 fontFamily: "'DM Sans', sans-serif",
-                boxShadow: v === tab ? '0 1px 2px rgba(0,0,0,0.1)' : 'none',
+                boxShadow: v === tab ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
               }}
             >
               {label}

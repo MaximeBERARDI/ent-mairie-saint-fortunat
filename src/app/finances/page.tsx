@@ -3,6 +3,7 @@
 import { useState, useMemo, useRef } from 'react'
 import { Shell } from '@/components/layout/Shell'
 import { Card, KpiCard } from '@/components/ui/Card'
+import { DataList } from '@/components/ui/DataList'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Tag } from '@/components/ui/Tag'
@@ -62,10 +63,31 @@ export default function FinancesPage() {
 
   return (
     <Shell title="Finances">
-      <div style={{ display: 'flex', gap: 8, marginBottom: 20, alignItems: 'center' }}>
-        <div style={{ display: 'flex', gap: 4, background: C.ph, borderRadius: 8, padding: 3 }}>
-          {([['factures', 'Factures'], ['budget', 'Budget'], ['fournisseurs', 'Fournisseurs'], ['parc-immobilier', 'Parc immobilier'], ['subventions', 'Subventions']] as [FinView, string][]).map(([v, label]) => (
-            <button key={v} onClick={() => setView(v)} style={{ padding: '5px 12px', borderRadius: 6, background: v === view ? '#fff' : 'transparent', border: 'none', color: v === view ? C.fg : C.muted, fontSize: 12, fontWeight: v === view ? 600 : 400, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", boxShadow: v === view ? '0 1px 2px rgba(0,0,0,0.1)' : 'none' }}>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 22, alignItems: 'center', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 4, background: C.ph, borderRadius: 10, padding: 4 }}>
+          {([
+            ['factures', '🧾 Factures'],
+            ['budget', '💰 Budget'],
+            ['fournisseurs', '🏢 Fournisseurs'],
+            ['parc-immobilier', '🏠 Parc immobilier'],
+            ['subventions', '🎫 Subventions'],
+          ] as [FinView, string][]).map(([v, label]) => (
+            <button
+              key={v}
+              onClick={() => setView(v)}
+              style={{
+                padding: '8px 16px',
+                borderRadius: 8,
+                background: v === view ? '#fff' : 'transparent',
+                border: 'none',
+                color: v === view ? C.fg : C.muted,
+                fontSize: 13,
+                fontWeight: v === view ? 600 : 500,
+                cursor: 'pointer',
+                fontFamily: "'DM Sans', sans-serif",
+                boxShadow: v === view ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+              }}
+            >
               {label}
             </button>
           ))}
@@ -192,59 +214,90 @@ function FacturesView() {
             />
           )}
 
-          {filtered.length === 0 ? (
-            <Card padding={24} style={{ textAlign: 'center' }}>
-              <p style={{ fontSize: 13, color: C.subtle }}>Aucune facture à afficher pour ce filtre.</p>
-            </Card>
-          ) : (
-            <Card padding={0}>
-              <div style={{ display: 'grid', gridTemplateColumns: '110px 1.4fr 90px 1.6fr 70px 90px 80px', gap: 10, padding: '8px 14px', background: C.bg, borderBottom: `1px solid ${C.border}`, alignItems: 'center' }}>
-                {['N°', 'Fournisseur', 'Montant', 'Poste comptable', 'Date', 'Statut', 'Action'].map(h => (
-                  <p key={h} style={{ fontSize: 10, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', minWidth: 0 }}>{h}</p>
-                ))}
-              </div>
-              {filtered.map((f, i) => {
-                const fournisseur = fournisseurs.find(x => x.id === f.fournisseurId)
-                const poste = postes.find(p => p.code === f.posteCode)
-                const isSelected = selectedId === f.id
-                return (
-                  <div key={f.id} onClick={() => setSelectedId(f.id)} style={{ display: 'grid', gridTemplateColumns: '110px 1.4fr 90px 1.6fr 70px 90px 80px', gap: 10, padding: '10px 14px', borderBottom: i < filtered.length - 1 ? `1px solid ${C.border}` : 'none', background: isSelected ? `${C.green}06` : (f.statut === 'En attente validation' ? `${C.warning}06` : '#fff'), alignItems: 'center', cursor: 'pointer' }}>
-                    <p style={{ fontSize: 11, color: C.subtle, fontFamily: "'JetBrains Mono', monospace", minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.numero}</p>
-                    <p style={{ fontSize: 12, color: C.fg, fontWeight: 500, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{fournisseur?.nom ?? '—'}</p>
-                    <p style={{ fontSize: 12, color: C.fg, fontWeight: 600, minWidth: 0 }}>{fmtMontant(f.montantTTC)}</p>
+          <DataList
+            rows={filtered}
+            rowKey={(f) => f.id}
+            onRowClick={(f) => setSelectedId(f.id)}
+            isSelected={(f) => selectedId === f.id}
+            rowBackground={(f) => f.statut === 'En attente validation' ? `${C.warning}06` : undefined}
+            emptyMessage="Aucune facture à afficher pour ce filtre."
+            columns={[
+              {
+                key: 'numero',
+                label: 'N°',
+                width: '110px',
+                primaryOnMobile: true,
+                render: (f) => (
+                  <span style={{ fontSize: 12, color: C.subtle, fontFamily: "'JetBrains Mono', monospace" }}>{f.numero}</span>
+                ),
+              },
+              {
+                key: 'fournisseur',
+                label: 'Fournisseur',
+                width: '1.4fr',
+                secondaryOnMobile: true,
+                render: (f) => {
+                  const fournisseur = fournisseurs.find(x => x.id === f.fournisseurId)
+                  return <span style={{ color: C.fg, fontWeight: 500 }}>{fournisseur?.nom ?? '—'}</span>
+                },
+              },
+              {
+                key: 'montant',
+                label: 'Montant',
+                width: '110px',
+                align: 'right',
+                render: (f) => <span style={{ color: C.fg, fontWeight: 700 }}>{fmtMontant(f.montantTTC)}</span>,
+              },
+              {
+                key: 'poste',
+                label: 'Poste comptable',
+                width: '1.6fr',
+                hideOnMedium: true,
+                render: (f) => {
+                  const poste = postes.find(p => p.code === f.posteCode)
+                  return (
                     <div style={{ minWidth: 0, overflow: 'hidden' }}>
                       <Tag label={poste ? `${poste.code} ${poste.label}` : f.posteCode} color={C.slate} truncate />
                     </div>
-                    <p style={{ fontSize: 11, color: C.subtle, minWidth: 0 }}>{fmtDateShort(f.dateFacture)}</p>
-                    <div style={{ minWidth: 0 }}>
-                      <Badge
-                        label={statutShortLabel(f.statut)}
-                        variant={statutBadgeVariant(f.statut)}
-                      />
-                    </div>
-                    <div style={{ minWidth: 0 }}>
-                      {f.statut === 'En attente validation' && canValidate ? (
-                        <div style={{ display: 'flex', gap: 4 }}>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handleValidate(f.id); setSelectedId(f.id) }}
-                            style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.success}`, background: C.successLight, color: C.success, cursor: 'pointer', fontSize: 12 }}
-                            title="Valider"
-                          >✓</button>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); setSelectedId(f.id) }}
-                            style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.danger}`, background: C.dangerLight, color: C.danger, cursor: 'pointer', fontSize: 12 }}
-                            title="Voir / rejeter"
-                          >✕</button>
-                        </div>
-                      ) : (
-                        <Button size="sm">Voir</Button>
-                      )}
-                    </div>
+                  )
+                },
+              },
+              {
+                key: 'date',
+                label: 'Date',
+                width: '90px',
+                render: (f) => <span style={{ color: C.subtle, fontSize: 12 }}>{fmtDateShort(f.dateFacture)}</span>,
+              },
+              {
+                key: 'statut',
+                label: 'Statut',
+                width: '100px',
+                render: (f) => <Badge label={statutShortLabel(f.statut)} variant={statutBadgeVariant(f.statut)} />,
+              },
+              {
+                key: 'action',
+                label: 'Action',
+                width: '90px',
+                align: 'right',
+                render: (f) => f.statut === 'En attente validation' && canValidate ? (
+                  <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleValidate(f.id); setSelectedId(f.id) }}
+                      style={{ padding: '4px 10px', borderRadius: 4, border: `1px solid ${C.success}`, background: C.successLight, color: C.success, cursor: 'pointer', fontSize: 13 }}
+                      title="Valider"
+                    >✓</button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setSelectedId(f.id) }}
+                      style={{ padding: '4px 10px', borderRadius: 4, border: `1px solid ${C.danger}`, background: C.dangerLight, color: C.danger, cursor: 'pointer', fontSize: 13 }}
+                      title="Voir / rejeter"
+                    >✕</button>
                   </div>
-                )
-              })}
-            </Card>
-          )}
+                ) : (
+                  <Button size="sm">Voir</Button>
+                ),
+              },
+            ]}
+          />
         </div>
 
         {/* Panneau détail */}

@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { Card, KpiCard } from '@/components/ui/Card'
+import { DataList } from '@/components/ui/DataList'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Tag } from '@/components/ui/Tag'
@@ -808,29 +809,69 @@ function QuittancesTab({
         ))}
       </div>
 
-      {filtered.length === 0 ? (
-        <Card padding={24} style={{ textAlign: 'center' }}>
-          <p style={{ fontSize: 12, color: C.subtle, fontStyle: 'italic' }}>Aucune quittance.</p>
-        </Card>
-      ) : (
-        <Card padding={0}>
-          <div style={{ display: 'grid', gridTemplateColumns: '130px 110px 1.5fr 1fr 100px 110px 220px', gap: 10, padding: '8px 14px', background: C.bg, borderBottom: `1px solid ${C.border}` }}>
-            {['N°', 'Mois', 'Bien', 'Locataire', 'Total', 'Statut', 'Actions'].map(h => (
-              <p key={h} style={{ fontSize: 10, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</p>
-            ))}
-          </div>
-          {filtered.map((q, i) => {
-            const bail = baux.find(b => b.id === q.bailId)
-            const bien = bail ? biens.find(x => x.id === bail.bienId) : null
-            const locataire = bail ? locataires.find(x => x.id === bail.locataireId) : null
-            return (
-              <div key={q.id} style={{ display: 'grid', gridTemplateColumns: '130px 110px 1.5fr 1fr 100px 110px 220px', gap: 10, padding: '10px 14px', borderBottom: i < filtered.length - 1 ? `1px solid ${C.border}` : 'none', alignItems: 'center', fontSize: 12 }}>
-                <p style={{ fontFamily: "'JetBrains Mono', monospace", color: C.subtle, fontSize: 11 }}>{q.numero}</p>
-                <p style={{ color: C.fg, textTransform: 'capitalize' }}>{fmtMois(q.mois)}</p>
-                <p style={{ color: C.fg, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{bien?.nom ?? '—'}</p>
-                <p style={{ color: C.fg, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{locataire?.fullName ?? '—'}</p>
-                <p style={{ color: C.fg, fontWeight: 600 }}>{fmtMontantDec(q.total)}</p>
-                <Badge label={q.statut} variant={statutQuittanceVariant(q.statut)} />
+      <DataList
+        rows={filtered}
+        rowKey={(q) => q.id}
+        emptyMessage="Aucune quittance."
+        columns={[
+          {
+            key: 'numero',
+            label: 'N°',
+            width: '120px',
+            primaryOnMobile: true,
+            render: (q) => <span style={{ fontFamily: "'JetBrains Mono', monospace", color: C.subtle, fontSize: 12 }}>{q.numero}</span>,
+          },
+          {
+            key: 'mois',
+            label: 'Mois',
+            width: '110px',
+            secondaryOnMobile: true,
+            render: (q) => <span style={{ color: C.fg, textTransform: 'capitalize' }}>{fmtMois(q.mois)}</span>,
+          },
+          {
+            key: 'bien',
+            label: 'Bien',
+            width: '1.5fr',
+            hideOnMedium: true,
+            render: (q) => {
+              const bail = baux.find(b => b.id === q.bailId)
+              const bien = bail ? biens.find(x => x.id === bail.bienId) : null
+              return <span style={{ color: C.fg, fontWeight: 500 }}>{bien?.nom ?? '—'}</span>
+            },
+          },
+          {
+            key: 'locataire',
+            label: 'Locataire',
+            width: '1fr',
+            render: (q) => {
+              const bail = baux.find(b => b.id === q.bailId)
+              const locataire = bail ? locataires.find(x => x.id === bail.locataireId) : null
+              return <span style={{ color: C.fg }}>{locataire?.fullName ?? '—'}</span>
+            },
+          },
+          {
+            key: 'total',
+            label: 'Total',
+            width: '110px',
+            align: 'right',
+            render: (q) => <span style={{ color: C.fg, fontWeight: 700 }}>{fmtMontantDec(q.total)}</span>,
+          },
+          {
+            key: 'statut',
+            label: 'Statut',
+            width: '120px',
+            render: (q) => <Badge label={q.statut} variant={statutQuittanceVariant(q.statut)} />,
+          },
+          {
+            key: 'actions',
+            label: 'Actions',
+            width: '230px',
+            align: 'right',
+            render: (q) => {
+              const bail = baux.find(b => b.id === q.bailId)
+              const bien = bail ? biens.find(x => x.id === bail.bienId) : null
+              const locataire = bail ? locataires.find(x => x.id === bail.locataireId) : null
+              return (
                 <QuittanceActions
                   quittance={q}
                   bail={bail}
@@ -841,11 +882,11 @@ function QuittancesTab({
                   onMarkRelancee={onMarkRelancee}
                   onDelete={onDelete}
                 />
-              </div>
-            )
-          })}
-        </Card>
-      )}
+              )
+            },
+          },
+        ]}
+      />
     </div>
   )
 }

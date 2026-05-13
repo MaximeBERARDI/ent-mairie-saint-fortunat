@@ -8,6 +8,7 @@ import { Tag } from '@/components/ui/Tag'
 import { SectionHeader } from '@/components/ui/SectionHeader'
 import { Separator } from '@/components/ui/Separator'
 import { COLORS as C } from '@/lib/theme'
+import { DataList } from '@/components/ui/DataList'
 import { useSubventions } from '@/hooks/useSubventions'
 import { useEcritures } from '@/hooks/useEcritures'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
@@ -234,65 +235,87 @@ export function SubventionsView() {
       <div style={{ display: 'flex', gap: 'var(--gap)' }}>
         {/* Liste */}
         <div style={{ flex: selected ? 2 : 3 }}>
-          {filtered.length === 0 ? (
-            <Card padding={24} style={{ textAlign: 'center' }}>
-              <p style={{ fontSize: 12, color: C.subtle, fontStyle: 'italic' }}>Aucune demande dans cette catégorie.</p>
-            </Card>
-          ) : (
-            <Card padding={0}>
-              <div style={{ display: 'grid', gridTemplateColumns: '110px 1fr 130px 110px 110px 130px 70px', gap: 10, padding: '8px 14px', background: C.bg, borderBottom: `1px solid ${C.border}` }}>
-                {['Réf.', 'Intitulé', 'Source', 'Demandé', 'Accordé', 'Statut', 'Action'].map(h => (
-                  <p key={h} style={{ fontSize: 10, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</p>
-                ))}
-              </div>
-              {filtered.map((s, i) => {
-                const isSel = selectedId === s.id
-                return (
-                  <div
-                    key={s.id}
-                    onClick={() => setSelectedId(s.id)}
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: '110px 1fr 130px 110px 110px 130px 70px',
-                      gap: 10,
-                      padding: '10px 14px',
-                      borderBottom: i < filtered.length - 1 ? `1px solid ${C.border}` : 'none',
-                      alignItems: 'center',
-                      fontSize: 12,
-                      cursor: 'pointer',
-                      background: isSel ? `${C.green}06` : '#fff',
-                    }}
-                  >
-                    <p style={{ fontFamily: "'JetBrains Mono', monospace", color: C.subtle, fontSize: 11 }}>{s.reference}</p>
-                    <div style={{ minWidth: 0 }}>
-                      <p style={{ color: C.fg, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.intitule}</p>
-                      <p style={{ fontSize: 10, color: C.subtle }}>{fmtDate(s.dateDepot)}</p>
-                    </div>
-                    <div style={{ minWidth: 0 }}>
-                      <Tag label={s.source} color={sourceColor(s.source)} truncate />
-                    </div>
-                    <p style={{ color: C.fg, fontWeight: 600 }}>{fmtMontant(s.montantDemande)}</p>
-                    <p style={{ color: s.montantAccorde ? C.success : C.subtle, fontWeight: 600 }}>
-                      {s.montantAccorde ? fmtMontant(s.montantAccorde) : '—'}
-                    </p>
-                    <div style={{ minWidth: 0 }}>
-                      <Badge label={s.statut} variant={statutVariant(s.statut)} />
-                    </div>
-                    <div style={{ display: 'flex', gap: 4 }}>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); setEditing(s); setShowForm(true) }}
-                        style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.border}`, background: '#fff', cursor: 'pointer', fontSize: 11 }}
-                      >✎</button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); if (confirm(`Supprimer ${s.reference} ? Les écritures comptables liées seront aussi supprimées.`)) handleDeleteSubvention(s.id) }}
-                        style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.danger}`, background: C.dangerLight, color: C.danger, cursor: 'pointer', fontSize: 11 }}
-                      >×</button>
-                    </div>
+          <DataList
+            rows={filtered}
+            rowKey={(s) => s.id}
+            onRowClick={(s) => setSelectedId(s.id)}
+            isSelected={(s) => selectedId === s.id}
+            emptyMessage="Aucune demande dans cette catégorie."
+            columns={[
+              {
+                key: 'reference',
+                label: 'Réf.',
+                width: '120px',
+                primaryOnMobile: true,
+                render: (s) => <span style={{ fontFamily: "'JetBrains Mono', monospace", color: C.subtle, fontSize: 12 }}>{s.reference}</span>,
+              },
+              {
+                key: 'intitule',
+                label: 'Intitulé',
+                width: '1fr',
+                secondaryOnMobile: true,
+                render: (s) => (
+                  <div style={{ minWidth: 0 }}>
+                    <p style={{ color: C.fg, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.intitule}</p>
+                    <p style={{ fontSize: 10, color: C.subtle }}>{fmtDate(s.dateDepot)}</p>
                   </div>
-                )
-              })}
-            </Card>
-          )}
+                ),
+              },
+              {
+                key: 'source',
+                label: 'Source',
+                width: '140px',
+                hideOnMedium: true,
+                render: (s) => (
+                  <div style={{ minWidth: 0 }}>
+                    <Tag label={s.source} color={sourceColor(s.source)} truncate />
+                  </div>
+                ),
+              },
+              {
+                key: 'demande',
+                label: 'Demandé',
+                width: '110px',
+                align: 'right',
+                render: (s) => <span style={{ color: C.fg, fontWeight: 700 }}>{fmtMontant(s.montantDemande)}</span>,
+              },
+              {
+                key: 'accorde',
+                label: 'Accordé',
+                width: '110px',
+                align: 'right',
+                render: (s) => (
+                  <span style={{ color: s.montantAccorde ? C.success : C.subtle, fontWeight: 700 }}>
+                    {s.montantAccorde ? fmtMontant(s.montantAccorde) : '—'}
+                  </span>
+                ),
+              },
+              {
+                key: 'statut',
+                label: 'Statut',
+                width: '130px',
+                render: (s) => <Badge label={s.statut} variant={statutVariant(s.statut)} />,
+              },
+              {
+                key: 'action',
+                label: 'Action',
+                width: '80px',
+                align: 'right',
+                render: (s) => (
+                  <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setEditing(s); setShowForm(true) }}
+                      style={{ padding: '4px 10px', borderRadius: 4, border: `1px solid ${C.border}`, background: '#fff', cursor: 'pointer', fontSize: 12 }}
+                    >✎</button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); if (confirm(`Supprimer ${s.reference} ? Les écritures comptables liées seront aussi supprimées.`)) handleDeleteSubvention(s.id) }}
+                      style={{ padding: '4px 10px', borderRadius: 4, border: `1px solid ${C.danger}`, background: C.dangerLight, color: C.danger, cursor: 'pointer', fontSize: 12 }}
+                    >×</button>
+                  </div>
+                ),
+              },
+            ]}
+          />
         </div>
 
         {/* Détail */}
