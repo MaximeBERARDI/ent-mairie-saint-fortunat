@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/Button'
 import { Avatar } from '@/components/ui/Avatar'
 import { Separator } from '@/components/ui/Separator'
 import { COLORS as C } from '@/lib/theme'
-import { COMMISSIONS } from '@/lib/data'
+import { useCommissions } from '@/hooks/useCommissions'
 import { ROLE_LABELS, ROLE_COLORS, type Person, type PersonRole } from '@/lib/people'
 import { OrganigrammeView } from '@/components/team/OrganigrammeView'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
@@ -326,6 +326,7 @@ function PersonDetail({ person, tasks, canManage, currentUserId, onEdit, onToggl
   onEdit: () => void
   onToggleActive: () => void
 }) {
+  const { commissions } = useCommissions()
   // Permissions effectives
   const fromRole = new Set(ROLE_PERMISSIONS[person.authLevel])
   const custom = new Set(person.customPermissions ?? [])
@@ -336,7 +337,7 @@ function PersonDetail({ person, tasks, canManage, currentUserId, onEdit, onToggl
   const myValidations = tasks.filter(t => t.validatorId === person.id && t.status === 'En attente validation')
 
   // Commissions où la personne est référente
-  const responsibleFor = COMMISSIONS.filter(c => person.responsibleCommissions.includes(c.id))
+  const responsibleFor = commissions.filter(c => person.responsibleCommissions.includes(c.id))
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap)' }}>

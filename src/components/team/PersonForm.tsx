@@ -5,7 +5,7 @@ import { COLORS as C } from '@/lib/theme'
 import { Button } from '@/components/ui/Button'
 import { Avatar } from '@/components/ui/Avatar'
 import { Badge } from '@/components/ui/Badge'
-import { COMMISSIONS } from '@/lib/data'
+import { useCommissions } from '@/hooks/useCommissions'
 import {
   AUTH_LEVEL_LABELS, AUTH_LEVEL_DESCRIPTIONS,
   PERMISSION_LABELS, SIGNATURE_LABELS,
@@ -43,6 +43,7 @@ const PERMISSION_GROUPS: Array<{ title: string; perms: Permission[] }> = [
 ]
 
 export function PersonForm({ open, onClose, onSubmit, onDelete, initial }: PersonFormProps) {
+  const { commissions } = useCommissions()
   const [section, setSection] = useState<'identite' | 'autorisations' | 'signature' | 'delegations'>('identite')
   const [prenom, setPrenom] = useState('')
   const [nom, setNom] = useState('')
@@ -455,7 +456,7 @@ export function PersonForm({ open, onClose, onSubmit, onDelete, initial }: Perso
                 Une commission peut avoir plusieurs responsables. Indépendant de l&apos;appartenance simple à la commission.
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {COMMISSIONS.map(c => {
+                {commissions.map(c => {
                   const checked = responsibleCommissions.has(c.id)
                   return (
                     <label

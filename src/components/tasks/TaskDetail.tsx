@@ -7,7 +7,7 @@ import { Avatar } from '@/components/ui/Avatar'
 import { Separator } from '@/components/ui/Separator'
 import { COLORS as C } from '@/lib/theme'
 import { getPerson } from '@/lib/people'
-import { COMMISSIONS } from '@/lib/data'
+import { useCommissions } from '@/hooks/useCommissions'
 import { formatLongFR } from '@/lib/dateUtils'
 import type { Task, TaskStatus, TaskPriority, TaskComment } from '@/lib/types'
 
@@ -59,10 +59,11 @@ export function TaskDetailContent({
   task, currentUserId, onUpdate, onCycleStatus, onEdit, onDelete, onClose,
   onAddComment, onDeleteComment, compact = false,
 }: TaskDetailContentProps) {
+  const { commissions } = useCommissions()
   const assignee = getPerson(task.assigneeId)
   const validator = task.validatorId ? getPerson(task.validatorId) : null
   const author = task.createdById ? getPerson(task.createdById) : null
-  const commission = COMMISSIONS.find(c => c.id === task.commissionId) ?? null
+  const commission = commissions.find(c => c.id === task.commissionId) ?? null
 
   const [draft, setDraft] = useState('')
   const handleAdd = () => {

@@ -10,7 +10,7 @@ import { SectionHeader } from '@/components/ui/SectionHeader'
 import { Avatar } from '@/components/ui/Avatar'
 import { Row } from '@/components/ui/Row'
 import { COLORS as C } from '@/lib/theme'
-import { COMMISSIONS } from '@/lib/data'
+import { useCommissions } from '@/hooks/useCommissions'
 import { PEOPLE } from '@/lib/people'
 import { useTasks } from '@/hooks/useTasks'
 import { useComptesRendus } from '@/hooks/useComptesRendus'
@@ -58,6 +58,7 @@ const INITIAL_WIZARD: WizardState = {
 }
 
 export default function CompteRendusPage() {
+  const { commissions } = useCommissions()
   const [tab, setTab] = useState<TabView>('liste')
   const [wizardStep, setWizardStep] = useState<number>(0)
   const [wizard, setWizard] = useState<WizardState>(INITIAL_WIZARD)
@@ -109,6 +110,7 @@ export default function CompteRendusPage() {
 function ListeView() {
   const { crs, hydrated, deleteCR } = useComptesRendus()
   const { tasks } = useTasks()
+  const { commissions } = useCommissions()
   const [selected, setSelected] = useState<CompteRendu | null>(null)
 
   const selectedTasks = selected
@@ -177,7 +179,7 @@ function ListeView() {
               <p style={{ padding: 16, fontSize: 12, color: C.subtle }}>Aucun CR pour le moment.</p>
             )}
             {crs.map((cr, i) => {
-              const commissionName = COMMISSIONS.find(c => c.id === cr.commissionId)?.name ?? 'Sans commission'
+              const commissionName = commissions.find(c => c.id === cr.commissionId)?.name ?? 'Sans commission'
               const dateLabel = cr.meetingDate
                 ? new Date(cr.meetingDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
                 : new Date(cr.importedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })
@@ -257,6 +259,7 @@ function UploadStep({
   updateWizard: (patch: Partial<WizardState>) => void
   onNext: () => void
 }) {
+  const { commissions } = useCommissions()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [dragOver, setDragOver] = useState(false)
   const [readError, setReadError] = useState<string | null>(null)
@@ -359,7 +362,7 @@ function UploadStep({
             style={{ flex: 1, height: 36, border: `1px solid ${C.border}`, borderRadius: 6, background: '#fff', padding: '0 10px', fontSize: 12, color: wizard.commissionId ? C.fg : C.subtle, fontFamily: "'DM Sans', sans-serif" }}
           >
             <option value="">Affecter à une commission… (optionnel)</option>
-            {COMMISSIONS.map(c => (
+            {commissions.map(c => (
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
           </select>
@@ -536,6 +539,7 @@ function ValidationStep({
   onPrev: () => void
   onNext: () => void
 }) {
+  const { commissions } = useCommissions()
   // Helper : valeur effective d'une tâche (extracted + edits)
   const effective = (i: number): ExtractedTask => ({
     ...wizard.extractedTasks[i],
@@ -698,7 +702,7 @@ function ValidationStep({
           <p style={{ fontSize: 12, color: C.fg, fontWeight: 600, marginBottom: 10 }}>Récapitulatif</p>
           {[
             ['Document', wizard.filename ?? '—'],
-            ['Commission', COMMISSIONS.find(c => c.id === wizard.commissionId)?.name ?? '—'],
+            ['Commission', commissions.find(c => c.id === wizard.commissionId)?.name ?? '—'],
             ['Tâches extraites', String(wizard.extractedTasks.length)],
             ['À créer', `${acceptedCount}`],
             ['Rejetées', `${Object.values(wizard.rejected).filter(Boolean).length}`],
@@ -743,6 +747,7 @@ function NotificationStep({
 }) {
   const { createTask } = useTasks()
   const { createCR } = useComptesRendus()
+  const { commissions } = useCommissions()
 
   // Création des tâches au montage (idempotent : un ref évite la double-exécution en strict mode)
   const createdRef = useRef(false)

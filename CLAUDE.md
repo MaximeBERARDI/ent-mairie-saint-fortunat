@@ -120,13 +120,11 @@ Toujours type-checker avant de commit. Le build inclut le type-check + le lint N
 
 ## Dette technique connue
 
-- `COMMISSIONS` (import depuis `data.ts`) est encore référencé dans Dashboard,
-  Tâches, et plusieurs composants. Le hook `useCommissions` est utilisé
-  uniquement par /commissions (onglet admin + listes locales). Les renommages
-  faits depuis l'admin ne se propagent **pas** aux autres pages tant que la
-  migration n'est pas terminée. À faire en suivant : remplacer
-  `import { COMMISSIONS } from '@/lib/data'` par `useCommissions()` dans
-  toutes les pages qui en ont besoin.
+- Migration `COMMISSIONS` → `useCommissions` **terminée** dans toutes les
+  pages client (Dashboard, Tâches, TaskForm, TaskCalendar, TaskDetail,
+  PersonForm, /equipe, /comptes-rendus). Reste utilisé en seed par
+  `useCommissions` lui-même et par `useTasks` (lookup legacy de
+  migration) + l'API route `/api/cr-extract` (server-side).
 
 ## Pas de back-end
 

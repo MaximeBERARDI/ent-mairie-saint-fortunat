@@ -12,7 +12,8 @@ import { Avatar } from '@/components/ui/Avatar'
 import { SectionHeader } from '@/components/ui/SectionHeader'
 import { Tag } from '@/components/ui/Tag'
 import { COLORS as C } from '@/lib/theme'
-import { COMMISSIONS } from '@/lib/data'
+import { useCommissions } from '@/hooks/useCommissions'
+import type { Commission } from '@/lib/types'
 import { useTasks } from '@/hooks/useTasks'
 import { useFactures } from '@/hooks/useFactures'
 import { useBudget } from '@/hooks/useBudget'
@@ -68,8 +69,8 @@ function getTodayLabel(): string {
   return `${days[d.getDay()]} ${d.getDate()} ${FRENCH_MONTHS[d.getMonth()]}`
 }
 
-// Prochaines réunions de commissions (parsées depuis COMMISSIONS.nextMeeting "5 mai")
-function getUpcomingMeetings(commissions: typeof COMMISSIONS) {
+// Prochaines réunions de commissions (parsées depuis le champ `nextMeeting` "5 mai")
+function getUpcomingMeetings(commissions: Commission[]) {
   const now = new Date()
   return commissions
     .map(c => {
@@ -83,7 +84,7 @@ function getUpcomingMeetings(commissions: typeof COMMISSIONS) {
       const date = new Date(year, monthIdx, day)
       return { commission: c, date, label: c.nextMeeting }
     })
-    .filter((x): x is { commission: typeof COMMISSIONS[number]; date: Date; label: string } => x !== null)
+    .filter((x): x is { commission: Commission; date: Date; label: string } => x !== null)
     .sort((a, b) => a.date.getTime() - b.date.getTime())
 }
 
@@ -169,6 +170,7 @@ function DashConseiller({ tasks, updateTask, currentUserId }: { tasks: Task[]; u
   const { factures } = useFactures()
   const { leaves } = useLeaveRequests()
   const { people } = useTeam()
+  const { commissions } = useCommissions()
 
   // Mes tâches actives
   const myTasks = useMemo(
@@ -203,7 +205,7 @@ function DashConseiller({ tasks, updateTask, currentUserId }: { tasks: Task[]; u
   }, [myTasks])
 
   // Prochaines réunions
-  const meetings = getUpcomingMeetings(COMMISSIONS).slice(0, 3)
+  const meetings = getUpcomingMeetings(commissions).slice(0, 3)
   const nextMeeting = meetings[0]
 
   // Activité récente — enrichie : tâches, factures soumises, demandes de congés
@@ -299,7 +301,7 @@ function DashConseiller({ tasks, updateTask, currentUserId }: { tasks: Task[]; u
             </p>
           ) : (
             topTasks.map((t, i) => {
-              const c = COMMISSIONS.find(x => x.id === t.commissionId)
+              const c = commissions.find(x => x.id === t.commissionId)
               const days = daysUntil(t.dueDate)
               const dot = t.priority === 'Urgent' ? C.danger : days !== null && days < 3 ? C.warning : C.subtle
               return (
@@ -397,6 +399,7 @@ function DashAgent({ tasks, updateTask, currentUserId }: { tasks: Task[]; update
   const { records, findByPersonId } = useEmployees()
   const { leaves, byPerson: leavesByPerson } = useLeaveRequests()
   const { byPerson: missionsByPerson } = useMissions()
+  const { commissions } = useCommissions()
   // Permissions : on n'affiche les actions rapides que si l'utilisateur a les droits
   const canSubmitFacture = me?.role !== 'agent' || hasPermission(me.authLevel, 'finance.view-all', me.customPermissions)
   const canUploadCR = me ? hasPermission(me.authLevel, 'cr.upload', me.customPermissions) : false
@@ -431,7 +434,7 @@ function DashAgent({ tasks, updateTask, currentUserId }: { tasks: Task[]; update
     })
   }, [tasks])
 
-  const meetings = getUpcomingMeetings(COMMISSIONS).slice(0, 3)
+  const meetings = getUpcomingMeetings(commissions).slice(0, 3)
   const meetingsThisWeek = meetings.filter(m => {
     const days = Math.floor((m.date.getTime() - Date.now()) / 86400000)
     return days >= 0 && days <= 7
@@ -465,7 +468,7 @@ function DashAgent({ tasks, updateTask, currentUserId }: { tasks: Task[]; update
               </p>
             ) : (
               todayTasks.map((t, i) => {
-                const c = COMMISSIONS.find(x => x.id === t.commissionId)
+                const c = commissions.find(x => x.id === t.commissionId)
                 return (
                   <div key={t.id} style={{
                     display: 'flex', alignItems: 'center', gap: 10,
@@ -511,7 +514,7 @@ function DashAgent({ tasks, updateTask, currentUserId }: { tasks: Task[]; update
               <p style={{ fontSize: 12, color: C.subtle, padding: '12px 0' }}>Rien de prévu cette semaine.</p>
             )}
             {weekTasks.map((t, i) => {
-              const c = COMMISSIONS.find(x => x.id === t.commissionId)
+              const c = commissions.find(x => x.id === t.commissionId)
               return (
                 <Row
                   key={t.id}
@@ -666,6 +669,7 @@ function DashMaire({ tasks, currentUserId }: { tasks: Task[]; currentUserId: str
   void currentUserId  // disponible pour personalisation future (à toi/équipe)
   // Sources de données réelles
   const { factures } = useFactures()
+  const { commissions } = useCommissions()
   const { postes, computePosteWithConsumption } = useBudget()
   const { ecritures } = useEcritures()
   const { records } = useEmployees()
@@ -675,7 +679,7 @@ function DashMaire({ tasks, currentUserId }: { tasks: Task[]; currentUserId: str
 
   // ─── Stats tâches ───
   const commissionStats = useMemo(() => {
-    return COMMISSIONS.map(c => {
+    return commissions.map(c => {
       const ctasks = tasks.filter(t => t.commissionId === c.id)
       const active = ctasks.filter(t => t.status !== 'Terminé').length
       const late = ctasks.filter(t => {

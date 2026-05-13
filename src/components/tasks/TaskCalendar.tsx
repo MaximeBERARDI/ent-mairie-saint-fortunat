@@ -8,7 +8,7 @@ import { Tag } from '@/components/ui/Tag'
 import { Avatar } from '@/components/ui/Avatar'
 import { COLORS as C } from '@/lib/theme'
 import { getPerson } from '@/lib/people'
-import { COMMISSIONS } from '@/lib/data'
+import { useCommissions } from '@/hooks/useCommissions'
 import { isoDate, parseISO, FRENCH_MONTHS } from '@/lib/dateUtils'
 import type { Task } from '@/lib/types'
 
@@ -261,9 +261,10 @@ function formatDayHeading(iso: string): string {
 }
 
 function TaskMiniCard({ task, onClick }: { task: Task; onClick: () => void }) {
+  const { commissions } = useCommissions()
   const assignee = getPerson(task.assigneeId)
-  const commName = COMMISSIONS.find(c => c.id === task.commissionId)?.name?.split(' ')[0]
-  const commColor = COMMISSIONS.find(c => c.id === task.commissionId)?.color ?? C.slate
+  const commName = commissions.find(c => c.id === task.commissionId)?.name?.split(' ')[0]
+  const commColor = commissions.find(c => c.id === task.commissionId)?.color ?? C.slate
   const statusColor = STATUS_COLORS[task.status]
 
   return (

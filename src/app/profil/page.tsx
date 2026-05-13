@@ -88,6 +88,13 @@ export default function ProfilPage() {
     if (!currentUser) return
     setPhone(currentUser.phone ?? '')
     setPrefs(loadPrefs(currentUser.id))
+    // Charger la photo persistée pour ce profil
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = window.localStorage.getItem(`ent-mairie:profil-photo:${currentUser.id}`)
+        setPhotoDataUrl(stored)
+      } catch {}
+    }
   }, [currentUserId, currentUser])
 
   if (!hydrated || !currentUser) {
@@ -135,8 +142,18 @@ export default function ProfilPage() {
       alert('La photo doit faire moins de 1 Mo.')
       return
     }
+    if (!currentUser) return
     const reader = new FileReader()
-    reader.onload = () => setPhotoDataUrl(reader.result as string)
+    reader.onload = () => {
+      const dataUrl = reader.result as string
+      setPhotoDataUrl(dataUrl)
+      // Persister dans localStorage par profil
+      try {
+        window.localStorage.setItem(`ent-mairie:profil-photo:${currentUser.id}`, dataUrl)
+      } catch {
+        alert('Impossible d\'enregistrer la photo (espace de stockage saturé).')
+      }
+    }
     reader.readAsDataURL(file)
   }
 

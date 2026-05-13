@@ -14,7 +14,8 @@ import { TaskForm } from '@/components/tasks/TaskForm'
 import { TaskCalendar } from '@/components/tasks/TaskCalendar'
 import { TaskDetailContent, TaskDetailModal } from '@/components/tasks/TaskDetail'
 import { useTasks } from '@/hooks/useTasks'
-import { COMMISSIONS } from '@/lib/data'
+import { useCommissions } from '@/hooks/useCommissions'
+import type { Commission } from '@/lib/types'
 import { getPerson, getPersonName, CURRENT_USER_ID } from '@/lib/people'
 import { formatShortFR, formatLongFR, relativeBucket } from '@/lib/dateUtils'
 import type { Task, TaskStatus } from '@/lib/types'
@@ -35,19 +36,19 @@ const PRIORITY_VARIANTS: Record<string, 'danger' | 'warning' | 'default'> = {
   Faible: 'default',
 }
 
-function getCommissionName(id?: string): string | null {
+function getCommissionName(commissions: Commission[], id?: string): string | null {
   if (!id) return null
-  return COMMISSIONS.find(c => c.id === id)?.name ?? null
+  return commissions.find(c => c.id === id)?.name ?? null
 }
 
-function getCommissionShortName(id?: string): string | null {
-  const name = getCommissionName(id)
+function getCommissionShortName(commissions: Commission[], id?: string): string | null {
+  const name = getCommissionName(commissions, id)
   if (!name) return null
   return name.split(' ')[0]
 }
 
-function getCommissionColor(id?: string): string {
-  return COMMISSIONS.find(c => c.id === id)?.color ?? C.slate
+function getCommissionColor(commissions: Commission[], id?: string): string {
+  return commissions.find(c => c.id === id)?.color ?? C.slate
 }
 
 export default function TachesPage() {
@@ -214,6 +215,7 @@ function ListeView({
   onAddComment: (taskId: string, authorId: string, content: string) => void
   onDeleteComment: (taskId: string, commentId: string) => void
 }) {
+  const { commissions } = useCommissions()
   const FILTERS: [TaskFilter, string][] = [
     ['toutes', `Toutes (${counts.toutes})`],
     ['mes', `Mes tâches (${counts.mes})`],
@@ -255,8 +257,8 @@ function ListeView({
           ) : (
             tasks.map((t, i) => {
               const assignee = getPerson(t.assigneeId)
-              const commName = getCommissionShortName(t.commissionId)
-              const commColor = getCommissionColor(t.commissionId)
+              const commName = getCommissionShortName(commissions, t.commissionId)
+              const commColor = getCommissionColor(commissions, t.commissionId)
               return (
                 <div
                   key={t.id}
@@ -327,6 +329,7 @@ function KanbanView({
   onEdit: (t: Task) => void
   onCycleStatus: (t: Task) => void
 }) {
+  const { commissions } = useCommissions()
   const COLUMNS: { status: TaskStatus; color: string }[] = [
     { status: 'À faire', color: C.subtle },
     { status: 'En cours', color: C.warning },
@@ -357,8 +360,8 @@ function KanbanView({
               )}
               {columnTasks.map(card => {
                 const assignee = getPerson(card.assigneeId)
-                const commName = getCommissionShortName(card.commissionId)
-                const commColor = getCommissionColor(card.commissionId)
+                const commName = getCommissionShortName(commissions, card.commissionId)
+                const commColor = getCommissionColor(commissions, card.commissionId)
                 return (
                   <Card
                     key={card.id}

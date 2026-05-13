@@ -2,10 +2,11 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { COLORS as C } from '@/lib/theme'
-import { COMMISSIONS } from '@/lib/data'
 import { PEOPLE, ROLE_LABELS, getPerson } from '@/lib/people'
 import { Button } from '@/components/ui/Button'
 import { Avatar } from '@/components/ui/Avatar'
+import { useCommissions } from '@/hooks/useCommissions'
+import { useCurrentUser } from '@/hooks/useCurrentUser'
 import type { Task, TaskPriority, TaskStatus, TaskDocument } from '@/lib/types'
 
 interface TaskFormProps {
@@ -39,10 +40,13 @@ function readFileAsDataURL(file: File): Promise<string> {
 }
 
 export function TaskForm({ open, onClose, onSubmit, onDelete, initial, title }: TaskFormProps) {
+  const { currentUserId } = useCurrentUser()
+  const { commissions } = useCommissions()
   const [label, setLabel] = useState('')
   const [description, setDescription] = useState('')
   const [commissionId, setCommissionId] = useState<string>('')
-  const [assigneeId, setAssigneeId] = useState<string>('p-jm')
+  // Par défaut, l'utilisateur courant s'assigne à lui-même (au lieu du maire en dur)
+  const [assigneeId, setAssigneeId] = useState<string>(currentUserId)
   const [validatorId, setValidatorId] = useState<string>('')
   const [dueDate, setDueDate] = useState<string>('')
   const [priority, setPriority] = useState<TaskPriority>('Normal')
@@ -57,7 +61,7 @@ export function TaskForm({ open, onClose, onSubmit, onDelete, initial, title }: 
     setLabel(initial?.label ?? '')
     setDescription(initial?.description ?? '')
     setCommissionId(initial?.commissionId ?? '')
-    setAssigneeId(initial?.assigneeId ?? 'p-jm')
+    setAssigneeId(initial?.assigneeId ?? currentUserId)
     setValidatorId(initial?.validatorId ?? '')
     setDueDate(initial?.dueDate ?? '')
     setPriority(initial?.priority ?? 'Normal')
@@ -275,7 +279,7 @@ export function TaskForm({ open, onClose, onSubmit, onDelete, initial, title }: 
               <label style={labelStyle}>Commission (optionnel)</label>
               <select value={commissionId} onChange={e => setCommissionId(e.target.value)} style={inputStyle}>
                 <option value="">— Sans commission —</option>
-                {COMMISSIONS.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                {commissions.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
             <div>
