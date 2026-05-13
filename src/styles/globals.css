@@ -126,3 +126,41 @@ body {
 
 .font-mono { font-family: 'JetBrains Mono', monospace; }
 .font-handwriting { font-family: 'Caveat', cursive; }
+
+/* ─── Responsive mobile ─────────────────────────────────────────────
+ * Sur écrans < 768px : padding réduit, top bar plus haute pour le burger,
+ * et on contraint les éléments à ne pas dépasser la viewport.
+ */
+@media (max-width: 767px) {
+  :root {
+    --content-pad: 10px;
+    --gap: 10px;
+    --topbar-h: 54px;
+    --card-pad: 10px;
+  }
+
+  /* Réduit la taille de tous les inputs sur mobile pour éviter le zoom iOS */
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+
+  /* Cards qui ont flex:N s'étalent sur 100% de la ligne */
+  main [style*="flex: 1"],
+  main [style*="flex:1"],
+  main [style*="flex: 2"],
+  main [style*="flex:2"],
+  main [style*="flex: 3"],
+  main [style*="flex:3"],
+  main [style*="flex: 1.5"],
+  main [style*="flex: 1.8"],
+  main [style*="flex: 2.5"] {
+    min-width: 0;
+  }
+
+  /* Les rangs flex inline en row deviennent column (sauf si attribut data-keep-row) */
+  main > div > div[style*="display: flex"]:not([data-keep-row]),
+  main > div > div[style*="display:flex"]:not([data-keep-row]) {
+    flex-wrap: wrap;
+  }
+}
+

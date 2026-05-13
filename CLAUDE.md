@@ -115,8 +115,18 @@ Toujours type-checker avant de commit. Le build inclut le type-check + le lint N
 - ✅ **Finances** — module M14 complet (plan comptable, écritures, ratios, historique pluriannuel, exports Excel multi-feuilles) + Parc immobilier (biens, locataires, baux, quittances PDF, relances mail)
 - ✅ **RH** — agents/contrats/grades/IFSE, workflow congés avec maj auto compteurs, calendrier mensuel réel, paies M14, missions, pointage des heures + suivi heures supplémentaires (workflow validation des saisies manuelles par maire / responsable Admin & Finances), génération de bulletins de paie format fonction publique territoriale (CSG/CRDS, CNRACL ou IRCANTEC, RAFP, etc.) en PDF imprimable
 - ✅ **Dashboard** — câblé aux vraies données (3 vues Élu/Agent/Maire)
-- 🟡 **Commissions** — CRUD tâches OK, mais membres statiques, pas de planning réunions, GED mock
+- 🟡 **Commissions** — CRUD tâches OK + onglet admin pour renommer/créer/supprimer les commissions ; membres statiques, pas de planning réunions, GED mock
 - ❌ **Auth réelle** — pas de NextAuth/Clerk, `CURRENT_USER_ID` codé en dur
+
+## Dette technique connue
+
+- `COMMISSIONS` (import depuis `data.ts`) est encore référencé dans Dashboard,
+  Tâches, et plusieurs composants. Le hook `useCommissions` est utilisé
+  uniquement par /commissions (onglet admin + listes locales). Les renommages
+  faits depuis l'admin ne se propagent **pas** aux autres pages tant que la
+  migration n'est pas terminée. À faire en suivant : remplacer
+  `import { COMMISSIONS } from '@/lib/data'` par `useCommissions()` dans
+  toutes les pages qui en ont besoin.
 
 ## Pas de back-end
 

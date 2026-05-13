@@ -12,16 +12,17 @@ import { Separator } from '@/components/ui/Separator'
 import { Avatar } from '@/components/ui/Avatar'
 import { Tag } from '@/components/ui/Tag'
 import { COLORS as C } from '@/lib/theme'
-import { COMMISSIONS } from '@/lib/data'
 import { useTasks } from '@/hooks/useTasks'
 import { useTeam } from '@/hooks/useTeam'
+import { useCommissions } from '@/hooks/useCommissions'
+import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { TaskForm } from '@/components/tasks/TaskForm'
 import { TaskDetailModal } from '@/components/tasks/TaskDetail'
 import { getPerson, PEOPLE, ROLE_LABELS, CURRENT_USER_ID, type Person } from '@/lib/people'
 import { formatShortFR } from '@/lib/dateUtils'
 import type { Commission, Task, TaskStatus } from '@/lib/types'
 
-type CommView = 'grille' | 'timeline'
+type CommView = 'grille' | 'timeline' | 'admin'
 
 const STATUS_VARIANTS: Record<TaskStatus, 'warning' | 'info' | 'success' | 'default' | 'terra'> = {
   'À faire': 'default',
@@ -48,6 +49,9 @@ const COMMISSION_MEMBERS: Record<string, string[]> = {
 export default function CommissionsPage() {
   const { tasks, hydrated, createTask, updateTask, deleteTask, addComment, deleteComment } = useTasks()
   const { people, hydrated: teamHydrated } = useTeam()
+  const { commissions, hydrated: commHydrated, createCommission, updateCommission, deleteCommission } = useCommissions()
+  const { can } = useCurrentUser()
+  const canManageCommissions = can('commissions.manage')
   const [view, setView] = useState<CommView>('grille')
   const [selected, setSelected] = useState<Commission | null>(null)
   const [formOpen, setFormOpen] = useState(false)
@@ -82,7 +86,7 @@ export default function CommissionsPage() {
 
   // Construire la liste réelle des commissions avec compteurs dynamiques
   const commissionsWithStats = useMemo(() => {
-    return COMMISSIONS.map(c => {
+    return commissions.map(c => {
       const ctasks = tasksByCommission.get(c.id) ?? []
       return {
         ...c,
@@ -136,7 +140,11 @@ export default function CommissionsPage() {
     <Shell title="Commissions">
       <div style={{ display: 'flex', gap: 8, marginBottom: 20, alignItems: 'center' }}>
         <div style={{ display: 'flex', gap: 4, background: C.ph, borderRadius: 8, padding: 3 }}>
-          {([['grille', 'Grille'], ['timeline', 'Timeline']] as [CommView, string][]).map(([v, label]) => (
+          {([
+            ['grille', 'Grille'],
+            ['timeline', 'Timeline'],
+            ...(canManageCommissions ? [['admin', '⚙ Administration']] as [CommView, string][] : []),
+          ] as [CommView, string][]).map(([v, label]) => (
             <button
               key={v}
               onClick={() => { setView(v); setSelected(null) }}
@@ -181,6 +189,15 @@ export default function CommissionsPage() {
       )}
       {view === 'timeline' && (
         <TimelineView commissions={commissionsWithStats} tasks={tasks} />
+      )}
+      {view === 'admin' && canManageCommissions && (
+        <CommissionsAdminView
+          commissions={commissions}
+          tasks={tasks}
+          onCreate={createCommission}
+          onUpdate={updateCommission}
+          onDelete={deleteCommission}
+        />
       )}
 
       <TaskForm
@@ -298,7 +315,7 @@ function GrilleView({
           <p style={{ fontSize: 12, color: C.subtle, padding: '8px 0' }}>Aucune activité récente.</p>
         ) : (
           recent.map((t, i) => {
-            const c = COMMISSIONS.find(c => c.id === t.commissionId)
+            const c = commissions.find(c => c.id === t.commissionId)
             const assignee = getPerson(t.assigneeId)
             return (
               <Row
@@ -695,7 +712,7 @@ function TimelineView({ commissions, tasks }: { commissions: Commission[]; tasks
             <p style={{ fontSize: 12, color: C.subtle, padding: '8px 0' }}>Pas d&apos;échéance imminente.</p>
           ) : (
             upcomingDeadlines.map((t, i) => {
-              const c = COMMISSIONS.find(c => c.id === t.commissionId)
+              const c = commissions.find(c => c.id === t.commissionId)
               return (
                 <Row
                   key={t.id}
@@ -718,4 +735,208 @@ function TimelineView({ commissions, tasks }: { commissions: Commission[]; tasks
 function parseDay(label: string): number {
   const m = label.match(/^(\d+)/)
   return m ? Number(m[1]) : 99
+}
+
+// ── Vue Administration : CRUD commissions ────────────────────────────────────
+
+const COMMISSION_COLORS = [
+  '#6ab123', '#2563a8', '#e9722a', '#d4493c', '#94a3b8', '#7d4d9e', '#3b9c8a',
+]
+
+function CommissionsAdminView({
+  commissions, tasks, onCreate, onUpdate, onDelete,
+}: {
+  commissions: Commission[]
+  tasks: Task[]
+  onCreate: (data: Omit<Commission, 'id'>) => Commission
+  onUpdate: (id: string, patch: Partial<Commission>) => void
+  onDelete: (id: string) => void
+}) {
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editName, setEditName] = useState('')
+  const [editColor, setEditColor] = useState('')
+  const [editMeeting, setEditMeeting] = useState('')
+  const [showCreate, setShowCreate] = useState(false)
+  const [newName, setNewName] = useState('')
+  const [newColor, setNewColor] = useState(COMMISSION_COLORS[0])
+  const [newMeeting, setNewMeeting] = useState('')
+
+  const startEdit = (c: Commission) => {
+    setEditingId(c.id)
+    setEditName(c.name)
+    setEditColor(c.color)
+    setEditMeeting(c.nextMeeting)
+  }
+  const saveEdit = (id: string) => {
+    onUpdate(id, { name: editName.trim(), color: editColor, nextMeeting: editMeeting.trim() })
+    setEditingId(null)
+  }
+  const cancelEdit = () => setEditingId(null)
+
+  const handleCreate = () => {
+    if (!newName.trim()) return
+    onCreate({ name: newName.trim(), color: newColor, nextMeeting: newMeeting.trim() || 'À planifier', tasks: 0, members: 0, docs: 0 })
+    setNewName('')
+    setNewMeeting('')
+    setNewColor(COMMISSION_COLORS[0])
+    setShowCreate(false)
+  }
+
+  const handleDelete = (c: Commission) => {
+    const linked = tasks.filter(t => t.commissionId === c.id)
+    if (linked.length > 0) {
+      alert(`Impossible : ${linked.length} tâche${linked.length > 1 ? 's' : ''} sont rattachées à cette commission. Détachez-les ou supprimez-les d'abord.`)
+      return
+    }
+    if (confirm(`Supprimer définitivement la commission « ${c.name} » ?`)) {
+      onDelete(c.id)
+    }
+  }
+
+  return (
+    <Card padding={16}>
+      <SectionHeader
+        title="Administration des commissions"
+        actions={
+          <Button variant="primary" size="sm" onClick={() => setShowCreate(s => !s)}>
+            {showCreate ? 'Annuler' : '+ Nouvelle commission'}
+          </Button>
+        }
+      />
+      <p style={{ fontSize: 11, color: C.subtle, marginBottom: 14 }}>
+        Renommer, créer ou supprimer les commissions municipales. La suppression est bloquée si des tâches y sont rattachées.
+      </p>
+
+      {showCreate && (
+        <Card padding={12} style={{ marginBottom: 14, background: C.greenLight, borderColor: C.green }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.4fr 1fr 100px', gap: 10, alignItems: 'flex-end' }}>
+            <div>
+              <p style={{ fontSize: 10, color: C.subtle, fontWeight: 600, marginBottom: 4 }}>Nom *</p>
+              <input
+                type="text"
+                value={newName}
+                onChange={e => setNewName(e.target.value)}
+                placeholder="ex: Développement du village"
+                autoFocus
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <p style={{ fontSize: 10, color: C.subtle, fontWeight: 600, marginBottom: 4 }}>Prochaine réunion</p>
+              <input
+                type="text"
+                value={newMeeting}
+                onChange={e => setNewMeeting(e.target.value)}
+                placeholder="ex: 15 juin"
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <p style={{ fontSize: 10, color: C.subtle, fontWeight: 600, marginBottom: 4 }}>Couleur</p>
+              <ColorPicker value={newColor} onChange={setNewColor} />
+            </div>
+            <Button variant="primary" size="sm" disabled={!newName.trim()} onClick={handleCreate}>Créer</Button>
+          </div>
+        </Card>
+      )}
+
+      <Card padding={0}>
+        <div style={{ display: 'grid', gridTemplateColumns: '40px 2fr 1.4fr 1fr 80px 130px', gap: 10, padding: '8px 14px', background: C.bg, borderBottom: `1px solid ${C.border}` }}>
+          {['', 'Nom', 'Prochaine réunion', 'Tâches', 'Couleur', 'Actions'].map(h => (
+            <p key={h} style={{ fontSize: 10, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</p>
+          ))}
+        </div>
+        {commissions.map((c, i) => {
+          const linkedTasks = tasks.filter(t => t.commissionId === c.id)
+          const isEditing = editingId === c.id
+          return (
+            <div key={c.id} style={{ display: 'grid', gridTemplateColumns: '40px 2fr 1.4fr 1fr 80px 130px', gap: 10, padding: '10px 14px', alignItems: 'center', borderBottom: i < commissions.length - 1 ? `1px solid ${C.border}` : 'none', background: isEditing ? `${C.green}06` : '#fff', fontSize: 12 }}>
+              <div style={{ width: 16, height: 16, borderRadius: 4, background: isEditing ? editColor : c.color }} />
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={e => setEditName(e.target.value)}
+                  autoFocus
+                  style={inputStyle}
+                />
+              ) : (
+                <p style={{ color: C.fg, fontWeight: 600 }}>{c.name}</p>
+              )}
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={editMeeting}
+                  onChange={e => setEditMeeting(e.target.value)}
+                  style={inputStyle}
+                />
+              ) : (
+                <p style={{ color: C.subtle }}>{c.nextMeeting}</p>
+              )}
+              <p style={{ color: linkedTasks.length > 0 ? C.fg : C.subtle, fontFamily: "'JetBrains Mono', monospace" }}>
+                {linkedTasks.length}
+              </p>
+              {isEditing ? (
+                <ColorPicker value={editColor} onChange={setEditColor} />
+              ) : (
+                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: C.subtle }}>{c.color}</span>
+              )}
+              <div style={{ display: 'flex', gap: 4 }}>
+                {isEditing ? (
+                  <>
+                    <button onClick={() => saveEdit(c.id)} title="Enregistrer" style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.success}`, background: C.successLight, color: C.success, cursor: 'pointer', fontSize: 12 }}>✓</button>
+                    <button onClick={cancelEdit} title="Annuler" style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.border}`, background: '#fff', cursor: 'pointer', fontSize: 11 }}>×</button>
+                  </>
+                ) : (
+                  <>
+                    <button onClick={() => startEdit(c)} title="Renommer / modifier" style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.border}`, background: '#fff', cursor: 'pointer', fontSize: 11 }}>✎</button>
+                    <button
+                      onClick={() => handleDelete(c)}
+                      title={linkedTasks.length > 0 ? 'Détachez les tâches avant' : 'Supprimer'}
+                      disabled={linkedTasks.length > 0}
+                      style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.danger}`, background: C.dangerLight, color: C.danger, cursor: linkedTasks.length > 0 ? 'not-allowed' : 'pointer', opacity: linkedTasks.length > 0 ? 0.4 : 1, fontSize: 11 }}
+                    >×</button>
+                  </>
+                )}
+              </div>
+            </div>
+          )
+        })}
+      </Card>
+    </Card>
+  )
+}
+
+function ColorPicker({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return (
+    <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexWrap: 'wrap' }}>
+      {COMMISSION_COLORS.map(c => (
+        <button
+          key={c}
+          onClick={() => onChange(c)}
+          aria-label={`Couleur ${c}`}
+          style={{
+            width: 18, height: 18, borderRadius: 4,
+            background: c,
+            border: value === c ? `2px solid ${C.fg}` : '1px solid #00000020',
+            cursor: 'pointer',
+            padding: 0,
+          }}
+        />
+      ))}
+    </div>
+  )
+}
+
+const inputStyle: React.CSSProperties = {
+  width: '100%',
+  height: 30,
+  border: `1px solid ${C.border}`,
+  borderRadius: 6,
+  background: '#fff',
+  padding: '0 8px',
+  fontSize: 12,
+  color: C.fg,
+  fontFamily: "'DM Sans', sans-serif",
+  outline: 'none',
 }

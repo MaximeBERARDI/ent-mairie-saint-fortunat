@@ -9,6 +9,10 @@ import { COLORS as C } from '@/lib/theme'
 import { PEOPLE } from '@/lib/people'
 import { AUTH_LEVEL_LABELS } from '@/lib/permissions'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
+import { useMobileNav } from '@/context/MobileNavContext'
+import { useIsMobile } from '@/hooks/useIsMobile'
+import { GlobalSearch } from './GlobalSearch'
+import { NotificationsBell } from './NotificationsBell'
 
 const NAV_ITEMS = [
   { label: 'Tableau de bord', href: '/dashboard' },
@@ -29,6 +33,8 @@ export function TopBar({ title, notif = 2 }: TopBarProps) {
   const pathname = usePathname()
   const { nav } = useSettings()
   const isTopNav = nav === 'top'
+  const isMobile = useIsMobile()
+  const { toggle: toggleMobileNav } = useMobileNav()
   const { currentUser, currentUserId, setCurrentUserId } = useCurrentUser()
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
@@ -56,9 +62,26 @@ export function TopBar({ title, notif = 2 }: TopBarProps) {
       display: 'flex',
       alignItems: 'center',
       gap: 12,
-      padding: '0 20px',
+      padding: '0 14px',
       flexShrink: 0,
     }}>
+      {isMobile && !isTopNav && (
+        <button
+          onClick={toggleMobileNav}
+          aria-label="Menu"
+          style={{
+            width: 36, height: 36, borderRadius: 6,
+            background: 'transparent',
+            border: '1px solid var(--card-border)',
+            cursor: 'pointer',
+            fontSize: 18,
+            color: 'var(--text)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: 0,
+            flexShrink: 0,
+          }}
+        >☰</button>
+      )}
       {isTopNav && (
         <>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginRight: 8, flexShrink: 0 }}>
@@ -85,33 +108,11 @@ export function TopBar({ title, notif = 2 }: TopBarProps) {
         <h1 style={{ fontSize: 15, color: 'var(--topbar-text)', fontWeight: 600, flex: 1 }}>{title}</h1>
       )}
 
-      {/* Search */}
-      <div style={{
-        width: isTopNav ? 160 : 180,
-        height: isTopNav ? 28 : 30,
-        background: 'transparent',
-        border: '1px solid var(--card-border)',
-        borderRadius: 20,
-        display: 'flex',
-        alignItems: 'center',
-        padding: '0 12px',
-        gap: 6,
-        flexShrink: 0,
-      }}>
-        <span style={{ fontSize: 11, color: 'var(--text-subtle)' }}>Rechercher…</span>
-      </div>
+      {/* Search global */}
+      <GlobalSearch />
 
       {/* Notif bell */}
-      <div style={{ position: 'relative', flexShrink: 0 }}>
-        <div style={{ width: 30, height: 30, border: '1px solid var(--card-border)', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-          <span style={{ fontSize: 14 }}>🔔</span>
-        </div>
-        {notif > 0 && (
-          <div style={{ position: 'absolute', top: -3, right: -3, width: 14, height: 14, borderRadius: '50%', background: C.danger, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ fontSize: 8, color: '#fff', fontWeight: 700 }}>{notif}</span>
-          </div>
-        )}
-      </div>
+      <NotificationsBell />
 
       {/* Profil utilisateur courant + sélecteur démo */}
       <div ref={userMenuRef} style={{ position: 'relative', flexShrink: 0 }}>
