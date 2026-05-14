@@ -126,6 +126,51 @@ Toujours type-checker avant de commit. Le build inclut le type-check + le lint N
   `useCommissions` lui-même et par `useTasks` (lookup legacy de
   migration) + l'API route `/api/cr-extract` (server-side).
 
+## Setup back-end (Lot 8a — en cours)
+
+Le projet est en cours de migration de `localStorage` vers **Supabase
+(PostgreSQL) + Prisma + NextAuth (Auth.js v5)**.
+
+### État actuel (Phase A — préparation locale, terminée)
+
+- Prisma v6 installé + schéma complet dans `prisma/schema.prisma`
+- Client Prisma singleton dans `src/lib/db.ts`
+- NextAuth configuré dans `src/lib/auth.ts` (provider Credentials,
+  adapter Prisma, sessions JWT, mot de passe bcrypt)
+- Route handler `src/app/api/auth/[...nextauth]/route.ts`
+- Script de seed `prisma/seed.ts` (Persons, Users, Commissions,
+  Plan M14, Fournisseurs, EmployeeRecords)
+- Scripts npm : `seed`, `prisma:generate`, `prisma:migrate`,
+  `prisma:deploy`
+- Tant que `DATABASE_URL` n'est pas configurée, l'app continue de
+  fonctionner en mode localStorage (sélecteur démo dans la TopBar).
+
+### Setup à faire par l'utilisateur (Phase B)
+
+1. Créer un compte sur https://supabase.com (free tier)
+2. Créer un projet → onglet **Settings → Database → Connection string**
+3. Copier la chaîne **Connection pooling** (port 6543) dans `DATABASE_URL`
+4. Copier la chaîne **Direct connection** (port 5432) dans `DIRECT_URL`
+   (utilisée par Prisma Migrate)
+5. Générer un secret : `openssl rand -base64 32` → coller dans `AUTH_SECRET`
+6. Mettre ces 3 variables dans :
+   - `.env.local` (pour le dev local)
+   - Vercel env vars (pour la prod)
+7. Lancer en local : `npx prisma migrate dev --name init` puis `npm run seed`
+
+Cf. `.env.example` pour le format complet.
+
+### Migration des hooks (Phase C — futures sessions)
+
+Chaque hook `useFoo` qui utilise `localStorage` devra être migré pour
+appeler des API routes Next.js (qui à leur tour utilisent Prisma).
+
+Pattern à appliquer :
+- `useTasks` → `GET /api/tasks`, `POST /api/tasks`, etc.
+- `useFactures`, `useEmployees`, `useBulletins`, etc. : idem
+- Le sélecteur démo de la TopBar sera retiré quand l'auth réelle sera
+  branchée partout.
+
 ## Pas de back-end
 
 Le projet est volontairement **sans serveur** pour le moment. Tous les hooks utilisent `localStorage`.

@@ -6,3 +6,7 @@ node_modules/
 .DS_Store
 tsconfig.tsbuildinfo
 .claude/settings.local.json
+# Prisma generated client
+node_modules/.prisma/
+# Local env
+.env
