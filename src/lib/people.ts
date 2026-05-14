@@ -45,6 +45,7 @@ interface PersonInit {
   responsibleCommissions?: string[]
   phone?: string
   startDate?: string
+  email?: string                     // override l'email auto-généré
 }
 
 const make = (init: PersonInit): Person => ({
@@ -54,7 +55,7 @@ const make = (init: PersonInit): Person => ({
   fullName: `${init.prenom} ${init.nom}`,
   role: init.role,
   poste: init.poste,
-  email: `${init.prenom.toLowerCase()}.${init.nom.toLowerCase().replace(/\s+/g, '-')}@saint-fortunat.fr`,
+  email: init.email ?? `${init.prenom.toLowerCase()}.${init.nom.toLowerCase().replace(/\s+/g, '-')}@saint-fortunat.fr`,
   phone: init.phone,
   color: init.color,
   initials: `${init.prenom[0]}${init.nom[0]}`.toUpperCase(),
@@ -77,6 +78,7 @@ export const PEOPLE: Person[] = [
     responsibleCommissions: [],  // supervise tout
     phone: '04 75 00 00 01',
     startDate: '2020-07-04',
+    email: 'berardi.maxime@gmail.com',
   }),
   make({
     id: 'p-md', prenom: 'Marie', nom: 'Durand', role: 'adjoint',

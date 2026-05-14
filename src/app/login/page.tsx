@@ -14,7 +14,7 @@ export default function LoginPage() {
   const router = useRouter()
   const { login, hydrated } = useAuth()
   const { setCurrentUserId } = useCurrentUser()
-  const [email, setEmail] = useState('jean.martin@saint-fortunat.fr')
+  const [email, setEmail] = useState('berardi.maxime@gmail.com')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
