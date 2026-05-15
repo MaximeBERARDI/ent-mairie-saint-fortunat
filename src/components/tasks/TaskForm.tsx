@@ -147,7 +147,7 @@ export function TaskForm({ open, onClose, onSubmit, onDelete, initial, title }: 
       dueDate: dueDate || undefined,
       priority,
       status,
-      documents: documents.length > 0 ? documents : undefined,
+      documents,
     })
     onClose()
   }
