@@ -6,9 +6,13 @@
 // - /auth/*             : pages liées à l'auth (mot de passe oublié, etc.)
 // - /api/auth/*         : endpoints NextAuth (callback, signout, session…)
 // - /_next/*, /favicon  : assets Next.js (déjà filtrés par le matcher)
+//
+// Utilise getToken() qui décode le JWT et trouve le bon cookie quelle
+// que soit la convention de nommage (authjs.* / next-auth.* / __Secure-…).
 
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { getToken } from 'next-auth/jwt'
 
 const PUBLIC_PATHS = ['/login', '/auth', '/api/auth']
 
@@ -19,13 +23,15 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next()
   }
 
-  // Détecte la présence du cookie de session NextAuth (v5).
-  // Le nom du cookie est suffixé "__Secure-" en HTTPS (Vercel prod).
-  const sessionCookie =
-    req.cookies.get('authjs.session-token')?.value ??
-    req.cookies.get('__Secure-authjs.session-token')?.value
+  const token = await getToken({
+    req,
+    secret: process.env.AUTH_SECRET,
+    salt: process.env.NODE_ENV === 'production'
+      ? '__Secure-authjs.session-token'
+      : 'authjs.session-token',
+  })
 
-  if (!sessionCookie) {
+  if (!token) {
     const loginUrl = new URL('/login', req.url)
     if (pathname !== '/') {
       loginUrl.searchParams.set('callbackUrl', pathname)
