@@ -26,6 +26,10 @@ declare module 'next-auth' {
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(db),
   session: { strategy: 'jwt' },
+  // Indispensable derrière le proxy Vercel : sans ça, NextAuth refuse
+  // de poser le cookie de session (on ne voit que csrf-token + callback-url
+  // dans les cookies, jamais authjs.session-token).
+  trustHost: true,
   pages: {
     signIn: '/login',
   },
