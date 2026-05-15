@@ -11,7 +11,6 @@ import { Separator } from '@/components/ui/Separator'
 import { Tag } from '@/components/ui/Tag'
 import { COLORS as C } from '@/lib/theme'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
-import { useAuth } from '@/hooks/useAuth'
 import { useTeam } from '@/hooks/useTeam'
 import { AUTH_LEVEL_LABELS, AUTH_LEVEL_DESCRIPTIONS } from '@/lib/permissions'
 
@@ -63,7 +62,6 @@ const inputStyle: React.CSSProperties = {
 
 export default function ProfilPage() {
   const { currentUser, currentUserId, hydrated } = useCurrentUser()
-  const { setPassword: setPwd, verifyPassword } = useAuth()
   const { updatePerson } = useTeam()
 
   const [tab, setTab] = useState<'infos' | 'securite' | 'notifications'>('infos')
@@ -111,13 +109,9 @@ export default function ProfilPage() {
     setTimeout(() => setSavedMsg(null), 3000)
   }
 
-  const handleChangePwd = () => {
+  const handleChangePwd = async () => {
     setPwdError(null)
     setPwdOk(false)
-    if (!verifyPassword(currentUser.email, oldPwd)) {
-      setPwdError('Mot de passe actuel incorrect.')
-      return
-    }
     if (newPwd !== confirmPwd) {
       setPwdError('Les deux nouveaux mots de passe ne correspondent pas.')
       return
@@ -126,14 +120,23 @@ export default function ProfilPage() {
       setPwdError('Le nouveau mot de passe doit faire au moins 8 caractères.')
       return
     }
-    const result = setPwd(currentUser.email, newPwd)
-    if (!result.ok) {
-      setPwdError(result.error ?? 'Échec.')
-      return
+    try {
+      const res = await fetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ oldPassword: oldPwd, newPassword: newPwd }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setPwdError(data.error ?? 'Échec.')
+        return
+      }
+      setPwdOk(true)
+      setOldPwd(''); setNewPwd(''); setConfirmPwd('')
+      setTimeout(() => setPwdOk(false), 3000)
+    } catch {
+      setPwdError('Erreur réseau.')
     }
-    setPwdOk(true)
-    setOldPwd(''); setNewPwd(''); setConfirmPwd('')
-    setTimeout(() => setPwdOk(false), 3000)
   }
 
   const handlePhotoUpload = async (file: File | null) => {

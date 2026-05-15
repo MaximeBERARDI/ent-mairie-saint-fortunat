@@ -1,12 +1,12 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useState, useRef, useEffect } from 'react'
+import { signOut } from 'next-auth/react'
 import { useSettings } from '@/context/SettingsContext'
 import { Avatar } from '@/components/ui/Avatar'
 import { COLORS as C } from '@/lib/theme'
-import { PEOPLE } from '@/lib/people'
 import { AUTH_LEVEL_LABELS } from '@/lib/permissions'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { useMobileNav } from '@/context/MobileNavContext'
@@ -31,13 +31,20 @@ interface TopBarProps {
 
 export function TopBar({ title, notif = 2 }: TopBarProps) {
   const pathname = usePathname()
+  const router = useRouter()
   const { nav } = useSettings()
   const isTopNav = nav === 'top'
   const isMobile = useIsMobile()
   const { toggle: toggleMobileNav } = useMobileNav()
-  const { currentUser, currentUserId, setCurrentUserId } = useCurrentUser()
+  const { currentUser } = useCurrentUser()
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
+
+  const handleLogout = async () => {
+    setUserMenuOpen(false)
+    await signOut({ redirect: false })
+    router.push('/login')
+  }
 
   useEffect(() => {
     if (!userMenuOpen) return
@@ -49,10 +56,6 @@ export function TopBar({ title, notif = 2 }: TopBarProps) {
     document.addEventListener('mousedown', onClick)
     return () => document.removeEventListener('mousedown', onClick)
   }, [userMenuOpen])
-
-  // Personnes actives groupées par rôle (pour le sélecteur démo)
-  const elus = PEOPLE.filter(p => p.active && p.role !== 'agent')
-  const agents = PEOPLE.filter(p => p.active && p.role === 'agent')
 
   return (
     <div style={{
@@ -114,16 +117,16 @@ export function TopBar({ title, notif = 2 }: TopBarProps) {
       {/* Notif bell */}
       <NotificationsBell />
 
-      {/* Profil utilisateur courant + sélecteur démo */}
+      {/* Profil utilisateur courant + déconnexion */}
       <div ref={userMenuRef} style={{ position: 'relative', flexShrink: 0 }}>
         <button
           onClick={() => setUserMenuOpen(o => !o)}
-          aria-label="Mon profil / changer d'utilisateur"
+          aria-label="Mon profil"
           title={currentUser ? `${currentUser.fullName} — ${AUTH_LEVEL_LABELS[currentUser.authLevel]}` : 'Profil'}
           style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
         >
           <Avatar
-            initials={currentUser?.initials ?? 'JM'}
+            initials={currentUser?.initials ?? '?'}
             size={30}
             color={currentUser?.color ?? C.terra}
           />
@@ -150,7 +153,7 @@ export function TopBar({ title, notif = 2 }: TopBarProps) {
                 </p>
               </div>
             )}
-            <div style={{ padding: '6px 0', maxHeight: 320, overflowY: 'auto' }}>
+            <div style={{ padding: '6px 0' }}>
               <Link
                 href="/profil"
                 onClick={() => setUserMenuOpen(false)}
@@ -158,47 +161,38 @@ export function TopBar({ title, notif = 2 }: TopBarProps) {
                   display: 'flex',
                   alignItems: 'center',
                   gap: 8,
-                  padding: '8px 14px',
+                  padding: '10px 14px',
                   textDecoration: 'none',
                   color: C.fg,
                   fontSize: 12,
                   fontWeight: 600,
-                  borderBottom: `1px solid ${C.border}`,
                 }}
               >
                 <span style={{ fontSize: 14 }}>👤</span>
                 Voir mon profil
               </Link>
-              <p style={{ fontSize: 9, color: C.subtle, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', padding: '6px 14px' }}>
-                Démo — Changer d'utilisateur
-              </p>
-              {[...elus, ...agents].map(p => (
-                <button
-                  key={p.id}
-                  onClick={() => { setCurrentUserId(p.id); setUserMenuOpen(false) }}
-                  style={{
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    padding: '6px 14px',
-                    background: p.id === currentUserId ? `${C.green}10` : 'transparent',
-                    border: 'none',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontFamily: "'DM Sans', sans-serif",
-                  }}
-                >
-                  <Avatar initials={p.initials} size={22} color={p.color} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: 11, color: C.fg, fontWeight: p.id === currentUserId ? 700 : 500 }}>{p.fullName}</p>
-                    <p style={{ fontSize: 9, color: C.subtle, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {AUTH_LEVEL_LABELS[p.authLevel]}
-                    </p>
-                  </div>
-                  {p.id === currentUserId && <span style={{ fontSize: 12, color: C.green }}>✓</span>}
-                </button>
-              ))}
+              <button
+                onClick={handleLogout}
+                style={{
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '10px 14px',
+                  background: 'transparent',
+                  border: 'none',
+                  borderTop: `1px solid ${C.border}`,
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  fontFamily: "'DM Sans', sans-serif",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: C.danger,
+                }}
+              >
+                <span style={{ fontSize: 14 }}>⏻</span>
+                Se déconnecter
+              </button>
             </div>
           </div>
         )}
