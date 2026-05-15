@@ -3,38 +3,46 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { signIn, getSession } from 'next-auth/react'
 import { Button } from '@/components/ui/Button'
 import { COLORS as C } from '@/lib/theme'
-import { useAuth } from '@/hooks/useAuth'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 
 const COMMUNE_PHOTO = 'https://www.saint-fortunat-sur-eyrieux.fr/wp-content/uploads/2018/12/41199_372425_24.jpg'
 
 export default function LoginPage() {
   const router = useRouter()
-  const { login, hydrated } = useAuth()
   const { setCurrentUserId } = useCurrentUser()
   const [email, setEmail] = useState('berardi.maxime@gmail.com')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Connexion via NextAuth (Credentials provider + bcrypt côté serveur).
+  // En succès : on synchronise currentUserId localStorage avec le
+  // personId de la session pour que le reste de l'app (qui utilise
+  // encore localStorage) reconnaisse l'utilisateur connecté.
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
     setSubmitting(true)
-    const result = login(email, password)
-    if (result.needsSetup) {
-      // Première connexion → page de définition du mot de passe
-      router.push(`/auth/premiere-connexion?email=${encodeURIComponent(email)}`)
-      return
-    }
-    if (!result.ok) {
-      setError(result.error ?? 'Connexion impossible.')
+
+    const result = await signIn('credentials', {
+      email: email.trim().toLowerCase(),
+      password,
+      redirect: false,
+    })
+
+    if (!result?.ok) {
+      setError('Email ou mot de passe incorrect.')
       setSubmitting(false)
       return
     }
-    if (result.personId) setCurrentUserId(result.personId)
+
+    const session = await getSession()
+    if (session?.user?.personId) {
+      setCurrentUserId(session.user.personId)
+    }
     router.push('/dashboard')
   }
 
@@ -182,10 +190,10 @@ export default function LoginPage() {
           <Button
             variant="primary"
             type="submit"
-            disabled={submitting || !hydrated}
+            disabled={submitting}
             style={{ width: '100%', justifyContent: 'center', height: 44, fontSize: 14 }}
           >
-            Se connecter
+            {submitting ? 'Connexion…' : 'Se connecter'}
           </Button>
 
           <div style={{
@@ -193,10 +201,12 @@ export default function LoginPage() {
             background: '#eaf1fb', border: `1px solid #2563a830`,
             borderRadius: 8, fontSize: 11, color: C.muted,
           }}>
-            <strong style={{ color: C.info, fontWeight: 600 }}>Première connexion ?</strong>
+            <strong style={{ color: C.info, fontWeight: 600 }}>Mot de passe par défaut</strong>
             <p style={{ marginTop: 4 }}>
-              Saisissez votre email et laissez le mot de passe vide. Vous serez
-              guidé pour définir votre mot de passe.
+              Pour cette première phase, le mot de passe initial est{' '}
+              <code style={{ background: '#fff', padding: '1px 5px', borderRadius: 3, fontFamily: 'monospace' }}>
+                saintfortunat2026
+              </code>. Il sera personnalisable dans une prochaine version.
             </p>
           </div>
         </form>
