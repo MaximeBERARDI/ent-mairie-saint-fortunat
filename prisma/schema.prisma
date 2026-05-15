@@ -14,10 +14,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-  // Pour Supabase, ajoute aussi DIRECT_URL pour les migrations
-  // directUrl = env("DIRECT_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // ─── Authentication (NextAuth.js / Auth.js v5) ─────────────────────
