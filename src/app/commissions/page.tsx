@@ -748,7 +748,7 @@ function CommissionsAdminView({
 }: {
   commissions: Commission[]
   tasks: Task[]
-  onCreate: (data: Omit<Commission, 'id'>) => Commission
+  onCreate: (data: Omit<Commission, 'id'>) => void
   onUpdate: (id: string, patch: Partial<Commission>) => void
   onDelete: (id: string) => void
 }) {

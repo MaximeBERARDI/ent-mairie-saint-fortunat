@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Manuel d'infrastructure — ENT Mairie de Saint-Fortunat</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: 'DM Sans', -apple-system, system-ui, sans-serif;
+    margin: 0;
+    background: #f5f3ee;
+    color: #2d2926;
+    line-height: 1.55;
+  }
+  .container {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 40px 32px 80px;
+  }
+  header {
+    text-align: center;
+    padding: 32px 0 48px;
+    border-bottom: 1px solid #e1ddd3;
+    margin-bottom: 48px;
+  }
+  header h1 {
+    font-size: 28px;
+    margin: 0 0 8px;
+    color: #2d2926;
+    font-weight: 700;
+  }
+  header p {
+    font-size: 14px;
+    color: #767068;
+    margin: 0;
+  }
+  .toc {
+    background: #fff;
+    border: 1px solid #e1ddd3;
+    border-radius: 12px;
+    padding: 22px 28px;
+    margin-bottom: 48px;
+  }
+  .toc h2 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #767068;
+    margin: 0 0 14px;
+    font-weight: 600;
+  }
+  .toc ol { margin: 0; padding-left: 22px; font-size: 14px; }
+  .toc li { padding: 3px 0; }
+  .toc a { color: #2d2926; text-decoration: none; }
+  .toc a:hover { color: #6ab123; text-decoration: underline; }
+
+  section {
+    background: #fff;
+    border: 1px solid #e1ddd3;
+    border-radius: 12px;
+    padding: 32px 40px;
+    margin-bottom: 24px;
+  }
+  section h2 {
+    font-size: 22px;
+    margin: 0 0 6px;
+    color: #2d2926;
+    font-weight: 700;
+  }
+  section h2 .num {
+    color: #6ab123;
+    font-weight: 700;
+    margin-right: 8px;
+  }
+  section .subtitle {
+    font-size: 13px;
+    color: #767068;
+    margin: 0 0 24px;
+  }
+  section h3 {
+    font-size: 16px;
+    margin: 28px 0 10px;
+    color: #2d2926;
+    font-weight: 700;
+    border-left: 3px solid #6ab123;
+    padding-left: 10px;
+  }
+  section h4 {
+    font-size: 14px;
+    margin: 18px 0 8px;
+    font-weight: 700;
+    color: #2d2926;
+  }
+  section p { font-size: 14px; margin: 8px 0; }
+  section ul, section ol { font-size: 14px; padding-left: 22px; }
+  section li { padding: 3px 0; }
+
+  .card-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin: 24px 0;
+  }
+  .card-row.two { grid-template-columns: 1fr 1fr; }
+  .actor-card {
+    border: 1px solid #e1ddd3;
+    border-radius: 10px;
+    padding: 18px;
+    background: #fafaf7;
+  }
+  .actor-card .icon {
+    font-size: 28px;
+    margin-bottom: 8px;
+  }
+  .actor-card h4 {
+    margin: 0 0 6px;
+    font-size: 15px;
+  }
+  .actor-card .role {
+    font-size: 11px;
+    color: #767068;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 10px;
+  }
+  .actor-card p { font-size: 13px; margin: 6px 0; }
+  .actor-card.github { border-top: 3px solid #24292f; }
+  .actor-card.vercel { border-top: 3px solid #000; }
+  .actor-card.supabase { border-top: 3px solid #3ecf8e; }
+  .actor-card.nextauth { border-top: 3px solid #8b5cf6; }
+  .actor-card.prisma { border-top: 3px solid #2d3748; }
+  .actor-card.nextjs { border-top: 3px solid #000; }
+
+  .pill {
+    display: inline-block;
+    padding: 2px 8px;
+    background: #ecead4;
+    color: #5a6e1e;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-right: 4px;
+  }
+  .pill.warn { background: #fef3c7; color: #92400e; }
+  .pill.danger { background: #fee2e2; color: #991b1b; }
+  .pill.info { background: #dbeafe; color: #1e3a8a; }
+
+  .schema {
+    background: #fafaf7;
+    border: 1px solid #e1ddd3;
+    border-radius: 10px;
+    padding: 24px;
+    margin: 20px 0;
+    text-align: center;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    line-height: 1.8;
+    white-space: pre;
+    color: #2d2926;
+    overflow-x: auto;
+  }
+
+  .flow {
+    background: #fafaf7;
+    border-left: 4px solid #6ab123;
+    padding: 16px 20px;
+    margin: 16px 0;
+    border-radius: 0 8px 8px 0;
+  }
+  .flow ol { margin: 0; padding-left: 20px; }
+  .flow li { padding: 5px 0; font-size: 13px; }
+
+  code, .mono {
+    font-family: 'Menlo', 'Monaco', monospace;
+    font-size: 12px;
+    background: #f0ede4;
+    padding: 2px 6px;
+    border-radius: 3px;
+    color: #5a6e1e;
+  }
+  pre {
+    background: #2d2926;
+    color: #f5f3ee;
+    padding: 14px 18px;
+    border-radius: 8px;
+    overflow-x: auto;
+    font-size: 12px;
+    line-height: 1.5;
+    margin: 14px 0;
+  }
+  pre code {
+    background: transparent;
+    color: inherit;
+    padding: 0;
+  }
+
+  .analogie {
+    background: linear-gradient(to right, #fef9e7, #fff);
+    border: 1px solid #f5e6a8;
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin: 16px 0;
+    font-size: 13px;
+  }
+  .analogie strong { color: #92400e; }
+
+  .danger-box {
+    background: #fee2e2;
+    border: 1px solid #fca5a5;
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin: 16px 0;
+    font-size: 13px;
+  }
+  .danger-box strong { color: #991b1b; }
+
+  .info-box {
+    background: #dbeafe;
+    border: 1px solid #93c5fd;
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin: 16px 0;
+    font-size: 13px;
+  }
+  .info-box strong { color: #1e3a8a; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 13px;
+  }
+  table th, table td {
+    padding: 10px 12px;
+    text-align: left;
+    border-bottom: 1px solid #e1ddd3;
+  }
+  table th {
+    background: #fafaf7;
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #767068;
+  }
+  table tr:last-child td { border-bottom: none; }
+
+  .glossaire dt {
+    font-weight: 700;
+    margin-top: 16px;
+    color: #2d2926;
+    font-size: 14px;
+  }
+  .glossaire dd {
+    margin: 4px 0 0 0;
+    font-size: 13px;
+    color: #4a4540;
+    padding-left: 18px;
+    border-left: 2px solid #e1ddd3;
+  }
+
+  footer {
+    text-align: center;
+    color: #767068;
+    font-size: 12px;
+    padding: 32px 0 0;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>🏛️ ENT Mairie de Saint-Fortunat — Manuel d'infrastructure</h1>
+    <p>Comprendre l'application, son fonctionnement, et savoir la piloter au quotidien.</p>
+    <p style="margin-top:8px;font-size:12px">15 mai 2026 — version 1</p>
+  </header>
+
+  <div class="toc">
+    <h2>Table des matières</h2>
+    <ol>
+      <li><a href="#vue">Vue d'ensemble — l'analogie de la boutique</a></li>
+      <li><a href="#acteurs">Les 3 services externes : GitHub, Vercel, Supabase</a></li>
+      <li><a href="#technos">Les technologies dans l'app : Next.js, Prisma, NextAuth</a></li>
+      <li><a href="#cycle">Le cycle de vie d'une modification</a></li>
+      <li><a href="#auth">Comment marche l'authentification, étape par étape</a></li>
+      <li><a href="#env">Les variables d'environnement</a></li>
+      <li><a href="#piloter">Comment piloter au quotidien</a></li>
+      <li><a href="#glossaire">Glossaire des termes techniques</a></li>
+    </ol>
+  </div>
+
+  <!-- ============================================================ -->
+  <section id="vue">
+    <h2><span class="num">1.</span>Vue d'ensemble — l'analogie de la boutique</h2>
+    <p class="subtitle">Avant tout : un schéma simple pour visualiser qui fait quoi.</p>
+
+    <div class="analogie">
+      <strong>📚 L'analogie :</strong> Imagine que tu ouvres une boutique en ligne.
+      <ul style="margin:8px 0 0">
+        <li><strong>GitHub</strong>, c'est le coffre-fort où sont rangés les plans de la boutique (le code).</li>
+        <li><strong>Vercel</strong>, c'est l'usine qui prend les plans et construit la boutique à chaque modification.</li>
+        <li><strong>Supabase</strong>, c'est l'entrepôt où sont stockées toutes les informations (clients, commandes, stock).</li>
+      </ul>
+      <p style="margin-top:8px">Le client (toi, les agents) entre dans la boutique via son navigateur. Il ne voit que la boutique finie, mais derrière elle se connecte à l'entrepôt pour aller chercher / écrire des infos.</p>
+    </div>
+
+    <h3>Le schéma global</h3>
+    <div class="schema">
+   ┌─────────────────┐                      ┌────────────────────┐
+   │   TOI (humain)  │                      │  CLAUDE (l'IA)     │
+   │                 │                      │                    │
+   │  • Décide       │ ◀──── conversation ─▶│  • Écrit le code   │
+   │  • Teste        │                      │  • Pousse les      │
+   │  • Donne des    │                      │    modifications   │
+   │    PATs         │                      │                    │
+   └────────┬────────┘                      └─────────┬──────────┘
+            │                                         │
+            │ via navigateur                          │ via Git push
+            │                                         │
+            ▼                                         ▼
+     ┌──────────────────────────────────────────────────────────┐
+     │              GITHUB (le coffre-fort)                     │
+     │   ─ stocke tout le code source                           │
+     │   ─ garde l'historique de chaque modification (commit)   │
+     │   ─ branche "main" = version officielle                  │
+     └────────────────────────┬─────────────────────────────────┘
+                              │ chaque commit push déclenche
+                              │ automatiquement…
+                              ▼
+     ┌──────────────────────────────────────────────────────────┐
+     │              VERCEL (l'usine)                            │
+     │   ─ détecte un nouveau commit                            │
+     │   ─ télécharge le code, compile (build)                  │
+     │   ─ met en ligne le résultat (deploy)                    │
+     │   ─ URL publique : ent-mairie-saint-fortunat.vercel.app  │
+     └──────────────────────────────────────────────────────────┘
+                              │ pour chaque page chargée
+                              │ par un utilisateur :
+                              ▼
+     ┌──────────────────────────────────────────────────────────┐
+     │              SUPABASE (l'entrepôt)                       │
+     │   ─ base de données PostgreSQL                           │
+     │   ─ stocke : utilisateurs, mots de passe, tâches,        │
+     │     factures, fiches RH, etc.                            │
+     │   ─ accessible via DATABASE_URL                          │
+     └──────────────────────────────────────────────────────────┘
+    </div>
+
+    <p>Maintenant que tu as l'image globale, on va détailler chaque acteur.</p>
+  </section>
+
+  <!-- ============================================================ -->
+  <section id="acteurs">
+    <h2><span class="num">2.</span>Les 3 services externes</h2>
+    <p class="subtitle">GitHub stocke, Vercel publie, Supabase mémorise. Chacun a un rôle précis.</p>
+
+    <div class="card-row">
+      <div class="actor-card github">
+        <div class="icon">🐙</div>
+        <h4>GitHub</h4>
+        <div class="role">Le coffre-fort à code</div>
+        <p><strong>C'est quoi :</strong> un site qui stocke des "dépôts" (repositories) de code. Le tien s'appelle <code>ent-mairie-saint-fortunat</code>.</p>
+        <p><strong>À quoi ça sert :</strong> garder une copie de référence du code, l'historique de toutes les modifications, et permettre la collaboration.</p>
+      </div>
+
+      <div class="actor-card vercel">
+        <div class="icon">▲</div>
+        <h4>Vercel</h4>
+        <div class="role">L'usine à site web</div>
+        <p><strong>C'est quoi :</strong> un service qui prend le code de GitHub et le transforme en site web accessible publiquement.</p>
+        <p><strong>À quoi ça sert :</strong> à chaque fois qu'on push du code sur GitHub, Vercel reconstruit et déploie automatiquement l'app.</p>
+      </div>
+
+      <div class="actor-card supabase">
+        <div class="icon">⚡</div>
+        <h4>Supabase</h4>
+        <div class="role">La base de données</div>
+        <p><strong>C'est quoi :</strong> une base de données PostgreSQL dans le cloud, accessible via internet.</p>
+        <p><strong>À quoi ça sert :</strong> stocker toutes les données métier (comptes, tâches, factures, etc.) de manière persistante et partagée.</p>
+      </div>
+    </div>
+
+    <h3>Pourquoi 3 services différents ?</h3>
+    <p>On <strong>aurait pu</strong> tout mettre sur un seul serveur (code + site + base de données), mais c'est plus fragile et plus compliqué à maintenir. Avec ces 3 services spécialisés :</p>
+    <ul>
+      <li><strong>Chacun fait son métier mieux que personne</strong> (GitHub est imbattable sur le stockage de code, Vercel sur l'hébergement Next.js, Supabase sur les DB Postgres).</li>
+      <li><strong>Si l'un tombe, les autres tiennent.</strong> Si Vercel a un pépin, le code reste sur GitHub, les données restent sur Supabase.</li>
+      <li><strong>Les 3 sont gratuits</strong> jusqu'à un certain volume (suffisant pour une commune).</li>
+    </ul>
+
+    <h3>Tes rôles sur chaque service</h3>
+    <table>
+      <thead>
+        <tr><th>Service</th><th>Compte au nom de</th><th>Ce que tu fais dessus</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>GitHub</strong></td>
+          <td>MaximeBERARDI</td>
+          <td>Tu reçois et valides les modifications. Tu génères des <em>PATs</em> (jetons temporaires) pour me laisser pousser du code.</td>
+        </tr>
+        <tr>
+          <td><strong>Vercel</strong></td>
+          <td>maximeberardi</td>
+          <td>Tu configures les variables d'environnement (DATABASE_URL, AUTH_SECRET, etc.), tu surveilles les déploiements et les logs.</td>
+        </tr>
+        <tr>
+          <td><strong>Supabase</strong></td>
+          <td>(ton compte)</td>
+          <td>Tu exécutes les commandes SQL (via le SQL Editor), tu gères le mot de passe de la base, tu peux consulter les tables.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ============================================================ -->
+  <section id="technos">
+    <h2><span class="num">3.</span>Les technologies dans l'app</h2>
+    <p class="subtitle">Ce qui se passe à l'intérieur du code — vu de très haut.</p>
+
+    <div class="card-row">
+      <div class="actor-card nextjs">
+        <div class="icon">▲</div>
+        <h4>Next.js</h4>
+        <div class="role">Framework de l'app</div>
+        <p><strong>C'est quoi :</strong> le squelette de l'application, qui définit comment construire des pages web.</p>
+        <p><strong>Tu vois :</strong> chaque URL (/dashboard, /taches, /finances) correspond à un fichier <code>page.tsx</code>.</p>
+      </div>
+
+      <div class="actor-card prisma">
+        <div class="icon">▣</div>
+        <h4>Prisma</h4>
+        <div class="role">Le traducteur DB</div>
+        <p><strong>C'est quoi :</strong> un outil qui permet au code TypeScript de "parler" à la base PostgreSQL.</p>
+        <p><strong>Tu vois :</strong> <code>db.user.findUnique(...)</code> dans le code = "SELECT * FROM users WHERE..." en SQL.</p>
+      </div>
+
+      <div class="actor-card nextauth">
+        <div class="icon">🔐</div>
+        <h4>NextAuth (Auth.js)</h4>
+        <div class="role">Le gardien</div>
+        <p><strong>C'est quoi :</strong> une bibliothèque qui gère tout ce qui touche à la connexion (login, sessions, cookies).</p>
+        <p><strong>Tu vois :</strong> la page /login, l'API /api/auth/*, la déconnexion, les cookies sécurisés.</p>
+      </div>
+    </div>
+
+    <h3>Le langage : TypeScript</h3>
+    <p>Le code est écrit en <strong>TypeScript</strong> (.ts ou .tsx pour les fichiers React). C'est du JavaScript avec en plus des "types" qui empêchent les erreurs idiotes (ex : passer un nombre là où on attend du texte). C'est l'équivalent d'un correcteur orthographique pour le code.</p>
+
+    <h3>Le stockage des mots de passe : bcrypt</h3>
+    <p>Quand tu saisis ton mot de passe, il <strong>n'est jamais stocké en clair</strong>. La bibliothèque <code>bcrypt</code> transforme ton mot de passe en une chaîne unique illisible (un "hash"), du genre :</p>
+    <pre><code>$2a$10$xN4QkW.zhO5VFv5ZmI8Pue.zJxa9HtT5jvU7BqM8fEK</code></pre>
+    <p>Quand tu retournes te logger, bcrypt re-calcule le hash de ce que tu tapes et compare. C'est <strong>impossible</strong> de retrouver le mot de passe d'origine à partir du hash. Même nous, en regardant la table <code>users</code> dans Supabase, on ne voit que des hashs.</p>
+  </section>
+
+  <!-- ============================================================ -->
+  <section id="cycle">
+    <h2><span class="num">4.</span>Le cycle de vie d'une modification</h2>
+    <p class="subtitle">Ce qui se passe entre "je veux X" et "X est en ligne".</p>
+
+    <div class="schema">
+   ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐    ┌──────────┐
+   │  1. TOI  │ ─▶ │ 2. CLAUDE│ ─▶ │ 3. GITHUB│ ─▶ │ 4. VERCEL│ ─▶ │  5. TOI  │
+   │          │    │          │    │          │    │          │    │          │
+   │ "Je veux │    │ écrit le │    │ stocke   │    │ rebuild  │    │ teste    │
+   │  X"      │    │ code     │    │ le code  │    │ +deploy  │    │ X        │
+   └──────────┘    └──────────┘    └──────────┘    └──────────┘    └──────────┘
+                        │                                              │
+                        │       ◀────────── feedback ───────────       │
+                        ▼                                              ▼
+                   modifications                                    nouvelle
+                   complémentaires                                  demande
+    </div>
+
+    <h3>Concrètement, étape par étape</h3>
+    <div class="flow">
+      <ol>
+        <li><strong>Toi :</strong> tu m'écris une demande ("Ajoute un bouton X", "Corrige le bug Y").</li>
+        <li><strong>Moi :</strong> je modifie les bons fichiers (Edit / Write).</li>
+        <li><strong>Moi :</strong> je teste le build local pour vérifier que rien ne casse (<code>npm run build</code>).</li>
+        <li><strong>Moi :</strong> je crée un <em>commit</em> = un instantané daté et nommé des modifications.</li>
+        <li><strong>Moi :</strong> je te demande un <em>PAT</em> (Personal Access Token) pour pouvoir pousser sur GitHub.</li>
+        <li><strong>Toi :</strong> tu génères un PAT et tu me le donnes.</li>
+        <li><strong>Moi :</strong> je pousse le commit sur GitHub (<code>git push</code>).</li>
+        <li><strong>Toi :</strong> tu révoques le PAT (sécurité — il a servi, plus besoin).</li>
+        <li><strong>GitHub :</strong> reçoit le commit, notifie automatiquement Vercel.</li>
+        <li><strong>Vercel :</strong> récupère le code, le compile, et déploie une nouvelle version.</li>
+        <li><strong>Toi :</strong> tu testes sur l'URL Vercel.</li>
+        <li><strong>Toi :</strong> tu me dis si ça marche ou pas → on enchaîne.</li>
+      </ol>
+    </div>
+
+    <div class="info-box">
+      <strong>💡 Pourquoi les PATs ?</strong><br>
+      Je tourne dans un environnement isolé (chez Anthropic). Je n'ai pas tes identifiants GitHub permanents — c'est une mesure de sécurité. Tu me fournis un jeton temporaire à chaque besoin, je l'utilise une fois, tu le supprimes. Comme une clé d'hôtel : valide pour une nuit, jetée à la sortie.
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section id="auth">
+    <h2><span class="num">5.</span>L'authentification en détail</h2>
+    <p class="subtitle">Ce qui se passe entre "je tape mon mot de passe" et "j'arrive sur le dashboard".</p>
+
+    <h3>Le scénario "je me connecte"</h3>
+    <div class="flow">
+      <ol>
+        <li>Tu tapes <code>berardi.maxime@gmail.com</code> + ton mot de passe sur la page <code>/login</code>.</li>
+        <li>Le navigateur envoie ces 2 informations en HTTPS à l'URL <code>/api/auth/callback/credentials</code> sur Vercel.</li>
+        <li>Vercel exécute le code de <strong>NextAuth</strong> dans une fonction serveur (une "serverless function").</li>
+        <li>NextAuth appelle <strong>Prisma</strong> qui se connecte à <strong>Supabase</strong> et fait : <code>SELECT * FROM users WHERE email = '…'</code>.</li>
+        <li>Supabase renvoie la ligne avec le <code>hashedPassword</code> (hash bcrypt).</li>
+        <li>NextAuth utilise <strong>bcrypt</strong> pour comparer le mot de passe que tu as tapé avec le hash. → OK ou KO.</li>
+        <li>Si OK : NextAuth génère un <strong>JWT</strong> (un jeton signé numériquement avec <code>AUTH_SECRET</code>) qui contient ton identité.</li>
+        <li>Ce JWT est placé dans un <strong>cookie</strong> nommé <code>__Secure-authjs.session-token</code>, envoyé à ton navigateur.</li>
+        <li>Le navigateur stocke le cookie et te redirige vers <code>/dashboard</code>.</li>
+      </ol>
+    </div>
+
+    <h3>Le scénario "je clique sur Tâches" (déjà connecté)</h3>
+    <div class="flow">
+      <ol>
+        <li>Tu cliques sur <code>/taches</code>.</li>
+        <li>Ton navigateur envoie automatiquement le cookie <code>__Secure-authjs.session-token</code> avec la requête.</li>
+        <li>Sur Vercel, le <strong>middleware</strong> intercepte la requête <em>avant</em> d'afficher la page.</li>
+        <li>Le middleware décode le JWT du cookie. Il vérifie qu'il est valide (signature OK, non expiré).</li>
+        <li>Si OK → la page <code>/taches</code> s'affiche. Sinon → redirection vers <code>/login</code>.</li>
+      </ol>
+    </div>
+
+    <h3>Pourquoi un cookie + JWT, et pas juste "je stocke la session sur le serveur" ?</h3>
+    <p>Avec un JWT signé, Vercel n'a pas besoin de redemander à Supabase à chaque clic "est-ce que cette personne est connectée ?". Le cookie contient tout, signé numériquement — c'est instantané et économise des requêtes à la base. Tant que la signature est valide (vérifiée avec <code>AUTH_SECRET</code>), la session est de confiance.</p>
+
+    <div class="danger-box">
+      <strong>⚠️ Si jamais AUTH_SECRET fuite :</strong> n'importe qui pourrait forger des JWT valides et se faire passer pour n'importe quel utilisateur. C'est pour ça qu'il est marqué "Sensitive" dans Vercel — il ne doit JAMAIS apparaître dans le code ni dans des logs.
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section id="env">
+    <h2><span class="num">6.</span>Les variables d'environnement</h2>
+    <p class="subtitle">Ce que Vercel doit savoir, sans que ça soit écrit dans le code source.</p>
+
+    <p>Le code public sur GitHub <strong>ne doit jamais contenir</strong> de mots de passe, de clés d'API, ou d'URL de base de données. Ces informations sont mises dans des "variables d'environnement" configurées dans Vercel.</p>
+
+    <h3>Les 4 variables actuelles</h3>
+    <table>
+      <thead>
+        <tr><th>Variable</th><th>À quoi ça sert</th><th>Si elle est cassée…</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>DATABASE_URL</code></td>
+          <td>L'adresse de Supabase pour les requêtes runtime (lecture, écriture).</td>
+          <td>L'app plante au login : "DATABASE_URL not found" ou "tenant not found".</td>
+        </tr>
+        <tr>
+          <td><code>DIRECT_URL</code></td>
+          <td>L'adresse Supabase pour les migrations Prisma (création / modification de tables).</td>
+          <td>Migrations impossibles. Le runtime continue normalement.</td>
+        </tr>
+        <tr>
+          <td><code>AUTH_SECRET</code></td>
+          <td>La clé secrète qui signe les JWT de session NextAuth.</td>
+          <td>Plus aucune session valide (faut se reconnecter). Si elle fuit : usurpation.</td>
+        </tr>
+        <tr>
+          <td><code>NEXTAUTH_URL</code></td>
+          <td>L'URL publique de l'app (<code>https://ent-mairie-saint-fortunat.vercel.app</code>).</td>
+          <td>Cookies posés sur un mauvais domaine → login en boucle.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3>Le format des URLs Supabase</h3>
+    <p>Une URL de connexion à PostgreSQL a ce format :</p>
+    <pre><code>postgresql://USER:PASSWORD@HOST:PORT/DATABASE?options</code></pre>
+    <p>Décomposons un de tes <code>DATABASE_URL</code> :</p>
+    <pre><code>postgresql://postgres.jvigyrsgrlravjwqulhb:MotDePasse@aws-0-eu-west-1.pooler.supabase.com:6543/postgres?pgbouncer=true
+            └──────────┬───────────────┘  └─────┬───┘ └────────────┬──────────────────────┘ └─┬─┘ └──┬───┘
+                  USER (compte Postgres)   PASSWORD       HOST (serveur Supabase)         PORT  DB</code></pre>
+    <ul>
+      <li><strong>USER</strong> : <code>postgres.jvigyrsgrlravjwqulhb</code> — le préfixe <code>postgres.</code> + ton "project ref" (identifiant unique de ton projet).</li>
+      <li><strong>PORT 6543</strong> = "connection pooler" (rapide, optimisé pour les requêtes courtes). C'est ce que Vercel utilise en production.</li>
+      <li><strong>PORT 5432</strong> = "direct connection" (utilisé pour les migrations qui ouvrent une connexion plus longue).</li>
+    </ul>
+
+    <div class="info-box">
+      <strong>💡 Caractères spéciaux dans le mot de passe :</strong><br>
+      Si le mot de passe contient des caractères comme <code>@</code>, <code>:</code>, <code>/</code>, <code>?</code>, <code>#</code>, ils <strong>cassent</strong> l'URL (qui utilise ces mêmes caractères comme séparateurs). Il faut les "encoder" (par ex. <code>@</code> → <code>%40</code>). Le plus simple : choisir un mot de passe avec uniquement des lettres et des chiffres.
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <section id="piloter">
+    <h2><span class="num">7.</span>Comment piloter au quotidien</h2>
+    <p class="subtitle">Les gestes utiles à connaître pour gérer l'app sans paniquer.</p>
+
+    <h3>Voir l'état des déploiements (Vercel)</h3>
+    <p>Vercel → ton projet → onglet <strong>Deployments</strong>.</p>
+    <ul>
+      <li>🟢 <strong>Ready</strong> = en ligne, fonctionne.</li>
+      <li>🟡 <strong>Building</strong> = en cours de compilation (1-2 min en moyenne).</li>
+      <li>🔴 <strong>Error</strong> = build échoué. Clique pour voir le log d'erreur.</li>
+    </ul>
+    <p>Le badge <strong>"Current"</strong> indique la version actuellement servie aux utilisateurs.</p>
+
+    <h3>Voir les logs en temps réel (Vercel)</h3>
+    <p>Vercel → onglet <strong>Logs</strong> (ou "Runtime Logs"). Tu y vois toutes les requêtes qui arrivent et toutes les erreurs côté serveur. C'est l'endroit pour debugger quand quelque chose ne marche pas.</p>
+
+    <h3>Modifier une variable d'environnement (Vercel)</h3>
+    <ol>
+      <li>Vercel → Project Settings → <strong>Environment Variables</strong>.</li>
+      <li>Trouve la variable → 3 points "..." → <strong>Edit</strong>.</li>
+      <li>Change la valeur → Save.</li>
+      <li>⚠️ <strong>Redéploie</strong> ensuite (Deployments → dernier → "..." → Redeploy), sinon le changement ne s'applique pas.</li>
+    </ol>
+
+    <h3>Réinitialiser le mot de passe DB Supabase</h3>
+    <ol>
+      <li>Supabase → Project Settings → <strong>Database</strong>.</li>
+      <li>Section "Database password" → Reset.</li>
+      <li>Note le nouveau mot de passe quelque part de sûr.</li>
+      <li>Vercel → modifie <code>DATABASE_URL</code> et <code>DIRECT_URL</code> avec le nouveau mot de passe.</li>
+      <li>Redéploie.</li>
+    </ol>
+
+    <h3>Consulter / modifier des données dans la DB</h3>
+    <p>Supabase → <strong>Table Editor</strong> dans le menu de gauche. Tu peux parcourir les tables (<code>persons</code>, <code>users</code>, <code>tasks</code>, etc.), filtrer, et éditer les lignes directement.</p>
+    <p>Pour des requêtes plus complexes : Supabase → <strong>SQL Editor</strong> → écris du SQL et clique Run.</p>
+
+    <h3>Exemples de SQL utiles</h3>
+    <pre><code>-- Voir tous les utilisateurs et à quelle personne ils sont liés
+SELECT u.email, p."fullName", p.role
+FROM users u
+LEFT JOIN persons p ON u."personId" = p.id;
+
+-- Réinitialiser le mot de passe d'un utilisateur à "saintfortunat2026"
+-- (le hash bcrypt de ce mot de passe — change l'email)
+UPDATE users
+SET "hashedPassword" = '$2b$10$X8h9c6FbF.Mr3RkD8RKLxe9rOK4uYy7sZHGXm0G8KqRqRqVxF4qPK'
+WHERE email = 'berardi.maxime@gmail.com';
+
+-- Compter le nombre de tâches par statut
+SELECT status, COUNT(*) FROM tasks GROUP BY status;</code></pre>
+
+    <h3>Si quelque chose plante après un déploiement</h3>
+    <ol>
+      <li>Vercel → Logs → cherche les lignes en rouge (Error).</li>
+      <li>Si ça ne se résout pas vite → <strong>Rollback</strong> : Deployments → trouve un ancien déploiement "Ready" qui marchait → "..." → <strong>"Promote to Production"</strong> (ou "Rollback").</li>
+      <li>Préviens-moi avec le message d'erreur — je corrige le code.</li>
+    </ol>
+
+    <h3>Sécurité — les bonnes habitudes</h3>
+    <ul>
+      <li><strong>Mot de passe DB Supabase</strong> : ne le partage à personne. Ne le mets pas dans un email ou un chat. Stocke-le dans un gestionnaire (Bitwarden, 1Password).</li>
+      <li><strong>AUTH_SECRET</strong> : pareil. Si tu suspectes une fuite, génère-en un nouveau (<code>openssl rand -base64 32</code>) et remplace dans Vercel.</li>
+      <li><strong>PATs GitHub</strong> : courte durée de vie (7 jours max), révoqués dès qu'utilisés. Un PAT = pouvoir de modifier tout le code.</li>
+      <li><strong>Comptes utilisateur de l'app</strong> : encourage-les à changer leur mot de passe par défaut (<code>saintfortunat2026</code>) à leur première connexion.</li>
+    </ul>
+  </section>
+
+  <!-- ============================================================ -->
+  <section id="glossaire">
+    <h2><span class="num">8.</span>Glossaire</h2>
+    <p class="subtitle">Les termes techniques qu'on utilise souvent, expliqués simplement.</p>
+
+    <dl class="glossaire">
+      <dt>API</dt>
+      <dd>"Application Programming Interface". Une porte d'entrée par laquelle le navigateur communique avec le serveur. Chaque URL en <code>/api/...</code> est une API.</dd>
+
+      <dt>Bcrypt</dt>
+      <dd>Algorithme qui transforme un mot de passe en une chaîne unique illisible (hash), impossible à inverser. On stocke le hash, pas le mot de passe.</dd>
+
+      <dt>Build</dt>
+      <dd>L'étape pendant laquelle Vercel compile le code source en une version optimisée prête à servir. Dure 1-2 min en moyenne.</dd>
+
+      <dt>Commit</dt>
+      <dd>Un instantané daté et nommé des modifications. Chaque commit a un identifiant unique (ex: <code>064d8956</code>) et un message qui explique ce qui a changé.</dd>
+
+      <dt>Cookie</dt>
+      <dd>Un petit fichier que le serveur peut demander au navigateur de stocker. Le navigateur le renvoie ensuite à chaque requête. Sert pour les sessions de connexion.</dd>
+
+      <dt>Deploy</dt>
+      <dd>Mettre une nouvelle version en ligne. Sur Vercel, c'est automatique après chaque <code>git push</code> sur la branche <code>main</code>.</dd>
+
+      <dt>Endpoint</dt>
+      <dd>Une URL d'API spécifique. Ex : <code>/api/auth/change-password</code> est l'endpoint pour changer son mot de passe.</dd>
+
+      <dt>Frontend / Backend</dt>
+      <dd>Frontend = ce qui tourne dans ton navigateur (ce que tu vois). Backend = ce qui tourne sur Vercel (le serveur, invisible). Next.js fait les deux dans un seul projet.</dd>
+
+      <dt>Git / GitHub</dt>
+      <dd>Git est l'outil qui suit l'historique du code. GitHub est le site web qui héberge les dépôts Git.</dd>
+
+      <dt>Hash</dt>
+      <dd>Une empreinte numérique unique. Bcrypt transforme "monMotDePasse123" en un hash qui ne peut pas être inversé.</dd>
+
+      <dt>JWT (JSON Web Token)</dt>
+      <dd>Un jeton signé numériquement qui prouve l'identité de l'utilisateur. Format : 3 parties séparées par des points, encodé en base64.</dd>
+
+      <dt>Middleware</dt>
+      <dd>Un bout de code qui s'exécute <em>avant</em> chaque requête. Le nôtre vérifie que tu es connecté avant de te laisser accéder à <code>/dashboard</code>.</dd>
+
+      <dt>Migration (DB)</dt>
+      <dd>Une modification de la structure de la base de données (ajouter une colonne, créer une table). Géré par Prisma via le SQL généré.</dd>
+
+      <dt>PAT (Personal Access Token)</dt>
+      <dd>Un jeton GitHub temporaire qui me permet de pousser du code. Tu en génères un quand j'en ai besoin, je l'utilise une fois, tu le révoques.</dd>
+
+      <dt>Prisma</dt>
+      <dd>Le "traducteur" entre le code TypeScript et la base PostgreSQL. Au lieu d'écrire du SQL, on écrit <code>db.user.findUnique(...)</code>.</dd>
+
+      <dt>Production / Preview / Development</dt>
+      <dd>Les 3 environnements Vercel. Production = la version vue par tous. Preview = une version temporaire pour tester. Development = ton ordi en local.</dd>
+
+      <dt>Push</dt>
+      <dd>Envoyer un ou plusieurs commits depuis l'ordi local vers GitHub. <code>git push</code>.</dd>
+
+      <dt>Repository (repo)</dt>
+      <dd>Un projet Git stocké sur GitHub. Le tien : <code>MaximeBERARDI/ent-mairie-saint-fortunat</code>.</dd>
+
+      <dt>Schema (Prisma)</dt>
+      <dd>Le fichier <code>schema.prisma</code> qui décrit toutes les tables de la DB (colonnes, types, relations).</dd>
+
+      <dt>Seed</dt>
+      <dd>Un script qui pré-remplit la DB avec des données initiales (utilisateurs, comptes M14, etc.). À ne lancer qu'une fois.</dd>
+
+      <dt>Server-side / Client-side</dt>
+      <dd>Server-side = exécuté sur Vercel (serveur). Client-side = exécuté dans le navigateur. Le mot-clé <code>'use client'</code> en haut d'un fichier indique du client-side.</dd>
+
+      <dt>SQL</dt>
+      <dd>Le langage pour interroger une base de données. Ex : <code>SELECT * FROM users WHERE email = '…'</code>.</dd>
+
+      <dt>Tenant</dt>
+      <dd>Sur Supabase, ton "tenant" = ton projet, identifié par son "project ref" (ex: <code>jvigyrsgrlravjwqulhb</code>). Tous tes données vivent dans ton tenant.</dd>
+    </dl>
+  </section>
+
+  <footer>
+    Manuel rédigé pour <strong>Maxime Berardi</strong> — Mairie de Saint-Fortunat-sur-Eyrieux.<br>
+    Si une notion reste floue, demande-moi une explication détaillée et je l'ajouterai à ce document.
+  </footer>
+
+</div>
+</body>
+</html>

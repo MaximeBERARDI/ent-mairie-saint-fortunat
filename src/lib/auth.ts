@@ -41,38 +41,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: 'Mot de passe', type: 'password' },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          console.log('[auth] Pas d\'email ou pas de password')
-          return null
-        }
+        if (!credentials?.email || !credentials?.password) return null
         const email = String(credentials.email).toLowerCase().trim()
-        console.log(`[auth] Tentative login pour: ${email}`)
         try {
           const user = await db.user.findUnique({
             where: { email },
             include: { person: true },
           })
-          if (!user) {
-            console.log(`[auth] User introuvable: ${email}`)
-            return null
-          }
-          if (!user.hashedPassword) {
-            console.log(`[auth] User sans hashedPassword: ${email}`)
-            return null
-          }
+          if (!user?.hashedPassword) return null
 
           const valid = await bcrypt.compare(String(credentials.password), user.hashedPassword)
-          if (!valid) {
-            console.log(`[auth] Mot de passe invalide pour: ${email}`)
-            return null
-          }
+          if (!valid) return null
 
-          if (user.person && !user.person.active) {
-            console.log(`[auth] Compte désactivé: ${email}`)
-            return null
-          }
+          if (user.person && !user.person.active) return null
 
-          console.log(`[auth] ✓ Login OK pour: ${email}, personId=${user.personId}`)
           return {
             id: user.id,
             email: user.email,
@@ -81,7 +63,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             authLevel: user.person?.authLevel ?? undefined,
           }
         } catch (e) {
-          console.error('[auth] Exception:', e)
+          console.error('[auth] DB error:', e)
           return null
         }
       },

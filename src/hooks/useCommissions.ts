@@ -1,72 +1,112 @@
 'use client'
 
+// Hook de gestion des commissions, branché sur l'API /api/commissions
+// (PostgreSQL via Prisma — plus de localStorage).
+//
+// Pattern :
+// - chargement au montage (fetch GET)
+// - mutations en "optimistic update" : on modifie le state local
+//   immédiatement, puis on appelle l'API. En cas d'erreur, on revient
+//   en arrière (rollback) et on logue l'erreur.
+
 import { useEffect, useState, useCallback } from 'react'
 import type { Commission } from '@/lib/types'
-import { COMMISSIONS } from '@/lib/data'
-
-const STORAGE_KEY = 'ent-mairie:commissions:v1'
-
-function load(): Commission[] {
-  if (typeof window === 'undefined') return COMMISSIONS
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY)
-    if (!raw) return COMMISSIONS
-    const parsed = JSON.parse(raw)
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : COMMISSIONS
-  } catch {
-    return COMMISSIONS
-  }
-}
-
-function persist(items: Commission[]) {
-  if (typeof window === 'undefined') return
-  try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items)) } catch {}
-}
-
-function newId(name: string): string {
-  // Slugify simple
-  const slug = name.toLowerCase()
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 30)
-  return slug || `comm-${Date.now()}`
-}
 
 export function useCommissions() {
-  const [commissions, setCommissions] = useState<Commission[]>(COMMISSIONS)
+  const [commissions, setCommissions] = useState<Commission[]>([])
   const [hydrated, setHydrated] = useState(false)
 
   useEffect(() => {
-    setCommissions(load())
-    setHydrated(true)
+    let cancelled = false
+    fetch('/api/commissions')
+      .then((r) => (r.ok ? r.json() : Promise.reject(r)))
+      .then((data: Commission[]) => {
+        if (!cancelled) {
+          setCommissions(data)
+          setHydrated(true)
+        }
+      })
+      .catch((e) => {
+        if (!cancelled) {
+          console.error('[useCommissions] load error:', e)
+          setHydrated(true)
+        }
+      })
+    return () => {
+      cancelled = true
+    }
   }, [])
 
-  useEffect(() => {
-    if (hydrated) persist(commissions)
-  }, [commissions, hydrated])
+  const createCommission = useCallback((data: Omit<Commission, 'id'>): void => {
+    // Insertion optimiste avec id temporaire
+    const tempId = `tmp-${Date.now()}`
+    const optimistic: Commission = { ...data, id: tempId }
+    setCommissions((prev) => [...prev, optimistic])
 
-  const createCommission = useCallback((data: Omit<Commission, 'id'>): Commission => {
-    const item: Commission = { ...data, id: newId(data.name) }
-    setCommissions(prev => {
-      // Garantir unicité de l'id
-      let id = item.id
-      let suffix = 1
-      while (prev.some(c => c.id === id)) {
-        id = `${item.id}-${suffix++}`
-      }
-      return [...prev, { ...item, id }]
+    fetch('/api/commissions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: data.name,
+        color: data.color,
+        nextMeeting: data.nextMeeting,
+      }),
     })
-    return item
+      .then((r) => (r.ok ? r.json() : Promise.reject(r)))
+      .then((created: Commission) => {
+        // Remplacer l'item temporaire par celui du serveur (avec son vrai id)
+        setCommissions((prev) => prev.map((c) => (c.id === tempId ? created : c)))
+      })
+      .catch((e) => {
+        console.error('[useCommissions] create error:', e)
+        // Rollback
+        setCommissions((prev) => prev.filter((c) => c.id !== tempId))
+        alert('Impossible de créer la commission.')
+      })
   }, [])
 
-  const updateCommission = useCallback((id: string, patch: Partial<Commission>) => {
-    setCommissions(prev => prev.map(c => (c.id === id ? { ...c, ...patch } : c)))
+  const updateCommission = useCallback((id: string, patch: Partial<Commission>): void => {
+    let previous: Commission[] = []
+    setCommissions((prev) => {
+      previous = prev
+      return prev.map((c) => (c.id === id ? { ...c, ...patch } : c))
+    })
+
+    fetch(`/api/commissions/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: patch.name,
+        color: patch.color,
+        nextMeeting: patch.nextMeeting,
+      }),
+    })
+      .then((r) => {
+        if (!r.ok) throw r
+      })
+      .catch((e) => {
+        console.error('[useCommissions] update error:', e)
+        setCommissions(previous)
+        alert('Impossible de mettre à jour la commission.')
+      })
   }, [])
 
-  const deleteCommission = useCallback((id: string) => {
-    setCommissions(prev => prev.filter(c => c.id !== id))
+  const deleteCommission = useCallback((id: string): void => {
+    let previous: Commission[] = []
+    setCommissions((prev) => {
+      previous = prev
+      return prev.filter((c) => c.id !== id)
+    })
+
+    fetch(`/api/commissions/${id}`, { method: 'DELETE' })
+      .then((r) => {
+        if (!r.ok) throw r
+      })
+      .catch((e) => {
+        console.error('[useCommissions] delete error:', e)
+        setCommissions(previous)
+        alert('Impossible de supprimer la commission.')
+      })
   }, [])
 
   return { commissions, hydrated, createCommission, updateCommission, deleteCommission }
