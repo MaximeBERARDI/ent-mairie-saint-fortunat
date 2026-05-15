@@ -12,10 +12,20 @@ export async function GET() {
   if (!session?.user) return NextResponse.json({ error: 'Non authentifié.' }, { status: 401 })
 
   const rows = await db.task.findMany({
-    include: { comments: { orderBy: { createdAt: 'asc' } } },
+    include: {
+      comments: { orderBy: { createdAt: 'asc' } },
+      documents: { orderBy: { uploadedAt: 'asc' } },
+    },
     orderBy: { createdAt: 'desc' },
   })
   return NextResponse.json(rows.map(taskFromDb))
+}
+
+interface DocumentInput {
+  name: string
+  size: number
+  type: string
+  dataUrl: string
 }
 
 interface CreateTaskBody {
@@ -27,6 +37,7 @@ interface CreateTaskBody {
   dueDate?: string | null
   priority?: TaskPriority
   status?: TaskStatus
+  documents?: DocumentInput[]
 }
 
 export async function POST(req: Request) {
@@ -55,8 +66,18 @@ export async function POST(req: Request) {
       dueDate: body.dueDate ? new Date(body.dueDate) : null,
       priority: priorityToDb(body.priority),
       status: statusToDb(body.status),
+      documents: body.documents && body.documents.length > 0
+        ? {
+            create: body.documents.map((d) => ({
+              name: d.name,
+              size: d.size,
+              type: d.type,
+              dataUrl: d.dataUrl,
+            })),
+          }
+        : undefined,
     },
-    include: { comments: true },
+    include: { comments: true, documents: true },
   })
   return NextResponse.json(taskFromDb(created))
 }

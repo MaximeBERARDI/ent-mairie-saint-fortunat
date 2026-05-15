@@ -7,6 +7,14 @@ import { db } from '@/lib/db'
 import { priorityToDb, statusToDb, taskFromDb } from '@/lib/task-mapper'
 import type { TaskPriority, TaskStatus } from '@/lib/types'
 
+interface DocumentInput {
+  id?: string
+  name: string
+  size: number
+  type: string
+  dataUrl: string
+}
+
 interface PatchBody {
   label?: string
   description?: string | null
@@ -16,6 +24,7 @@ interface PatchBody {
   dueDate?: string | null
   priority?: TaskPriority
   status?: TaskStatus
+  documents?: DocumentInput[]
 }
 
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
@@ -40,13 +49,46 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   if (body.status !== undefined) data.status = statusToDb(body.status)
 
   try {
-    const updated = await db.task.update({
-      where: { id: params.id },
-      data,
-      include: { comments: { orderBy: { createdAt: 'asc' } } },
+    // Si documents est fourni dans le body, on remplace l'intégralité
+    // (suppression des anciens + création des nouveaux) dans une
+    // transaction. Si non, on ne touche pas aux documents existants.
+    const updated = await db.$transaction(async (tx) => {
+      if (body.documents !== undefined) {
+        // Conserve les documents existants dont l'id est repassé,
+        // supprime ceux qui ne sont plus là, crée les nouveaux.
+        const keptIds = body.documents
+          .filter((d) => d.id && !d.id.startsWith('tmp-'))
+          .map((d) => d.id!)
+        await tx.document.deleteMany({
+          where: { taskId: params.id, id: { notIn: keptIds.length > 0 ? keptIds : [''] } },
+        })
+        const newDocs = body.documents.filter(
+          (d) => !d.id || d.id.startsWith('tmp-'),
+        )
+        if (newDocs.length > 0) {
+          await tx.document.createMany({
+            data: newDocs.map((d) => ({
+              taskId: params.id,
+              name: d.name,
+              size: d.size,
+              type: d.type,
+              dataUrl: d.dataUrl,
+            })),
+          })
+        }
+      }
+      return tx.task.update({
+        where: { id: params.id },
+        data,
+        include: {
+          comments: { orderBy: { createdAt: 'asc' } },
+          documents: { orderBy: { uploadedAt: 'asc' } },
+        },
+      })
     })
     return NextResponse.json(taskFromDb(updated))
-  } catch {
+  } catch (e) {
+    console.error('[api/tasks PATCH]', e)
     return NextResponse.json({ error: 'Tâche introuvable.' }, { status: 404 })
   }
 }

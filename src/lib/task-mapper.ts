@@ -4,12 +4,13 @@
 // utilise des libellés français avec espaces et accents (À faire, En cours…).
 // Ces helpers font la traduction des deux côtés.
 
-import type { Task, TaskComment, TaskPriority, TaskStatus } from './types'
+import type { Task, TaskComment, TaskDocument, TaskPriority, TaskStatus } from './types'
 import type {
   Task as DbTask,
   TaskComment as DbTaskComment,
   TaskPriority as DbTaskPriority,
   TaskStatus as DbTaskStatus,
+  Document as DbDocument,
 } from '@prisma/client'
 
 const PRIORITY_TO_DB: Record<TaskPriority, DbTaskPriority> = {
@@ -58,7 +59,20 @@ export function commentFromDb(c: DbTaskComment): TaskComment {
   }
 }
 
-export function taskFromDb(t: DbTask & { comments?: DbTaskComment[] }): Task {
+export function documentFromDb(d: DbDocument): TaskDocument {
+  return {
+    id: d.id,
+    name: d.name,
+    size: d.size,
+    type: d.type,
+    dataUrl: d.dataUrl ?? d.storageUrl ?? '',
+    uploadedAt: d.uploadedAt.toISOString(),
+  }
+}
+
+export function taskFromDb(
+  t: DbTask & { comments?: DbTaskComment[]; documents?: DbDocument[] },
+): Task {
   return {
     id: t.id,
     label: t.label,
@@ -70,7 +84,7 @@ export function taskFromDb(t: DbTask & { comments?: DbTaskComment[] }): Task {
     dueDate: t.dueDate ? t.dueDate.toISOString().slice(0, 10) : undefined,
     priority: priorityFromDb(t.priority),
     status: statusFromDb(t.status),
-    documents: [],
+    documents: t.documents?.map(documentFromDb) ?? [],
     comments: t.comments?.map(commentFromDb) ?? [],
     createdAt: t.createdAt.toISOString(),
     updatedAt: t.updatedAt.toISOString(),

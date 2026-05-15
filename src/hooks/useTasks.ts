@@ -60,6 +60,7 @@ export function useTasks() {
         dueDate: data.dueDate,
         priority: data.priority,
         status: data.status,
+        documents: data.documents,
       }),
     })
       .then((r) => (r.ok ? r.json() : Promise.reject(r)))
@@ -95,10 +96,14 @@ export function useTasks() {
         dueDate: patch.dueDate,
         priority: patch.priority,
         status: patch.status,
+        documents: patch.documents,
       }),
     })
-      .then((r) => {
-        if (!r.ok) throw r
+      .then((r) => (r.ok ? r.json() : Promise.reject(r)))
+      .then((updated: Task) => {
+        // Synchronise avec la version serveur (notamment pour les
+        // vrais ids des documents fraîchement créés).
+        setTasks((prev) => prev.map((t) => (t.id === id ? updated : t)))
       })
       .catch((e) => {
         console.error('[useTasks] update error:', e)

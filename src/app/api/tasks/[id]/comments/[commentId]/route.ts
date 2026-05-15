@@ -10,7 +10,7 @@ export async function DELETE(_req: Request, { params }: { params: { id: string; 
 
   try {
     await db.taskComment.delete({ where: { id: params.commentId } })
-    await db.task.update({ where: { id: params.id }, data: { updatedAt: new Date() } })
+    await db.task.update({ where: { id: params.id }, data: {} })
     return NextResponse.json({ ok: true })
   } catch {
     return NextResponse.json({ error: 'Commentaire introuvable.' }, { status: 404 })

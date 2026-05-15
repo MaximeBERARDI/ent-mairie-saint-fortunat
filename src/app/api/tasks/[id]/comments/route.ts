@@ -29,8 +29,8 @@ export async function POST(req: Request, { params }: { params: { id: string } })
         content,
       },
     })
-    // Touche updatedAt de la tâche parente
-    await db.task.update({ where: { id: params.id }, data: { updatedAt: new Date() } })
+    // Touche updatedAt de la tâche parente (l'update est implicite via la mise à jour Prisma)
+    await db.task.update({ where: { id: params.id }, data: {} })
     return NextResponse.json(commentFromDb(created))
   } catch {
     return NextResponse.json({ error: 'Tâche introuvable.' }, { status: 404 })
