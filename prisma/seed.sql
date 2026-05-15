@@ -257,7 +257,7 @@ INSERT INTO users (id, email, name, "hashedPassword", "personId", "createdAt", "
   'user-p-jm',
   'berardi.maxime@gmail.com',
   'Jean Martin',
-  '$2b$10$klTbXb29V1xq8AGrcWUPiuDhQqRoNGR9T32T.ytOxWSxjSjF2g9gG',
+  '$2b$10$6cYS9t//WLwwicp4i8URg.BRQs/H3MMAdHdc0ZnTMf/.rRR5SHlFi',
   'p-jm',
   NOW(),
   NOW()
@@ -267,7 +267,7 @@ INSERT INTO users (id, email, name, "hashedPassword", "personId", "createdAt", "
   'user-p-md',
   'marie.durand@saint-fortunat.fr',
   'Marie Durand',
-  '$2b$10$klTbXb29V1xq8AGrcWUPiuDhQqRoNGR9T32T.ytOxWSxjSjF2g9gG',
+  '$2b$10$6cYS9t//WLwwicp4i8URg.BRQs/H3MMAdHdc0ZnTMf/.rRR5SHlFi',
   'p-md',
   NOW(),
   NOW()
@@ -277,7 +277,7 @@ INSERT INTO users (id, email, name, "hashedPassword", "personId", "createdAt", "
   'user-p-rg',
   'robert.granger@saint-fortunat.fr',
   'Robert Granger',
-  '$2b$10$klTbXb29V1xq8AGrcWUPiuDhQqRoNGR9T32T.ytOxWSxjSjF2g9gG',
+  '$2b$10$6cYS9t//WLwwicp4i8URg.BRQs/H3MMAdHdc0ZnTMf/.rRR5SHlFi',
   'p-rg',
   NOW(),
   NOW()
@@ -287,7 +287,7 @@ INSERT INTO users (id, email, name, "hashedPassword", "personId", "createdAt", "
   'user-p-lf',
   'laurent.fabre@saint-fortunat.fr',
   'Laurent Fabre',
-  '$2b$10$klTbXb29V1xq8AGrcWUPiuDhQqRoNGR9T32T.ytOxWSxjSjF2g9gG',
+  '$2b$10$6cYS9t//WLwwicp4i8URg.BRQs/H3MMAdHdc0ZnTMf/.rRR5SHlFi',
   'p-lf',
   NOW(),
   NOW()
@@ -297,7 +297,7 @@ INSERT INTO users (id, email, name, "hashedPassword", "personId", "createdAt", "
   'user-p-sb',
   'sylvie.bonnet@saint-fortunat.fr',
   'Sylvie Bonnet',
-  '$2b$10$klTbXb29V1xq8AGrcWUPiuDhQqRoNGR9T32T.ytOxWSxjSjF2g9gG',
+  '$2b$10$6cYS9t//WLwwicp4i8URg.BRQs/H3MMAdHdc0ZnTMf/.rRR5SHlFi',
   'p-sb',
   NOW(),
   NOW()
@@ -307,7 +307,7 @@ INSERT INTO users (id, email, name, "hashedPassword", "personId", "createdAt", "
   'user-p-pr',
   'pierre.roche@saint-fortunat.fr',
   'Pierre Roche',
-  '$2b$10$klTbXb29V1xq8AGrcWUPiuDhQqRoNGR9T32T.ytOxWSxjSjF2g9gG',
+  '$2b$10$6cYS9t//WLwwicp4i8URg.BRQs/H3MMAdHdc0ZnTMf/.rRR5SHlFi',
   'p-pr',
   NOW(),
   NOW()
@@ -317,7 +317,7 @@ INSERT INTO users (id, email, name, "hashedPassword", "personId", "createdAt", "
   'user-p-im',
   'isabelle.morel@saint-fortunat.fr',
   'Isabelle Morel',
-  '$2b$10$klTbXb29V1xq8AGrcWUPiuDhQqRoNGR9T32T.ytOxWSxjSjF2g9gG',
+  '$2b$10$6cYS9t//WLwwicp4i8URg.BRQs/H3MMAdHdc0ZnTMf/.rRR5SHlFi',
   'p-im',
   NOW(),
   NOW()
@@ -327,7 +327,7 @@ INSERT INTO users (id, email, name, "hashedPassword", "personId", "createdAt", "
   'user-p-tg',
   'thomas.girard@saint-fortunat.fr',
   'Thomas Girard',
-  '$2b$10$klTbXb29V1xq8AGrcWUPiuDhQqRoNGR9T32T.ytOxWSxjSjF2g9gG',
+  '$2b$10$6cYS9t//WLwwicp4i8URg.BRQs/H3MMAdHdc0ZnTMf/.rRR5SHlFi',
   'p-tg',
   NOW(),
   NOW()
@@ -337,7 +337,7 @@ INSERT INTO users (id, email, name, "hashedPassword", "personId", "createdAt", "
   'user-p-lb',
   'lucie.bernard@saint-fortunat.fr',
   'Lucie Bernard',
-  '$2b$10$klTbXb29V1xq8AGrcWUPiuDhQqRoNGR9T32T.ytOxWSxjSjF2g9gG',
+  '$2b$10$6cYS9t//WLwwicp4i8URg.BRQs/H3MMAdHdc0ZnTMf/.rRR5SHlFi',
   'p-lb',
   NOW(),
   NOW()
@@ -347,7 +347,7 @@ INSERT INTO users (id, email, name, "hashedPassword", "personId", "createdAt", "
   'user-p-mf',
   'marc.faure@saint-fortunat.fr',
   'Marc Faure',
-  '$2b$10$klTbXb29V1xq8AGrcWUPiuDhQqRoNGR9T32T.ytOxWSxjSjF2g9gG',
+  '$2b$10$6cYS9t//WLwwicp4i8URg.BRQs/H3MMAdHdc0ZnTMf/.rRR5SHlFi',
   'p-mf',
   NOW(),
   NOW()
@@ -357,7 +357,7 @@ INSERT INTO users (id, email, name, "hashedPassword", "personId", "createdAt", "
   'user-p-ad',
   'anne.dupont@saint-fortunat.fr',
   'Anne Dupont',
-  '$2b$10$klTbXb29V1xq8AGrcWUPiuDhQqRoNGR9T32T.ytOxWSxjSjF2g9gG',
+  '$2b$10$6cYS9t//WLwwicp4i8URg.BRQs/H3MMAdHdc0ZnTMf/.rRR5SHlFi',
   'p-ad',
   NOW(),
   NOW()
@@ -367,7 +367,7 @@ INSERT INTO users (id, email, name, "hashedPassword", "personId", "createdAt", "
   'user-p-cv',
   'claude.viard@saint-fortunat.fr',
   'Claude Viard',
-  '$2b$10$klTbXb29V1xq8AGrcWUPiuDhQqRoNGR9T32T.ytOxWSxjSjF2g9gG',
+  '$2b$10$6cYS9t//WLwwicp4i8URg.BRQs/H3MMAdHdc0ZnTMf/.rRR5SHlFi',
   'p-cv',
   NOW(),
   NOW()
@@ -2193,6 +2193,172 @@ INSERT INTO employee_records ("personId", "numAgent", contrat, cadre, grade, ech
   NULL,
   '2025-01-01T00:00:00Z'::timestamptz
 ) ON CONFLICT ("personId") DO NOTHING;
+
+-- ─── 7. Tâches initiales ────────────────────────────────────
+INSERT INTO tasks (id, label, description, "commissionId", "assigneeId", "validatorId", "createdById", "dueDate", priority, status, "createdAt", "updatedAt") VALUES (
+  'task-seed-1',
+  'Répondre demande PLU secteur Nord',
+  NULL,
+  'travaux',
+  'p-jm',
+  NULL,
+  NULL,
+  '2026-05-02'::date,
+  'urgent'::"TaskPriority",
+  'en_cours'::"TaskStatus",
+  '2026-04-25T09:00:00Z'::timestamptz,
+  '2026-04-25T09:00:00Z'::timestamptz
+) ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO tasks (id, label, description, "commissionId", "assigneeId", "validatorId", "createdById", "dueDate", priority, status, "createdAt", "updatedAt") VALUES (
+  'task-seed-2',
+  'Valider devis éclairage — route des Combes',
+  NULL,
+  'travaux',
+  'p-jm',
+  NULL,
+  NULL,
+  '2026-05-05'::date,
+  'normal'::"TaskPriority",
+  'a_faire'::"TaskStatus",
+  '2026-04-26T10:00:00Z'::timestamptz,
+  '2026-04-26T10:00:00Z'::timestamptz
+) ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO tasks (id, label, description, "commissionId", "assigneeId", "validatorId", "createdById", "dueDate", priority, status, "createdAt", "updatedAt") VALUES (
+  'task-seed-3',
+  'Préparer OJ Conseil du 8 mai',
+  NULL,
+  'admin-finance',
+  'p-jm',
+  NULL,
+  NULL,
+  '2026-05-08'::date,
+  'normal'::"TaskPriority",
+  'a_faire'::"TaskStatus",
+  '2026-04-27T11:00:00Z'::timestamptz,
+  '2026-04-27T11:00:00Z'::timestamptz
+) ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO tasks (id, label, description, "commissionId", "assigneeId", "validatorId", "createdById", "dueDate", priority, status, "createdAt", "updatedAt") VALUES (
+  'task-seed-4',
+  'Signer convention CC Pays de Vernoux',
+  NULL,
+  'admin-finance',
+  'p-jm',
+  'p-rg',
+  NULL,
+  '2026-05-10'::date,
+  'normal'::"TaskPriority",
+  'en_attente_validation'::"TaskStatus",
+  '2026-04-22T14:00:00Z'::timestamptz,
+  '2026-04-22T14:00:00Z'::timestamptz
+) ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO tasks (id, label, description, "commissionId", "assigneeId", "validatorId", "createdById", "dueDate", priority, status, "createdAt", "updatedAt") VALUES (
+  'task-seed-5',
+  'Mise à jour registre état civil Q1',
+  NULL,
+  'admin-finance',
+  'p-pr',
+  NULL,
+  NULL,
+  '2026-05-15'::date,
+  'faible'::"TaskPriority",
+  'en_cours'::"TaskStatus",
+  '2026-04-15T08:00:00Z'::timestamptz,
+  '2026-04-15T08:00:00Z'::timestamptz
+) ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO tasks (id, label, description, "commissionId", "assigneeId", "validatorId", "createdById", "dueDate", priority, status, "createdAt", "updatedAt") VALUES (
+  'task-seed-6',
+  'Suivi chantier route des Combes',
+  NULL,
+  'travaux',
+  'p-lf',
+  NULL,
+  NULL,
+  '2026-05-15'::date,
+  'normal'::"TaskPriority",
+  'en_cours'::"TaskStatus",
+  '2026-04-18T09:00:00Z'::timestamptz,
+  '2026-04-18T09:00:00Z'::timestamptz
+) ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO tasks (id, label, description, "commissionId", "assigneeId", "validatorId", "createdById", "dueDate", priority, status, "createdAt", "updatedAt") VALUES (
+  'task-seed-7',
+  'Mise à jour site internet — actu mai',
+  NULL,
+  NULL,
+  'p-im',
+  NULL,
+  NULL,
+  '2026-05-31'::date,
+  'faible'::"TaskPriority",
+  'a_faire'::"TaskStatus",
+  '2026-04-28T16:00:00Z'::timestamptz,
+  '2026-04-28T16:00:00Z'::timestamptz
+) ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO tasks (id, label, description, "commissionId", "assigneeId", "validatorId", "createdById", "dueDate", priority, status, "createdAt", "updatedAt") VALUES (
+  'task-seed-8',
+  'Valider délibération 2026-015',
+  NULL,
+  'admin-finance',
+  'p-jm',
+  'p-md',
+  NULL,
+  '2026-05-06'::date,
+  'urgent'::"TaskPriority",
+  'en_attente_validation'::"TaskStatus",
+  '2026-04-29T13:00:00Z'::timestamptz,
+  '2026-04-29T13:00:00Z'::timestamptz
+) ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO tasks (id, label, description, "commissionId", "assigneeId", "validatorId", "createdById", "dueDate", priority, status, "createdAt", "updatedAt") VALUES (
+  'task-seed-9',
+  'Budget primitif 2026 adopté',
+  NULL,
+  'admin-finance',
+  'p-jm',
+  NULL,
+  NULL,
+  '2026-04-01'::date,
+  'normal'::"TaskPriority",
+  'termine'::"TaskStatus",
+  '2026-03-15T10:00:00Z'::timestamptz,
+  '2026-03-15T10:00:00Z'::timestamptz
+) ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO tasks (id, label, description, "commissionId", "assigneeId", "validatorId", "createdById", "dueDate", priority, status, "createdAt", "updatedAt") VALUES (
+  'task-seed-10',
+  'CR commission du 12 avril',
+  NULL,
+  'admin-finance',
+  'p-md',
+  NULL,
+  NULL,
+  '2026-04-12'::date,
+  'normal'::"TaskPriority",
+  'termine'::"TaskStatus",
+  '2026-04-12T14:00:00Z'::timestamptz,
+  '2026-04-12T14:00:00Z'::timestamptz
+) ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO tasks (id, label, description, "commissionId", "assigneeId", "validatorId", "createdById", "dueDate", priority, status, "createdAt", "updatedAt") VALUES (
+  'task-seed-11',
+  'Rapport annuel 2025 — ébauche',
+  NULL,
+  'admin-finance',
+  'p-jm',
+  NULL,
+  NULL,
+  '2026-05-30'::date,
+  'faible'::"TaskPriority",
+  'a_faire'::"TaskStatus",
+  '2026-04-20T11:00:00Z'::timestamptz,
+  '2026-04-20T11:00:00Z'::timestamptz
+) ON CONFLICT (id) DO NOTHING;
 
 -- ─── Fin du seed ────────────────────────────────────────────────
 COMMIT;

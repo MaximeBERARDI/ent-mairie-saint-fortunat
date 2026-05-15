@@ -8,8 +8,9 @@ import bcrypt from 'bcryptjs'
 import { writeFileSync } from 'fs'
 import { resolve } from 'path'
 import { PEOPLE } from '../src/lib/people'
-import { COMMISSIONS, EMPLOYEE_RECORDS, FOURNISSEURS } from '../src/lib/data'
+import { COMMISSIONS, EMPLOYEE_RECORDS, FOURNISSEURS, TASKS } from '../src/lib/data'
 import { COMPTES_M14 } from '../src/lib/m14-plan'
+import type { TaskPriority, TaskStatus } from '../src/lib/types'
 
 const DEFAULT_PASSWORD = 'saintfortunat2026'
 
@@ -58,6 +59,19 @@ function contratToEnum(v: string): string {
     Contractuel: 'contractuel_cdd',
   }
   return map[v] ?? 'contractuel_cdd'
+}
+
+function taskPriorityToEnum(v: TaskPriority): string {
+  return { Urgent: 'urgent', Normal: 'normal', Faible: 'faible' }[v]
+}
+
+function taskStatusToEnum(v: TaskStatus): string {
+  return {
+    'À faire': 'a_faire',
+    'En cours': 'en_cours',
+    'En attente validation': 'en_attente_validation',
+    'Terminé': 'termine',
+  }[v]
 }
 
 async function main() {
@@ -207,6 +221,29 @@ async function main() {
     )
   }
 
+  // 7. Tâches initiales
+  lines.push('-- ─── 7. Tâches initiales ────────────────────────────────────')
+  for (const t of TASKS) {
+    const id = t.id.startsWith('task-') ? t.id : `task-seed-${t.id}`
+    lines.push(
+      `INSERT INTO tasks (id, label, description, "commissionId", "assigneeId", "validatorId", "createdById", "dueDate", priority, status, "createdAt", "updatedAt") VALUES (`,
+      `  ${sqlString(id)},`,
+      `  ${sqlString(t.label)},`,
+      `  ${sqlString(t.description)},`,
+      `  ${sqlString(t.commissionId)},`,
+      `  ${sqlString(t.assigneeId)},`,
+      `  ${sqlString(t.validatorId)},`,
+      `  ${sqlString(t.createdById)},`,
+      `  ${t.dueDate ? `'${t.dueDate}'::date` : 'NULL'},`,
+      `  '${taskPriorityToEnum(t.priority)}'::"TaskPriority",`,
+      `  '${taskStatusToEnum(t.status)}'::"TaskStatus",`,
+      `  ${sqlDate(t.createdAt)},`,
+      `  ${sqlDate(t.updatedAt ?? t.createdAt)}`,
+      `) ON CONFLICT (id) DO NOTHING;`,
+      '',
+    )
+  }
+
   lines.push(
     '-- ─── Fin du seed ────────────────────────────────────────────────',
     'COMMIT;',
@@ -216,7 +253,7 @@ async function main() {
   const out = resolve(__dirname, 'seed.sql')
   writeFileSync(out, lines.join('\n'))
   console.log(`✓ ${lines.length} lignes écrites dans ${out}`)
-  console.log(`  ${PEOPLE.length} persons / users, ${COMMISSIONS.length} commissions, ${COMPTES_M14.length} comptes M14, ${FOURNISSEURS.length} fournisseurs, ${EMPLOYEE_RECORDS.length} employee records`)
+  console.log(`  ${PEOPLE.length} persons / users, ${COMMISSIONS.length} commissions, ${COMPTES_M14.length} comptes M14, ${FOURNISSEURS.length} fournisseurs, ${EMPLOYEE_RECORDS.length} employee records, ${TASKS.length} tasks`)
 }
 
 main().catch((e) => {
