@@ -8,7 +8,7 @@ import bcrypt from 'bcryptjs'
 import { writeFileSync } from 'fs'
 import { resolve } from 'path'
 import { PEOPLE } from '../src/lib/people'
-import { COMMISSIONS, EMPLOYEE_RECORDS, FOURNISSEURS, TASKS, FACTURES } from '../src/lib/data'
+import { COMMISSIONS, EMPLOYEE_RECORDS, FOURNISSEURS, TASKS, FACTURES, LEAVE_REQUESTS, MISSIONS } from '../src/lib/data'
 import { COMPTES_M14 } from '../src/lib/m14-plan'
 import type { TaskPriority, TaskStatus } from '../src/lib/types'
 
@@ -17,6 +17,13 @@ const FACTURE_STATUT_TO_DB: Record<string, string> = {
   'En attente validation': 'en_attente_validation',
   'Validée': 'validee',
   'Rejetée': 'rejetee',
+}
+
+const LEAVE_STATUT_TO_DB: Record<string, string> = {
+  'En attente': 'en_attente',
+  'Approuvée': 'approuvee',
+  'Refusée': 'refusee',
+  'Annulée': 'annulee',
 }
 
 const DEFAULT_PASSWORD = 'saintfortunat2026'
@@ -278,6 +285,47 @@ async function main() {
     )
   }
 
+  // 9. Demandes de congés
+  lines.push('-- ─── 9. Demandes de congés ──────────────────────────────────')
+  for (const l of LEAVE_REQUESTS) {
+    lines.push(
+      `INSERT INTO leave_requests (id, "personId", type, "dateDebut", "dateFin", "nbJoursOuvres", motif, statut, "submittedAt", "decidedById", "decidedAt", "decisionMotif", "createdAt") VALUES (`,
+      `  ${sqlString(l.id)},`,
+      `  ${sqlString(l.personId)},`,
+      `  ${sqlString(l.type)},`,
+      `  '${l.dateDebut}'::date,`,
+      `  '${l.dateFin}'::date,`,
+      `  ${sqlNum(l.nbJoursOuvres)},`,
+      `  ${sqlString(l.motif)},`,
+      `  '${LEAVE_STATUT_TO_DB[l.statut]}'::"LeaveStatut",`,
+      `  ${sqlDate(l.submittedAt)},`,
+      `  ${sqlString(l.decidedById)},`,
+      `  ${sqlDate(l.decidedAt)},`,
+      `  ${sqlString(l.decisionMotif)},`,
+      `  ${sqlDate(l.createdAt)}`,
+      `) ON CONFLICT (id) DO NOTHING;`,
+      '',
+    )
+  }
+
+  // 10. Missions
+  lines.push('-- ─── 10. Missions ───────────────────────────────────────────')
+  for (const m of MISSIONS) {
+    lines.push(
+      `INSERT INTO missions (id, "personId", label, description, "dateDebut", "dateFin", lieu, "createdAt") VALUES (`,
+      `  ${sqlString(m.id)},`,
+      `  ${sqlString(m.personId)},`,
+      `  ${sqlString(m.label)},`,
+      `  ${sqlString(m.description)},`,
+      `  '${m.dateDebut}'::date,`,
+      `  ${m.dateFin ? `'${m.dateFin}'::date` : 'NULL'},`,
+      `  ${sqlString(m.lieu)},`,
+      `  ${sqlDate(m.createdAt)}`,
+      `) ON CONFLICT (id) DO NOTHING;`,
+      '',
+    )
+  }
+
   lines.push(
     '-- ─── Fin du seed ────────────────────────────────────────────────',
     'COMMIT;',
@@ -287,7 +335,7 @@ async function main() {
   const out = resolve(__dirname, 'seed.sql')
   writeFileSync(out, lines.join('\n'))
   console.log(`✓ ${lines.length} lignes écrites dans ${out}`)
-  console.log(`  ${PEOPLE.length} persons / users, ${COMMISSIONS.length} commissions, ${COMPTES_M14.length} comptes M14, ${FOURNISSEURS.length} fournisseurs, ${EMPLOYEE_RECORDS.length} employee records, ${TASKS.length} tasks, ${FACTURES.length} factures`)
+  console.log(`  ${PEOPLE.length} persons/users, ${COMMISSIONS.length} commissions, ${COMPTES_M14.length} comptes M14, ${FOURNISSEURS.length} fournisseurs, ${EMPLOYEE_RECORDS.length} employees, ${TASKS.length} tasks, ${FACTURES.length} factures, ${LEAVE_REQUESTS.length} leaves, ${MISSIONS.length} missions`)
 }
 
 main().catch((e) => {

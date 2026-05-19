@@ -1,32 +1,15 @@
 'use client'
 
+// Hook gestion des demandes de congés branché sur /api/leaves.
+// Le serveur gère l'impact sur les compteurs EmployeeRecord (transac
+// Prisma), donc les callbacks onApprove/onUnapprove ne sont plus
+// utilisés en production — gardés en signature pour rétrocompat.
+
 import { useEffect, useState, useCallback } from 'react'
 import type { LeaveRequest, LeaveType, EmployeeRecord, TaskDocument } from '@/lib/types'
-import { LEAVE_REQUESTS } from '@/lib/data'
-
-const STORAGE_KEY = 'ent-mairie:leaves:v1'
-
-function loadFromStorage(): LeaveRequest[] | null {
-  if (typeof window === 'undefined') return null
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY)
-    if (!raw) return null
-    const parsed = JSON.parse(raw)
-    return Array.isArray(parsed) ? parsed : null
-  } catch {
-    return null
-  }
-}
-
-function saveToStorage(items: LeaveRequest[]) {
-  if (typeof window === 'undefined') return
-  try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
-  } catch {}
-}
 
 // Compte les jours ouvrés (lundi-vendredi) entre deux dates incluses.
-// Ne tient pas compte des jours fériés (simple pour un MVP).
+// Garde la même implémentation côté client pour l'affichage immédiat.
 export function countOuvres(dateDebut: string, dateFin: string): number {
   const start = new Date(dateDebut + 'T00:00:00')
   const end = new Date(dateFin + 'T00:00:00')
@@ -41,7 +24,6 @@ export function countOuvres(dateDebut: string, dateFin: string): number {
   return count
 }
 
-// Vrai si la date du jour est dans la plage [debut, fin] (inclus).
 export function isDateInRange(target: string, debut: string, fin: string): boolean {
   return target >= debut && target <= fin
 }
@@ -55,104 +37,164 @@ export interface NewLeaveInput {
   documents?: TaskDocument[]
 }
 
-export function useLeaveRequests(opts?: {
-  // Callback invoqué quand une demande est approuvée → à utiliser pour
-  // décrémenter les compteurs côté EmployeeRecord.
+export function useLeaveRequests(_opts?: {
   onApprove?: (leave: LeaveRequest) => void
-  // Callback inverse pour ré-incrémenter quand on rouvre une demande.
   onUnapprove?: (leave: LeaveRequest) => void
 }) {
-  const [leaves, setLeaves] = useState<LeaveRequest[]>(LEAVE_REQUESTS)
+  void _opts // gardés en signature, plus utilisés
+  const [leaves, setLeaves] = useState<LeaveRequest[]>([])
   const [hydrated, setHydrated] = useState(false)
 
   useEffect(() => {
-    const stored = loadFromStorage()
-    if (stored && stored.length > 0) setLeaves(stored)
-    else saveToStorage(LEAVE_REQUESTS)
-    setHydrated(true)
+    let cancelled = false
+    fetch('/api/leaves')
+      .then((r) => (r.ok ? r.json() : Promise.reject(r)))
+      .then((data: LeaveRequest[]) => {
+        if (!cancelled) {
+          setLeaves(data)
+          setHydrated(true)
+        }
+      })
+      .catch((e) => {
+        if (!cancelled) {
+          console.error('[useLeaveRequests] load error:', e)
+          setHydrated(true)
+        }
+      })
+    return () => {
+      cancelled = true
+    }
   }, [])
 
-  useEffect(() => {
-    if (hydrated) saveToStorage(leaves)
-  }, [leaves, hydrated])
-
   const submitLeave = useCallback((data: NewLeaveInput): LeaveRequest => {
+    const tempId = `tmp-${Date.now()}`
     const now = new Date().toISOString()
-    const leave: LeaveRequest = {
+    const optimistic: LeaveRequest = {
       ...data,
-      id: `lr-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`,
+      id: tempId,
       nbJoursOuvres: countOuvres(data.dateDebut, data.dateFin),
       statut: 'En attente',
       submittedAt: now,
       createdAt: now,
+      documents: data.documents ?? [],
     }
-    setLeaves(prev => [leave, ...prev])
-    return leave
-  }, [])
+    setLeaves((prev) => [optimistic, ...prev])
 
-  const approveLeave = useCallback((id: string, decidedById: string) => {
-    setLeaves(prev => {
-      const updated = prev.map(l => {
-        if (l.id !== id) return l
-        const next: LeaveRequest = {
-          ...l,
-          statut: 'Approuvée',
-          decidedById,
-          decidedAt: new Date().toISOString(),
-          decisionMotif: undefined,
-        }
-        // Hook externe : décrémenter les compteurs
-        opts?.onApprove?.(next)
-        return next
-      })
-      return updated
+    fetch('/api/leaves', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
     })
-  }, [opts])
-
-  const rejectLeave = useCallback((id: string, decidedById: string, motif: string) => {
-    setLeaves(prev => prev.map(l => {
-      if (l.id !== id) return l
-      return {
-        ...l,
-        statut: 'Refusée',
-        decidedById,
-        decidedAt: new Date().toISOString(),
-        decisionMotif: motif,
-      }
-    }))
+      .then((r) => (r.ok ? r.json() : Promise.reject(r)))
+      .then((created: LeaveRequest) => {
+        setLeaves((prev) => prev.map((l) => (l.id === tempId ? created : l)))
+      })
+      .catch((e) => {
+        console.error('[useLeaveRequests] submit error:', e)
+        setLeaves((prev) => prev.filter((l) => l.id !== tempId))
+        alert('Impossible de soumettre la demande.')
+      })
+    return optimistic
   }, [])
 
-  // Annule la décision sans supprimer la demande (retour en attente).
-  const reopenLeave = useCallback((id: string) => {
-    setLeaves(prev => prev.map(l => {
-      if (l.id !== id) return l
-      // Si elle était approuvée, on rebascule les compteurs
-      if (l.statut === 'Approuvée') opts?.onUnapprove?.(l)
-      const { decidedById: _v, decidedAt: _va, decisionMotif: _r, ...rest } = l
-      void _v; void _va; void _r
-      return { ...rest, statut: 'En attente' }
-    }))
-  }, [opts])
+  // Helper pour PATCH avec action workflow
+  const patchAction = useCallback(
+    (id: string, body: Record<string, unknown>, errorMsg: string) => {
+      const previousLeaves = leaves
+      fetch(`/api/leaves/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+        .then((r) => (r.ok ? r.json() : Promise.reject(r)))
+        .then((updated: LeaveRequest) => {
+          setLeaves((prev) => prev.map((l) => (l.id === id ? updated : l)))
+        })
+        .catch((e) => {
+          console.error('[useLeaveRequests] patch error:', e)
+          setLeaves(previousLeaves)
+          alert(errorMsg)
+        })
+    },
+    [leaves],
+  )
+
+  const approveLeave = useCallback(
+    (id: string, _decidedById: string) => {
+      void _decidedById
+      setLeaves((prev) =>
+        prev.map((l) =>
+          l.id === id ? { ...l, statut: 'Approuvée', decidedAt: new Date().toISOString() } : l,
+        ),
+      )
+      patchAction(id, { action: 'approve' }, "Impossible d'approuver la demande.")
+    },
+    [patchAction],
+  )
+
+  const rejectLeave = useCallback(
+    (id: string, _decidedById: string, motif: string) => {
+      void _decidedById
+      setLeaves((prev) =>
+        prev.map((l) =>
+          l.id === id
+            ? {
+                ...l,
+                statut: 'Refusée',
+                decidedAt: new Date().toISOString(),
+                decisionMotif: motif,
+              }
+            : l,
+        ),
+      )
+      patchAction(id, { action: 'reject', decisionMotif: motif }, 'Impossible de refuser la demande.')
+    },
+    [patchAction],
+  )
+
+  const reopenLeave = useCallback(
+    (id: string) => {
+      setLeaves((prev) =>
+        prev.map((l) => {
+          if (l.id !== id) return l
+          const { decidedById: _v, decidedAt: _va, decisionMotif: _r, ...rest } = l
+          void _v; void _va; void _r
+          return { ...rest, statut: 'En attente' }
+        }),
+      )
+      patchAction(id, { action: 'reopen' }, 'Impossible de réouvrir la demande.')
+    },
+    [patchAction],
+  )
 
   const deleteLeave = useCallback((id: string) => {
-    setLeaves(prev => {
-      const target = prev.find(l => l.id === id)
-      if (target?.statut === 'Approuvée') opts?.onUnapprove?.(target)
-      return prev.filter(l => l.id !== id)
+    let previous: LeaveRequest[] = []
+    setLeaves((prev) => {
+      previous = prev
+      return prev.filter((l) => l.id !== id)
     })
-  }, [opts])
 
-  // Filtres pratiques
-  const byPerson = useCallback((personId: string) => {
-    return leaves.filter(l => l.personId === personId)
-  }, [leaves])
+    fetch(`/api/leaves/${id}`, { method: 'DELETE' })
+      .then((r) => {
+        if (!r.ok) throw r
+      })
+      .catch((e) => {
+        console.error('[useLeaveRequests] delete error:', e)
+        setLeaves(previous)
+        alert('Impossible de supprimer la demande.')
+      })
+  }, [])
 
-  // Personnes en absence aujourd'hui (parmi celles avec leave Approuvée).
+  const byPerson = useCallback(
+    (personId: string) => leaves.filter((l) => l.personId === personId),
+    [leaves],
+  )
+
   const absentToday = useCallback((): { personId: string; leave: LeaveRequest }[] => {
     const today = new Date().toISOString().slice(0, 10)
     return leaves
-      .filter(l => l.statut === 'Approuvée' && isDateInRange(today, l.dateDebut, l.dateFin))
-      .map(l => ({ personId: l.personId, leave: l }))
+      .filter((l) => l.statut === 'Approuvée' && isDateInRange(today, l.dateDebut, l.dateFin))
+      .map((l) => ({ personId: l.personId, leave: l }))
   }, [leaves])
 
   return {
@@ -168,8 +210,8 @@ export function useLeaveRequests(opts?: {
   }
 }
 
-// Helper externe : applique l'effet d'une approbation sur un EmployeeRecord.
-// Retourne le record modifié (pas de mutation).
+// Helper externe conservé pour rétrocompat (le serveur fait maintenant
+// ce calcul lui-même via les transactions Prisma).
 export function applyLeaveOnEmployee(
   employee: EmployeeRecord,
   leave: LeaveRequest,

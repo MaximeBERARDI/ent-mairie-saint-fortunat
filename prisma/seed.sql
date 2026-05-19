@@ -257,7 +257,7 @@ INSERT INTO users (id, email, name, "hashedPassword", "personId", "createdAt", "
   'user-p-jm',
   'berardi.maxime@gmail.com',
   'Jean Martin',
-  '$2b$10$hExFi95f0fDDzQmodKIKze3MB4MBsbGZkRQ1Q9hOGu.804o8WFXAa',
+  '$2b$10$ZM8zQ5QqgZ23eESR.isKPu17Xa.DdNEbze9yGs8NXkYvXWtfBSotm',
   'p-jm',
   NOW(),
   NOW()
@@ -267,7 +267,7 @@ INSERT INTO users (id, email, name, "hashedPassword", "personId", "createdAt", "
   'user-p-md',
   'marie.durand@saint-fortunat.fr',
   'Marie Durand',
-  '$2b$10$hExFi95f0fDDzQmodKIKze3MB4MBsbGZkRQ1Q9hOGu.804o8WFXAa',
+  '$2b$10$ZM8zQ5QqgZ23eESR.isKPu17Xa.DdNEbze9yGs8NXkYvXWtfBSotm',
   'p-md',
   NOW(),
   NOW()
@@ -277,7 +277,7 @@ INSERT INTO users (id, email, name, "hashedPassword", "personId", "createdAt", "
   'user-p-rg',
   'robert.granger@saint-fortunat.fr',
   'Robert Granger',
-  '$2b$10$hExFi95f0fDDzQmodKIKze3MB4MBsbGZkRQ1Q9hOGu.804o8WFXAa',
+  '$2b$10$ZM8zQ5QqgZ23eESR.isKPu17Xa.DdNEbze9yGs8NXkYvXWtfBSotm',
   'p-rg',
   NOW(),
   NOW()
@@ -287,7 +287,7 @@ INSERT INTO users (id, email, name, "hashedPassword", "personId", "createdAt", "
   'user-p-lf',
   'laurent.fabre@saint-fortunat.fr',
   'Laurent Fabre',
-  '$2b$10$hExFi95f0fDDzQmodKIKze3MB4MBsbGZkRQ1Q9hOGu.804o8WFXAa',
+  '$2b$10$ZM8zQ5QqgZ23eESR.isKPu17Xa.DdNEbze9yGs8NXkYvXWtfBSotm',
   'p-lf',
   NOW(),
   NOW()
@@ -297,7 +297,7 @@ INSERT INTO users (id, email, name, "hashedPassword", "personId", "createdAt", "
   'user-p-sb',
   'sylvie.bonnet@saint-fortunat.fr',
   'Sylvie Bonnet',
-  '$2b$10$hExFi95f0fDDzQmodKIKze3MB4MBsbGZkRQ1Q9hOGu.804o8WFXAa',
+  '$2b$10$ZM8zQ5QqgZ23eESR.isKPu17Xa.DdNEbze9yGs8NXkYvXWtfBSotm',
   'p-sb',
   NOW(),
   NOW()
@@ -307,7 +307,7 @@ INSERT INTO users (id, email, name, "hashedPassword", "personId", "createdAt", "
   'user-p-pr',
   'pierre.roche@saint-fortunat.fr',
   'Pierre Roche',
-  '$2b$10$hExFi95f0fDDzQmodKIKze3MB4MBsbGZkRQ1Q9hOGu.804o8WFXAa',
+  '$2b$10$ZM8zQ5QqgZ23eESR.isKPu17Xa.DdNEbze9yGs8NXkYvXWtfBSotm',
   'p-pr',
   NOW(),
   NOW()
@@ -317,7 +317,7 @@ INSERT INTO users (id, email, name, "hashedPassword", "personId", "createdAt", "
   'user-p-im',
   'isabelle.morel@saint-fortunat.fr',
   'Isabelle Morel',
-  '$2b$10$hExFi95f0fDDzQmodKIKze3MB4MBsbGZkRQ1Q9hOGu.804o8WFXAa',
+  '$2b$10$ZM8zQ5QqgZ23eESR.isKPu17Xa.DdNEbze9yGs8NXkYvXWtfBSotm',
   'p-im',
   NOW(),
   NOW()
@@ -327,7 +327,7 @@ INSERT INTO users (id, email, name, "hashedPassword", "personId", "createdAt", "
   'user-p-tg',
   'thomas.girard@saint-fortunat.fr',
   'Thomas Girard',
-  '$2b$10$hExFi95f0fDDzQmodKIKze3MB4MBsbGZkRQ1Q9hOGu.804o8WFXAa',
+  '$2b$10$ZM8zQ5QqgZ23eESR.isKPu17Xa.DdNEbze9yGs8NXkYvXWtfBSotm',
   'p-tg',
   NOW(),
   NOW()
@@ -337,7 +337,7 @@ INSERT INTO users (id, email, name, "hashedPassword", "personId", "createdAt", "
   'user-p-lb',
   'lucie.bernard@saint-fortunat.fr',
   'Lucie Bernard',
-  '$2b$10$hExFi95f0fDDzQmodKIKze3MB4MBsbGZkRQ1Q9hOGu.804o8WFXAa',
+  '$2b$10$ZM8zQ5QqgZ23eESR.isKPu17Xa.DdNEbze9yGs8NXkYvXWtfBSotm',
   'p-lb',
   NOW(),
   NOW()
@@ -347,7 +347,7 @@ INSERT INTO users (id, email, name, "hashedPassword", "personId", "createdAt", "
   'user-p-mf',
   'marc.faure@saint-fortunat.fr',
   'Marc Faure',
-  '$2b$10$hExFi95f0fDDzQmodKIKze3MB4MBsbGZkRQ1Q9hOGu.804o8WFXAa',
+  '$2b$10$ZM8zQ5QqgZ23eESR.isKPu17Xa.DdNEbze9yGs8NXkYvXWtfBSotm',
   'p-mf',
   NOW(),
   NOW()
@@ -357,7 +357,7 @@ INSERT INTO users (id, email, name, "hashedPassword", "personId", "createdAt", "
   'user-p-ad',
   'anne.dupont@saint-fortunat.fr',
   'Anne Dupont',
-  '$2b$10$hExFi95f0fDDzQmodKIKze3MB4MBsbGZkRQ1Q9hOGu.804o8WFXAa',
+  '$2b$10$ZM8zQ5QqgZ23eESR.isKPu17Xa.DdNEbze9yGs8NXkYvXWtfBSotm',
   'p-ad',
   NOW(),
   NOW()
@@ -367,7 +367,7 @@ INSERT INTO users (id, email, name, "hashedPassword", "personId", "createdAt", "
   'user-p-cv',
   'claude.viard@saint-fortunat.fr',
   'Claude Viard',
-  '$2b$10$hExFi95f0fDDzQmodKIKze3MB4MBsbGZkRQ1Q9hOGu.804o8WFXAa',
+  '$2b$10$ZM8zQ5QqgZ23eESR.isKPu17Xa.DdNEbze9yGs8NXkYvXWtfBSotm',
   'p-cv',
   NOW(),
   NOW()
@@ -2459,6 +2459,110 @@ INSERT INTO factures (id, numero, "fournisseurId", "montantTTC", "posteCode", "d
   'Numéro client erroné, demander un avoir au fournisseur.',
   NULL,
   '2026-04-13T15:00:00Z'::timestamptz
+) ON CONFLICT (id) DO NOTHING;
+
+-- ─── 9. Demandes de congés ──────────────────────────────────
+INSERT INTO leave_requests (id, "personId", type, "dateDebut", "dateFin", "nbJoursOuvres", motif, statut, "submittedAt", "decidedById", "decidedAt", "decisionMotif", "createdAt") VALUES (
+  'lr-001',
+  'p-mf',
+  'Congés annuels',
+  '2026-05-20'::date,
+  '2026-05-28'::date,
+  7,
+  'Vacances en famille',
+  'en_attente'::"LeaveStatut",
+  '2026-04-28T14:30:00Z'::timestamptz,
+  NULL,
+  NULL,
+  NULL,
+  '2026-04-28T14:30:00Z'::timestamptz
+) ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO leave_requests (id, "personId", type, "dateDebut", "dateFin", "nbJoursOuvres", motif, statut, "submittedAt", "decidedById", "decidedAt", "decisionMotif", "createdAt") VALUES (
+  'lr-002',
+  'p-lb',
+  'RTT',
+  '2026-05-15'::date,
+  '2026-05-15'::date,
+  1,
+  NULL,
+  'en_attente'::"LeaveStatut",
+  '2026-04-30T09:15:00Z'::timestamptz,
+  NULL,
+  NULL,
+  NULL,
+  '2026-04-30T09:15:00Z'::timestamptz
+) ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO leave_requests (id, "personId", type, "dateDebut", "dateFin", "nbJoursOuvres", motif, statut, "submittedAt", "decidedById", "decidedAt", "decisionMotif", "createdAt") VALUES (
+  'lr-003',
+  'p-im',
+  'Congés annuels',
+  '2026-05-04'::date,
+  '2026-05-09'::date,
+  5,
+  NULL,
+  'approuvee'::"LeaveStatut",
+  '2026-04-15T10:00:00Z'::timestamptz,
+  'p-jm',
+  '2026-04-16T08:30:00Z'::timestamptz,
+  NULL,
+  '2026-04-15T10:00:00Z'::timestamptz
+) ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO leave_requests (id, "personId", type, "dateDebut", "dateFin", "nbJoursOuvres", motif, statut, "submittedAt", "decidedById", "decidedAt", "decisionMotif", "createdAt") VALUES (
+  'lr-004',
+  'p-tg',
+  'Congés annuels',
+  '2026-04-13'::date,
+  '2026-04-17'::date,
+  5,
+  NULL,
+  'approuvee'::"LeaveStatut",
+  '2026-03-25T15:00:00Z'::timestamptz,
+  'p-jm',
+  '2026-03-26T08:00:00Z'::timestamptz,
+  NULL,
+  '2026-03-25T15:00:00Z'::timestamptz
+) ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO leave_requests (id, "personId", type, "dateDebut", "dateFin", "nbJoursOuvres", motif, statut, "submittedAt", "decidedById", "decidedAt", "decisionMotif", "createdAt") VALUES (
+  'lr-005',
+  'p-pr',
+  'Maladie',
+  '2026-03-09'::date,
+  '2026-03-10'::date,
+  2,
+  'Grippe',
+  'approuvee'::"LeaveStatut",
+  '2026-03-09T08:00:00Z'::timestamptz,
+  'p-jm',
+  '2026-03-09T09:00:00Z'::timestamptz,
+  NULL,
+  '2026-03-09T08:00:00Z'::timestamptz
+) ON CONFLICT (id) DO NOTHING;
+
+-- ─── 10. Missions ───────────────────────────────────────────
+INSERT INTO missions (id, "personId", label, description, "dateDebut", "dateFin", lieu, "createdAt") VALUES (
+  'm-001',
+  'p-mf',
+  'Réfection signalétique route des Combes',
+  'Pose de panneaux STOP + marquage au sol après les travaux de voirie.',
+  '2026-05-12'::date,
+  '2026-05-16'::date,
+  'Route des Combes',
+  '2026-04-20T09:00:00Z'::timestamptz
+) ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO missions (id, "personId", label, description, "dateDebut", "dateFin", lieu, "createdAt") VALUES (
+  'm-002',
+  'p-tg',
+  'Maintenance préventive — chaufferie école',
+  NULL,
+  '2026-05-05'::date,
+  NULL,
+  'École communale',
+  '2026-04-22T11:00:00Z'::timestamptz
 ) ON CONFLICT (id) DO NOTHING;
 
 -- ─── Fin du seed ────────────────────────────────────────────────
