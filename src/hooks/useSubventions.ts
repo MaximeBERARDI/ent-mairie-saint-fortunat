@@ -44,7 +44,27 @@ export function useSubventions() {
     setSubventions((prev) => [optimistic, ...prev])
 
     fetch('/api/subventions', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data),
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        intitule: data.intitule,
+        description: data.description,
+        source: data.source,
+        organisme: data.organisme,
+        contactNom: data.contactNom,
+        contactEmail: data.contactEmail,
+        montantProjet: data.montantProjet,
+        montantDemande: data.montantDemande,
+        montantAccorde: data.montantAccorde,
+        montantVerse: data.montantVerse,
+        dateDepot: data.dateDepot,
+        dateDecision: data.dateDecision,
+        datePrevisionVersement: data.datePrevisionVersement,
+        statut: data.statut,
+        motifRefus: data.motifRefus,
+        imputationCompte: data.imputationCompte,
+        notes: data.notes,
+        documents: data.documents,
+      }),
     })
       .then((r) => (r.ok ? r.json() : Promise.reject(r)))
       .then((created: DemandeSubvention) => {
@@ -66,7 +86,27 @@ export function useSubventions() {
     })
 
     fetch(`/api/subventions/${id}`, {
-      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch),
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        intitule: patch.intitule,
+        description: patch.description,
+        source: patch.source,
+        organisme: patch.organisme,
+        contactNom: patch.contactNom,
+        contactEmail: patch.contactEmail,
+        montantProjet: patch.montantProjet,
+        montantDemande: patch.montantDemande,
+        montantAccorde: patch.montantAccorde,
+        montantVerse: patch.montantVerse,
+        dateDepot: patch.dateDepot,
+        dateDecision: patch.dateDecision,
+        datePrevisionVersement: patch.datePrevisionVersement,
+        statut: patch.statut,
+        motifRefus: patch.motifRefus,
+        imputationCompte: patch.imputationCompte,
+        notes: patch.notes,
+        documents: patch.documents,
+      }),
     })
       .then((r) => (r.ok ? r.json() : Promise.reject(r)))
       .then((updated: DemandeSubvention) => {

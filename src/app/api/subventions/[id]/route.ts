@@ -7,6 +7,14 @@ import { db } from '@/lib/db'
 import { subventionFromDb } from '@/lib/subvention-projet-mapper'
 import type { SourceSubvention, StatutSubvention } from '@/lib/types'
 
+interface DocumentInput {
+  id?: string
+  name: string
+  size: number
+  type: string
+  dataUrl: string
+}
+
 interface PatchBody {
   intitule?: string
   description?: string | null
@@ -25,6 +33,7 @@ interface PatchBody {
   motifRefus?: string | null
   imputationCompte?: string | null
   notes?: string | null
+  documents?: DocumentInput[]
 }
 
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
@@ -54,9 +63,30 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   if (body.notes !== undefined) data.notes = body.notes?.trim() || null
 
   try {
-    const updated = await db.demandeSubvention.update({ where: { id: params.id }, data })
+    const updated = await db.$transaction(async (tx) => {
+      if (body.documents !== undefined) {
+        const keptIds = body.documents.filter((d) => d.id && !d.id.startsWith('tmp-')).map((d) => d.id!)
+        await tx.document.deleteMany({
+          where: { subventionId: params.id, id: { notIn: keptIds.length > 0 ? keptIds : [''] } },
+        })
+        const newDocs = body.documents.filter((d) => !d.id || d.id.startsWith('tmp-'))
+        if (newDocs.length > 0) {
+          await tx.document.createMany({
+            data: newDocs.map((d) => ({
+              subventionId: params.id, name: d.name, size: d.size, type: d.type, dataUrl: d.dataUrl,
+            })),
+          })
+        }
+      }
+      return tx.demandeSubvention.update({
+        where: { id: params.id },
+        data,
+        include: { documents: { orderBy: { uploadedAt: 'asc' } } },
+      })
+    })
     return NextResponse.json(subventionFromDb(updated))
-  } catch {
+  } catch (e) {
+    console.error('[api/subventions PATCH]', e)
     return NextResponse.json({ error: 'Subvention introuvable.' }, { status: 404 })
   }
 }

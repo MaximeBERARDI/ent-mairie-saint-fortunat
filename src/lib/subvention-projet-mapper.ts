@@ -7,14 +7,27 @@ import type {
   SourceFinancement,
   SourceSubvention,
   StatutSubvention,
+  TaskDocument,
 } from './types'
 import type {
   DemandeSubvention as DbSubvention,
   FinancementProjet as DbFinancement,
   Projet as DbProjet,
+  Document as DbDocument,
 } from '@prisma/client'
 
-export function subventionFromDb(s: DbSubvention): DemandeSubvention {
+function documentFromDb(d: DbDocument): TaskDocument {
+  return {
+    id: d.id,
+    name: d.name,
+    size: d.size,
+    type: d.type,
+    dataUrl: d.dataUrl ?? d.storageUrl ?? '',
+    uploadedAt: d.uploadedAt.toISOString(),
+  }
+}
+
+export function subventionFromDb(s: DbSubvention & { documents?: DbDocument[] }): DemandeSubvention {
   return {
     id: s.id,
     reference: s.reference,
@@ -35,6 +48,7 @@ export function subventionFromDb(s: DbSubvention): DemandeSubvention {
     motifRefus: s.motifRefus ?? undefined,
     imputationCompte: s.imputationCompte ?? undefined,
     notes: s.notes ?? undefined,
+    documents: s.documents?.map(documentFromDb) ?? [],
     createdAt: s.createdAt.toISOString(),
     updatedAt: s.updatedAt.toISOString(),
   }

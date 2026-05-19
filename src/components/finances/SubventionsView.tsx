@@ -690,7 +690,7 @@ function SubventionForm({ initial, onSubmit, onCancel }: {
             motifRefus: motifRefus.trim() || undefined,
             imputationCompte: imputationCompte.trim() || undefined,
             notes: notes.trim() || undefined,
-            documents: documents.length > 0 ? documents : undefined,
+            documents,
           })}
         >
           {initial ? 'Enregistrer' : 'Créer la demande'}

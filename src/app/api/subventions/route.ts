@@ -10,7 +10,10 @@ import type { SourceSubvention, StatutSubvention } from '@/lib/types'
 export async function GET() {
   const session = await auth()
   if (!session?.user) return NextResponse.json({ error: 'Non authentifié.' }, { status: 401 })
-  const rows = await db.demandeSubvention.findMany({ orderBy: { createdAt: 'desc' } })
+  const rows = await db.demandeSubvention.findMany({
+    include: { documents: { orderBy: { uploadedAt: 'asc' } } },
+    orderBy: { createdAt: 'desc' },
+  })
   return NextResponse.json(rows.map(subventionFromDb))
 }
 
@@ -25,6 +28,13 @@ async function nextReference(year: number): Promise<string> {
     .filter((n) => !isNaN(n))
     .reduce((acc, n) => Math.max(acc, n), 0)
   return `${prefix}${String(max + 1).padStart(3, '0')}`
+}
+
+interface DocumentInput {
+  name: string
+  size: number
+  type: string
+  dataUrl: string
 }
 
 interface CreateBody {
@@ -45,6 +55,7 @@ interface CreateBody {
   motifRefus?: string
   imputationCompte?: string
   notes?: string
+  documents?: DocumentInput[]
 }
 
 export async function POST(req: Request) {
@@ -79,7 +90,11 @@ export async function POST(req: Request) {
       motifRefus: body.motifRefus?.trim() || null,
       imputationCompte: body.imputationCompte?.trim() || null,
       notes: body.notes?.trim() || null,
+      documents: body.documents && body.documents.length > 0
+        ? { create: body.documents.map((d) => ({ name: d.name, size: d.size, type: d.type, dataUrl: d.dataUrl })) }
+        : undefined,
     },
+    include: { documents: true },
   })
   return NextResponse.json(subventionFromDb(created))
 }
