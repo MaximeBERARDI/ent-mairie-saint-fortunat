@@ -8,7 +8,7 @@ import bcrypt from 'bcryptjs'
 import { writeFileSync } from 'fs'
 import { resolve } from 'path'
 import { PEOPLE } from '../src/lib/people'
-import { COMMISSIONS, EMPLOYEE_RECORDS, FOURNISSEURS, TASKS, FACTURES, LEAVE_REQUESTS, MISSIONS, POINTAGES, BIENS_IMMOBILIERS, LOCATAIRES, BAUX, QUITTANCES } from '../src/lib/data'
+import { COMMISSIONS, EMPLOYEE_RECORDS, FOURNISSEURS, TASKS, FACTURES, LEAVE_REQUESTS, MISSIONS, POINTAGES, BIENS_IMMOBILIERS, LOCATAIRES, BAUX, QUITTANCES, DEMANDES_SUBVENTIONS, PROJETS } from '../src/lib/data'
 import { COMPTES_M14 } from '../src/lib/m14-plan'
 import type { TaskPriority, TaskStatus } from '../src/lib/types'
 
@@ -459,6 +459,75 @@ async function main() {
     )
   }
 
+  // 16. Demandes de subventions
+  lines.push('-- ─── 16. Demandes de subventions ────────────────────────────')
+  for (const s of DEMANDES_SUBVENTIONS) {
+    lines.push(
+      `INSERT INTO demandes_subventions (id, reference, intitule, description, source, organisme, "contactNom", "contactEmail", "montantProjet", "montantDemande", "montantAccorde", "montantVerse", "dateDepot", "dateDecision", "datePrevisionVersement", statut, "motifRefus", "imputationCompte", notes, "createdAt", "updatedAt") VALUES (`,
+      `  ${sqlString(s.id)},`,
+      `  ${sqlString(s.reference)},`,
+      `  ${sqlString(s.intitule)},`,
+      `  ${sqlString(s.description)},`,
+      `  ${sqlString(s.source)},`,
+      `  ${sqlString(s.organisme)},`,
+      `  ${sqlString(s.contactNom)},`,
+      `  ${sqlString(s.contactEmail)},`,
+      `  ${sqlNum(s.montantProjet)},`,
+      `  ${sqlNum(s.montantDemande)},`,
+      `  ${sqlNum(s.montantAccorde)},`,
+      `  ${sqlNum(s.montantVerse)},`,
+      `  ${s.dateDepot ? `'${s.dateDepot}'::date` : 'NULL'},`,
+      `  ${s.dateDecision ? `'${s.dateDecision}'::date` : 'NULL'},`,
+      `  ${s.datePrevisionVersement ? `'${s.datePrevisionVersement}'::date` : 'NULL'},`,
+      `  ${sqlString(s.statut)},`,
+      `  ${sqlString(s.motifRefus)},`,
+      `  ${sqlString(s.imputationCompte)},`,
+      `  ${sqlString(s.notes)},`,
+      `  ${sqlDate(s.createdAt)},`,
+      `  ${sqlDate(s.updatedAt ?? s.createdAt)}`,
+      `) ON CONFLICT (id) DO NOTHING;`,
+      '',
+    )
+  }
+
+  // 17. Projets (avec financements en cascade)
+  lines.push('-- ─── 17. Projets d\'investissement + financements ───────────')
+  for (const p of PROJETS) {
+    lines.push(
+      `INSERT INTO projets (id, nom, description, "coutTotal", "coutHT", "imputationCompte", "anneeDebut", "anneesEtalement", "tauxFCTVA", notes, "createdAt") VALUES (`,
+      `  ${sqlString(p.id)},`,
+      `  ${sqlString(p.nom)},`,
+      `  ${sqlString(p.description)},`,
+      `  ${sqlNum(p.coutTotal)},`,
+      `  ${sqlNum(p.coutHT)},`,
+      `  ${sqlString(p.imputationCompte)},`,
+      `  ${sqlNum(p.anneeDebut)},`,
+      `  ${sqlNum(p.anneesEtalement)},`,
+      `  ${sqlNum(p.tauxFCTVA)},`,
+      `  ${sqlString(p.notes)},`,
+      `  ${sqlDate(p.createdAt)}`,
+      `) ON CONFLICT (id) DO NOTHING;`,
+      '',
+    )
+    for (const f of p.financements) {
+      lines.push(
+        `INSERT INTO financements_projet (id, "projetId", source, organisme, montant, "dureeAnnees", "tauxInteret", "anneeVersement", certitude, "subventionId") VALUES (`,
+        `  ${sqlString(f.id)},`,
+        `  ${sqlString(p.id)},`,
+        `  ${sqlString(f.source)},`,
+        `  ${sqlString(f.organisme)},`,
+        `  ${sqlNum(f.montant)},`,
+        `  ${sqlNum(f.dureeAnnees)},`,
+        `  ${sqlNum(f.tauxInteret)},`,
+        `  ${sqlNum(f.anneeVersement)},`,
+        `  ${sqlString(f.certitude)},`,
+        `  ${sqlString(f.subventionId)}`,
+        `) ON CONFLICT (id) DO NOTHING;`,
+        '',
+      )
+    }
+  }
+
   lines.push(
     '-- ─── Fin du seed ────────────────────────────────────────────────',
     'COMMIT;',
@@ -468,7 +537,7 @@ async function main() {
   const out = resolve(__dirname, 'seed.sql')
   writeFileSync(out, lines.join('\n'))
   console.log(`✓ ${lines.length} lignes écrites dans ${out}`)
-  console.log(`  ${PEOPLE.length} persons/users, ${COMMISSIONS.length} commissions, ${COMPTES_M14.length} comptes M14, ${FOURNISSEURS.length} fournisseurs, ${EMPLOYEE_RECORDS.length} employees, ${TASKS.length} tasks, ${FACTURES.length} factures, ${LEAVE_REQUESTS.length} leaves, ${MISSIONS.length} missions, ${POINTAGES.length} pointages, ${BIENS_IMMOBILIERS.length} biens, ${LOCATAIRES.length} locataires, ${BAUX.length} baux, ${QUITTANCES.length} quittances`)
+  console.log(`  ${PEOPLE.length} persons/users, ${COMMISSIONS.length} commissions, ${COMPTES_M14.length} comptes M14, ${FOURNISSEURS.length} fournisseurs, ${EMPLOYEE_RECORDS.length} employees, ${TASKS.length} tasks, ${FACTURES.length} factures, ${LEAVE_REQUESTS.length} leaves, ${MISSIONS.length} missions, ${POINTAGES.length} pointages, ${BIENS_IMMOBILIERS.length} biens, ${LOCATAIRES.length} locataires, ${BAUX.length} baux, ${QUITTANCES.length} quittances, ${DEMANDES_SUBVENTIONS.length} subventions, ${PROJETS.length} projets`)
 }
 
 main().catch((e) => {

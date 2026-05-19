@@ -1,93 +1,95 @@
 'use client'
 
+// Hook gestion des subventions branché sur /api/subventions.
+// Pattern optimistic update + rollback.
+
 import { useEffect, useState, useCallback } from 'react'
 import type { DemandeSubvention } from '@/lib/types'
-import { DEMANDES_SUBVENTIONS } from '@/lib/data'
-
-const STORAGE_KEY = 'ent-mairie:subventions:v1'
-
-function load(): DemandeSubvention[] {
-  if (typeof window === 'undefined') return DEMANDES_SUBVENTIONS
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY)
-    if (!raw) return DEMANDES_SUBVENTIONS
-    const parsed = JSON.parse(raw)
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEMANDES_SUBVENTIONS
-  } catch {
-    return DEMANDES_SUBVENTIONS
-  }
-}
-
-function persist(items: DemandeSubvention[]) {
-  if (typeof window === 'undefined') return
-  try { window.localStorage.setItem(STORAGE_KEY, JSON.stringify(items)) } catch {}
-}
-
-function newId(): string {
-  return `sub-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
-}
-
-function nextReference(subventions: DemandeSubvention[]): string {
-  const year = new Date().getFullYear()
-  const prefix = `SUB-${year}-`
-  const max = subventions
-    .map(s => s.reference)
-    .filter(r => r.startsWith(prefix))
-    .map(r => parseInt(r.slice(prefix.length), 10))
-    .filter(n => !isNaN(n))
-    .reduce((acc, n) => Math.max(acc, n), 0)
-  return `${prefix}${String(max + 1).padStart(3, '0')}`
-}
 
 export type NewSubventionInput = Omit<DemandeSubvention, 'id' | 'createdAt' | 'updatedAt' | 'reference'>
 
 export function useSubventions() {
-  const [subventions, setSubventions] = useState<DemandeSubvention[]>(DEMANDES_SUBVENTIONS)
+  const [subventions, setSubventions] = useState<DemandeSubvention[]>([])
   const [hydrated, setHydrated] = useState(false)
 
   useEffect(() => {
-    setSubventions(load())
-    setHydrated(true)
+    let cancelled = false
+    fetch('/api/subventions')
+      .then((r) => (r.ok ? r.json() : Promise.reject(r)))
+      .then((data: DemandeSubvention[]) => {
+        if (!cancelled) {
+          setSubventions(data)
+          setHydrated(true)
+        }
+      })
+      .catch((e) => {
+        if (!cancelled) {
+          console.error('[useSubventions] load error:', e)
+          setHydrated(true)
+        }
+      })
+    return () => { cancelled = true }
   }, [])
 
-  useEffect(() => {
-    if (hydrated) persist(subventions)
-  }, [subventions, hydrated])
-
   const createSubvention = useCallback((data: NewSubventionInput): DemandeSubvention => {
-    setSubventions(prev => {
-      const item: DemandeSubvention = {
-        ...data,
-        id: newId(),
-        reference: nextReference(prev),
-        createdAt: new Date().toISOString(),
-      }
-      return [item, ...prev]
-    })
-    // Note : on retourne une donnée optimiste. Le vrai state se met à jour de façon asynchrone.
-    return {
+    const tempId = `tmp-${Date.now()}`
+    const now = new Date().toISOString()
+    const optimistic: DemandeSubvention = {
       ...data,
-      id: newId(),
-      reference: nextReference(subventions),
-      createdAt: new Date().toISOString(),
+      id: tempId,
+      reference: `SUB-${new Date().getFullYear()}-…`,
+      createdAt: now,
+      updatedAt: now,
     }
-  }, [subventions])
+    setSubventions((prev) => [optimistic, ...prev])
+
+    fetch('/api/subventions', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data),
+    })
+      .then((r) => (r.ok ? r.json() : Promise.reject(r)))
+      .then((created: DemandeSubvention) => {
+        setSubventions((prev) => prev.map((s) => (s.id === tempId ? created : s)))
+      })
+      .catch((e) => {
+        console.error('[useSubventions] create error:', e)
+        setSubventions((prev) => prev.filter((s) => s.id !== tempId))
+        alert('Impossible de créer la subvention.')
+      })
+    return optimistic
+  }, [])
 
   const updateSubvention = useCallback((id: string, patch: Partial<DemandeSubvention>) => {
-    setSubventions(prev => prev.map(s => (
-      s.id === id ? { ...s, ...patch, updatedAt: new Date().toISOString() } : s
-    )))
+    let previous: DemandeSubvention[] = []
+    setSubventions((prev) => {
+      previous = prev
+      return prev.map((s) => (s.id === id ? { ...s, ...patch, updatedAt: new Date().toISOString() } : s))
+    })
+
+    fetch(`/api/subventions/${id}`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch),
+    })
+      .then((r) => (r.ok ? r.json() : Promise.reject(r)))
+      .then((updated: DemandeSubvention) => {
+        setSubventions((prev) => prev.map((s) => (s.id === id ? updated : s)))
+      })
+      .catch((e) => {
+        console.error('[useSubventions] update error:', e)
+        setSubventions(previous)
+        alert('Impossible de mettre à jour la subvention.')
+      })
   }, [])
 
   const deleteSubvention = useCallback((id: string) => {
-    setSubventions(prev => prev.filter(s => s.id !== id))
+    let previous: DemandeSubvention[] = []
+    setSubventions((prev) => { previous = prev; return prev.filter((s) => s.id !== id) })
+    fetch(`/api/subventions/${id}`, { method: 'DELETE' })
+      .then((r) => { if (!r.ok) throw r })
+      .catch((e) => {
+        console.error('[useSubventions] delete error:', e)
+        setSubventions(previous)
+        alert('Impossible de supprimer la subvention.')
+      })
   }, [])
 
-  return {
-    subventions,
-    hydrated,
-    createSubvention,
-    updateSubvention,
-    deleteSubvention,
-  }
+  return { subventions, hydrated, createSubvention, updateSubvention, deleteSubvention }
 }
