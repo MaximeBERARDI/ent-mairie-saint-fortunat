@@ -33,16 +33,25 @@ export default function LoginPage() {
       redirect: false,
     })
 
-    if (!result?.ok) {
+    // En NextAuth v5 beta, on ne peut pas se fier à result.ok seul :
+    // on vérifie aussi result.error et l'existence effective de la
+    // session côté serveur. Sans ça, un signIn raté peut quand même
+    // laisser l'utilisateur entrer si un ancien cookie de session est
+    // encore valide.
+    if (result?.error || !result?.ok) {
       setError('Email ou mot de passe incorrect.')
       setSubmitting(false)
       return
     }
 
     const session = await getSession()
-    if (session?.user?.personId) {
-      setCurrentUserId(session.user.personId)
+    if (!session?.user?.personId) {
+      setError('Email ou mot de passe incorrect.')
+      setSubmitting(false)
+      return
     }
+
+    setCurrentUserId(session.user.personId)
     router.push('/dashboard')
   }
 
