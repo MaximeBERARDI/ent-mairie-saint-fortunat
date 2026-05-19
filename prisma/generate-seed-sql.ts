@@ -8,9 +8,16 @@ import bcrypt from 'bcryptjs'
 import { writeFileSync } from 'fs'
 import { resolve } from 'path'
 import { PEOPLE } from '../src/lib/people'
-import { COMMISSIONS, EMPLOYEE_RECORDS, FOURNISSEURS, TASKS } from '../src/lib/data'
+import { COMMISSIONS, EMPLOYEE_RECORDS, FOURNISSEURS, TASKS, FACTURES } from '../src/lib/data'
 import { COMPTES_M14 } from '../src/lib/m14-plan'
 import type { TaskPriority, TaskStatus } from '../src/lib/types'
+
+const FACTURE_STATUT_TO_DB: Record<string, string> = {
+  'À soumettre': 'a_soumettre',
+  'En attente validation': 'en_attente_validation',
+  'Validée': 'validee',
+  'Rejetée': 'rejetee',
+}
 
 const DEFAULT_PASSWORD = 'saintfortunat2026'
 
@@ -244,6 +251,33 @@ async function main() {
     )
   }
 
+  // 8. Factures initiales
+  lines.push('-- ─── 8. Factures initiales ──────────────────────────────────')
+  for (const f of FACTURES) {
+    lines.push(
+      `INSERT INTO factures (id, numero, "fournisseurId", "montantTTC", "posteCode", "dateFacture", "dateEcheance", statut, "submittedById", "submittedAt", "validatedById", "validatedAt", "rejectedById", "rejectedAt", "rejectionReason", notes, "createdAt") VALUES (`,
+      `  ${sqlString(f.id)},`,
+      `  ${sqlString(f.numero)},`,
+      `  ${sqlString(f.fournisseurId)},`,
+      `  ${sqlNum(f.montantTTC)},`,
+      `  ${sqlString(f.posteCode)},`,
+      `  '${f.dateFacture}'::date,`,
+      `  ${f.dateEcheance ? `'${f.dateEcheance}'::date` : 'NULL'},`,
+      `  '${FACTURE_STATUT_TO_DB[f.statut]}'::"FactureStatut",`,
+      `  ${sqlString(f.submittedById)},`,
+      `  ${sqlDate(f.submittedAt)},`,
+      `  ${sqlString(f.validatedById)},`,
+      `  ${sqlDate(f.validatedAt)},`,
+      `  ${sqlString(f.rejectedById)},`,
+      `  ${sqlDate(f.rejectedAt)},`,
+      `  ${sqlString(f.rejectionReason)},`,
+      `  ${sqlString(f.notes)},`,
+      `  ${sqlDate(f.createdAt)}`,
+      `) ON CONFLICT (id) DO NOTHING;`,
+      '',
+    )
+  }
+
   lines.push(
     '-- ─── Fin du seed ────────────────────────────────────────────────',
     'COMMIT;',
@@ -253,7 +287,7 @@ async function main() {
   const out = resolve(__dirname, 'seed.sql')
   writeFileSync(out, lines.join('\n'))
   console.log(`✓ ${lines.length} lignes écrites dans ${out}`)
-  console.log(`  ${PEOPLE.length} persons / users, ${COMMISSIONS.length} commissions, ${COMPTES_M14.length} comptes M14, ${FOURNISSEURS.length} fournisseurs, ${EMPLOYEE_RECORDS.length} employee records, ${TASKS.length} tasks`)
+  console.log(`  ${PEOPLE.length} persons / users, ${COMMISSIONS.length} commissions, ${COMPTES_M14.length} comptes M14, ${FOURNISSEURS.length} fournisseurs, ${EMPLOYEE_RECORDS.length} employee records, ${TASKS.length} tasks, ${FACTURES.length} factures`)
 }
 
 main().catch((e) => {

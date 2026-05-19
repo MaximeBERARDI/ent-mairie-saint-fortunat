@@ -257,7 +257,7 @@ INSERT INTO users (id, email, name, "hashedPassword", "personId", "createdAt", "
   'user-p-jm',
   'berardi.maxime@gmail.com',
   'Jean Martin',
-  '$2b$10$6cYS9t//WLwwicp4i8URg.BRQs/H3MMAdHdc0ZnTMf/.rRR5SHlFi',
+  '$2b$10$hExFi95f0fDDzQmodKIKze3MB4MBsbGZkRQ1Q9hOGu.804o8WFXAa',
   'p-jm',
   NOW(),
   NOW()
@@ -267,7 +267,7 @@ INSERT INTO users (id, email, name, "hashedPassword", "personId", "createdAt", "
   'user-p-md',
   'marie.durand@saint-fortunat.fr',
   'Marie Durand',
-  '$2b$10$6cYS9t//WLwwicp4i8URg.BRQs/H3MMAdHdc0ZnTMf/.rRR5SHlFi',
+  '$2b$10$hExFi95f0fDDzQmodKIKze3MB4MBsbGZkRQ1Q9hOGu.804o8WFXAa',
   'p-md',
   NOW(),
   NOW()
@@ -277,7 +277,7 @@ INSERT INTO users (id, email, name, "hashedPassword", "personId", "createdAt", "
   'user-p-rg',
   'robert.granger@saint-fortunat.fr',
   'Robert Granger',
-  '$2b$10$6cYS9t//WLwwicp4i8URg.BRQs/H3MMAdHdc0ZnTMf/.rRR5SHlFi',
+  '$2b$10$hExFi95f0fDDzQmodKIKze3MB4MBsbGZkRQ1Q9hOGu.804o8WFXAa',
   'p-rg',
   NOW(),
   NOW()
@@ -287,7 +287,7 @@ INSERT INTO users (id, email, name, "hashedPassword", "personId", "createdAt", "
   'user-p-lf',
   'laurent.fabre@saint-fortunat.fr',
   'Laurent Fabre',
-  '$2b$10$6cYS9t//WLwwicp4i8URg.BRQs/H3MMAdHdc0ZnTMf/.rRR5SHlFi',
+  '$2b$10$hExFi95f0fDDzQmodKIKze3MB4MBsbGZkRQ1Q9hOGu.804o8WFXAa',
   'p-lf',
   NOW(),
   NOW()
@@ -297,7 +297,7 @@ INSERT INTO users (id, email, name, "hashedPassword", "personId", "createdAt", "
   'user-p-sb',
   'sylvie.bonnet@saint-fortunat.fr',
   'Sylvie Bonnet',
-  '$2b$10$6cYS9t//WLwwicp4i8URg.BRQs/H3MMAdHdc0ZnTMf/.rRR5SHlFi',
+  '$2b$10$hExFi95f0fDDzQmodKIKze3MB4MBsbGZkRQ1Q9hOGu.804o8WFXAa',
   'p-sb',
   NOW(),
   NOW()
@@ -307,7 +307,7 @@ INSERT INTO users (id, email, name, "hashedPassword", "personId", "createdAt", "
   'user-p-pr',
   'pierre.roche@saint-fortunat.fr',
   'Pierre Roche',
-  '$2b$10$6cYS9t//WLwwicp4i8URg.BRQs/H3MMAdHdc0ZnTMf/.rRR5SHlFi',
+  '$2b$10$hExFi95f0fDDzQmodKIKze3MB4MBsbGZkRQ1Q9hOGu.804o8WFXAa',
   'p-pr',
   NOW(),
   NOW()
@@ -317,7 +317,7 @@ INSERT INTO users (id, email, name, "hashedPassword", "personId", "createdAt", "
   'user-p-im',
   'isabelle.morel@saint-fortunat.fr',
   'Isabelle Morel',
-  '$2b$10$6cYS9t//WLwwicp4i8URg.BRQs/H3MMAdHdc0ZnTMf/.rRR5SHlFi',
+  '$2b$10$hExFi95f0fDDzQmodKIKze3MB4MBsbGZkRQ1Q9hOGu.804o8WFXAa',
   'p-im',
   NOW(),
   NOW()
@@ -327,7 +327,7 @@ INSERT INTO users (id, email, name, "hashedPassword", "personId", "createdAt", "
   'user-p-tg',
   'thomas.girard@saint-fortunat.fr',
   'Thomas Girard',
-  '$2b$10$6cYS9t//WLwwicp4i8URg.BRQs/H3MMAdHdc0ZnTMf/.rRR5SHlFi',
+  '$2b$10$hExFi95f0fDDzQmodKIKze3MB4MBsbGZkRQ1Q9hOGu.804o8WFXAa',
   'p-tg',
   NOW(),
   NOW()
@@ -337,7 +337,7 @@ INSERT INTO users (id, email, name, "hashedPassword", "personId", "createdAt", "
   'user-p-lb',
   'lucie.bernard@saint-fortunat.fr',
   'Lucie Bernard',
-  '$2b$10$6cYS9t//WLwwicp4i8URg.BRQs/H3MMAdHdc0ZnTMf/.rRR5SHlFi',
+  '$2b$10$hExFi95f0fDDzQmodKIKze3MB4MBsbGZkRQ1Q9hOGu.804o8WFXAa',
   'p-lb',
   NOW(),
   NOW()
@@ -347,7 +347,7 @@ INSERT INTO users (id, email, name, "hashedPassword", "personId", "createdAt", "
   'user-p-mf',
   'marc.faure@saint-fortunat.fr',
   'Marc Faure',
-  '$2b$10$6cYS9t//WLwwicp4i8URg.BRQs/H3MMAdHdc0ZnTMf/.rRR5SHlFi',
+  '$2b$10$hExFi95f0fDDzQmodKIKze3MB4MBsbGZkRQ1Q9hOGu.804o8WFXAa',
   'p-mf',
   NOW(),
   NOW()
@@ -357,7 +357,7 @@ INSERT INTO users (id, email, name, "hashedPassword", "personId", "createdAt", "
   'user-p-ad',
   'anne.dupont@saint-fortunat.fr',
   'Anne Dupont',
-  '$2b$10$6cYS9t//WLwwicp4i8URg.BRQs/H3MMAdHdc0ZnTMf/.rRR5SHlFi',
+  '$2b$10$hExFi95f0fDDzQmodKIKze3MB4MBsbGZkRQ1Q9hOGu.804o8WFXAa',
   'p-ad',
   NOW(),
   NOW()
@@ -367,7 +367,7 @@ INSERT INTO users (id, email, name, "hashedPassword", "personId", "createdAt", "
   'user-p-cv',
   'claude.viard@saint-fortunat.fr',
   'Claude Viard',
-  '$2b$10$6cYS9t//WLwwicp4i8URg.BRQs/H3MMAdHdc0ZnTMf/.rRR5SHlFi',
+  '$2b$10$hExFi95f0fDDzQmodKIKze3MB4MBsbGZkRQ1Q9hOGu.804o8WFXAa',
   'p-cv',
   NOW(),
   NOW()
@@ -2358,6 +2358,107 @@ INSERT INTO tasks (id, label, description, "commissionId", "assigneeId", "valida
   'a_faire'::"TaskStatus",
   '2026-04-20T11:00:00Z'::timestamptz,
   '2026-04-20T11:00:00Z'::timestamptz
+) ON CONFLICT (id) DO NOTHING;
+
+-- ─── 8. Factures initiales ──────────────────────────────────
+INSERT INTO factures (id, numero, "fournisseurId", "montantTTC", "posteCode", "dateFacture", "dateEcheance", statut, "submittedById", "submittedAt", "validatedById", "validatedAt", "rejectedById", "rejectedAt", "rejectionReason", notes, "createdAt") VALUES (
+  'fact-042',
+  'FAC-2026-042',
+  'four-edf',
+  1240,
+  '60611',
+  '2026-04-28'::date,
+  '2026-05-28'::date,
+  'en_attente_validation'::"FactureStatut",
+  'p-pr',
+  '2026-04-29T09:15:00Z'::timestamptz,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  '2026-04-29T09:15:00Z'::timestamptz
+) ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO factures (id, numero, "fournisseurId", "montantTTC", "posteCode", "dateFacture", "dateEcheance", statut, "submittedById", "submittedAt", "validatedById", "validatedAt", "rejectedById", "rejectedAt", "rejectionReason", notes, "createdAt") VALUES (
+  'fact-041',
+  'FAC-2026-041',
+  'four-saur',
+  387,
+  '60612',
+  '2026-04-25'::date,
+  '2026-05-25'::date,
+  'en_attente_validation'::"FactureStatut",
+  'p-pr',
+  '2026-04-26T10:00:00Z'::timestamptz,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  '2026-04-26T10:00:00Z'::timestamptz
+) ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO factures (id, numero, "fournisseurId", "montantTTC", "posteCode", "dateFacture", "dateEcheance", statut, "submittedById", "submittedAt", "validatedById", "validatedAt", "rejectedById", "rejectedAt", "rejectionReason", notes, "createdAt") VALUES (
+  'fact-040',
+  'FAC-2026-040',
+  'four-mvv',
+  4850,
+  '2315',
+  '2026-04-20'::date,
+  '2026-06-04'::date,
+  'validee'::"FactureStatut",
+  'p-pr',
+  '2026-04-21T08:30:00Z'::timestamptz,
+  'p-jm',
+  '2026-04-22T14:10:00Z'::timestamptz,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  '2026-04-21T08:30:00Z'::timestamptz
+) ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO factures (id, numero, "fournisseurId", "montantTTC", "posteCode", "dateFacture", "dateEcheance", statut, "submittedById", "submittedAt", "validatedById", "validatedAt", "rejectedById", "rejectedAt", "rejectionReason", notes, "createdAt") VALUES (
+  'fact-039',
+  'FAC-2026-039',
+  'four-girod',
+  920,
+  '2315',
+  '2026-04-15'::date,
+  '2026-05-30'::date,
+  'validee'::"FactureStatut",
+  'p-pr',
+  '2026-04-16T09:00:00Z'::timestamptz,
+  'p-md',
+  '2026-04-17T11:00:00Z'::timestamptz,
+  NULL,
+  NULL,
+  NULL,
+  NULL,
+  '2026-04-16T09:00:00Z'::timestamptz
+) ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO factures (id, numero, "fournisseurId", "montantTTC", "posteCode", "dateFacture", "dateEcheance", statut, "submittedById", "submittedAt", "validatedById", "validatedAt", "rejectedById", "rejectedAt", "rejectionReason", notes, "createdAt") VALUES (
+  'fact-038',
+  'FAC-2026-038',
+  'four-poste',
+  145,
+  '6262',
+  '2026-04-12'::date,
+  '2026-05-12'::date,
+  'rejetee'::"FactureStatut",
+  'p-im',
+  '2026-04-13T15:00:00Z'::timestamptz,
+  NULL,
+  NULL,
+  'p-jm',
+  '2026-04-14T08:30:00Z'::timestamptz,
+  'Numéro client erroné, demander un avoir au fournisseur.',
+  NULL,
+  '2026-04-13T15:00:00Z'::timestamptz
 ) ON CONFLICT (id) DO NOTHING;
 
 -- ─── Fin du seed ────────────────────────────────────────────────
