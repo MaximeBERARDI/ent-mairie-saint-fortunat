@@ -8,7 +8,7 @@ import bcrypt from 'bcryptjs'
 import { writeFileSync } from 'fs'
 import { resolve } from 'path'
 import { PEOPLE } from '../src/lib/people'
-import { COMMISSIONS, EMPLOYEE_RECORDS, FOURNISSEURS, TASKS, FACTURES, LEAVE_REQUESTS, MISSIONS } from '../src/lib/data'
+import { COMMISSIONS, EMPLOYEE_RECORDS, FOURNISSEURS, TASKS, FACTURES, LEAVE_REQUESTS, MISSIONS, POINTAGES } from '../src/lib/data'
 import { COMPTES_M14 } from '../src/lib/m14-plan'
 import type { TaskPriority, TaskStatus } from '../src/lib/types'
 
@@ -24,6 +24,18 @@ const LEAVE_STATUT_TO_DB: Record<string, string> = {
   'Approuvée': 'approuvee',
   'Refusée': 'refusee',
   'Annulée': 'annulee',
+}
+
+const POINTAGE_TYPE_TO_DB: Record<string, string> = {
+  entree: 'entree',
+  sortie: 'sortie',
+  'pause-debut': 'pause_debut',
+  'pause-fin': 'pause_fin',
+}
+const POINTAGE_VAL_TO_DB: Record<string, string> = {
+  'En attente': 'en_attente',
+  'Approuvée': 'approuvee',
+  'Refusée': 'refusee',
 }
 
 const DEFAULT_PASSWORD = 'saintfortunat2026'
@@ -326,6 +338,28 @@ async function main() {
     )
   }
 
+  // 11. Pointages
+  lines.push('-- ─── 11. Pointages ──────────────────────────────────────────')
+  for (const p of POINTAGES) {
+    lines.push(
+      `INSERT INTO pointages (id, "personId", type, timestamp, manuel, motif, "validationStatut", "validateurId", "validatedAt", "validationMotif", "createdAt", "createdById") VALUES (`,
+      `  ${sqlString(p.id)},`,
+      `  ${sqlString(p.personId)},`,
+      `  '${POINTAGE_TYPE_TO_DB[p.type]}'::"PointageType",`,
+      `  ${sqlDate(p.timestamp)},`,
+      `  ${sqlBool(p.manuel)},`,
+      `  ${sqlString(p.motif)},`,
+      `  ${p.validationStatut ? `'${POINTAGE_VAL_TO_DB[p.validationStatut]}'::"PointageValidationStatut"` : 'NULL'},`,
+      `  ${sqlString(p.validateurId)},`,
+      `  ${sqlDate(p.validatedAt)},`,
+      `  ${sqlString(p.validationMotif)},`,
+      `  ${sqlDate(p.createdAt)},`,
+      `  ${sqlString(p.createdById)}`,
+      `) ON CONFLICT (id) DO NOTHING;`,
+      '',
+    )
+  }
+
   lines.push(
     '-- ─── Fin du seed ────────────────────────────────────────────────',
     'COMMIT;',
@@ -335,7 +369,7 @@ async function main() {
   const out = resolve(__dirname, 'seed.sql')
   writeFileSync(out, lines.join('\n'))
   console.log(`✓ ${lines.length} lignes écrites dans ${out}`)
-  console.log(`  ${PEOPLE.length} persons/users, ${COMMISSIONS.length} commissions, ${COMPTES_M14.length} comptes M14, ${FOURNISSEURS.length} fournisseurs, ${EMPLOYEE_RECORDS.length} employees, ${TASKS.length} tasks, ${FACTURES.length} factures, ${LEAVE_REQUESTS.length} leaves, ${MISSIONS.length} missions`)
+  console.log(`  ${PEOPLE.length} persons/users, ${COMMISSIONS.length} commissions, ${COMPTES_M14.length} comptes M14, ${FOURNISSEURS.length} fournisseurs, ${EMPLOYEE_RECORDS.length} employees, ${TASKS.length} tasks, ${FACTURES.length} factures, ${LEAVE_REQUESTS.length} leaves, ${MISSIONS.length} missions, ${POINTAGES.length} pointages`)
 }
 
 main().catch((e) => {

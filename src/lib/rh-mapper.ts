@@ -6,6 +6,9 @@ import type {
   LeaveRequest,
   LeaveStatut,
   Mission,
+  Pointage,
+  PointageType,
+  PointageValidationStatut,
   TaskDocument,
   TypeContrat,
 } from './types'
@@ -14,6 +17,9 @@ import type {
   LeaveRequest as DbLeave,
   LeaveStatut as DbLeaveStatut,
   Mission as DbMission,
+  Pointage as DbPointage,
+  PointageType as DbPointageType,
+  PointageValidationStatut as DbPointageValidationStatut,
   Document as DbDocument,
   TypeContrat as DbTypeContrat,
 } from '@prisma/client'
@@ -111,6 +117,53 @@ export function leaveFromDb(l: DbLeave & { documents?: DbDocument[] }): LeaveReq
     decisionMotif: l.decisionMotif ?? undefined,
     documents: l.documents?.map(documentFromDb) ?? [],
     createdAt: l.createdAt.toISOString(),
+  }
+}
+
+// ─── Pointage ───────────────────────────────────────────────────
+
+const POINTAGE_TYPE_TO_DB: Record<PointageType, DbPointageType> = {
+  entree: 'entree',
+  sortie: 'sortie',
+  'pause-debut': 'pause_debut',
+  'pause-fin': 'pause_fin',
+}
+const POINTAGE_TYPE_FROM_DB: Record<DbPointageType, PointageType> = {
+  entree: 'entree',
+  sortie: 'sortie',
+  pause_debut: 'pause-debut',
+  pause_fin: 'pause-fin',
+}
+export const pointageTypeToDb = (t: PointageType) => POINTAGE_TYPE_TO_DB[t]
+export const pointageTypeFromDb = (t: DbPointageType) => POINTAGE_TYPE_FROM_DB[t]
+
+const POINTAGE_VAL_TO_DB: Record<PointageValidationStatut, DbPointageValidationStatut> = {
+  'En attente': 'en_attente',
+  Approuvée: 'approuvee',
+  Refusée: 'refusee',
+}
+const POINTAGE_VAL_FROM_DB: Record<DbPointageValidationStatut, PointageValidationStatut> = {
+  en_attente: 'En attente',
+  approuvee: 'Approuvée',
+  refusee: 'Refusée',
+}
+export const pointageValToDb = (v: PointageValidationStatut) => POINTAGE_VAL_TO_DB[v]
+export const pointageValFromDb = (v: DbPointageValidationStatut) => POINTAGE_VAL_FROM_DB[v]
+
+export function pointageFromDb(p: DbPointage): Pointage {
+  return {
+    id: p.id,
+    personId: p.personId,
+    type: pointageTypeFromDb(p.type),
+    timestamp: p.timestamp.toISOString(),
+    manuel: p.manuel,
+    motif: p.motif ?? undefined,
+    validationStatut: p.validationStatut ? pointageValFromDb(p.validationStatut) : undefined,
+    validateurId: p.validateurId ?? undefined,
+    validatedAt: p.validatedAt?.toISOString(),
+    validationMotif: p.validationMotif ?? undefined,
+    createdAt: p.createdAt.toISOString(),
+    createdById: p.createdById,
   }
 }
 

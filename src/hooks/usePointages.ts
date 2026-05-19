@@ -1,23 +1,15 @@
 'use client'
 
+// Hook gestion des pointages branché sur /api/pointages.
+// La config HSup reste en localStorage (préférence locale).
+// Tous les helpers de calcul (computeMinutesWorked, hSupHebdo, etc.)
+// sont conservés tels quels — ils opèrent sur l'état local.
+
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import type { Pointage, PointageType, ConfigHSup, EmployeeRecord } from '@/lib/types'
-import { POINTAGES, DEFAULT_CONFIG_HSUP } from '@/lib/data'
+import { DEFAULT_CONFIG_HSUP } from '@/lib/data'
 
-const KEY_POINTAGES = 'ent-mairie:pointages:v1'
 const KEY_CONFIG = 'ent-mairie:hsup-config:v1'
-
-function loadPointages(): Pointage[] {
-  if (typeof window === 'undefined') return POINTAGES
-  try {
-    const raw = window.localStorage.getItem(KEY_POINTAGES)
-    if (!raw) return POINTAGES
-    const parsed = JSON.parse(raw)
-    return Array.isArray(parsed) ? parsed : POINTAGES
-  } catch {
-    return POINTAGES
-  }
-}
 
 function loadConfig(): ConfigHSup {
   if (typeof window === 'undefined') return DEFAULT_CONFIG_HSUP
@@ -30,18 +22,9 @@ function loadConfig(): ConfigHSup {
   }
 }
 
-function persistPointages(items: Pointage[]) {
-  if (typeof window === 'undefined') return
-  try { window.localStorage.setItem(KEY_POINTAGES, JSON.stringify(items)) } catch {}
-}
-
 function persistConfig(cfg: ConfigHSup) {
   if (typeof window === 'undefined') return
   try { window.localStorage.setItem(KEY_CONFIG, JSON.stringify(cfg)) } catch {}
-}
-
-function newId(): string {
-  return `pt-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
 }
 
 // ─── Helpers de date ────────────────────────────────────────────────
@@ -57,27 +40,14 @@ export function isoWeek(iso: string): string {
   return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, '0')}`
 }
 
-// Mois ISO 'YYYY-MM' à partir d'une date ISO.
 const isoMonth = (iso: string) => iso.slice(0, 7)
 
 // ─── Calcul du temps travaillé sur une journée ───────────────────────
 
-/**
- * À partir d'une liste de pointages d'un agent sur une journée, calcule
- * le temps de travail effectif en minutes. Algorithme :
- * 1. On trie les pointages par timestamp.
- * 2. On parcourt et on accumule la durée entre `entree` et `sortie`,
- *    en soustrayant les périodes `pause-debut` → `pause-fin`.
- * 3. Si pas de pause badgée et que la journée fait > 6h, on retire la
- *    pause déjeuner forfaitaire (config.pauseDejeunerMinutes).
- *
- * Renvoie 0 si données incohérentes (ex: pas de paire entrée/sortie).
- */
 export function computeMinutesWorked(
   pointagesDuJour: Pointage[],
   config: ConfigHSup,
 ): number {
-  // Ne compter que les pointages validés ou non-manuels
   const valid = pointagesDuJour.filter(p =>
     !p.manuel || p.validationStatut === 'Approuvée'
   )
@@ -108,12 +78,10 @@ export function computeMinutesWorked(
     }
   }
 
-  // Si toujours pas sorti et pas badgé : durée 0 (en cours, pas terminée)
   if (lastEntree) return 0
 
   let totalMinutes = Math.max(0, Math.round(total / 60000))
 
-  // Pause forfaitaire si pas de pause badgée et journée > 6 h
   if (!pauseBadgee && totalMinutes > 360) {
     totalMinutes = Math.max(0, totalMinutes - config.pauseDejeunerMinutes)
   }
@@ -132,38 +100,69 @@ export interface NewPointageInput {
 }
 
 export function usePointages() {
-  const [pointages, setPointages] = useState<Pointage[]>(POINTAGES)
+  const [pointages, setPointages] = useState<Pointage[]>([])
   const [config, setConfig] = useState<ConfigHSup>(DEFAULT_CONFIG_HSUP)
   const [hydrated, setHydrated] = useState(false)
 
   useEffect(() => {
-    setPointages(loadPointages())
     setConfig(loadConfig())
-    setHydrated(true)
+    let cancelled = false
+    fetch('/api/pointages')
+      .then((r) => (r.ok ? r.json() : Promise.reject(r)))
+      .then((data: Pointage[]) => {
+        if (!cancelled) {
+          setPointages(data)
+          setHydrated(true)
+        }
+      })
+      .catch((e) => {
+        if (!cancelled) {
+          console.error('[usePointages] load error:', e)
+          setHydrated(true)
+        }
+      })
+    return () => { cancelled = true }
   }, [])
 
-  useEffect(() => { if (hydrated) persistPointages(pointages) }, [pointages, hydrated])
   useEffect(() => { if (hydrated) persistConfig(config) }, [config, hydrated])
 
   // ─── CRUD ──────────────────────────────────────────────────────
 
   const badger = useCallback((personId: string, type: PointageType): Pointage => {
-    const item: Pointage = {
-      id: newId(),
+    const tempId = `tmp-${Date.now()}`
+    const now = new Date().toISOString()
+    const optimistic: Pointage = {
+      id: tempId,
       personId,
       type,
-      timestamp: new Date().toISOString(),
+      timestamp: now,
       manuel: false,
-      createdAt: new Date().toISOString(),
+      createdAt: now,
       createdById: personId,
     }
-    setPointages(prev => [item, ...prev])
-    return item
+    setPointages((prev) => [optimistic, ...prev])
+
+    fetch('/api/pointages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ personId, type, timestamp: now, manuel: false }),
+    })
+      .then((r) => (r.ok ? r.json() : Promise.reject(r)))
+      .then((created: Pointage) => {
+        setPointages((prev) => prev.map((p) => (p.id === tempId ? created : p)))
+      })
+      .catch((e) => {
+        console.error('[usePointages] badger error:', e)
+        setPointages((prev) => prev.filter((p) => p.id !== tempId))
+        alert('Impossible de badger.')
+      })
+    return optimistic
   }, [])
 
   const ajouterManuel = useCallback((data: NewPointageInput): Pointage => {
-    const item: Pointage = {
-      id: newId(),
+    const tempId = `tmp-${Date.now()}`
+    const optimistic: Pointage = {
+      id: tempId,
       personId: data.personId,
       type: data.type,
       timestamp: data.timestamp,
@@ -173,59 +172,99 @@ export function usePointages() {
       createdAt: new Date().toISOString(),
       createdById: data.createdById,
     }
-    setPointages(prev => [item, ...prev])
-    return item
+    setPointages((prev) => [optimistic, ...prev])
+
+    fetch('/api/pointages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        personId: data.personId,
+        type: data.type,
+        timestamp: data.timestamp,
+        manuel: true,
+        motif: data.motif,
+      }),
+    })
+      .then((r) => (r.ok ? r.json() : Promise.reject(r)))
+      .then((created: Pointage) => {
+        setPointages((prev) => prev.map((p) => (p.id === tempId ? created : p)))
+      })
+      .catch((e) => {
+        console.error('[usePointages] ajouterManuel error:', e)
+        setPointages((prev) => prev.filter((p) => p.id !== tempId))
+        alert("Impossible d'ajouter le pointage manuel.")
+      })
+    return optimistic
   }, [])
 
-  const validerPointage = useCallback((id: string, validateurId: string) => {
-    setPointages(prev => prev.map(p =>
-      p.id === id
-        ? {
-            ...p,
-            validationStatut: 'Approuvée',
-            validateurId,
-            validatedAt: new Date().toISOString(),
-            validationMotif: undefined,
-          }
-        : p,
-    ))
-  }, [])
+  const patchAction = useCallback((id: string, body: Record<string, unknown>, errorMsg: string) => {
+    const previous = pointages
+    fetch(`/api/pointages/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+      .then((r) => (r.ok ? r.json() : Promise.reject(r)))
+      .then((updated: Pointage) => {
+        setPointages((prev) => prev.map((p) => (p.id === id ? updated : p)))
+      })
+      .catch((e) => {
+        console.error('[usePointages] patch error:', e)
+        setPointages(previous)
+        alert(errorMsg)
+      })
+  }, [pointages])
 
-  const refuserPointage = useCallback((id: string, validateurId: string, motif: string) => {
-    setPointages(prev => prev.map(p =>
+  const validerPointage = useCallback((id: string, _validateurId: string) => {
+    void _validateurId
+    setPointages((prev) => prev.map((p) =>
       p.id === id
-        ? {
-            ...p,
-            validationStatut: 'Refusée',
-            validateurId,
-            validatedAt: new Date().toISOString(),
-            validationMotif: motif,
-          }
+        ? { ...p, validationStatut: 'Approuvée', validatedAt: new Date().toISOString(), validationMotif: undefined }
         : p,
     ))
-  }, [])
+    patchAction(id, { action: 'validate' }, 'Impossible de valider le pointage.')
+  }, [patchAction])
+
+  const refuserPointage = useCallback((id: string, _validateurId: string, motif: string) => {
+    void _validateurId
+    setPointages((prev) => prev.map((p) =>
+      p.id === id
+        ? { ...p, validationStatut: 'Refusée', validatedAt: new Date().toISOString(), validationMotif: motif }
+        : p,
+    ))
+    patchAction(id, { action: 'refuse', validationMotif: motif }, 'Impossible de refuser le pointage.')
+  }, [patchAction])
 
   const supprimerPointage = useCallback((id: string) => {
-    setPointages(prev => prev.filter(p => p.id !== id))
+    let previous: Pointage[] = []
+    setPointages((prev) => {
+      previous = prev
+      return prev.filter((p) => p.id !== id)
+    })
+
+    fetch(`/api/pointages/${id}`, { method: 'DELETE' })
+      .then((r) => { if (!r.ok) throw r })
+      .catch((e) => {
+        console.error('[usePointages] delete error:', e)
+        setPointages(previous)
+        alert('Impossible de supprimer le pointage.')
+      })
   }, [])
 
   const updateConfig = useCallback((patch: Partial<ConfigHSup>) => {
-    setConfig(prev => ({ ...prev, ...patch }))
+    setConfig((prev) => ({ ...prev, ...patch }))
   }, [])
 
-  // ─── Calculs ───────────────────────────────────────────────────
+  // ─── Calculs (inchangés) ───────────────────────────────────────
 
-  // Pointages d'une personne sur une période
   const byPerson = useCallback((personId: string) =>
     pointages.filter(p => p.personId === personId),
   [pointages])
 
-  // Pointages d'un jour donné pour une personne
   const byPersonDay = useCallback((personId: string, dateIso: string) =>
     pointages.filter(p => p.personId === personId && dateOnly(p.timestamp) === dateIso),
   [pointages])
 
-  // Minutes travaillées par jour pour une personne. Renvoie un Map<dateIso, minutes>.
   const minutesByDay = useCallback((personId: string): Map<string, number> => {
     const result = new Map<string, number>()
     const personPoints = pointages.filter(p => p.personId === personId)
@@ -237,8 +276,6 @@ export function usePointages() {
     return result
   }, [pointages, config])
 
-  // Heures supplémentaires hebdomadaires pour une personne sur une semaine ISO.
-  // Hsup = travaillé - heures contractuelles hebdo (selon EmployeeRecord).
   const hSupHebdo = useCallback((personId: string, week: string, employee?: EmployeeRecord): number => {
     const minutes = minutesByDay(personId)
     let totalMin = 0
@@ -247,10 +284,9 @@ export function usePointages() {
     })
     const totalH = totalMin / 60
     const ref = employee ? employee.tempsTravailHeures : config.heuresHebdoReference
-    return Math.max(0, Math.round((totalH - ref) * 4) / 4) // arrondi au quart d'heure
+    return Math.max(0, Math.round((totalH - ref) * 4) / 4)
   }, [minutesByDay, config])
 
-  // HSup mensuel cumulé (somme des HSup hebdo pour les semaines qui touchent ce mois)
   const hSupMensuel = useCallback((personId: string, month: string, employee?: EmployeeRecord): number => {
     const minutes = minutesByDay(personId)
     const weeks = new Set<string>()
@@ -262,7 +298,6 @@ export function usePointages() {
     return Math.round(total * 4) / 4
   }, [minutesByDay, hSupHebdo])
 
-  // Total des heures travaillées sur une période
   const heuresTotalSemaine = useCallback((personId: string, week: string): number => {
     const minutes = minutesByDay(personId)
     let totalMin = 0
@@ -272,7 +307,6 @@ export function usePointages() {
     return Math.round((totalMin / 60) * 4) / 4
   }, [minutesByDay])
 
-  // Statut courant : "Présent" si une entrée n'a pas encore été suivie d'une sortie aujourd'hui.
   const isPresentNow = useCallback((personId: string): boolean => {
     const today = new Date().toISOString().slice(0, 10)
     const pts = byPersonDay(personId, today)
@@ -283,7 +317,6 @@ export function usePointages() {
     return last.type === 'entree' || last.type === 'pause-fin'
   }, [byPersonDay])
 
-  // Pointages en attente de validation (saisies manuelles non décidées)
   const enAttenteValidation = useMemo(
     () => pointages.filter(p => p.manuel && p.validationStatut === 'En attente'),
     [pointages],
