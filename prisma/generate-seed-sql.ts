@@ -8,7 +8,7 @@ import bcrypt from 'bcryptjs'
 import { writeFileSync } from 'fs'
 import { resolve } from 'path'
 import { PEOPLE } from '../src/lib/people'
-import { COMMISSIONS, EMPLOYEE_RECORDS, FOURNISSEURS, TASKS, FACTURES, LEAVE_REQUESTS, MISSIONS, POINTAGES } from '../src/lib/data'
+import { COMMISSIONS, EMPLOYEE_RECORDS, FOURNISSEURS, TASKS, FACTURES, LEAVE_REQUESTS, MISSIONS, POINTAGES, BIENS_IMMOBILIERS, LOCATAIRES, BAUX, QUITTANCES } from '../src/lib/data'
 import { COMPTES_M14 } from '../src/lib/m14-plan'
 import type { TaskPriority, TaskStatus } from '../src/lib/types'
 
@@ -36,6 +36,20 @@ const POINTAGE_VAL_TO_DB: Record<string, string> = {
   'En attente': 'en_attente',
   'Approuvée': 'approuvee',
   'Refusée': 'refusee',
+}
+
+const BAIL_STATUT_TO_DB: Record<string, string> = {
+  'En cours': 'en_cours',
+  'Préavis': 'preavis',
+  'Terminé': 'termine',
+}
+
+const QUITT_STATUT_TO_DB: Record<string, string> = {
+  'À émettre': 'a_emettre',
+  'Émise': 'emise',
+  'Payée': 'payee',
+  'Impayée': 'impayee',
+  'Relancée': 'relancee',
 }
 
 const DEFAULT_PASSWORD = 'saintfortunat2026'
@@ -360,6 +374,91 @@ async function main() {
     )
   }
 
+  // 12. Biens immobiliers
+  lines.push('-- ─── 12. Biens immobiliers ──────────────────────────────────')
+  for (const b of BIENS_IMMOBILIERS) {
+    lines.push(
+      `INSERT INTO biens_immobiliers (id, reference, nom, type, adresse, surface, pieces, "loyerMensuel", "chargesMensuelles", notes, active, "createdAt") VALUES (`,
+      `  ${sqlString(b.id)},`,
+      `  ${sqlString(b.reference)},`,
+      `  ${sqlString(b.nom)},`,
+      `  ${sqlString(b.type)},`,
+      `  ${sqlString(b.adresse)},`,
+      `  ${sqlNum(b.surface)},`,
+      `  ${sqlNum(b.pieces)},`,
+      `  ${sqlNum(b.loyerMensuel)},`,
+      `  ${sqlNum(b.chargesMensuelles)},`,
+      `  ${sqlString(b.notes)},`,
+      `  ${sqlBool(b.active)},`,
+      `  ${sqlDate(b.createdAt)}`,
+      `) ON CONFLICT (id) DO NOTHING;`,
+      '',
+    )
+  }
+
+  // 13. Locataires
+  lines.push('-- ─── 13. Locataires ─────────────────────────────────────────')
+  for (const l of LOCATAIRES) {
+    lines.push(
+      `INSERT INTO locataires (id, prenom, nom, "fullName", email, phone, "adresseFacturation", notes, "createdAt") VALUES (`,
+      `  ${sqlString(l.id)},`,
+      `  ${sqlString(l.prenom)},`,
+      `  ${sqlString(l.nom)},`,
+      `  ${sqlString(l.fullName)},`,
+      `  ${sqlString(l.email)},`,
+      `  ${sqlString(l.phone)},`,
+      `  ${sqlString(l.adresseFacturation)},`,
+      `  ${sqlString(l.notes)},`,
+      `  ${sqlDate(l.createdAt)}`,
+      `) ON CONFLICT (id) DO NOTHING;`,
+      '',
+    )
+  }
+
+  // 14. Baux
+  lines.push('-- ─── 14. Baux ───────────────────────────────────────────────')
+  for (const b of BAUX) {
+    lines.push(
+      `INSERT INTO baux (id, "bienId", "locataireId", "dateDebut", "dateFin", "loyerMensuel", "chargesMensuelles", "depotGarantie", statut, notes, "createdAt") VALUES (`,
+      `  ${sqlString(b.id)},`,
+      `  ${sqlString(b.bienId)},`,
+      `  ${sqlString(b.locataireId)},`,
+      `  '${b.dateDebut}'::date,`,
+      `  ${b.dateFin ? `'${b.dateFin}'::date` : 'NULL'},`,
+      `  ${sqlNum(b.loyerMensuel)},`,
+      `  ${sqlNum(b.chargesMensuelles)},`,
+      `  ${sqlNum(b.depotGarantie)},`,
+      `  '${BAIL_STATUT_TO_DB[b.statut]}'::"StatutBail",`,
+      `  ${sqlString(b.notes)},`,
+      `  ${sqlDate(b.createdAt)}`,
+      `) ON CONFLICT (id) DO NOTHING;`,
+      '',
+    )
+  }
+
+  // 15. Quittances
+  lines.push('-- ─── 15. Quittances ─────────────────────────────────────────')
+  for (const q of QUITTANCES) {
+    lines.push(
+      `INSERT INTO quittances (id, "bailId", mois, numero, "loyerHC", charges, total, statut, "emiseAt", "payeeAt", "modeReglement", notes, "createdAt") VALUES (`,
+      `  ${sqlString(q.id)},`,
+      `  ${sqlString(q.bailId)},`,
+      `  ${sqlString(q.mois)},`,
+      `  ${sqlString(q.numero)},`,
+      `  ${sqlNum(q.loyerHC)},`,
+      `  ${sqlNum(q.charges)},`,
+      `  ${sqlNum(q.total)},`,
+      `  '${QUITT_STATUT_TO_DB[q.statut]}'::"StatutQuittance",`,
+      `  ${sqlDate(q.emiseAt)},`,
+      `  ${sqlDate(q.payeeAt)},`,
+      `  ${sqlString(q.modeReglement)},`,
+      `  ${sqlString(q.notes)},`,
+      `  ${sqlDate(q.createdAt)}`,
+      `) ON CONFLICT (id) DO NOTHING;`,
+      '',
+    )
+  }
+
   lines.push(
     '-- ─── Fin du seed ────────────────────────────────────────────────',
     'COMMIT;',
@@ -369,7 +468,7 @@ async function main() {
   const out = resolve(__dirname, 'seed.sql')
   writeFileSync(out, lines.join('\n'))
   console.log(`✓ ${lines.length} lignes écrites dans ${out}`)
-  console.log(`  ${PEOPLE.length} persons/users, ${COMMISSIONS.length} commissions, ${COMPTES_M14.length} comptes M14, ${FOURNISSEURS.length} fournisseurs, ${EMPLOYEE_RECORDS.length} employees, ${TASKS.length} tasks, ${FACTURES.length} factures, ${LEAVE_REQUESTS.length} leaves, ${MISSIONS.length} missions, ${POINTAGES.length} pointages`)
+  console.log(`  ${PEOPLE.length} persons/users, ${COMMISSIONS.length} commissions, ${COMPTES_M14.length} comptes M14, ${FOURNISSEURS.length} fournisseurs, ${EMPLOYEE_RECORDS.length} employees, ${TASKS.length} tasks, ${FACTURES.length} factures, ${LEAVE_REQUESTS.length} leaves, ${MISSIONS.length} missions, ${POINTAGES.length} pointages, ${BIENS_IMMOBILIERS.length} biens, ${LOCATAIRES.length} locataires, ${BAUX.length} baux, ${QUITTANCES.length} quittances`)
 }
 
 main().catch((e) => {
