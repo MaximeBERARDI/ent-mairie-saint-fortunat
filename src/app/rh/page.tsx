@@ -109,13 +109,22 @@ export default function RHPage() {
   return (
     <Shell title="Ressources humaines">
       <div style={{ display: 'flex', gap: 8, marginBottom: 16, alignItems: 'center' }}>
-        <div style={{ display: 'flex', gap: 4, background: C.ph, borderRadius: 8, padding: 3 }}>
+        <div className="tabs-buttons" style={{ display: 'flex', gap: 4, background: C.ph, borderRadius: 8, padding: 3 }}>
           {visibleTabs.map(([v, label]) => (
             <button key={v} onClick={() => setTab(v)} style={{ minHeight: 36, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '5px 12px', borderRadius: 6, background: v === tab ? '#fff' : 'transparent', border: 'none', color: v === tab ? C.fg : C.muted, fontSize: 12, fontWeight: v === tab ? 600 : 400, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", boxShadow: v === tab ? '0 1px 2px rgba(0,0,0,0.1)' : 'none' }}>
               {label}
             </button>
           ))}
         </div>
+        <select
+          className="tabs-select"
+          value={tab}
+          onChange={e => setTab(e.target.value as RHTab)}
+          aria-label="Choisir une section RH"
+          style={{ minHeight: 40, width: '100%', borderRadius: 8, border: `1px solid ${C.border}`, padding: '0 12px', fontSize: 14, color: C.fg, background: '#fff', fontFamily: "'DM Sans', sans-serif" }}
+        >
+          {visibleTabs.map(([v, label]) => <option key={v} value={v}>{label}</option>)}
+        </select>
       </div>
 
       {tab === 'agents' && <AgentsView currentUserId={currentUserId} canViewAll={canViewAll} canManage={canManage} />}

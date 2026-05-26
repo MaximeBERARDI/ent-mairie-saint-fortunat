@@ -26,6 +26,14 @@ import { SubventionsView } from '@/components/finances/SubventionsView'
 
 type FinView = 'factures' | 'budget' | 'fournisseurs' | 'parc-immobilier' | 'subventions'
 
+const FIN_TABS: [FinView, string][] = [
+  ['factures', '🧾 Factures'],
+  ['budget', '💰 Budget'],
+  ['fournisseurs', '🏢 Fournisseurs'],
+  ['parc-immobilier', '🏠 Parc immobilier'],
+  ['subventions', '🎫 Subventions'],
+]
+
 const fmtMontant = (v: number) =>
   new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v)
 
@@ -62,14 +70,8 @@ export default function FinancesPage() {
   return (
     <Shell title="Finances">
       <div style={{ display: 'flex', gap: 8, marginBottom: 22, alignItems: 'center', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', gap: 4, background: C.ph, borderRadius: 10, padding: 4 }}>
-          {([
-            ['factures', '🧾 Factures'],
-            ['budget', '💰 Budget'],
-            ['fournisseurs', '🏢 Fournisseurs'],
-            ['parc-immobilier', '🏠 Parc immobilier'],
-            ['subventions', '🎫 Subventions'],
-          ] as [FinView, string][]).map(([v, label]) => (
+        <div className="tabs-buttons" style={{ display: 'flex', gap: 4, background: C.ph, borderRadius: 10, padding: 4 }}>
+          {FIN_TABS.map(([v, label]) => (
             <button
               key={v}
               onClick={() => setView(v)}
@@ -94,6 +96,15 @@ export default function FinancesPage() {
             </button>
           ))}
         </div>
+        <select
+          className="tabs-select"
+          value={view}
+          onChange={e => setView(e.target.value as FinView)}
+          aria-label="Choisir une section Finances"
+          style={{ minHeight: 40, width: '100%', borderRadius: 8, border: `1px solid ${C.border}`, padding: '0 12px', fontSize: 14, color: C.fg, background: '#fff', fontFamily: "'DM Sans', sans-serif" }}
+        >
+          {FIN_TABS.map(([v, label]) => <option key={v} value={v}>{label}</option>)}
+        </select>
       </div>
 
       {view === 'factures' && <FacturesView />}

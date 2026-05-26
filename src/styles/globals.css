@@ -198,6 +198,18 @@ textarea:focus {
   top: 8px;
 }
 
+/* ─── Onglets responsives (chantier 5) ──────────────────────────────
+ * Sous 767px, la rangée de boutons d'onglets (.tabs-buttons) cède la place
+ * à un <select> natif (.tabs-select), bien plus utilisable au doigt sur
+ * mobile. Les deux coexistent dans le DOM, la media query bascule l'affichage
+ * (pas de JS → pas de saut d'hydratation). */
+.tabs-select { display: none; }
+
+@media (max-width: 767px) {
+  .tabs-buttons { display: none !important; }
+  .tabs-select { display: block; }
+}
+
 /* ─── Responsive mobile ─────────────────────────────────────────────
  * Sur écrans < 768px : padding réduit, top bar plus haute pour le burger,
  * et on contraint les éléments à ne pas dépasser la viewport.
