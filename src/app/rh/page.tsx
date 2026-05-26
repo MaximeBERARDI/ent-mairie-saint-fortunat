@@ -561,7 +561,7 @@ function DocumentsManager({ documents, onChange }: { documents: TaskDocument[]; 
         style={{ display: 'none' }}
       />
       <Button size="sm" onClick={() => fileInputRef.current?.click()}>+ Ajouter un document</Button>
-      {error && <p style={{ fontSize: 11, color: C.danger, marginTop: 6 }}>{error}</p>}
+      {error && <p role="alert" style={{ fontSize: 11, color: C.danger, marginTop: 6 }}>{error}</p>}
     </div>
   )
 }

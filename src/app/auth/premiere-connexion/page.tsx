@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
+import { FormError } from '@/components/ui/FormError'
 import { COLORS as C } from '@/lib/theme'
 import { useAuth } from '@/hooks/useAuth'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
@@ -189,15 +190,7 @@ function PremiereConnexionContent() {
             )}
           </div>
 
-          {error && (
-            <div style={{
-              padding: '10px 12px', marginBottom: 14,
-              background: C.dangerLight, border: `1px solid ${C.danger}40`,
-              borderRadius: 6, color: C.danger, fontSize: 12,
-            }}>
-              {error}
-            </div>
-          )}
+          <FormError message={error} />
 
           <Button
             variant="primary"

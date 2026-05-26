@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/Button'
+import { FormError } from '@/components/ui/FormError'
 import { COLORS as C } from '@/lib/theme'
 import { useAuth } from '@/hooks/useAuth'
 
@@ -102,15 +103,7 @@ export default function MotDePasseOubliePage() {
                 />
               </div>
 
-              {error && (
-                <div style={{
-                  padding: '10px 12px', marginBottom: 14,
-                  background: C.dangerLight, border: `1px solid ${C.danger}40`,
-                  borderRadius: 6, color: C.danger, fontSize: 12,
-                }}>
-                  {error}
-                </div>
-              )}
+              <FormError message={error} />
 
               <Button
                 variant="primary"
