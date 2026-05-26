@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { Avatar } from '@/components/ui/Avatar'
 import { Badge } from '@/components/ui/Badge'
 import { useCommissions } from '@/hooks/useCommissions'
+import { useModalA11y } from '@/hooks/useModalA11y'
 import {
   AUTH_LEVEL_LABELS, AUTH_LEVEL_DESCRIPTIONS,
   PERMISSION_LABELS, SIGNATURE_LABELS,
@@ -79,12 +80,7 @@ export function PersonForm({ open, onClose, onSubmit, onDelete, initial }: Perso
     setError(null)
   }, [open, initial])
 
-  useEffect(() => {
-    if (!open) return
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [open, onClose])
+  const modalRef = useModalA11y<HTMLFormElement>(open, onClose)
 
   if (!open) return null
 
@@ -167,6 +163,10 @@ export function PersonForm({ open, onClose, onSubmit, onDelete, initial }: Perso
       }}
     >
       <form
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={initial?.id ? 'Modifier la fiche du membre' : 'Nouveau membre'}
         onClick={e => e.stopPropagation()}
         onSubmit={handleSubmit}
         style={{

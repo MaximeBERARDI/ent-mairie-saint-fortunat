@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Avatar } from '@/components/ui/Avatar'
@@ -8,6 +8,7 @@ import { Separator } from '@/components/ui/Separator'
 import { COLORS as C } from '@/lib/theme'
 import { getPerson } from '@/lib/people'
 import { useCommissions } from '@/hooks/useCommissions'
+import { useModalA11y } from '@/hooks/useModalA11y'
 import { formatLongFR } from '@/lib/dateUtils'
 import type { Task, TaskStatus, TaskPriority, TaskComment } from '@/lib/types'
 
@@ -319,14 +320,7 @@ function DetailRow({ label, value }: { label: string; value: React.ReactNode }) 
 
 export function TaskDetailModal(props: TaskDetailContentProps & { open: boolean }) {
   const { open, onClose, ...content } = props
-  const dialogRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!open) return
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose?.() }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [open, onClose])
+  const dialogRef = useModalA11y<HTMLDivElement>(open, () => onClose?.())
 
   if (!open) return null
 
@@ -343,6 +337,9 @@ export function TaskDetailModal(props: TaskDetailContentProps & { open: boolean 
     >
       <div
         ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Détail de la tâche"
         onClick={e => e.stopPropagation()}
         style={{
           background: '#fff',

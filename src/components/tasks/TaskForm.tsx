@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button'
 import { Avatar } from '@/components/ui/Avatar'
 import { useCommissions } from '@/hooks/useCommissions'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
+import { useModalA11y } from '@/hooks/useModalA11y'
 import type { Task, TaskPriority, TaskStatus, TaskDocument } from '@/lib/types'
 
 interface TaskFormProps {
@@ -71,14 +72,7 @@ export function TaskForm({ open, onClose, onSubmit, onDelete, initial, title }: 
     setTimeout(() => labelInputRef.current?.focus(), 50)
   }, [open, initial])
 
-  useEffect(() => {
-    if (!open) return
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  }, [open, onClose])
+  const modalRef = useModalA11y<HTMLFormElement>(open, onClose)
 
   // Si on passe en "En attente validation" sans validateur → pré-sélectionne
   useEffect(() => {
@@ -217,6 +211,10 @@ export function TaskForm({ open, onClose, onSubmit, onDelete, initial, title }: 
       }}
     >
       <form
+        ref={modalRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label={title ?? 'Formulaire de tâche'}
         onClick={e => e.stopPropagation()}
         onSubmit={handleSubmit}
         style={{
