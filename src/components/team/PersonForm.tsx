@@ -7,6 +7,9 @@ import { Avatar } from '@/components/ui/Avatar'
 import { Badge } from '@/components/ui/Badge'
 import { useCommissions } from '@/hooks/useCommissions'
 import { useModalA11y } from '@/hooks/useModalA11y'
+import { useCurrentUser } from '@/hooks/useCurrentUser'
+import { useModuleAccess } from '@/hooks/useModuleAccess'
+import { GATEABLE_MODULES } from '@/lib/modules'
 import {
   AUTH_LEVEL_LABELS, AUTH_LEVEL_DESCRIPTIONS,
   PERMISSION_LABELS, SIGNATURE_LABELS,
@@ -43,9 +46,22 @@ const PERMISSION_GROUPS: Array<{ title: string; perms: Permission[] }> = [
   { title: 'Système', perms: ['system.settings'] },
 ]
 
+type FormSection = 'identite' | 'autorisations' | 'signature' | 'delegations' | 'acces'
+
 export function PersonForm({ open, onClose, onSubmit, onDelete, initial }: PersonFormProps) {
   const { commissions } = useCommissions()
-  const [section, setSection] = useState<'identite' | 'autorisations' | 'signature' | 'delegations'>('identite')
+  const { can } = useCurrentUser()
+  const { isVisible, setVisible } = useModuleAccess()
+  const editId = initial?.id
+  const canEditModules = !!editId && can('team.edit-roles')
+  const TABS: [FormSection, string][] = [
+    ['identite', 'Identité'],
+    ['autorisations', 'Autorisations'],
+    ['signature', 'Signature'],
+    ['delegations', 'Délégations'],
+  ]
+  if (canEditModules) TABS.push(['acces', 'Accès aux modules'])
+  const [section, setSection] = useState<FormSection>('identite')
   const [prenom, setPrenom] = useState('')
   const [nom, setNom] = useState('')
   const [role, setRole] = useState<PersonRole>('agent')
@@ -197,12 +213,7 @@ export function PersonForm({ open, onClose, onSubmit, onDelete, initial }: Perso
 
         {/* Tabs */}
         <div style={{ display: 'flex', gap: 0, borderBottom: `1px solid ${C.border}`, paddingLeft: 20 }}>
-          {([
-            ['identite', 'Identité'],
-            ['autorisations', 'Autorisations'],
-            ['signature', 'Signature'],
-            ['delegations', 'Délégations'],
-          ] as const).map(([k, label]) => (
+          {TABS.map(([k, label]) => (
             <button
               key={k}
               type="button"
@@ -485,6 +496,30 @@ export function PersonForm({ open, onClose, onSubmit, onDelete, initial }: Perso
                 })}
               </div>
             </>
+          )}
+
+          {section === 'acces' && editId && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <p style={{ fontSize: 12, color: C.muted, lineHeight: 1.5 }}>
+                Décochez un module pour le masquer à <strong>{prenom || 'ce membre'}</strong> dans la navigation.
+                Le tableau de bord reste toujours visible. Modification appliquée immédiatement.
+              </p>
+              {GATEABLE_MODULES.map(m => {
+                const checked = isVisible(editId, m.key)
+                return (
+                  <label key={m.key} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', border: `1px solid ${C.border}`, borderRadius: 8, cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={e => setVisible(editId, m.key, e.target.checked)}
+                      style={{ width: 16, height: 16, accentColor: C.green, cursor: 'pointer' }}
+                    />
+                    <span style={{ fontSize: 13, color: C.fg, fontWeight: checked ? 600 : 400 }}>{m.label}</span>
+                    {!checked && <span style={{ marginLeft: 'auto', fontSize: 11, color: C.subtle }}>masqué</span>}
+                  </label>
+                )
+              })}
+            </div>
           )}
 
           {error && (
