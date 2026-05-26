@@ -1,9 +1,14 @@
 'use client'
 
 import type { ReactNode } from 'react'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { useSettings } from '@/context/SettingsContext'
 import { MobileNavProvider, useMobileNav } from '@/context/MobileNavContext'
 import { useIsMobile } from '@/hooks/useIsMobile'
+import { useCurrentUser } from '@/hooks/useCurrentUser'
+import { useModuleAccess } from '@/hooks/useModuleAccess'
+import { moduleKeyForHref } from '@/lib/modules'
 import { Sidebar } from './Sidebar'
 import { TopBar } from './TopBar'
 
@@ -26,6 +31,17 @@ function ShellInner({ title, children, notif }: ShellProps) {
   const isTopNav = nav === 'top'
   const isMobile = useIsMobile()
   const { open: mobileNavOpen, setOpen: setMobileNavOpen } = useMobileNav()
+  const pathname = usePathname()
+  const { currentUserId, can } = useCurrentUser()
+  const { isVisible, hydrated: accessHydrated } = useModuleAccess()
+
+  // Garde de route : si le module de la page courante est masqué pour ce
+  // profil (config admin), on bloque l'accès direct en plus du filtrage de la
+  // nav. Équipe reste accessible à qui gère les accès (anti-verrouillage).
+  const moduleKey = moduleKeyForHref('/' + (pathname?.split('/')[1] ?? ''))
+  const blocked = accessHydrated && moduleKey !== null
+    && !(moduleKey === 'equipe' && can('team.edit-roles'))
+    && !isVisible(currentUserId, moduleKey)
 
   return (
     <div style={{
@@ -73,9 +89,31 @@ function ShellInner({ title, children, notif }: ShellProps) {
           {isTopNav && (
             <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-fg)', marginBottom: 'var(--gap)' }}>{title}</h1>
           )}
-          {children}
+          {blocked ? <ModuleBlocked /> : children}
         </main>
       </div>
+    </div>
+  )
+}
+
+function ModuleBlocked() {
+  return (
+    <div style={{ maxWidth: 460, margin: '8vh auto 0', textAlign: 'center', padding: 24 }}>
+      <div style={{ fontSize: 40, marginBottom: 12 }} aria-hidden>🔒</div>
+      <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-fg)', marginBottom: 8 }}>Module non accessible</h2>
+      <p style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 20, lineHeight: 1.5 }}>
+        Ce module a été masqué pour votre profil par un administrateur.
+      </p>
+      <Link
+        href="/dashboard"
+        style={{
+          display: 'inline-flex', alignItems: 'center', minHeight: 40, padding: '0 18px',
+          background: 'var(--accent-dark)', color: 'var(--accent-text)',
+          borderRadius: 6, textDecoration: 'none', fontSize: 14, fontWeight: 600,
+        }}
+      >
+        Retour au tableau de bord
+      </Link>
     </div>
   )
 }
