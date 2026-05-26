@@ -10,7 +10,7 @@ import type { ExerciceHistorique } from '@/lib/types'
 
 type DbRow = Awaited<ReturnType<typeof db.exerciceHistorique.findFirst>>
 
-export function historiqueFromDb(r: NonNullable<DbRow>): ExerciceHistorique {
+function historiqueFromDb(r: NonNullable<DbRow>): ExerciceHistorique {
   return {
     id: r.id,
     exercice: r.exercice,
