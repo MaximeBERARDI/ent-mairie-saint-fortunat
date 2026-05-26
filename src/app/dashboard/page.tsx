@@ -758,6 +758,30 @@ function DashMaire({ tasks, currentUserId }: { tasks: Task[]; currentUserId: str
         </div>
       )}
 
+      {/* Vue d'ensemble Finances — synthèse en tête, avant le détail budgétaire */}
+      <Card padding={16} style={{ marginBottom: 'var(--gap)' }}>
+        <SectionHeader title="Vue d'ensemble Finances" actions={<Link href="/finances"><Button size="sm">Module Finances</Button></Link>} />
+        <div style={{ display: 'flex', gap: 'var(--gap)', flexWrap: 'wrap' }}>
+          <div style={{ flex: '1 1 150px', minWidth: 130 }}>
+            <p style={{ fontSize: 11, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>CAF brute</p>
+            <p style={{ fontSize: 22, color: ratios.cafBrute >= 0 ? C.success : C.danger, fontWeight: 700, lineHeight: 1.1 }}>{fmtMontant(ratios.cafBrute)}</p>
+          </div>
+          <div style={{ flex: '1 1 150px', minWidth: 130 }}>
+            <p style={{ fontSize: 11, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>Taux d&apos;épargne brute</p>
+            <p style={{ fontSize: 22, color: C.fg, fontWeight: 700, lineHeight: 1.1 }}>{ratios.tauxEpargneBrute}%</p>
+          </div>
+          <div style={{ flex: '1 1 150px', minWidth: 130 }}>
+            <p style={{ fontSize: 11, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>Capacité désendettement</p>
+            <p style={{ fontSize: 22, color: ratios.cafBrute <= 0 ? C.danger : ratios.capaciteDesendettement < 8 ? C.success : ratios.capaciteDesendettement <= 12 ? C.warning : C.danger, fontWeight: 700, lineHeight: 1.1 }}>{ratios.cafBrute <= 0 ? '∞' : `${ratios.capaciteDesendettement} ans`}</p>
+          </div>
+          <div style={{ flex: '1 1 150px', minWidth: 130 }}>
+            <p style={{ fontSize: 11, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>Factures à valider</p>
+            <p style={{ fontSize: 22, color: facturesEnAttente.length > 0 ? C.warning : C.success, fontWeight: 700, lineHeight: 1.1 }}>{facturesEnAttente.length}</p>
+            {facturesEnAttente.length > 0 && <p style={{ fontSize: 12, color: C.subtle }}>{fmtMontant(facturesEnAttenteMontant)}</p>}
+          </div>
+        </div>
+      </Card>
+
       {/* KPI bar — pilotage global */}
       <div style={{ display: 'flex', gap: 'var(--gap)', marginBottom: 'var(--gap)' }}>
         <KpiCard label="CAF brute (auto-financement)" value={fmtMontant(ratios.cafBrute)} sub={`Taux d'épargne ${ratios.tauxEpargneBrute}%`} color={ratios.cafBrute >= 0 ? C.success : C.danger} />
