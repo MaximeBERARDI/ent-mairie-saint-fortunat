@@ -1,7 +1,9 @@
 # ENT Mairie de Saint-Fortunat — guide projet
 
 Application interne pour la mairie de **Saint-Fortunat** (Ardèche, ~900 habitants).
-MVP / démo. Pas de back-end : toutes les données vivent en `localStorage` côté navigateur.
+MVP / démo. **Back-end actif** : les données métier vivent en PostgreSQL
+(Supabase) via Prisma, exposées par des route handlers Next.js sous `/api`.
+Seules quelques préférences locales restent en `localStorage` (cf. plus bas).
 
 ## Stack
 
@@ -14,46 +16,59 @@ MVP / démo. Pas de back-end : toutes les données vivent en `localStorage` côt
 
 ## Architecture des données
 
-### Référentiels d'identité & autorité (statiques en code)
+### Référentiels d'identité & autorité
 
-- `src/lib/people.ts` — `PEOPLE` : tous les utilisateurs (élus + agents) avec niveaux d'autorisation (`AuthLevel`), permissions custom, signatures, délégations. **Source unique** de qui est qui.
-- `src/lib/permissions.ts` — types `AuthLevel`, `Permission`, `SignatureDomain` + helpers `hasPermission()`. Toujours passer par `hasPermission(authLevel, permission, customPermissions)`.
+- `src/lib/people.ts` — `PEOPLE` : **seed** des utilisateurs (élus + agents) avec niveaux d'autorisation (`AuthLevel`), permissions custom, signatures, délégations. À l'exécution, les `Person` proviennent de la DB via `/api/persons` (lus par `TeamContext`) ; `PEOPLE` reste utilisé pour le seed Prisma et le lookup email de `useAuth`.
+- `src/lib/permissions.ts` — types `AuthLevel`, `Permission`, `SignatureDomain` + helpers `hasPermission()` (logique d'autorisation en code). Toujours passer par `hasPermission(authLevel, permission, customPermissions)`.
 - Utilisateur courant dérivé de la session NextAuth via `useCurrentUser()` / `TeamContext` (`currentUserId = session.user.personId`, `currentUser`, `can()`). **Ne plus coder en dur** d'identité : toujours passer par `useCurrentUser()`.
 
-### Modules métier (persistés en localStorage)
+### Modules métier (persistés en base via Prisma)
 
+La migration `localStorage` → DB est **faite** pour tous les modules métier.
 Chaque module suit le **même pattern** :
 
 1. Type(s) défini(s) dans `src/lib/types.ts`
-2. Seed dans `src/lib/data.ts`
-3. Hook `useXxx` dans `src/hooks/` qui :
-   - charge depuis `localStorage` au montage
-   - sauve à chaque mutation
-   - expose les CRUD + helpers
-4. Clé localStorage versionnée : `ent-mairie:<module>:vN`
+2. Modèle Prisma dans `prisma/schema.prisma` + seed dans `prisma/seed.ts`
+3. Route handler `src/app/api/<module>/route.ts` (+ `[id]/route.ts`) qui
+   parle à Prisma via `src/lib/db.ts`
+4. Hook `useXxx` dans `src/hooks/` qui :
+   - charge via `fetch('/api/<module>')` au montage (`hydrated`)
+   - mute en **optimistic update** : état local immédiat, appel API,
+     rollback + `alert()` en cas d'erreur
+   - expose les CRUD + helpers (interface inchangée pour les pages)
 
-| Module | Hook | Type | Clé localStorage |
+| Module | Hook | Type | Route API |
 |---|---|---|---|
-| Tâches | `useTasks` | `Task` | `:tasks:v1` |
-| Équipe (statique) | `useTeam` | `Person` | `:team:v1` |
-| Factures | `useFactures` | `Facture` | `:factures:v1` |
-| Fournisseurs | `useFournisseurs` | `Fournisseur` | `:fournisseurs:v1` |
-| Plan comptable M14 | `useBudget` | `CompteM14` | `:budget:v2` |
-| Écritures comptables | `useEcritures` | `Ecriture` | `:ecritures:v1` |
-| Historique pluriannuel | `useHistorique` | `ExerciceHistorique` | `:historique:v1` |
-| Agents (RH) | `useEmployees` | `EmployeeRecord` | `:employees:v1` |
-| Demandes d'absence | `useLeaveRequests` | `LeaveRequest` | `:leaves:v1` |
-| Missions | `useMissions` | `Mission` | `:missions:v1` |
-| Comptes rendus | `useComptesRendus` | `CompteRendu` | `:comptes-rendus:v1` |
-| Biens immobiliers | `useParcImmobilier` | `BienImmobilier` | `:biens:v1` |
-| Locataires | `useParcImmobilier` | `Locataire` | `:locataires:v1` |
-| Baux | `useParcImmobilier` | `Bail` | `:baux:v1` |
-| Quittances | `useParcImmobilier` | `Quittance` | `:quittances:v1` |
-| Pointages | `usePointages` | `Pointage` | `:pointages:v1` |
-| Config HSup | `usePointages` | `ConfigHSup` | `:hsup-config:v1` |
-| Bulletins de paie | `useBulletins` | `BulletinPaie` | `:bulletins:v1` |
-| Auth (mots de passe démo) | `useAuth` | — | `:auth:v1` |
-| Utilisateur courant | `useCurrentUser` | — | `:current-user-id:v1` |
+| Tâches | `useTasks` | `Task` | `/api/tasks` (+ `/comments`) |
+| Équipe / Personnes | `useTeam` (via `TeamContext`) | `Person` | `/api/persons` |
+| Factures | `useFactures` | `Facture` | `/api/factures` |
+| Fournisseurs | `useFournisseurs` | `Fournisseur` | `/api/fournisseurs` |
+| Plan comptable M14 | `useBudget` | `CompteM14` | `/api/budget` |
+| Écritures comptables | `useEcritures` | `Ecriture` | `/api/ecritures` |
+| Historique pluriannuel | `useHistorique` | `ExerciceHistorique` | `/api/historique` |
+| Comptes rendus | `useComptesRendus` | `CompteRendu` | `/api/comptes-rendus` |
+| Commissions | `useCommissions` | `Commission` | `/api/commissions` |
+| Agents (RH) | `useEmployees` | `EmployeeRecord` | `/api/employees` |
+| Demandes d'absence | `useLeaveRequests` | `LeaveRequest` | `/api/leaves` |
+| Missions | `useMissions` | `Mission` | `/api/missions` |
+| Bulletins de paie | `useBulletins` | `BulletinPaie` | `/api/bulletins` |
+| Pointages | `usePointages` | `Pointage` | `/api/pointages` |
+| Parc immobilier | `useParcImmobilier` | `BienImmobilier`, `Locataire`, `Bail`, `Quittance` | `/api/biens`, `/api/locataires`, `/api/baux`, `/api/quittances` |
+| Projets d'investissement | `useProjets` | `Projet` | `/api/projets` |
+| Subventions | `useSubventions` | `DemandeSubvention` | `/api/subventions` |
+
+**Ce qui reste volontairement en `localStorage`** (préférences locales, pas
+des données métier) :
+
+- Config heures sup (`usePointages` → `:hsup-config:v1`)
+- Thème UI (`SettingsContext` → `ent-settings`)
+- Mots de passe démo (`useAuth` → `:auth:v1`) — **en clair, vestige à
+  réconcilier avec NextAuth** (l'identité réelle passe déjà par la session ;
+  ce store ne sert plus qu'au flux login/setup-password/reset de démo).
+
+L'**utilisateur courant** (`useCurrentUser`) est désormais dérivé de la
+session NextAuth via `TeamContext` — plus de clé `localStorage`, et le
+sélecteur démo de la TopBar a été retiré.
 
 ### Lien Person ↔ EmployeeRecord
 
@@ -112,75 +127,66 @@ Toujours type-checker avant de commit. Le build inclut le type-check + le lint N
 - ✅ **Tâches** — CRUD complet, validation workflow, documents
 - ✅ **Comptes rendus** — extraction IA (Claude API), validation des tâches extraites
 - ✅ **Équipe** — fiches Person, niveaux d'autorisation, signature, délégations
-- ✅ **Finances** — module M14 complet (plan comptable, écritures, ratios, historique pluriannuel, exports Excel multi-feuilles) + Parc immobilier (biens, locataires, baux, quittances PDF, relances mail)
+- ✅ **Finances** — module M14 complet (plan comptable, écritures, ratios, historique pluriannuel, exports Excel multi-feuilles) + Parc immobilier (biens, locataires, baux, quittances PDF, relances mail) + **Projets d'investissement** (projections pluriannuelles : annuités d'emprunt, FCTVA, impact CAF/dette) + **Subventions** (suivi des demandes : dépôt, décision, versement)
 - ✅ **RH** — agents/contrats/grades/IFSE, workflow congés avec maj auto compteurs, calendrier mensuel réel, paies M14, missions, pointage des heures + suivi heures supplémentaires (workflow validation des saisies manuelles par maire / responsable Admin & Finances), génération de bulletins de paie format fonction publique territoriale (CSG/CRDS, CNRACL ou IRCANTEC, RAFP, etc.) en PDF imprimable
 - ✅ **Dashboard** — câblé aux vraies données (3 vues Élu/Agent/Maire)
-- 🟡 **Commissions** — CRUD tâches OK + onglet admin pour renommer/créer/supprimer les commissions ; membres statiques, pas de planning réunions, GED mock
-- 🟡 **Auth réelle** — NextAuth (Credentials + bcrypt) branché pour l'identité : login, session JWT, `useCurrentUser()`/`TeamContext` dérivent l'utilisateur courant. Reste à étendre la persistance Prisma aux autres modules (Phase C).
+- ✅ **a11y / UX (audit 2026-05)** — Sprint 1 (P0 : contrastes WCAG AA, focus-visible, self-host fonts/RGPD) + Sprint 2 (P1 : icônes SVG sidebar, échelle typo, cibles tactiles 40-44 px, ARIA/skip-link/landmarks/modales focus-trap, responsive mobile). Cf. `docs/audit-ux-2026-05/`.
+- ✅ **Visibilité des modules par profil** — `Person.hiddenModules` en DB, UI admin dans `PersonForm`, garde de route côté nav.
+- 🟡 **Commissions** — CRUD tâches OK + onglet admin pour renommer/créer/supprimer les commissions ; membres statiques, pas de planning réunions, GED encore mock (cf. `(placeholder)` dans `commissions/page.tsx`).
+- 🟡 **Auth réelle** — NextAuth (Credentials + bcrypt) branché : login, session JWT, `useCurrentUser()`/`TeamContext` dérivent l'utilisateur courant ; route `/api/auth/change-password`. **Reste** : retirer le store de mots de passe démo en clair de `useAuth` (`localStorage`) et router les flux login/reset/première-connexion entièrement via NextAuth.
 
 ## Dette technique connue
 
-- Migration `COMMISSIONS` → `useCommissions` **terminée** dans toutes les
-  pages client (Dashboard, Tâches, TaskForm, TaskCalendar, TaskDetail,
-  PersonForm, /equipe, /comptes-rendus). Reste utilisé en seed par
-  `useCommissions` lui-même et par `useTasks` (lookup legacy de
-  migration) + l'API route `/api/cr-extract` (server-side).
+- **`useAuth` en `localStorage`** (mots de passe démo en clair) : doublonne
+  NextAuth. À supprimer une fois les flux login/reset/première-connexion
+  entièrement passés par NextAuth.
+- **Pas de migrations Prisma versionnées** : `prisma/migrations/` est absent,
+  le schéma est synchronisé via `prisma db push` (workflow MVP, sans
+  historique de migration). À formaliser avant la mise en prod « sérieuse ».
+- **GED des commissions** encore mock (documents `(placeholder)`).
 
-## Setup back-end (Lot 8a — en cours)
+## Back-end (Supabase + Prisma + NextAuth)
 
-Le projet est en cours de migration de `localStorage` vers **Supabase
-(PostgreSQL) + Prisma + NextAuth (Auth.js v5)**.
+Stack back-end : **Supabase (PostgreSQL) + Prisma + NextAuth (Auth.js v5)**.
 
-### État actuel (Phase A — préparation locale, terminée)
+### Phases A et B — faites
 
-- Prisma v6 installé + schéma complet dans `prisma/schema.prisma`
+- Prisma v6 + schéma complet dans `prisma/schema.prisma`
 - Client Prisma singleton dans `src/lib/db.ts`
-- NextAuth configuré dans `src/lib/auth.ts` (provider Credentials,
-  adapter Prisma, sessions JWT, mot de passe bcrypt)
-- Route handler `src/app/api/auth/[...nextauth]/route.ts`
-- Script de seed `prisma/seed.ts` (Persons, Users, Commissions,
-  Plan M14, Fournisseurs, EmployeeRecords)
-- Scripts npm : `seed`, `prisma:generate`, `prisma:migrate`,
-  `prisma:deploy`
-- Tant que `DATABASE_URL` n'est pas configurée, l'app continue de
-  fonctionner en mode localStorage (sélecteur démo dans la TopBar).
+- NextAuth dans `src/lib/auth.ts` (provider Credentials, adapter Prisma,
+  sessions JWT, bcrypt) + route `src/app/api/auth/[...nextauth]/route.ts`
+- Seed `prisma/seed.ts` (Persons, Users, Commissions, Plan M14,
+  Fournisseurs, EmployeeRecords)
+- Scripts npm : `seed`, `prisma:generate`, `prisma:migrate`, `prisma:deploy`
+- Base Supabase provisionnée, `DATABASE_URL` / `DIRECT_URL` / `AUTH_SECRET`
+  configurées en `.env` (local) et en variables d'environnement Vercel (prod).
 
-### Setup à faire par l'utilisateur (Phase B)
+⚠️ **Conséquence importante** : les hooks lisent maintenant `/api` **sans
+fallback localStorage**. L'app ne tourne donc plus en mode démo offline — une
+DB joignable est requise (en dev comme en prod). Le schéma est poussé via
+`prisma db push` (pas de dossier `prisma/migrations/`, cf. dette technique).
 
-1. Créer un compte sur https://supabase.com (free tier)
-2. Créer un projet → onglet **Settings → Database → Connection string**
-3. Copier la chaîne **Connection pooling** (port 6543) dans `DATABASE_URL`
-4. Copier la chaîne **Direct connection** (port 5432) dans `DIRECT_URL`
-   (utilisée par Prisma Migrate)
-5. Générer un secret : `openssl rand -base64 32` → coller dans `AUTH_SECRET`
-6. Mettre ces 3 variables dans :
-   - `.env.local` (pour le dev local)
-   - Vercel env vars (pour la prod)
-7. Lancer en local : `npx prisma migrate dev --name init` puis `npm run seed`
+Variables d'env (cf. `.env.example`) :
 
-Cf. `.env.example` pour le format complet.
+1. `DATABASE_URL` — chaîne **Connection pooling** Supabase (port 6543)
+2. `DIRECT_URL` — chaîne **Direct connection** (port 5432), pour Prisma
+3. `AUTH_SECRET` — `openssl rand -base64 32`
 
-### Migration des hooks (Phase C — futures sessions)
+### Phase C — migration des hooks : faite
 
-Chaque hook `useFoo` qui utilise `localStorage` devra être migré pour
-appeler des API routes Next.js (qui à leur tour utilisent Prisma).
+Tous les hooks métier appellent désormais les route handlers `/api`
+(cf. table « Modules métier » ci-dessus). Le pattern optimistic-update
+préserve l'interface des hooks, donc les pages n'ont pas bougé.
 
-Pattern à appliquer :
-- `useTasks` → `GET /api/tasks`, `POST /api/tasks`, etc.
-- `useFactures`, `useEmployees`, `useBulletins`, etc. : idem
-- Le sélecteur démo de la TopBar sera retiré quand l'auth réelle sera
-  branchée partout.
+**Reliquats** (cf. dette technique) : `useAuth` (mots de passe démo en
+`localStorage`), formalisation des migrations Prisma, GED des commissions.
 
-## Pas de back-end
+## Contraintes de persistance
 
-Le projet est volontairement **sans serveur** pour le moment. Tous les hooks utilisent `localStorage`.
-Conséquences :
-- Pas de partage multi-utilisateurs (chaque navigateur a sa propre base)
-- Pas de persistance au-delà du navigateur
-- Limite à ~5 Mo par origine
-- Documents (`TaskDocument`) stockés en base64 → max **1 Mo / fichier**, **4 Mo total**
-
-Quand on passera à un vrai back-end, le pattern des hooks rendra la migration localisée : remplacer le `useEffect`/`localStorage` par un `fetch` côté hook, sans toucher aux pages.
+- **Multi-utilisateurs réel** : les données sont partagées via la DB (fini le
+  silo par navigateur de l'ère localStorage).
+- Documents (`TaskDocument`) toujours stockés en **base64** — garder un œil
+  sur la taille des payloads envoyés à l'API / stockés en DB.
 
 ## Permissions & rôles
 
