@@ -239,7 +239,7 @@ function BiensTab({
           <button
             key={v}
             onClick={() => setFilterActive(v)}
-            style={{ padding: '5px 12px', borderRadius: 20, background: v === filterActive ? C.green : '#fff', border: `1px solid ${v === filterActive ? C.green : C.border}`, color: v === filterActive ? '#fff' : C.muted, fontSize: 11, fontWeight: v === filterActive ? 600 : 400, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}
+            style={{ padding: '5px 12px', borderRadius: 20, background: v === filterActive ? C.green : '#fff', border: `1px solid ${v === filterActive ? C.green : C.border}`, color: v === filterActive ? '#fff' : C.muted, fontSize: 12, fontWeight: v === filterActive ? 600 : 400, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}
           >
             {label}
           </button>
@@ -270,17 +270,17 @@ function BiensTab({
         <Card padding={0}>
           <div style={{ display: 'grid', gridTemplateColumns: '90px 1.5fr 1fr 70px 100px 120px 120px', gap: 10, padding: '8px 14px', background: C.bg, borderBottom: `1px solid ${C.border}` }}>
             {['Réf.', 'Nom', 'Type', 'Surface', 'Loyer + charges', 'Locataire', 'Actions'].map(h => (
-              <p key={h} style={{ fontSize: 10, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</p>
+              <p key={h} style={{ fontSize: 12, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</p>
             ))}
           </div>
           {filtered.map((b, i) => {
             const bail = baux.find(x => x.bienId === b.id && x.statut === 'En cours')
             return (
               <div key={b.id} style={{ display: 'grid', gridTemplateColumns: '90px 1.5fr 1fr 70px 100px 120px 120px', gap: 10, padding: '10px 14px', borderBottom: i < filtered.length - 1 ? `1px solid ${C.border}` : 'none', alignItems: 'center', fontSize: 12, opacity: b.active ? 1 : 0.6 }}>
-                <p style={{ fontFamily: "'JetBrains Mono', monospace", color: C.subtle, fontSize: 11 }}>{b.reference}</p>
+                <p style={{ fontFamily: "'JetBrains Mono', monospace", color: C.subtle, fontSize: 12 }}>{b.reference}</p>
                 <div style={{ minWidth: 0 }}>
                   <p style={{ color: C.fg, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.nom}</p>
-                  <p style={{ fontSize: 10, color: C.subtle, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.adresse}</p>
+                  <p style={{ fontSize: 12, color: C.subtle, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.adresse}</p>
                 </div>
                 <Tag label={b.type} color={C.slate} />
                 <p style={{ color: C.fg }}>{b.surface} m²</p>
@@ -289,7 +289,7 @@ function BiensTab({
                   {bail ? <Badge label="Loué" variant="success" /> : <Badge label="Vacant" variant="warning" />}
                 </div>
                 <div style={{ display: 'flex', gap: 4 }}>
-                  <button onClick={() => { setEditing(b); setShowForm(true) }} style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.border}`, background: '#fff', cursor: 'pointer', fontSize: 11 }}>✎</button>
+                  <button onClick={() => { setEditing(b); setShowForm(true) }} style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.border}`, background: '#fff', cursor: 'pointer', fontSize: 12 }}>✎</button>
                   <button
                     onClick={() => {
                       if (bail) {
@@ -298,7 +298,7 @@ function BiensTab({
                       }
                       if (confirm(`Supprimer ${b.nom} ?`)) onDelete(b.id)
                     }}
-                    style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.danger}`, background: C.dangerLight, color: C.danger, cursor: 'pointer', fontSize: 11 }}
+                    style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.danger}`, background: C.dangerLight, color: C.danger, cursor: 'pointer', fontSize: 12 }}
                   >×</button>
                 </div>
               </div>
@@ -441,7 +441,7 @@ function LocatairesTab({
         <Card padding={0}>
           <div style={{ display: 'grid', gridTemplateColumns: '40px 2fr 1.5fr 1fr 1.5fr 80px', gap: 10, padding: '8px 14px', background: C.bg, borderBottom: `1px solid ${C.border}` }}>
             {['', 'Nom', 'Email', 'Téléphone', 'Bien loué', 'Actions'].map(h => (
-              <p key={h} style={{ fontSize: 10, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</p>
+              <p key={h} style={{ fontSize: 12, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</p>
             ))}
           </div>
           {locataires.map((l, i) => {
@@ -452,21 +452,21 @@ function LocatairesTab({
                 <Avatar initials={`${l.prenom[0] ?? ''}${l.nom[0] ?? ''}`.toUpperCase()} size={28} color={C.terra} />
                 <div style={{ minWidth: 0 }}>
                   <p style={{ color: C.fg, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{l.fullName}</p>
-                  {l.notes && <p style={{ fontSize: 10, color: C.subtle, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{l.notes}</p>}
+                  {l.notes && <p style={{ fontSize: 12, color: C.subtle, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{l.notes}</p>}
                 </div>
                 <p style={{ color: C.subtle, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{l.email ?? '—'}</p>
                 <p style={{ color: C.subtle }}>{l.phone ?? '—'}</p>
-                <p style={{ color: C.fg, fontSize: 11, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <p style={{ color: C.fg, fontSize: 12, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {bien ? bien.nom : <span style={{ color: C.subtle, fontStyle: 'italic' }}>aucun bien</span>}
                 </p>
                 <div style={{ display: 'flex', gap: 4 }}>
-                  <button onClick={() => { setEditing(l); setShowForm(true) }} style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.border}`, background: '#fff', cursor: 'pointer', fontSize: 11 }}>✎</button>
+                  <button onClick={() => { setEditing(l); setShowForm(true) }} style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.border}`, background: '#fff', cursor: 'pointer', fontSize: 12 }}>✎</button>
                   <button
                     onClick={() => {
                       if (bail) { alert('Ce locataire a un bail en cours.'); return }
                       if (confirm(`Supprimer ${l.fullName} ?`)) onDelete(l.id)
                     }}
-                    style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.danger}`, background: C.dangerLight, color: C.danger, cursor: 'pointer', fontSize: 11 }}
+                    style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.danger}`, background: C.dangerLight, color: C.danger, cursor: 'pointer', fontSize: 12 }}
                   >×</button>
                 </div>
               </div>
@@ -570,7 +570,7 @@ function BauxTab({
           <button
             key={v}
             onClick={() => setFilter(v)}
-            style={{ padding: '5px 12px', borderRadius: 20, background: v === filter ? C.green : '#fff', border: `1px solid ${v === filter ? C.green : C.border}`, color: v === filter ? '#fff' : C.muted, fontSize: 11, fontWeight: v === filter ? 600 : 400, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}
+            style={{ padding: '5px 12px', borderRadius: 20, background: v === filter ? C.green : '#fff', border: `1px solid ${v === filter ? C.green : C.border}`, color: v === filter ? '#fff' : C.muted, fontSize: 12, fontWeight: v === filter ? 600 : 400, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}
           >
             {label}
           </button>
@@ -603,7 +603,7 @@ function BauxTab({
         <Card padding={0}>
           <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1.5fr 1fr 1fr 100px 100px 80px', gap: 10, padding: '8px 14px', background: C.bg, borderBottom: `1px solid ${C.border}` }}>
             {['Bien', 'Locataire', 'Début', 'Fin', 'Loyer + ch.', 'Statut', 'Actions'].map(h => (
-              <p key={h} style={{ fontSize: 10, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</p>
+              <p key={h} style={{ fontSize: 12, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</p>
             ))}
           </div>
           {filtered.map((b, i) => {
@@ -622,10 +622,10 @@ function BauxTab({
                 <p style={{ color: C.fg, fontWeight: 600 }}>{fmtMontant(b.loyerMensuel + b.chargesMensuelles)}</p>
                 <Badge label={b.statut} variant={b.statut === 'En cours' ? 'success' : b.statut === 'Préavis' ? 'warning' : 'default'} />
                 <div style={{ display: 'flex', gap: 4 }}>
-                  <button onClick={() => { setEditing(b); setShowForm(true) }} style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.border}`, background: '#fff', cursor: 'pointer', fontSize: 11 }}>✎</button>
+                  <button onClick={() => { setEditing(b); setShowForm(true) }} style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.border}`, background: '#fff', cursor: 'pointer', fontSize: 12 }}>✎</button>
                   <button
                     onClick={() => { if (confirm('Supprimer ce bail ? Les quittances liées resteront en base.')) onDelete(b.id) }}
-                    style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.danger}`, background: C.dangerLight, color: C.danger, cursor: 'pointer', fontSize: 11 }}
+                    style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.danger}`, background: C.dangerLight, color: C.danger, cursor: 'pointer', fontSize: 12 }}
                   >×</button>
                 </div>
               </div>
@@ -772,7 +772,7 @@ function QuittancesTab({
       {/* Génération du mois */}
       <Card padding={14} style={{ marginBottom: 12, background: `${C.green}08`, borderColor: `${C.green}40` }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <p style={{ fontSize: 13, color: C.fg, fontWeight: 600, flex: 1, minWidth: 200 }}>
+          <p style={{ fontSize: 14, color: C.fg, fontWeight: 600, flex: 1, minWidth: 200 }}>
             Générer les quittances mensuelles pour tous les baux en cours
           </p>
           <input
@@ -801,7 +801,7 @@ function QuittancesTab({
           <button
             key={v}
             onClick={() => setFilterStatut(v)}
-            style={{ padding: '5px 12px', borderRadius: 20, background: v === filterStatut ? C.green : '#fff', border: `1px solid ${v === filterStatut ? C.green : C.border}`, color: v === filterStatut ? '#fff' : C.muted, fontSize: 11, fontWeight: v === filterStatut ? 600 : 400, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}
+            style={{ padding: '5px 12px', borderRadius: 20, background: v === filterStatut ? C.green : '#fff', border: `1px solid ${v === filterStatut ? C.green : C.border}`, color: v === filterStatut ? '#fff' : C.muted, fontSize: 12, fontWeight: v === filterStatut ? 600 : 400, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}
           >
             {label}
           </button>
@@ -935,7 +935,7 @@ function QuittanceActions({
       {(quittance.statut === 'Émise' || quittance.statut === 'Impayée' || quittance.statut === 'Relancée') && (
         showPayee ? (
           <>
-            <select value={mode} onChange={e => setMode(e.target.value as ModeReglement)} style={{ ...inputStyle, height: 26, fontSize: 11, padding: '0 6px', width: 100 }}>
+            <select value={mode} onChange={e => setMode(e.target.value as ModeReglement)} style={{ ...inputStyle, height: 26, fontSize: 12, padding: '0 6px', width: 100 }}>
               <option value="Virement">Virement</option>
               <option value="Chèque">Chèque</option>
               <option value="Espèces">Espèces</option>
@@ -965,14 +965,14 @@ const btnIcon: React.CSSProperties = {
   border: `1px solid ${C.border}`,
   background: '#fff',
   cursor: 'pointer',
-  fontSize: 11,
+  fontSize: 12,
   fontFamily: "'DM Sans', sans-serif",
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <p style={{ fontSize: 10, color: C.subtle, fontWeight: 600, marginBottom: 4 }}>{label}</p>
+      <p style={{ fontSize: 12, color: C.subtle, fontWeight: 600, marginBottom: 4 }}>{label}</p>
       {children}
     </div>
   )

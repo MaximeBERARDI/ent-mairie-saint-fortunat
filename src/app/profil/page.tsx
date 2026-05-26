@@ -55,7 +55,7 @@ function savePrefs(personId: string, prefs: NotifPrefs) {
 const inputStyle: React.CSSProperties = {
   width: '100%', height: 36, padding: '0 12px',
   border: `1px solid ${C.border}`, borderRadius: 6,
-  background: '#fff', fontSize: 13, color: C.fg,
+  background: '#fff', fontSize: 14, color: C.fg,
   fontFamily: "'DM Sans', sans-serif",
   boxSizing: 'border-box',
 }
@@ -203,7 +203,7 @@ export default function ProfilPage() {
           </div>
           <div style={{ flex: 1 }}>
             <p style={{ fontSize: 22, color: C.fg, fontWeight: 700 }}>{currentUser.fullName}</p>
-            <p style={{ fontSize: 13, color: C.subtle }}>{currentUser.poste}</p>
+            <p style={{ fontSize: 14, color: C.subtle }}>{currentUser.poste}</p>
             <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
               <Badge label={AUTH_LEVEL_LABELS[currentUser.authLevel]} variant="primary" />
               {currentUser.canSign && <Badge label="Signataire" variant="success" />}
@@ -278,7 +278,7 @@ export default function ProfilPage() {
               />
             </Field>
           </div>
-          <p style={{ fontSize: 11, color: C.subtle, marginBottom: 14 }}>
+          <p style={{ fontSize: 12, color: C.subtle, marginBottom: 14 }}>
             Le prénom, nom, email et poste sont gérés par les administrateurs depuis le module Équipe.
             Pour les modifier, contactez la Direction Générale des Services.
           </p>
@@ -364,14 +364,14 @@ export default function ProfilPage() {
 
           <SectionHeader title="Niveau d'autorisation" />
           <div style={{ padding: 14, background: C.bg, borderRadius: 6 }}>
-            <p style={{ fontSize: 13, color: C.fg, fontWeight: 700, marginBottom: 4 }}>
+            <p style={{ fontSize: 14, color: C.fg, fontWeight: 700, marginBottom: 4 }}>
               {AUTH_LEVEL_LABELS[currentUser.authLevel]}
             </p>
-            <p style={{ fontSize: 11, color: C.muted, lineHeight: 1.5 }}>
+            <p style={{ fontSize: 12, color: C.muted, lineHeight: 1.5 }}>
               {AUTH_LEVEL_DESCRIPTIONS[currentUser.authLevel]}
             </p>
             {currentUser.customPermissions && currentUser.customPermissions.length > 0 && (
-              <p style={{ fontSize: 11, color: C.subtle, marginTop: 6, fontStyle: 'italic' }}>
+              <p style={{ fontSize: 12, color: C.subtle, marginTop: 6, fontStyle: 'italic' }}>
                 {currentUser.customPermissions.length} permission(s) personnalisée(s) accordée(s) en plus du niveau.
               </p>
             )}
@@ -412,7 +412,7 @@ export default function ProfilPage() {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <p style={{ fontSize: 11, color: C.muted, fontWeight: 600, marginBottom: 6 }}>{label}</p>
+      <p style={{ fontSize: 12, color: C.muted, fontWeight: 600, marginBottom: 6 }}>{label}</p>
       {children}
     </div>
   )
@@ -433,7 +433,7 @@ function PrefRow({ label, checked, onChange }: { label: string; checked: boolean
         onChange={e => onChange(e.target.checked)}
         style={{ width: 18, height: 18, cursor: 'pointer', accentColor: C.green }}
       />
-      <span style={{ flex: 1, fontSize: 13, color: C.fg }}>{label}</span>
+      <span style={{ flex: 1, fontSize: 14, color: C.fg }}>{label}</span>
     </label>
   )
 }

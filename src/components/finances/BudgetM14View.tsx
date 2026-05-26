@@ -143,7 +143,7 @@ export function BudgetM14View() {
                 background: v === tab ? '#fff' : 'transparent',
                 border: 'none',
                 color: v === tab ? C.fg : C.muted,
-                fontSize: 13,
+                fontSize: 14,
                 fontWeight: v === tab ? 600 : 500,
                 cursor: 'pointer',
                 fontFamily: "'DM Sans', sans-serif",
@@ -272,7 +272,7 @@ function PlanComptableView({
                   background: s === section ? '#fff' : 'transparent',
                   border: 'none',
                   color: s === section ? C.fg : C.muted,
-                  fontSize: 11,
+                  fontSize: 12,
                   fontWeight: s === section ? 600 : 400,
                   cursor: 'pointer',
                   fontFamily: "'DM Sans', sans-serif",
@@ -283,29 +283,29 @@ function PlanComptableView({
               </button>
             ))}
           </div>
-          <p style={{ fontSize: 11, color: C.subtle, fontStyle: 'italic', marginLeft: 6 }}>
+          <p style={{ fontSize: 12, color: C.subtle, fontStyle: 'italic', marginLeft: 6 }}>
             💡 Cliquez sur un article pour ouvrir son détail et modifier son budget alloué.
           </p>
         </div>
 
         {/* Récap section */}
-        <div style={{ display: 'flex', gap: 12, padding: 10, background: C.bg, borderRadius: 6, marginBottom: 12, fontSize: 11 }}>
+        <div style={{ display: 'flex', gap: 12, padding: 10, background: C.bg, borderRadius: 6, marginBottom: 12, fontSize: 12 }}>
           <div style={{ flex: 1 }}>
-            <p style={{ fontSize: 9, color: C.subtle, fontWeight: 600, marginBottom: 2 }}>Total dépenses</p>
+            <p style={{ fontSize: 11, color: C.subtle, fontWeight: 600, marginBottom: 2 }}>Total dépenses</p>
             <p style={{ color: C.fg, fontWeight: 600 }}>{fmtMontant(totaux.depBudget)}</p>
-            <p style={{ color: C.subtle, fontSize: 10 }}>Réalisé : {fmtMontant(totaux.depReal)}</p>
+            <p style={{ color: C.subtle, fontSize: 12 }}>Réalisé : {fmtMontant(totaux.depReal)}</p>
           </div>
           <div style={{ flex: 1 }}>
-            <p style={{ fontSize: 9, color: C.subtle, fontWeight: 600, marginBottom: 2 }}>Total recettes</p>
+            <p style={{ fontSize: 11, color: C.subtle, fontWeight: 600, marginBottom: 2 }}>Total recettes</p>
             <p style={{ color: C.fg, fontWeight: 600 }}>{fmtMontant(totaux.recBudget)}</p>
-            <p style={{ color: C.subtle, fontSize: 10 }}>Réalisé : {fmtMontant(totaux.recReal)}</p>
+            <p style={{ color: C.subtle, fontSize: 12 }}>Réalisé : {fmtMontant(totaux.recReal)}</p>
           </div>
           <div style={{ flex: 1 }}>
-            <p style={{ fontSize: 9, color: C.subtle, fontWeight: 600, marginBottom: 2 }}>Équilibre budget</p>
+            <p style={{ fontSize: 11, color: C.subtle, fontWeight: 600, marginBottom: 2 }}>Équilibre budget</p>
             <p style={{ color: equilibre >= 0 ? C.success : C.danger, fontWeight: 700 }}>
               {equilibre >= 0 ? '+' : ''}{fmtMontant(equilibre)}
             </p>
-            <p style={{ color: C.subtle, fontSize: 10 }}>{equilibre >= 0 ? 'excédentaire' : 'déficitaire'}</p>
+            <p style={{ color: C.subtle, fontSize: 12 }}>{equilibre >= 0 ? 'excédentaire' : 'déficitaire'}</p>
           </div>
         </div>
 
@@ -315,7 +315,7 @@ function PlanComptableView({
           if (chapitresOfThisSection.length === 0) return null
           return (
             <div key={sens} style={{ marginBottom: 16 }}>
-              <p style={{ fontSize: 11, color: sens === 'D' ? C.warning : C.success, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+              <p style={{ fontSize: 12, color: sens === 'D' ? C.warning : C.success, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                 {sens === 'D' ? '↓ Dépenses' : '↑ Recettes'}
               </p>
               {chapitresOfThisSection.map(ch => {
@@ -387,12 +387,12 @@ function ChapitreSection({
           fontFamily: "'DM Sans', sans-serif",
         }}
       >
-        <span style={{ fontSize: 10, color: C.subtle }}>{open ? '▾' : '▸'}</span>
-        <span style={{ fontSize: 10, color: C.subtle, fontFamily: "'JetBrains Mono', monospace", fontWeight: 600 }}>Ch. {chapitre.code}</span>
+        <span style={{ fontSize: 12, color: C.subtle }}>{open ? '▾' : '▸'}</span>
+        <span style={{ fontSize: 12, color: C.subtle, fontFamily: "'JetBrains Mono', monospace", fontWeight: 600 }}>Ch. {chapitre.code}</span>
         <span style={{ fontSize: 12, color: C.fg, fontWeight: 600 }}>{chapitre.label}</span>
-        <span style={{ fontSize: 11, color: C.subtle, textAlign: 'right' }}>{fmtMontant(totalBudget)}</span>
-        <span style={{ fontSize: 11, color: C.fg, fontWeight: 600, textAlign: 'right' }}>{fmtMontant(totalReal)}</span>
-        <span style={{ fontSize: 11, color: pct > 85 ? C.danger : pct > 65 ? C.warning : C.success, fontWeight: 600, textAlign: 'right' }}>{pct}%</span>
+        <span style={{ fontSize: 12, color: C.subtle, textAlign: 'right' }}>{fmtMontant(totalBudget)}</span>
+        <span style={{ fontSize: 12, color: C.fg, fontWeight: 600, textAlign: 'right' }}>{fmtMontant(totalReal)}</span>
+        <span style={{ fontSize: 12, color: pct > 85 ? C.danger : pct > 65 ? C.warning : C.success, fontWeight: 600, textAlign: 'right' }}>{pct}%</span>
       </button>
       {open && (
         <div style={{ padding: '4px 0' }}>
@@ -416,11 +416,11 @@ function ChapitreSection({
               }}
             >
               <span />
-              <span style={{ fontSize: 10, color: C.subtle, fontFamily: "'JetBrains Mono', monospace" }}>{a.code}</span>
-              <span style={{ fontSize: 11, color: C.fg }}>{a.label}</span>
-              <span style={{ fontSize: 11, color: C.subtle, textAlign: 'right' }}>{fmtMontant(a.budgetAlloue)}</span>
-              <span style={{ fontSize: 11, color: C.fg, fontWeight: 500, textAlign: 'right' }}>{fmtMontant(a.consommationTotale)}</span>
-              <span style={{ fontSize: 11, color: a.pctConsomme > 85 ? C.danger : a.pctConsomme > 65 ? C.warning : C.success, fontWeight: 600, textAlign: 'right' }}>
+              <span style={{ fontSize: 12, color: C.subtle, fontFamily: "'JetBrains Mono', monospace" }}>{a.code}</span>
+              <span style={{ fontSize: 12, color: C.fg }}>{a.label}</span>
+              <span style={{ fontSize: 12, color: C.subtle, textAlign: 'right' }}>{fmtMontant(a.budgetAlloue)}</span>
+              <span style={{ fontSize: 12, color: C.fg, fontWeight: 500, textAlign: 'right' }}>{fmtMontant(a.consommationTotale)}</span>
+              <span style={{ fontSize: 12, color: a.pctConsomme > 85 ? C.danger : a.pctConsomme > 65 ? C.warning : C.success, fontWeight: 600, textAlign: 'right' }}>
                 {a.pctConsomme}%
               </span>
             </button>
@@ -450,10 +450,10 @@ function DrillDownPanel({
     <>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
         <div>
-          <p style={{ fontSize: 9, color: C.subtle, fontWeight: 600, marginBottom: 2, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+          <p style={{ fontSize: 11, color: C.subtle, fontWeight: 600, marginBottom: 2, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             {compte.section} · {compte.sens === 'D' ? 'Dépense' : 'Recette'} · Chap. {compte.chapitreCode}
           </p>
-          <p style={{ fontSize: 11, color: C.subtle, fontFamily: "'JetBrains Mono', monospace", marginBottom: 2 }}>{compte.code}</p>
+          <p style={{ fontSize: 12, color: C.subtle, fontFamily: "'JetBrains Mono', monospace", marginBottom: 2 }}>{compte.code}</p>
           <p style={{ fontSize: 14, color: C.fg, fontWeight: 700 }}>{compte.label}</p>
         </div>
         <button onClick={onClose} aria-label="Fermer" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: C.subtle, fontSize: 18, padding: 0 }}>×</button>
@@ -464,12 +464,12 @@ function DrillDownPanel({
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
         <div style={{ padding: 8, background: editing ? `${C.green}10` : C.bg, borderRadius: 6, border: `1px solid ${editing ? C.green : 'transparent'}` }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginBottom: 2 }}>
-            <p style={{ fontSize: 9, color: C.subtle, fontWeight: 600 }}>Budget alloué</p>
+            <p style={{ fontSize: 11, color: C.subtle, fontWeight: 600 }}>Budget alloué</p>
             {!editing && (
               <button
                 onClick={() => setEditing(true)}
                 title="Modifier le budget alloué"
-                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: C.green, fontSize: 10, padding: 0 }}
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: C.green, fontSize: 12, padding: 0 }}
               >✎</button>
             )}
           </div>
@@ -483,37 +483,37 @@ function DrillDownPanel({
                   if (e.key === 'Enter') { onUpdateBudget(parseFloat(budgetVal) || 0); setEditing(false) }
                   if (e.key === 'Escape') { setBudgetVal(String(compte.budgetAlloue)); setEditing(false) }
                 }}
-                style={{ ...inputStyle, height: 24, fontSize: 11 }}
+                style={{ ...inputStyle, height: 24, fontSize: 12 }}
                 autoFocus
               />
               <button
                 onClick={() => { onUpdateBudget(parseFloat(budgetVal) || 0); setEditing(false) }}
                 title="Valider (Entrée)"
-                style={{ padding: '0 6px', fontSize: 10, background: C.success, color: '#fff', border: 'none', borderRadius: 3, cursor: 'pointer' }}
+                style={{ padding: '0 6px', fontSize: 12, background: C.success, color: '#fff', border: 'none', borderRadius: 3, cursor: 'pointer' }}
               >✓</button>
               <button
                 onClick={() => { setBudgetVal(String(compte.budgetAlloue)); setEditing(false) }}
                 title="Annuler (Échap)"
-                style={{ padding: '0 6px', fontSize: 10, background: C.bg, color: C.subtle, border: `1px solid ${C.border}`, borderRadius: 3, cursor: 'pointer' }}
+                style={{ padding: '0 6px', fontSize: 12, background: C.bg, color: C.subtle, border: `1px solid ${C.border}`, borderRadius: 3, cursor: 'pointer' }}
               >×</button>
             </div>
           ) : (
-            <p style={{ fontSize: 13, color: C.fg, fontWeight: 700, cursor: 'pointer' }} onClick={() => setEditing(true)} title="Cliquer pour modifier">
+            <p style={{ fontSize: 14, color: C.fg, fontWeight: 700, cursor: 'pointer' }} onClick={() => setEditing(true)} title="Cliquer pour modifier">
               {fmtMontant(compte.budgetAlloue)}
             </p>
           )}
         </div>
         <div style={{ padding: 8, background: C.bg, borderRadius: 6 }}>
-          <p style={{ fontSize: 9, color: C.subtle, fontWeight: 600, marginBottom: 2 }}>Réalisé</p>
-          <p style={{ fontSize: 13, color: C.fg, fontWeight: 700 }}>{fmtMontant(compte.consommationTotale)}</p>
+          <p style={{ fontSize: 11, color: C.subtle, fontWeight: 600, marginBottom: 2 }}>Réalisé</p>
+          <p style={{ fontSize: 14, color: C.fg, fontWeight: 700 }}>{fmtMontant(compte.consommationTotale)}</p>
         </div>
         <div style={{ padding: 8, background: C.bg, borderRadius: 6 }}>
-          <p style={{ fontSize: 9, color: C.subtle, fontWeight: 600, marginBottom: 2 }}>Reste à engager</p>
-          <p style={{ fontSize: 13, color: compte.reste >= 0 ? C.success : C.danger, fontWeight: 700 }}>{fmtMontant(compte.reste)}</p>
+          <p style={{ fontSize: 11, color: C.subtle, fontWeight: 600, marginBottom: 2 }}>Reste à engager</p>
+          <p style={{ fontSize: 14, color: compte.reste >= 0 ? C.success : C.danger, fontWeight: 700 }}>{fmtMontant(compte.reste)}</p>
         </div>
         <div style={{ padding: 8, background: C.bg, borderRadius: 6 }}>
-          <p style={{ fontSize: 9, color: C.subtle, fontWeight: 600, marginBottom: 2 }}>% consommé</p>
-          <p style={{ fontSize: 13, color: compte.pctConsomme > 85 ? C.danger : compte.pctConsomme > 65 ? C.warning : C.success, fontWeight: 700 }}>{compte.pctConsomme}%</p>
+          <p style={{ fontSize: 11, color: C.subtle, fontWeight: 600, marginBottom: 2 }}>% consommé</p>
+          <p style={{ fontSize: 14, color: compte.pctConsomme > 85 ? C.danger : compte.pctConsomme > 65 ? C.warning : C.success, fontWeight: 700 }}>{compte.pctConsomme}%</p>
         </div>
       </div>
       <Progress pct={compte.pctConsomme} />
@@ -521,10 +521,10 @@ function DrillDownPanel({
       <Separator my={10} />
 
       {/* Décomposition */}
-      <p style={{ fontSize: 9, color: C.subtle, fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+      <p style={{ fontSize: 11, color: C.subtle, fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
         Décomposition du réalisé
       </p>
-      <div style={{ fontSize: 11, color: C.fg, lineHeight: 1.6, marginBottom: 12 }}>
+      <div style={{ fontSize: 12, color: C.fg, lineHeight: 1.6, marginBottom: 12 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
           <span style={{ color: C.subtle }}>Conso. initiale (avant app)</span>
           <span>{fmtMontantDec(compte.consoInitiale)}</span>
@@ -542,13 +542,13 @@ function DrillDownPanel({
       {/* Factures imputées */}
       <SectionHeader title={`Factures imputées (${factures.length})`} />
       {factures.length === 0 ? (
-        <p style={{ fontSize: 11, color: C.subtle, fontStyle: 'italic', padding: '6px 0' }}>Aucune facture sur ce compte.</p>
+        <p style={{ fontSize: 12, color: C.subtle, fontStyle: 'italic', padding: '6px 0' }}>Aucune facture sur ce compte.</p>
       ) : (
         <div style={{ marginBottom: 12 }}>
           {factures.map(f => {
             const four = fournisseurs.find(x => x.id === f.fournisseurId)
             return (
-              <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: `1px solid ${C.border}`, fontSize: 11 }}>
+              <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: `1px solid ${C.border}`, fontSize: 12 }}>
                 <span style={{ fontFamily: "'JetBrains Mono', monospace", color: C.subtle, minWidth: 90 }}>{f.numero}</span>
                 <span style={{ flex: 1, color: C.fg }}>{four?.nom ?? '—'}</span>
                 <span style={{ color: C.subtle, minWidth: 50 }}>{fmtDate(f.dateFacture)}</span>
@@ -563,7 +563,7 @@ function DrillDownPanel({
       {/* Écritures */}
       <SectionHeader title={`Écritures comptables (${ecritures.length})`} />
       {ecritures.length === 0 ? (
-        <p style={{ fontSize: 11, color: C.subtle, fontStyle: 'italic', padding: '6px 0' }}>Aucune écriture sur ce compte.</p>
+        <p style={{ fontSize: 12, color: C.subtle, fontStyle: 'italic', padding: '6px 0' }}>Aucune écriture sur ce compte.</p>
       ) : (
         <div>
           {ecritures.map(e => {
@@ -571,7 +571,7 @@ function DrillDownPanel({
             const isDebit = (ligne?.debit ?? 0) > 0
             const montant = isDebit ? ligne!.debit : ligne!.credit
             return (
-              <div key={e.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: `1px solid ${C.border}`, fontSize: 11 }}>
+              <div key={e.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 0', borderBottom: `1px solid ${C.border}`, fontSize: 12 }}>
                 <span style={{ fontFamily: "'JetBrains Mono', monospace", color: C.subtle, minWidth: 50 }}>#{e.numero}</span>
                 <Tag label={e.journal} color={C.slate} />
                 <span style={{ flex: 1, color: C.fg }}>{e.libelle}</span>
@@ -651,7 +651,7 @@ function EcrituresView({
       {/* Liste écritures */}
       {filtered.length === 0 ? (
         <Card padding={24} style={{ textAlign: 'center' }}>
-          <p style={{ fontSize: 13, color: C.subtle }}>
+          <p style={{ fontSize: 14, color: C.subtle }}>
             {ecritures.length === 0
               ? 'Aucune écriture pour le moment. Validez une facture ou créez-en une manuellement.'
               : 'Aucune écriture ne correspond à votre recherche.'}
@@ -661,7 +661,7 @@ function EcrituresView({
         <Card padding={0}>
           <div style={{ display: 'grid', gridTemplateColumns: '60px 70px 60px 1fr 100px 100px 100px 60px', padding: '8px 14px', background: C.bg, borderBottom: `1px solid ${C.border}` }}>
             {['N°', 'Date', 'Journal', 'Libellé / Pièce', 'Comptes', 'Débit', 'Crédit', ''].map(h => (
-              <p key={h} style={{ fontSize: 10, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</p>
+              <p key={h} style={{ fontSize: 12, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</p>
             ))}
           </div>
           {filtered.map((e, i) => {
@@ -670,15 +670,15 @@ function EcrituresView({
             const balanced = isBalanced(e.lignes)
             return (
               <div key={e.id} style={{ borderBottom: i < filtered.length - 1 ? `1px solid ${C.border}` : 'none' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '60px 70px 60px 1fr 100px 100px 100px 60px', padding: '8px 14px', alignItems: 'center', fontSize: 11 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '60px 70px 60px 1fr 100px 100px 100px 60px', padding: '8px 14px', alignItems: 'center', fontSize: 12 }}>
                   <p style={{ fontFamily: "'JetBrains Mono', monospace", color: C.subtle }}>#{e.numero}</p>
                   <p style={{ color: C.subtle }}>{fmtDate(e.date)}</p>
                   <Tag label={e.journal} color={C.slate} />
                   <div>
                     <p style={{ color: C.fg, fontWeight: 500 }}>{e.libelle}</p>
-                    {e.pieceRef && <p style={{ fontSize: 9, color: C.subtle }}>Pièce: {e.pieceRef}</p>}
+                    {e.pieceRef && <p style={{ fontSize: 11, color: C.subtle }}>Pièce: {e.pieceRef}</p>}
                   </div>
-                  <p style={{ color: C.subtle, fontFamily: "'JetBrains Mono', monospace", fontSize: 10 }}>
+                  <p style={{ color: C.subtle, fontFamily: "'JetBrains Mono', monospace", fontSize: 12 }}>
                     {e.lignes.map(l => l.compteCode).join(' · ')}
                   </p>
                   <p style={{ color: C.fg, fontWeight: 600, textAlign: 'right' }}>{fmtMontantDec(totalD)}</p>
@@ -695,7 +695,7 @@ function EcrituresView({
                   </div>
                 </div>
                 {/* Détail des lignes */}
-                <div style={{ paddingLeft: 28, paddingRight: 14, paddingBottom: 8, fontSize: 10, color: C.subtle }}>
+                <div style={{ paddingLeft: 28, paddingRight: 14, paddingBottom: 8, fontSize: 12, color: C.subtle }}>
                   {e.lignes.map(l => (
                     <div key={l.id} style={{ display: 'grid', gridTemplateColumns: '80px 1fr 100px 100px 60px', gap: 6, padding: '2px 0' }}>
                       <span style={{ fontFamily: "'JetBrains Mono', monospace" }}>{l.compteCode}</span>
@@ -771,8 +771,8 @@ function NewEcritureForm({ onSubmit, onCancel }: {
       </div>
 
       {/* Lignes */}
-      <p style={{ fontSize: 10, color: C.subtle, fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Lignes d'écriture</p>
-      <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr 110px 110px 30px', gap: 6, marginBottom: 6, fontSize: 9, color: C.subtle, fontWeight: 600 }}>
+      <p style={{ fontSize: 12, color: C.subtle, fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Lignes d'écriture</p>
+      <div style={{ display: 'grid', gridTemplateColumns: '140px 1fr 110px 110px 30px', gap: 6, marginBottom: 6, fontSize: 11, color: C.subtle, fontWeight: 600 }}>
         <span>COMPTE</span>
         <span>LIBELLÉ</span>
         <span style={{ textAlign: 'right' }}>DÉBIT</span>
@@ -832,7 +832,7 @@ function NewEcritureForm({ onSubmit, onCancel }: {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
         <Button size="sm" onClick={addLigne}>+ Ligne</Button>
         <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-          <span style={{ fontSize: 11, color: C.subtle }}>Totaux :</span>
+          <span style={{ fontSize: 12, color: C.subtle }}>Totaux :</span>
           <span style={{ fontSize: 12, color: C.fg, fontWeight: 600 }}>D {fmtMontantDec(totalD)}</span>
           <span style={{ fontSize: 12, color: C.fg, fontWeight: 600 }}>C {fmtMontantDec(totalC)}</span>
           <span style={{ fontSize: 12, color: equilibre ? C.success : C.danger, fontWeight: 700 }}>
@@ -944,7 +944,7 @@ function RatiosView({
         {/* Ratios obligatoires R. 2313-1 */}
         <Card padding={14}>
           <SectionHeader title="Ratios obligatoires (article R. 2313-1 CGCT)" />
-          <p style={{ fontSize: 11, color: C.subtle, marginBottom: 12 }}>
+          <p style={{ fontSize: 12, color: C.subtle, marginBottom: 12 }}>
             Ratios à publier en annexe au compte administratif et au budget primitif. Population : {ratios.population} hab.
           </p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
@@ -954,11 +954,11 @@ function RatiosView({
               return (
                 <div key={String(r.key)} style={{ padding: 10, border: `1px solid ${C.border}`, borderLeft: `3px solid ${color}`, borderRadius: 6, background: '#fff' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                    <p style={{ fontSize: 10, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{r.label}</p>
+                    <p style={{ fontSize: 12, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{r.label}</p>
                     <InfoTooltip indicatorKey={String(r.key)} />
                   </div>
                   <p style={{ fontSize: 16, color: C.fg, fontWeight: 700 }}>{r.value}</p>
-                  {r.sub && <p style={{ fontSize: 10, color: C.subtle, marginTop: 2 }}>{r.sub}</p>}
+                  {r.sub && <p style={{ fontSize: 12, color: C.subtle, marginTop: 2 }}>{r.sub}</p>}
                 </div>
               )
             })}
@@ -991,12 +991,12 @@ function RatiosView({
           <p style={{ fontSize: 12, color: C.fg, fontWeight: 700, marginBottom: 10 }}>Postes budgétaires en alerte</p>
           {(() => {
             const alertes = enriched.filter(p => p.enAlerte).sort((a, b) => b.pctConsomme - a.pctConsomme).slice(0, 6)
-            if (alertes.length === 0) return <p style={{ fontSize: 11, color: C.subtle, fontStyle: 'italic' }}>Aucun poste en alerte 👌</p>
+            if (alertes.length === 0) return <p style={{ fontSize: 12, color: C.subtle, fontStyle: 'italic' }}>Aucun poste en alerte 👌</p>
             return alertes.map(p => (
               <div key={p.code} style={{ marginBottom: 10 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
-                  <p style={{ fontSize: 11, color: C.fg, fontWeight: 500 }}>{p.code} {p.label}</p>
-                  <p style={{ fontSize: 11, color: p.pctConsomme > 95 ? C.danger : C.warning, fontWeight: 700 }}>{p.pctConsomme}%</p>
+                  <p style={{ fontSize: 12, color: C.fg, fontWeight: 500 }}>{p.code} {p.label}</p>
+                  <p style={{ fontSize: 12, color: p.pctConsomme > 95 ? C.danger : C.warning, fontWeight: 700 }}>{p.pctConsomme}%</p>
                 </div>
                 <Progress pct={p.pctConsomme} />
               </div>
@@ -1012,11 +1012,11 @@ function RatioBlock({ label, value, sub, color, helpKey }: { label: string; valu
   return (
     <div style={{ padding: 12, background: '#fff', border: `1px solid ${C.border}`, borderRadius: 6 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-        <p style={{ fontSize: 10, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</p>
+        <p style={{ fontSize: 12, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</p>
         {helpKey && <InfoTooltip indicatorKey={helpKey} />}
       </div>
       <p style={{ fontSize: 18, color, fontWeight: 700 }}>{value}</p>
-      {sub && <p style={{ fontSize: 10, color: C.subtle, marginTop: 2 }}>{sub}</p>}
+      {sub && <p style={{ fontSize: 12, color: C.subtle, marginTop: 2 }}>{sub}</p>}
     </div>
   )
 }
@@ -1024,7 +1024,7 @@ function RatioBlock({ label, value, sub, color, helpKey }: { label: string; valu
 function VentilationBar({ parts }: { parts: Array<{ label: string; value: number; color: string }> }) {
   const total = parts.reduce((acc, p) => acc + p.value, 0)
   if (total === 0) {
-    return <p style={{ fontSize: 11, color: C.subtle, fontStyle: 'italic' }}>Aucune donnée.</p>
+    return <p style={{ fontSize: 12, color: C.subtle, fontStyle: 'italic' }}>Aucune donnée.</p>
   }
   return (
     <>
@@ -1038,9 +1038,9 @@ function VentilationBar({ parts }: { parts: Array<{ label: string; value: number
         return (
           <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
             <div style={{ width: 10, height: 10, borderRadius: '50%', background: p.color, flexShrink: 0 }} />
-            <p style={{ fontSize: 11, color: C.fg, flex: 1 }}>{p.label}</p>
-            <p style={{ fontSize: 10, color: C.subtle }}>{fmtMontant(p.value)}</p>
-            <p style={{ fontSize: 11, color: C.muted, fontWeight: 600, minWidth: 32, textAlign: 'right' }}>{pct}%</p>
+            <p style={{ fontSize: 12, color: C.fg, flex: 1 }}>{p.label}</p>
+            <p style={{ fontSize: 12, color: C.subtle }}>{fmtMontant(p.value)}</p>
+            <p style={{ fontSize: 12, color: C.muted, fontWeight: 600, minWidth: 32, textAlign: 'right' }}>{pct}%</p>
           </div>
         )
       })}
@@ -1053,7 +1053,7 @@ function VentilationBar({ parts }: { parts: Array<{ label: string; value: number
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <p style={{ fontSize: 10, color: C.subtle, fontWeight: 600, marginBottom: 4 }}>{label}</p>
+      <p style={{ fontSize: 12, color: C.subtle, fontWeight: 600, marginBottom: 4 }}>{label}</p>
       {children}
     </div>
   )

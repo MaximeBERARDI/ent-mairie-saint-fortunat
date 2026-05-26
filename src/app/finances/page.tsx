@@ -83,7 +83,7 @@ export default function FinancesPage() {
                 background: v === view ? '#fff' : 'transparent',
                 border: 'none',
                 color: v === view ? C.fg : C.muted,
-                fontSize: 13,
+                fontSize: 14,
                 fontWeight: v === view ? 600 : 500,
                 cursor: 'pointer',
                 fontFamily: "'DM Sans', sans-serif",
@@ -191,7 +191,7 @@ function FacturesView() {
               ['Validée', `Validées (${counts['Validée']})`],
               ['Rejetée', `Rejetées (${counts['Rejetée']})`],
             ] as [typeof filter, string][]).map(([v, label]) => (
-              <button key={v} onClick={() => setFilter(v)} style={{ padding: '5px 12px', borderRadius: 20, background: v === filter ? C.green : '#fff', border: `1px solid ${v === filter ? C.green : C.border}`, color: v === filter ? '#fff' : C.muted, fontSize: 11, fontWeight: v === filter ? 600 : 400, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}>
+              <button key={v} onClick={() => setFilter(v)} style={{ padding: '5px 12px', borderRadius: 20, background: v === filter ? C.green : '#fff', border: `1px solid ${v === filter ? C.green : C.border}`, color: v === filter ? '#fff' : C.muted, fontSize: 12, fontWeight: v === filter ? 600 : 400, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}>
                 {label}
               </button>
             ))}
@@ -286,12 +286,12 @@ function FacturesView() {
                   <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
                     <button
                       onClick={(e) => { e.stopPropagation(); handleValidate(f.id); setSelectedId(f.id) }}
-                      style={{ padding: '4px 10px', borderRadius: 4, border: `1px solid ${C.success}`, background: C.successLight, color: C.success, cursor: 'pointer', fontSize: 13 }}
+                      style={{ padding: '4px 10px', borderRadius: 4, border: `1px solid ${C.success}`, background: C.successLight, color: C.success, cursor: 'pointer', fontSize: 14 }}
                       title="Valider"
                     >✓</button>
                     <button
                       onClick={(e) => { e.stopPropagation(); setSelectedId(f.id) }}
-                      style={{ padding: '4px 10px', borderRadius: 4, border: `1px solid ${C.danger}`, background: C.dangerLight, color: C.danger, cursor: 'pointer', fontSize: 13 }}
+                      style={{ padding: '4px 10px', borderRadius: 4, border: `1px solid ${C.danger}`, background: C.dangerLight, color: C.danger, cursor: 'pointer', fontSize: 14 }}
                       title="Voir / rejeter"
                     >✕</button>
                   </div>
@@ -443,10 +443,10 @@ function SubmitFactureForm({
       </Field>
 
       <div style={{ marginTop: 12 }}>
-        <p style={{ fontSize: 10, color: C.subtle, fontWeight: 600, marginBottom: 6 }}>Pièces justificatives (PDF, photos…)</p>
+        <p style={{ fontSize: 12, color: C.subtle, fontWeight: 600, marginBottom: 6 }}>Pièces justificatives (PDF, photos…)</p>
         <div style={{ border: `1px dashed ${C.border}`, borderRadius: 6, padding: 10, background: '#fff' }}>
           {documents.length === 0 && (
-            <p style={{ fontSize: 11, color: C.subtle, marginBottom: 8 }}>
+            <p style={{ fontSize: 12, color: C.subtle, marginBottom: 8 }}>
               Aucune pièce — joignez la facture PDF, devis, bon de livraison… (max 1 Mo / fichier, 4 Mo total).
             </p>
           )}
@@ -456,7 +456,7 @@ function SubmitFactureForm({
                 <div key={doc.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: C.bg, border: `1px solid ${C.border}`, borderRadius: 6, padding: '6px 8px' }}>
                   <span style={{ fontSize: 16 }}>📎</span>
                   <a href={doc.dataUrl} download={doc.name} style={{ flex: 1, fontSize: 12, color: C.fg, textDecoration: 'none', fontWeight: 500 }}>{doc.name}</a>
-                  <span style={{ fontSize: 10, color: C.subtle }}>{formatBytes(doc.size)}</span>
+                  <span style={{ fontSize: 12, color: C.subtle }}>{formatBytes(doc.size)}</span>
                   <button type="button" onClick={() => removeDoc(doc.id)} aria-label="Retirer" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: C.danger, fontSize: 14, padding: '0 4px' }}>×</button>
                 </div>
               ))}
@@ -473,7 +473,7 @@ function SubmitFactureForm({
           <Button size="sm" onClick={() => fileInputRef.current?.click()}>+ Ajouter une pièce jointe</Button>
         </div>
         {fileError && (
-          <p style={{ fontSize: 11, color: C.danger, marginTop: 6 }}>{fileError}</p>
+          <p style={{ fontSize: 12, color: C.danger, marginTop: 6 }}>{fileError}</p>
         )}
       </div>
 
@@ -545,8 +545,8 @@ function FactureDetailPanel({
     <>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
         <div>
-          <p style={{ fontSize: 13, color: C.fg, fontWeight: 700, marginBottom: 2 }}>{facture.numero}</p>
-          <p style={{ fontSize: 11, color: C.subtle }}>{fournisseur?.nom ?? '—'}</p>
+          <p style={{ fontSize: 14, color: C.fg, fontWeight: 700, marginBottom: 2 }}>{facture.numero}</p>
+          <p style={{ fontSize: 12, color: C.subtle }}>{fournisseur?.nom ?? '—'}</p>
         </div>
         <Badge label={statutShortLabel(facture.statut)} variant={statutBadgeVariant(facture.statut)} />
       </div>
@@ -554,8 +554,8 @@ function FactureDetailPanel({
 
       {lines.map(([k, v], i) => (
         <div key={i} style={{ display: 'flex', gap: 8, padding: '5px 0', borderBottom: i < lines.length - 1 ? `1px solid ${C.border}` : 'none' }}>
-          <p style={{ fontSize: 10, color: C.subtle, width: 90, flexShrink: 0 }}>{k}</p>
-          <p style={{ fontSize: 11, color: C.fg, fontWeight: 500 }}>{v}</p>
+          <p style={{ fontSize: 12, color: C.subtle, width: 90, flexShrink: 0 }}>{k}</p>
+          <p style={{ fontSize: 12, color: C.fg, fontWeight: 500 }}>{v}</p>
         </div>
       ))}
 
@@ -566,8 +566,8 @@ function FactureDetailPanel({
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
           <Avatar initials={submitter.initials} size={20} color={submitter.color} />
           <div style={{ flex: 1 }}>
-            <p style={{ fontSize: 11, color: C.fg, fontWeight: 500 }}>Soumis par {submitter.fullName}</p>
-            <p style={{ fontSize: 9, color: C.subtle }}>{fmtDateTime(facture.submittedAt)}</p>
+            <p style={{ fontSize: 12, color: C.fg, fontWeight: 500 }}>Soumis par {submitter.fullName}</p>
+            <p style={{ fontSize: 11, color: C.subtle }}>{fmtDateTime(facture.submittedAt)}</p>
           </div>
         </div>
       )}
@@ -577,8 +577,8 @@ function FactureDetailPanel({
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, padding: 8, background: C.successLight, borderRadius: 6 }}>
           <Avatar initials={validator.initials} size={20} color={validator.color} />
           <div style={{ flex: 1 }}>
-            <p style={{ fontSize: 11, color: C.success, fontWeight: 600 }}>Validée par {validator.fullName}</p>
-            <p style={{ fontSize: 9, color: C.muted }}>{fmtDateTime(facture.validatedAt)} — imputée sur le poste {facture.posteCode}</p>
+            <p style={{ fontSize: 12, color: C.success, fontWeight: 600 }}>Validée par {validator.fullName}</p>
+            <p style={{ fontSize: 11, color: C.muted }}>{fmtDateTime(facture.validatedAt)} — imputée sur le poste {facture.posteCode}</p>
           </div>
         </div>
       )}
@@ -589,12 +589,12 @@ function FactureDetailPanel({
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
             <Avatar initials={rejector.initials} size={20} color={rejector.color} />
             <div style={{ flex: 1 }}>
-              <p style={{ fontSize: 11, color: C.danger, fontWeight: 600 }}>Rejetée par {rejector.fullName}</p>
-              <p style={{ fontSize: 9, color: C.muted }}>{fmtDateTime(facture.rejectedAt)}</p>
+              <p style={{ fontSize: 12, color: C.danger, fontWeight: 600 }}>Rejetée par {rejector.fullName}</p>
+              <p style={{ fontSize: 11, color: C.muted }}>{fmtDateTime(facture.rejectedAt)}</p>
             </div>
           </div>
           {facture.rejectionReason && (
-            <p style={{ fontSize: 11, color: C.fg, fontStyle: 'italic', paddingLeft: 26 }}>« {facture.rejectionReason} »</p>
+            <p style={{ fontSize: 12, color: C.fg, fontStyle: 'italic', paddingLeft: 26 }}>« {facture.rejectionReason} »</p>
           )}
         </div>
       )}
@@ -602,15 +602,15 @@ function FactureDetailPanel({
       {/* Notes / commentaires saisis à la soumission */}
       {facture.notes && (
         <div style={{ padding: 8, background: C.bg, border: `1px solid ${C.border}`, borderRadius: 6, marginBottom: 10 }}>
-          <p style={{ fontSize: 9, color: C.subtle, fontWeight: 600, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Commentaire</p>
-          <p style={{ fontSize: 11, color: C.fg, whiteSpace: 'pre-wrap', lineHeight: 1.4 }}>{facture.notes}</p>
+          <p style={{ fontSize: 11, color: C.subtle, fontWeight: 600, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Commentaire</p>
+          <p style={{ fontSize: 12, color: C.fg, whiteSpace: 'pre-wrap', lineHeight: 1.4 }}>{facture.notes}</p>
         </div>
       )}
 
       {/* Pièces jointes */}
       {facture.documents && facture.documents.length > 0 ? (
         <div style={{ marginBottom: 12 }}>
-          <p style={{ fontSize: 9, color: C.subtle, fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+          <p style={{ fontSize: 11, color: C.subtle, fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             Pièces jointes ({facture.documents.length})
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -621,25 +621,25 @@ function FactureDetailPanel({
                 download={doc.name}
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 8px', background: C.bg, border: `1px solid ${C.border}`, borderRadius: 6, textDecoration: 'none', color: C.fg, fontSize: 11 }}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 8px', background: C.bg, border: `1px solid ${C.border}`, borderRadius: 6, textDecoration: 'none', color: C.fg, fontSize: 12 }}
               >
                 <span style={{ fontSize: 14 }}>📎</span>
                 <span style={{ flex: 1, fontWeight: 500 }}>{doc.name}</span>
-                <span style={{ fontSize: 9, color: C.subtle }}>{formatBytes(doc.size)}</span>
+                <span style={{ fontSize: 11, color: C.subtle }}>{formatBytes(doc.size)}</span>
               </a>
             ))}
           </div>
         </div>
       ) : (
         <div style={{ height: 56, background: C.ph, borderRadius: 6, marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <span style={{ fontSize: 11, color: C.subtle }}>Aucune pièce jointe</span>
+          <span style={{ fontSize: 12, color: C.subtle }}>Aucune pièce jointe</span>
         </div>
       )}
 
       {/* Actions selon statut + permissions */}
       {facture.statut === 'En attente validation' && canValidate && (
         <>
-          <p style={{ fontSize: 11, color: C.muted, fontWeight: 600, marginBottom: 6 }}>Commentaire (obligatoire si rejet)</p>
+          <p style={{ fontSize: 12, color: C.muted, fontWeight: 600, marginBottom: 6 }}>Commentaire (obligatoire si rejet)</p>
           <textarea
             value={comment}
             onChange={e => setComment(e.target.value)}
@@ -654,7 +654,7 @@ function FactureDetailPanel({
       )}
 
       {facture.statut === 'En attente validation' && !canValidate && (
-        <p style={{ fontSize: 11, color: C.subtle, padding: '8px 0', fontStyle: 'italic' }}>
+        <p style={{ fontSize: 12, color: C.subtle, padding: '8px 0', fontStyle: 'italic' }}>
           Vous n&apos;avez pas la permission de valider cette facture.
         </p>
       )}
@@ -731,14 +731,14 @@ function FournisseursView() {
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Rechercher un fournisseur…"
-          style={{ width: '100%', height: 34, border: `1px solid ${C.border}`, borderRadius: 20, background: '#fff', padding: '0 14px', fontSize: 11, color: C.fg, marginBottom: 8, fontFamily: "'DM Sans', sans-serif" }}
+          style={{ width: '100%', height: 34, border: `1px solid ${C.border}`, borderRadius: 20, background: '#fff', padding: '0 14px', fontSize: 12, color: C.fg, marginBottom: 8, fontFamily: "'DM Sans', sans-serif" }}
         />
         <Button size="sm" style={{ width: '100%', justifyContent: 'center', marginBottom: 8 }} onClick={() => setShowNewForm(true)}>
           + Nouveau fournisseur
         </Button>
         <div style={{ flex: 1, overflow: 'auto' }}>
           {filtered.length === 0 && (
-            <p style={{ fontSize: 11, color: C.subtle, padding: 12, fontStyle: 'italic' }}>Aucun résultat</p>
+            <p style={{ fontSize: 12, color: C.subtle, padding: 12, fontStyle: 'italic' }}>Aucun résultat</p>
           )}
           {filtered.map(s => {
             const isSel = selectedId === s.id
@@ -746,11 +746,11 @@ function FournisseursView() {
             return (
               <div key={s.id} onClick={() => setSelectedId(s.id)} style={{ padding: '9px 10px', borderRadius: 6, cursor: 'pointer', background: isSel ? 'var(--accent-light)' : 'transparent', border: `1px solid ${isSel ? 'var(--accent)' : C.border}`, marginBottom: 4 }}>
                 <p style={{ fontSize: 12, color: isSel ? 'var(--accent)' : C.fg, fontWeight: isSel ? 600 : 400 }}>
-                  {s.nom} {!s.active && <span style={{ fontSize: 9, color: C.subtle }}>(inactif)</span>}
+                  {s.nom} {!s.active && <span style={{ fontSize: 11, color: C.subtle }}>(inactif)</span>}
                 </p>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 2 }}>
                   <Tag label={s.categorie} color={isSel ? C.green : C.slate} />
-                  <p style={{ fontSize: 10, color: C.subtle, fontWeight: 600 }}>{fmtMontant(total)}</p>
+                  <p style={{ fontSize: 12, color: C.subtle, fontWeight: 600 }}>{fmtMontant(total)}</p>
                 </div>
               </div>
             )
@@ -779,7 +779,7 @@ function FournisseursView() {
                 <Avatar initials={selected.nom.slice(0, 3).toUpperCase()} size={36} color={C.warning} />
                 <div>
                   <p style={{ fontSize: 17, color: C.fg, fontWeight: 700 }}>{selected.nom}</p>
-                  <p style={{ fontSize: 11, color: C.subtle }}>
+                  <p style={{ fontSize: 12, color: C.subtle }}>
                     {selected.categorie}
                     {selected.posteParDefaut && ` — Poste ${selected.posteParDefaut}`}
                   </p>
@@ -820,9 +820,9 @@ function FournisseursView() {
                 </p>
               ) : stats.ours.map((f, i) => (
                 <div key={f.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: i < stats.ours.length - 1 ? `1px solid ${C.border}` : 'none' }}>
-                  <p style={{ fontSize: 11, color: C.subtle, fontFamily: "'JetBrains Mono', monospace", flex: 1 }}>{f.numero}</p>
+                  <p style={{ fontSize: 12, color: C.subtle, fontFamily: "'JetBrains Mono', monospace", flex: 1 }}>{f.numero}</p>
                   <p style={{ fontSize: 12, color: C.fg, fontWeight: 600 }}>{fmtMontant(f.montantTTC)}</p>
-                  <p style={{ fontSize: 11, color: C.subtle }}>{fmtDateShort(f.dateFacture)}</p>
+                  <p style={{ fontSize: 12, color: C.subtle }}>{fmtDateShort(f.dateFacture)}</p>
                   <Badge label={statutShortLabel(f.statut)} variant={statutBadgeVariant(f.statut)} />
                 </div>
               ))}
@@ -838,8 +838,8 @@ function FournisseursView() {
                   ['Délai paiement', selected.delaiPaiement ? `${selected.delaiPaiement} jours` : '—'],
                 ].map(([k, v]) => (
                   <div key={k} style={{ padding: '6px 8px', background: 'var(--page-bg)', borderRadius: 6 }}>
-                    <p style={{ fontSize: 9, color: C.subtle, fontWeight: 600, marginBottom: 2 }}>{k}</p>
-                    <p style={{ fontSize: 11, color: C.fg, fontWeight: 500 }}>{v}</p>
+                    <p style={{ fontSize: 11, color: C.subtle, fontWeight: 600, marginBottom: 2 }}>{k}</p>
+                    <p style={{ fontSize: 12, color: C.fg, fontWeight: 500 }}>{v}</p>
                   </div>
                 ))}
               </div>
@@ -930,7 +930,7 @@ function NewFournisseurForm({
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <p style={{ fontSize: 10, color: C.subtle, fontWeight: 600, marginBottom: 4 }}>{label}</p>
+      <p style={{ fontSize: 12, color: C.subtle, fontWeight: 600, marginBottom: 4 }}>{label}</p>
       {children}
     </div>
   )

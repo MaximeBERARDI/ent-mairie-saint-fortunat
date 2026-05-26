@@ -95,7 +95,7 @@ export function ProjectionView({ baseRatios }: ProjectionViewProps) {
       <div style={{ display: 'flex', gap: 'var(--gap)' }}>
         {/* Liste des projets */}
         <div style={{ width: 260, flexShrink: 0 }}>
-          <p style={{ fontSize: 10, color: C.subtle, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
+          <p style={{ fontSize: 12, color: C.subtle, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
             Projets en simulation ({projets.length})
           </p>
           {projets.length === 0 ? (
@@ -125,7 +125,7 @@ export function ProjectionView({ baseRatios }: ProjectionViewProps) {
                     <p style={{ fontSize: 12, color: C.fg, fontWeight: 600, marginBottom: 4 }}>{p.nom}</p>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       <Tag label={String(p.anneeDebut)} color={C.slate} />
-                      <p style={{ fontSize: 11, color: C.subtle, fontWeight: 600 }}>{fmtMontant(p.coutTotal)}</p>
+                      <p style={{ fontSize: 12, color: C.subtle, fontWeight: 600 }}>{fmtMontant(p.coutTotal)}</p>
                     </div>
                   </button>
                 )
@@ -155,7 +155,7 @@ export function ProjectionView({ baseRatios }: ProjectionViewProps) {
             />
           ) : (
             <Card padding={32} style={{ textAlign: 'center' }}>
-              <p style={{ fontSize: 13, color: C.subtle }}>Sélectionnez un projet pour voir sa projection.</p>
+              <p style={{ fontSize: 14, color: C.subtle }}>Sélectionnez un projet pour voir sa projection.</p>
             </Card>
           )}
         </div>
@@ -236,15 +236,15 @@ function ProjetProjection({
       <Card padding={0} style={{ marginBottom: 16, background: C.bg }}>
         <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1.2fr 90px', gap: 10, padding: '8px 14px', borderBottom: `1px solid ${C.border}` }}>
           {['Source', 'Organisme', 'Montant', 'Détail', 'Versement'].map(h => (
-            <p key={h} style={{ fontSize: 9, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</p>
+            <p key={h} style={{ fontSize: 11, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</p>
           ))}
         </div>
         {projet.financements.map((f, i) => (
           <div key={f.id} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1.2fr 90px', gap: 10, padding: '8px 14px', borderBottom: i < projet.financements.length - 1 ? `1px solid ${C.border}` : 'none', alignItems: 'center', fontSize: 12 }}>
             <Tag label={f.source} color={f.source === 'Emprunt' ? C.danger : f.source === 'FCTVA' ? C.info : f.source === 'Autofinancement' ? C.slate : C.success} />
-            <span style={{ color: C.subtle, fontSize: 11 }}>{f.organisme ?? '—'}</span>
+            <span style={{ color: C.subtle, fontSize: 12 }}>{f.organisme ?? '—'}</span>
             <span style={{ color: C.fg, fontWeight: 600 }}>{fmtMontant(f.montant)}</span>
-            <span style={{ color: C.subtle, fontSize: 11 }}>
+            <span style={{ color: C.subtle, fontSize: 12 }}>
               {f.source === 'Emprunt' && f.dureeAnnees && f.tauxInteret
                 ? `${f.dureeAnnees} ans à ${f.tauxInteret}% — annuité ${fmtMontant(annuiteConstante(f.montant, f.tauxInteret, f.dureeAnnees))}`
                 : f.certitude ? `Certitude : ${f.certitude}` : ''}
@@ -258,13 +258,13 @@ function ProjetProjection({
       <Card padding={12} style={{ marginBottom: 16, background: `${C.green}06`, borderColor: `${C.green}30` }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
           <p style={{ fontSize: 12, color: C.fg, fontWeight: 600 }}>Paramètres de la projection</p>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: C.muted }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: C.muted }}>
             Horizon :
             <select value={horizon} onChange={e => setHorizon(parseInt(e.target.value, 10))} style={{ ...inputStyle, width: 80, height: 28 }}>
               {[3, 5, 7, 10, 15].map(n => <option key={n} value={n}>{n} ans</option>)}
             </select>
           </label>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, color: C.muted }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: C.muted }}>
             Croissance recettes/dépenses :
             <input type="number" step="0.5" value={croissance} onChange={e => setCroissance(parseFloat(e.target.value) || 0)} style={{ ...inputStyle, width: 70, height: 28 }} />
             <span>% / an</span>
@@ -275,7 +275,7 @@ function ProjetProjection({
       {/* KPI projection finale */}
       {lastYear && (
         <div style={{ marginBottom: 16 }}>
-          <p style={{ fontSize: 11, color: C.muted, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+          <p style={{ fontSize: 12, color: C.muted, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             Projection à {horizon} ans (impact en {lastYear.annee})
           </p>
           <div style={{ display: 'flex', gap: 'var(--gap)' }}>
@@ -311,14 +311,14 @@ function ProjetProjection({
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--gap)', marginBottom: 'var(--gap)' }}>
         <Card padding={14}>
           <SectionHeader title="Encours de dette projeté" />
-          <p style={{ fontSize: 10, color: C.subtle, marginBottom: 8 }}>En milliers d'euros</p>
+          <p style={{ fontSize: 12, color: C.subtle, marginBottom: 8 }}>En milliers d'euros</p>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={C.border} />
               <XAxis dataKey="annee" fontSize={11} stroke={C.subtle} />
               <YAxis fontSize={11} stroke={C.subtle} unit=" k€" />
               <Tooltip contentStyle={{ fontSize: 12, borderRadius: 6, border: `1px solid ${C.border}` }} />
-              <Legend wrapperStyle={{ fontSize: 11 }} />
+              <Legend wrapperStyle={{ fontSize: 12 }} />
               <Bar dataKey="encoursDette" name="Encours dette (k€)" fill={C.slate} />
             </BarChart>
           </ResponsiveContainer>
@@ -326,14 +326,14 @@ function ProjetProjection({
 
         <Card padding={14}>
           <SectionHeader title="Capacité de désendettement" />
-          <p style={{ fontSize: 10, color: C.subtle, marginBottom: 8 }}>Seuil sain &lt; 8 ans · Surveillance 8-12 · Critique &gt; 12</p>
+          <p style={{ fontSize: 12, color: C.subtle, marginBottom: 8 }}>Seuil sain &lt; 8 ans · Surveillance 8-12 · Critique &gt; 12</p>
           <ResponsiveContainer width="100%" height={220}>
             <LineChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={C.border} />
               <XAxis dataKey="annee" fontSize={11} stroke={C.subtle} />
               <YAxis fontSize={11} stroke={C.subtle} unit=" ans" />
               <Tooltip contentStyle={{ fontSize: 12, borderRadius: 6, border: `1px solid ${C.border}` }} />
-              <Legend wrapperStyle={{ fontSize: 11 }} />
+              <Legend wrapperStyle={{ fontSize: 12 }} />
               <Line type="monotone" dataKey="capaciteDesendettement" name="Désendettement (années)" stroke={C.danger} strokeWidth={2} dot={{ r: 4 }} />
             </LineChart>
           </ResponsiveContainer>
@@ -341,14 +341,14 @@ function ProjetProjection({
 
         <Card padding={14}>
           <SectionHeader title="Recettes vs Dépenses fonctionnement" />
-          <p style={{ fontSize: 10, color: C.subtle, marginBottom: 8 }}>RRF, DRF (avec intérêts du projet) et CAF brute en k€</p>
+          <p style={{ fontSize: 12, color: C.subtle, marginBottom: 8 }}>RRF, DRF (avec intérêts du projet) et CAF brute en k€</p>
           <ResponsiveContainer width="100%" height={220}>
             <ComposedChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={C.border} />
               <XAxis dataKey="annee" fontSize={11} stroke={C.subtle} />
               <YAxis fontSize={11} stroke={C.subtle} unit=" k€" />
               <Tooltip contentStyle={{ fontSize: 12, borderRadius: 6, border: `1px solid ${C.border}` }} />
-              <Legend wrapperStyle={{ fontSize: 11 }} />
+              <Legend wrapperStyle={{ fontSize: 12 }} />
               <Bar dataKey="rrf" name="RRF" fill={C.success} />
               <Bar dataKey="drf" name="DRF" fill={C.warning} />
               <Line type="monotone" dataKey="cafBrute" name="CAF brute" stroke={C.green} strokeWidth={2} dot={{ r: 4 }} />
@@ -358,14 +358,14 @@ function ProjetProjection({
 
         <Card padding={14}>
           <SectionHeader title="Annuités d'emprunt" />
-          <p style={{ fontSize: 10, color: C.subtle, marginBottom: 8 }}>Décomposition intérêts (chap. 66) / capital (chap. 16D) en €</p>
+          <p style={{ fontSize: 12, color: C.subtle, marginBottom: 8 }}>Décomposition intérêts (chap. 66) / capital (chap. 16D) en €</p>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={C.border} />
               <XAxis dataKey="annee" fontSize={11} stroke={C.subtle} />
               <YAxis fontSize={11} stroke={C.subtle} unit=" €" />
               <Tooltip contentStyle={{ fontSize: 12, borderRadius: 6, border: `1px solid ${C.border}` }} />
-              <Legend wrapperStyle={{ fontSize: 11 }} />
+              <Legend wrapperStyle={{ fontSize: 12 }} />
               <Bar dataKey="capital" name="Capital remboursé" stackId="a" fill={C.slate} />
               <Bar dataKey="interets" name="Intérêts" stackId="a" fill={C.warning} />
             </BarChart>
@@ -378,11 +378,11 @@ function ProjetProjection({
       <Card padding={0}>
         <div style={{ display: 'grid', gridTemplateColumns: '60px 1fr 1fr 1fr 1fr 1fr 1fr 90px', gap: 8, padding: '8px 12px', background: C.bg, borderBottom: `1px solid ${C.border}` }}>
           {['Année', 'Dép. équip.', 'Recettes inv.', 'Intérêts', 'Capital remb.', 'Encours fin', 'CAF brute', 'Désendet.'].map(h => (
-            <p key={h} style={{ fontSize: 9, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{h}</p>
+            <p key={h} style={{ fontSize: 11, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{h}</p>
           ))}
         </div>
         {projection.map((p, i) => (
-          <div key={p.annee} style={{ display: 'grid', gridTemplateColumns: '60px 1fr 1fr 1fr 1fr 1fr 1fr 90px', gap: 8, padding: '8px 12px', borderBottom: i < projection.length - 1 ? `1px solid ${C.border}` : 'none', alignItems: 'center', fontSize: 11 }}>
+          <div key={p.annee} style={{ display: 'grid', gridTemplateColumns: '60px 1fr 1fr 1fr 1fr 1fr 1fr 90px', gap: 8, padding: '8px 12px', borderBottom: i < projection.length - 1 ? `1px solid ${C.border}` : 'none', alignItems: 'center', fontSize: 12 }}>
             <span style={{ color: C.fg, fontWeight: 700, fontFamily: "'JetBrains Mono', monospace" }}>{p.annee}</span>
             <span style={{ color: p.depEquipement > 0 ? C.warning : C.subtle }}>{p.depEquipement > 0 ? fmtMontantK(p.depEquipement) : '—'}</span>
             <span style={{ color: p.recettesInvest > 0 ? C.success : C.subtle }}>{p.recettesInvest > 0 ? fmtMontantK(p.recettesInvest) : '—'}</span>
@@ -479,29 +479,29 @@ function ProjetForm({ initial, onSubmit, onCancel }: {
       </div>
 
       {/* Financements */}
-      <p style={{ fontSize: 10, color: C.subtle, fontWeight: 700, marginTop: 14, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+      <p style={{ fontSize: 12, color: C.subtle, fontWeight: 700, marginTop: 14, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
         Plan de financement
       </p>
       {financements.length === 0 && (
-        <p style={{ fontSize: 11, color: C.subtle, fontStyle: 'italic', marginBottom: 8 }}>
+        <p style={{ fontSize: 12, color: C.subtle, fontStyle: 'italic', marginBottom: 8 }}>
           Aucun financement. Ajoutez les subventions, l'emprunt, le FCTVA et l'autofinancement.
         </p>
       )}
       {financements.map((f, idx) => (
         <div key={f.id} style={{ display: 'grid', gridTemplateColumns: '1.5fr 1.5fr 100px 80px 80px 90px 100px 30px', gap: 6, marginBottom: 6, alignItems: 'center' }}>
-          <select value={f.source} onChange={e => updateFinancement(f.id, { source: e.target.value as SourceFinancement })} style={{ ...inputStyle, fontSize: 11 }}>
+          <select value={f.source} onChange={e => updateFinancement(f.id, { source: e.target.value as SourceFinancement })} style={{ ...inputStyle, fontSize: 12 }}>
             {SOURCE_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
           </select>
-          <input type="text" value={f.organisme ?? ''} onChange={e => updateFinancement(f.id, { organisme: e.target.value })} placeholder="organisme" style={{ ...inputStyle, fontSize: 11 }} />
-          <input type="number" min="0" value={f.montant} onChange={e => updateFinancement(f.id, { montant: num(e.target.value) })} placeholder="€" style={{ ...inputStyle, fontSize: 11, textAlign: 'right' }} />
+          <input type="text" value={f.organisme ?? ''} onChange={e => updateFinancement(f.id, { organisme: e.target.value })} placeholder="organisme" style={{ ...inputStyle, fontSize: 12 }} />
+          <input type="number" min="0" value={f.montant} onChange={e => updateFinancement(f.id, { montant: num(e.target.value) })} placeholder="€" style={{ ...inputStyle, fontSize: 12, textAlign: 'right' }} />
           {f.source === 'Emprunt' ? (
             <>
-              <input type="number" min="0" max="30" value={f.dureeAnnees ?? ''} onChange={e => updateFinancement(f.id, { dureeAnnees: parseInt(e.target.value, 10) || undefined })} placeholder="durée" style={{ ...inputStyle, fontSize: 11 }} />
-              <input type="number" min="0" step="0.01" value={f.tauxInteret ?? ''} onChange={e => updateFinancement(f.id, { tauxInteret: parseFloat(e.target.value) || undefined })} placeholder="taux %" style={{ ...inputStyle, fontSize: 11 }} />
+              <input type="number" min="0" max="30" value={f.dureeAnnees ?? ''} onChange={e => updateFinancement(f.id, { dureeAnnees: parseInt(e.target.value, 10) || undefined })} placeholder="durée" style={{ ...inputStyle, fontSize: 12 }} />
+              <input type="number" min="0" step="0.01" value={f.tauxInteret ?? ''} onChange={e => updateFinancement(f.id, { tauxInteret: parseFloat(e.target.value) || undefined })} placeholder="taux %" style={{ ...inputStyle, fontSize: 12 }} />
             </>
           ) : (
             <>
-              <select value={f.certitude ?? ''} onChange={e => updateFinancement(f.id, { certitude: e.target.value as 'Certaine' | 'Probable' | 'À demander' })} style={{ ...inputStyle, fontSize: 11 }}>
+              <select value={f.certitude ?? ''} onChange={e => updateFinancement(f.id, { certitude: e.target.value as 'Certaine' | 'Probable' | 'À demander' })} style={{ ...inputStyle, fontSize: 12 }}>
                 <option value="Certaine">Certaine</option>
                 <option value="Probable">Probable</option>
                 <option value="À demander">À demander</option>
@@ -509,15 +509,15 @@ function ProjetForm({ initial, onSubmit, onCancel }: {
               <span />
             </>
           )}
-          <input type="number" min="2020" value={f.anneeVersement ?? ''} onChange={e => updateFinancement(f.id, { anneeVersement: parseInt(e.target.value, 10) || undefined })} placeholder="année" style={{ ...inputStyle, fontSize: 11 }} />
-          <span style={{ fontSize: 11, color: C.subtle, textAlign: 'right' }}>{Math.round((f.montant / num(coutTotal)) * 100) || 0}%</span>
+          <input type="number" min="2020" value={f.anneeVersement ?? ''} onChange={e => updateFinancement(f.id, { anneeVersement: parseInt(e.target.value, 10) || undefined })} placeholder="année" style={{ ...inputStyle, fontSize: 12 }} />
+          <span style={{ fontSize: 12, color: C.subtle, textAlign: 'right' }}>{Math.round((f.montant / num(coutTotal)) * 100) || 0}%</span>
           <button onClick={() => removeFinancement(f.id)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: C.danger, fontSize: 14 }}>×</button>
         </div>
       ))}
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 8 }}>
         <Button size="sm" onClick={addFinancement}>+ Financement</Button>
-        <span style={{ fontSize: 11, color: C.subtle }}>
+        <span style={{ fontSize: 12, color: C.subtle }}>
           Total : <strong style={{ color: totalFin === num(coutTotal) ? C.success : C.warning }}>{fmtMontant(totalFin)}</strong>
           {totalFin !== num(coutTotal) && num(coutTotal) > 0 && (
             <span style={{ color: C.danger, marginLeft: 8 }}>
@@ -561,7 +561,7 @@ function ProjetForm({ initial, onSubmit, onCancel }: {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <p style={{ fontSize: 10, color: C.subtle, fontWeight: 600, marginBottom: 4 }}>{label}</p>
+      <p style={{ fontSize: 12, color: C.subtle, fontWeight: 600, marginBottom: 4 }}>{label}</p>
       {children}
     </div>
   )

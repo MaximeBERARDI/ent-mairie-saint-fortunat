@@ -205,12 +205,12 @@ export function HistoriqueView({ currentRatios, currentYearLabel }: HistoriqueVi
             {importInfo.errors.length > 0 && ` ${importInfo.errors.length} erreur${importInfo.errors.length > 1 ? 's' : ''} :`}
           </p>
           {importInfo.errors.slice(0, 5).map((err, i) => (
-            <p key={i} style={{ fontSize: 11, color: C.danger, marginTop: 4 }}>· {err}</p>
+            <p key={i} style={{ fontSize: 12, color: C.danger, marginTop: 4 }}>· {err}</p>
           ))}
           {importInfo.errors.length > 5 && (
-            <p style={{ fontSize: 11, color: C.subtle, fontStyle: 'italic', marginTop: 4 }}>… et {importInfo.errors.length - 5} autre(s).</p>
+            <p style={{ fontSize: 12, color: C.subtle, fontStyle: 'italic', marginTop: 4 }}>… et {importInfo.errors.length - 5} autre(s).</p>
           )}
-          <button onClick={() => setImportInfo(null)} style={{ background: 'transparent', border: 'none', color: C.muted, fontSize: 11, cursor: 'pointer', marginTop: 6 }}>Fermer</button>
+          <button onClick={() => setImportInfo(null)} style={{ background: 'transparent', border: 'none', color: C.muted, fontSize: 12, cursor: 'pointer', marginTop: 6 }}>Fermer</button>
         </Card>
       )}
 
@@ -249,7 +249,7 @@ export function HistoriqueView({ currentRatios, currentYearLabel }: HistoriqueVi
         <Card padding={0} style={{ marginBottom: 16 }}>
           <div style={{ display: 'grid', gridTemplateColumns: '70px 70px 1fr 1fr 1fr 1fr 1fr 80px', padding: '8px 14px', background: C.bg, borderBottom: `1px solid ${C.border}` }}>
             {['Exercice', 'Pop.', 'RRF', 'DRF', 'CAF brute', 'Encours dette', 'Désendet.', 'Actions'].map(h => (
-              <p key={h} style={{ fontSize: 10, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</p>
+              <p key={h} style={{ fontSize: 12, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</p>
             ))}
           </div>
           {exercices.map((e, i) => {
@@ -268,12 +268,12 @@ export function HistoriqueView({ currentRatios, currentYearLabel }: HistoriqueVi
                 <div style={{ display: 'flex', gap: 4 }}>
                   <button
                     onClick={() => { setEditing(e); setShowForm(true) }}
-                    style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.border}`, background: '#fff', color: C.muted, cursor: 'pointer', fontSize: 11 }}
+                    style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.border}`, background: '#fff', color: C.muted, cursor: 'pointer', fontSize: 12 }}
                     title="Modifier"
                   >✎</button>
                   <button
                     onClick={() => { if (confirm(`Supprimer l'exercice ${e.exercice} ?`)) deleteExercice(e.id) }}
-                    style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.danger}`, background: C.dangerLight, color: C.danger, cursor: 'pointer', fontSize: 11 }}
+                    style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.danger}`, background: C.dangerLight, color: C.danger, cursor: 'pointer', fontSize: 12 }}
                     title="Supprimer"
                   >×</button>
                 </div>
@@ -354,7 +354,7 @@ function ChartsSection({
         {/* Recettes vs Dépenses */}
         <Card padding={14}>
           <SectionHeader title="Recettes vs Dépenses de fonctionnement" />
-          <p style={{ fontSize: 10, color: C.subtle, marginBottom: 8 }}>En milliers d'euros — l'écart vert représente la CAF brute.</p>
+          <p style={{ fontSize: 12, color: C.subtle, marginBottom: 8 }}>En milliers d'euros — l'écart vert représente la CAF brute.</p>
           <ResponsiveContainer width="100%" height={260}>
             <ComposedChart data={serieKeur} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={C.border} />
@@ -365,7 +365,7 @@ function ChartsSection({
                 labelStyle={{ color: C.fg }}
                 contentStyle={{ fontSize: 12, borderRadius: 6, border: `1px solid ${C.border}` }}
               />
-              <Legend wrapperStyle={{ fontSize: 11 }} />
+              <Legend wrapperStyle={{ fontSize: 12 }} />
               <Bar dataKey="rrfK" name="RRF" fill={C.success} />
               <Bar dataKey="drfK" name="DRF" fill={C.warning} />
               <Line type="monotone" dataKey="cafBruteK" name="CAF brute" stroke={C.green} strokeWidth={2} dot={{ r: 4 }} />
@@ -376,7 +376,7 @@ function ChartsSection({
         {/* Capacité désendettement */}
         <Card padding={14}>
           <SectionHeader title="Encours de dette & capacité de désendettement" />
-          <p style={{ fontSize: 10, color: C.subtle, marginBottom: 8 }}>Seuil sain : &lt; 8 ans · Surveillance : 8-12 · Critique : &gt; 12.</p>
+          <p style={{ fontSize: 12, color: C.subtle, marginBottom: 8 }}>Seuil sain : &lt; 8 ans · Surveillance : 8-12 · Critique : &gt; 12.</p>
           <ResponsiveContainer width="100%" height={260}>
             <ComposedChart data={serieKeur} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={C.border} />
@@ -384,7 +384,7 @@ function ChartsSection({
               <YAxis yAxisId="left" fontSize={11} stroke={C.subtle} unit=" k€" />
               <YAxis yAxisId="right" orientation="right" fontSize={11} stroke={C.subtle} unit=" ans" />
               <Tooltip contentStyle={{ fontSize: 12, borderRadius: 6, border: `1px solid ${C.border}` }} />
-              <Legend wrapperStyle={{ fontSize: 11 }} />
+              <Legend wrapperStyle={{ fontSize: 12 }} />
               <Bar yAxisId="left" dataKey="encoursK" name="Encours dette (k€)" fill={C.slate} />
               <Line yAxisId="right" type="monotone" dataKey="capaciteDesendettement" name="Désendettement (ans)" stroke={C.danger} strokeWidth={2} dot={{ r: 4 }} />
             </ComposedChart>
@@ -394,14 +394,14 @@ function ChartsSection({
         {/* Ventilation des dépenses */}
         <Card padding={14}>
           <SectionHeader title="Ventilation des dépenses de fonctionnement" />
-          <p style={{ fontSize: 10, color: C.subtle, marginBottom: 8 }}>En milliers d'euros — empilé par chapitre M14.</p>
+          <p style={{ fontSize: 12, color: C.subtle, marginBottom: 8 }}>En milliers d'euros — empilé par chapitre M14.</p>
           <ResponsiveContainer width="100%" height={260}>
             <BarChart data={serieKeur} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={C.border} />
               <XAxis dataKey="label" fontSize={11} stroke={C.subtle} />
               <YAxis fontSize={11} stroke={C.subtle} unit=" k€" />
               <Tooltip contentStyle={{ fontSize: 12, borderRadius: 6, border: `1px solid ${C.border}` }} />
-              <Legend wrapperStyle={{ fontSize: 11 }} />
+              <Legend wrapperStyle={{ fontSize: 12 }} />
               <Bar dataKey="charges012K" name="Personnel (012)" stackId="a" fill={C.slate} />
               <Bar dataKey="charges011K" name="Charges générales (011)" stackId="a" fill={C.green} />
               <Bar dataKey="charges65K" name="Gestion courante (65)" stackId="a" fill={C.terra} />
@@ -414,14 +414,14 @@ function ChartsSection({
         {/* Indicateurs par habitant */}
         <Card padding={14}>
           <SectionHeader title="Indicateurs par habitant (R. 2313-1)" />
-          <p style={{ fontSize: 10, color: C.subtle, marginBottom: 8 }}>Évolution des principaux ratios DGFiP.</p>
+          <p style={{ fontSize: 12, color: C.subtle, marginBottom: 8 }}>Évolution des principaux ratios DGFiP.</p>
           <ResponsiveContainer width="100%" height={260}>
             <LineChart data={serieKeur} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={C.border} />
               <XAxis dataKey="label" fontSize={11} stroke={C.subtle} />
               <YAxis fontSize={11} stroke={C.subtle} unit=" €" />
               <Tooltip contentStyle={{ fontSize: 12, borderRadius: 6, border: `1px solid ${C.border}` }} />
-              <Legend wrapperStyle={{ fontSize: 11 }} />
+              <Legend wrapperStyle={{ fontSize: 12 }} />
               <Line type="monotone" dataKey="rrfParHab" name="RRF / hab." stroke={C.success} strokeWidth={2} dot={{ r: 4 }} />
               <Line type="monotone" dataKey="drfParHab" name="DRF / hab." stroke={C.warning} strokeWidth={2} dot={{ r: 4 }} />
               <Line type="monotone" dataKey="detteParHab" name="Dette / hab." stroke={C.danger} strokeWidth={2} dot={{ r: 4 }} />
@@ -432,14 +432,14 @@ function ChartsSection({
         {/* Taux d'épargne */}
         <Card padding={14}>
           <SectionHeader title="Taux d'épargne brute" />
-          <p style={{ fontSize: 10, color: C.subtle, marginBottom: 8 }}>Seuil sain : &gt; 12% · Surveillance : 8-12% · Faible : &lt; 8%.</p>
+          <p style={{ fontSize: 12, color: C.subtle, marginBottom: 8 }}>Seuil sain : &gt; 12% · Surveillance : 8-12% · Faible : &lt; 8%.</p>
           <ResponsiveContainer width="100%" height={260}>
             <LineChart data={serieKeur} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={C.border} />
               <XAxis dataKey="label" fontSize={11} stroke={C.subtle} />
               <YAxis fontSize={11} stroke={C.subtle} unit=" %" />
               <Tooltip contentStyle={{ fontSize: 12, borderRadius: 6, border: `1px solid ${C.border}` }} />
-              <Legend wrapperStyle={{ fontSize: 11 }} />
+              <Legend wrapperStyle={{ fontSize: 12 }} />
               <Line type="monotone" dataKey="tauxEpargne" name="Taux d'épargne brute (%)" stroke={C.green} strokeWidth={2} dot={{ r: 5 }} />
             </LineChart>
           </ResponsiveContainer>
@@ -452,7 +452,7 @@ function ChartsSection({
             <p style={{ fontSize: 12, color: C.subtle, fontStyle: 'italic' }}>Au moins 2 exercices nécessaires pour calculer les variations.</p>
           ) : (
             <div>
-              <div style={{ display: 'grid', gridTemplateColumns: '70px 1fr 1fr 1fr 1fr 1fr', padding: '6px 8px', background: C.bg, borderRadius: 4, fontSize: 9, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '70px 1fr 1fr 1fr 1fr 1fr', padding: '6px 8px', background: C.bg, borderRadius: 4, fontSize: 11, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>
                 <span>Exercice</span>
                 <span>RRF</span>
                 <span>DRF</span>
@@ -461,7 +461,7 @@ function ChartsSection({
                 <span>Dette</span>
               </div>
               {variations.map(v => (
-                <div key={v.exercice} style={{ display: 'grid', gridTemplateColumns: '70px 1fr 1fr 1fr 1fr 1fr', padding: '6px 8px', borderBottom: `1px solid ${C.border}`, fontSize: 11 }}>
+                <div key={v.exercice} style={{ display: 'grid', gridTemplateColumns: '70px 1fr 1fr 1fr 1fr 1fr', padding: '6px 8px', borderBottom: `1px solid ${C.border}`, fontSize: 12 }}>
                   <span style={{ fontFamily: "'JetBrains Mono', monospace", fontWeight: 600, color: C.fg }}>{v.exercice}</span>
                   <VariationCell value={v.deltaRrf} positiveIsGood />
                   <VariationCell value={v.deltaDrf} positiveIsGood={false} />
@@ -522,7 +522,7 @@ function ExerciceForm({ initial, onSubmit, onCancel }: {
   return (
     <Card padding={14} style={{ marginBottom: 12, background: C.greenLight, borderColor: C.green }}>
       <SectionHeader title={initial ? `Modifier l'exercice ${initial.exercice}` : 'Nouvel exercice historique'} />
-      <p style={{ fontSize: 11, color: C.subtle, marginBottom: 10 }}>
+      <p style={{ fontSize: 12, color: C.subtle, marginBottom: 10 }}>
         Les agrégats se trouvent dans le compte administratif (CA) de l'année concernée.
         Les valeurs en € peuvent être saisies sans séparateur (ex: <code>295000</code>).
       </p>
@@ -536,7 +536,7 @@ function ExerciceForm({ initial, onSubmit, onCancel }: {
         </Field>
       </div>
 
-      <p style={{ fontSize: 10, color: C.subtle, fontWeight: 700, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Section fonctionnement</p>
+      <p style={{ fontSize: 12, color: C.subtle, fontWeight: 700, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Section fonctionnement</p>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 12 }}>
         <Field label="RRF — Recettes réelles de fonctionnement (€)">
           <input type="number" value={rrf} onChange={e => setRrf(e.target.value)} style={inputStyle} />
@@ -570,7 +570,7 @@ function ExerciceForm({ initial, onSubmit, onCancel }: {
         </Field>
       </div>
 
-      <p style={{ fontSize: 10, color: C.subtle, fontWeight: 700, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Section investissement & dette</p>
+      <p style={{ fontSize: 12, color: C.subtle, fontWeight: 700, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Section investissement & dette</p>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 12 }}>
         <Field label="Dépenses équipement (chap. 20+21+23) (€)">
           <input type="number" value={depEquipement} onChange={e => setDepEquipement(e.target.value)} style={inputStyle} />
@@ -636,7 +636,7 @@ function ExerciceForm({ initial, onSubmit, onCancel }: {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <p style={{ fontSize: 10, color: C.subtle, fontWeight: 600, marginBottom: 4 }}>{label}</p>
+      <p style={{ fontSize: 12, color: C.subtle, fontWeight: 600, marginBottom: 4 }}>{label}</p>
       {children}
     </div>
   )

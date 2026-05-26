@@ -121,7 +121,7 @@ function ListeView() {
     <div style={{ display: 'flex', gap: 'var(--gap)', height: 'calc(100vh - 180px)' }}>
       <Card style={{ flex: 2 }} padding={0}>
         <div style={{ padding: '12px 16px', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <p style={{ fontSize: 13, color: C.fg, fontWeight: 600, flex: 1 }}>
+          <p style={{ fontSize: 14, color: C.fg, fontWeight: 600, flex: 1 }}>
             {selected?.filename ?? 'Sélectionner un compte rendu'}
           </p>
           {selected && (
@@ -147,14 +147,14 @@ function ListeView() {
             ) : (
               <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12, color: C.subtle, textAlign: 'center', padding: 24 }}>
                 <span style={{ fontSize: 32 }}>📄</span>
-                <p style={{ fontSize: 13 }}>PDF non sauvegardé (trop volumineux pour le stockage local)</p>
-                <p style={{ fontSize: 11 }}>{selectedTasks.length} tâche{selectedTasks.length > 1 ? 's' : ''} créée{selectedTasks.length > 1 ? 's' : ''} à partir de ce CR</p>
+                <p style={{ fontSize: 14 }}>PDF non sauvegardé (trop volumineux pour le stockage local)</p>
+                <p style={{ fontSize: 12 }}>{selectedTasks.length} tâche{selectedTasks.length > 1 ? 's' : ''} créée{selectedTasks.length > 1 ? 's' : ''} à partir de ce CR</p>
               </div>
             )
           ) : (
             <div style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 12, color: C.subtle }}>
               <span style={{ fontSize: 32 }}>📄</span>
-              <p style={{ fontSize: 13 }}>
+              <p style={{ fontSize: 14 }}>
                 {hydrated && crs.length === 0
                   ? 'Aucun CR importé pour le moment — clique sur « Nouveau CR » pour commencer.'
                   : 'Cliquez sur un CR pour le visualiser'}
@@ -168,9 +168,9 @@ function ListeView() {
         <Card padding={0} style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           <div style={{ padding: '10px 14px', borderBottom: `1px solid ${C.border}`, background: `${C.green}08`, display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ width: 20, height: 20, borderRadius: '50%', background: C.green, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ fontSize: 9, color: '#fff', fontWeight: 700 }}>IA</span>
+              <span style={{ fontSize: 11, color: '#fff', fontWeight: 700 }}>IA</span>
             </div>
-            <p style={{ fontSize: 13, color: C.fg, fontWeight: 700, flex: 1 }}>Comptes rendus traités</p>
+            <p style={{ fontSize: 14, color: C.fg, fontWeight: 700, flex: 1 }}>Comptes rendus traités</p>
             <Badge label={`${crs.length}`} variant="default" />
           </div>
           <div style={{ flex: 1, overflow: 'auto' }}>
@@ -189,7 +189,7 @@ function ListeView() {
                     <p style={{ fontSize: 12, color: C.fg, fontWeight: 500 }}>{cr.filename}</p>
                     <Badge label="Validé" variant="success" />
                   </div>
-                  <p style={{ fontSize: 10, color: C.subtle, marginTop: 2 }}>{commissionName} · {cr.taskIds.length} tâche{cr.taskIds.length > 1 ? 's' : ''} · {dateLabel}</p>
+                  <p style={{ fontSize: 12, color: C.subtle, marginTop: 2 }}>{commissionName} · {cr.taskIds.length} tâche{cr.taskIds.length > 1 ? 's' : ''} · {dateLabel}</p>
                 </div>
               )
             })}
@@ -389,7 +389,7 @@ function UploadStep({
           <li>Vérifiez et ajustez les tâches proposées</li>
           <li>Les tâches sont créées et les responsables notifiés</li>
         </ol>
-        <div style={{ marginTop: 12, padding: 10, background: C.bg, borderRadius: 6, fontSize: 11, color: C.subtle }}>
+        <div style={{ marginTop: 12, padding: 10, background: C.bg, borderRadius: 6, fontSize: 12, color: C.subtle }}>
           🔒 Le PDF est traité côté serveur via l&apos;API Anthropic. Aucune donnée n&apos;est conservée par l&apos;IA après traitement.
         </div>
       </Card>
@@ -457,7 +457,7 @@ function ExtractionStep({
       <Card style={{ flex: 1 }} padding={16}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
           <div style={{ width: 32, height: 32, borderRadius: '50%', background: C.greenLight, border: `2px solid ${C.green}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ fontSize: 11, color: C.green, fontWeight: 700 }}>IA</span>
+            <span style={{ fontSize: 12, color: C.green, fontWeight: 700 }}>IA</span>
           </div>
           <div style={{ flex: 1 }}>
             <p style={{ fontSize: 14, color: C.fg, fontWeight: 700 }}>
@@ -465,7 +465,7 @@ function ExtractionStep({
               {!wizard.extracting && wizard.extractError && 'Erreur d\'extraction'}
               {!wizard.extracting && !wizard.extractError && wizard.extractedTasks.length > 0 && 'Extraction terminée'}
             </p>
-            <p style={{ fontSize: 10, color: C.subtle }}>{wizard.filename}</p>
+            <p style={{ fontSize: 12, color: C.subtle }}>{wizard.filename}</p>
           </div>
           {wizard.extracting && <Badge label="Traitement IA" variant="primary" />}
           {!wizard.extracting && wizard.extractedTasks.length > 0 && (
@@ -486,7 +486,7 @@ function ExtractionStep({
             <div style={{ marginTop: 14, height: 4, borderRadius: 2, background: C.ph, overflow: 'hidden' }}>
               <div className="cr-progress-bar" style={{ width: '40%', height: '100%', background: C.green, borderRadius: 2, animation: 'cr-pulse 1.4s ease-in-out infinite' }} />
             </div>
-            <p style={{ fontSize: 10, color: C.subtle, marginTop: 6 }}>
+            <p style={{ fontSize: 12, color: C.subtle, marginTop: 6 }}>
               Cela prend généralement 15 à 45 secondes selon la longueur du CR.
             </p>
             <style>{`
@@ -585,11 +585,11 @@ function ValidationStep({
       <Card style={{ flex: 3 }} padding={16}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, padding: '10px 12px', background: C.greenLight, borderRadius: 8 }}>
           <div style={{ width: 28, height: 28, borderRadius: '50%', background: C.green, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ fontSize: 10, color: '#fff', fontWeight: 700 }}>IA</span>
+            <span style={{ fontSize: 12, color: '#fff', fontWeight: 700 }}>IA</span>
           </div>
           <div style={{ flex: 1 }}>
             <p style={{ fontSize: 12, color: C.green, fontWeight: 700 }}>Extraction terminée</p>
-            <p style={{ fontSize: 10, color: C.muted }}>
+            <p style={{ fontSize: 12, color: C.muted }}>
               {wizard.extractedTasks.length} tâche{wizard.extractedTasks.length > 1 ? 's' : ''} identifiée{wizard.extractedTasks.length > 1 ? 's' : ''}
               {unassignedCount > 0 && ` — ${unassignedCount} sans responsable identifié`}
             </p>
@@ -636,7 +636,7 @@ function ValidationStep({
                     {wasEdited && <Badge label="Modifié" variant="terra" />}
                     {needsAssignee && !isRejected && <Badge label="Responsable à définir" variant="warning" />}
                     {t.sourceQuote && (
-                      <span style={{ fontSize: 10, color: C.subtle, fontStyle: 'italic' }}>
+                      <span style={{ fontSize: 12, color: C.subtle, fontStyle: 'italic' }}>
                         « {t.sourceQuote.length > 80 ? t.sourceQuote.slice(0, 80) + '…' : t.sourceQuote} »
                       </span>
                     )}
@@ -645,7 +645,7 @@ function ValidationStep({
                 <button
                   onClick={() => toggleReject(i)}
                   title={isRejected ? 'Réintégrer' : 'Rejeter cette tâche'}
-                  style={{ padding: '4px 10px', borderRadius: 5, border: `1px solid ${isRejected ? C.subtle : C.danger}`, background: isRejected ? C.bg : C.dangerLight, color: isRejected ? C.subtle : C.danger, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}
+                  style={{ padding: '4px 10px', borderRadius: 5, border: `1px solid ${isRejected ? C.subtle : C.danger}`, background: isRejected ? C.bg : C.dangerLight, color: isRejected ? C.subtle : C.danger, cursor: 'pointer', fontSize: 14, fontWeight: 600 }}
                 >
                   {isRejected ? '↺' : '✕'}
                 </button>
@@ -656,7 +656,7 @@ function ValidationStep({
                   <select
                     value={t.assigneeId ?? ''}
                     onChange={e => updateEdit(i, { assigneeId: e.target.value || null })}
-                    style={{ flex: 1.5, height: 28, border: `1px solid ${needsAssignee ? C.warning : C.border}`, borderRadius: 5, background: needsAssignee ? '#fff' : C.bg, padding: '0 8px', fontSize: 11, color: t.assigneeId ? C.fg : C.warning, fontFamily: "'DM Sans', sans-serif" }}
+                    style={{ flex: 1.5, height: 28, border: `1px solid ${needsAssignee ? C.warning : C.border}`, borderRadius: 5, background: needsAssignee ? '#fff' : C.bg, padding: '0 8px', fontSize: 12, color: t.assigneeId ? C.fg : C.warning, fontFamily: "'DM Sans', sans-serif" }}
                   >
                     <option value="">— Choisir un responsable —</option>
                     {PEOPLE.filter(p => p.active).map(p => (
@@ -667,12 +667,12 @@ function ValidationStep({
                     type="date"
                     value={t.dueDate ?? ''}
                     onChange={e => updateEdit(i, { dueDate: e.target.value || null })}
-                    style={{ width: 130, height: 28, border: `1px solid ${C.border}`, borderRadius: 5, background: C.bg, padding: '0 8px', fontSize: 11, color: C.muted, fontFamily: "'DM Sans', sans-serif", flexShrink: 0 }}
+                    style={{ width: 130, height: 28, border: `1px solid ${C.border}`, borderRadius: 5, background: C.bg, padding: '0 8px', fontSize: 12, color: C.muted, fontFamily: "'DM Sans', sans-serif", flexShrink: 0 }}
                   />
                   <select
                     value={t.priority}
                     onChange={e => updateEdit(i, { priority: e.target.value as TaskPriority })}
-                    style={{ width: 90, height: 28, border: `1px solid ${C.border}`, borderRadius: 5, background: C.bg, padding: '0 8px', fontSize: 11, color: C.muted, fontFamily: "'DM Sans', sans-serif", flexShrink: 0 }}
+                    style={{ width: 90, height: 28, border: `1px solid ${C.border}`, borderRadius: 5, background: C.bg, padding: '0 8px', fontSize: 12, color: C.muted, fontFamily: "'DM Sans', sans-serif", flexShrink: 0 }}
                   >
                     <option value="Urgent">Urgent</option>
                     <option value="Normal">Normal</option>
@@ -709,15 +709,15 @@ function ValidationStep({
             ['Sans responsable', `${unassignedCount}`],
           ].map(([k, v], i) => (
             <div key={i} style={{ display: 'flex', gap: 6, padding: '4px 0', borderBottom: i < 5 ? `1px solid ${C.border}` : 'none' }}>
-              <p style={{ fontSize: 10, color: C.subtle, width: 110, flexShrink: 0 }}>{k}</p>
-              <p style={{ fontSize: 10, color: C.fg, fontWeight: 500 }}>{v}</p>
+              <p style={{ fontSize: 12, color: C.subtle, width: 110, flexShrink: 0 }}>{k}</p>
+              <p style={{ fontSize: 12, color: C.fg, fontWeight: 500 }}>{v}</p>
             </div>
           ))}
         </Card>
         <Card padding={14}>
           <p style={{ fontSize: 12, color: C.fg, fontWeight: 600, marginBottom: 8 }}>Personnes à notifier</p>
           {notifyCounts.size === 0 && (
-            <p style={{ fontSize: 11, color: C.subtle }}>Aucune personne — assignez les tâches à gauche.</p>
+            <p style={{ fontSize: 12, color: C.subtle }}>Aucune personne — assignez les tâches à gauche.</p>
           )}
           {Array.from(notifyCounts.entries()).map(([personId, count], i, arr) => {
             const p = PEOPLE.find(x => x.id === personId)
@@ -725,8 +725,8 @@ function ValidationStep({
             return (
               <div key={personId} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 0', borderBottom: i < arr.length - 1 ? `1px solid ${C.border}` : 'none' }}>
                 <Avatar initials={p.initials} size={20} color={p.color} />
-                <p style={{ fontSize: 11, color: C.fg, flex: 1 }}>{p.fullName}</p>
-                <p style={{ fontSize: 10, color: C.subtle }}>{count} tâche{count > 1 ? 's' : ''}</p>
+                <p style={{ fontSize: 12, color: C.fg, flex: 1 }}>{p.fullName}</p>
+                <p style={{ fontSize: 12, color: C.subtle }}>{count} tâche{count > 1 ? 's' : ''}</p>
               </div>
             )
           })}
@@ -809,7 +809,7 @@ function NotificationStep({
       <p style={{ fontSize: 18, color: C.fg, fontWeight: 700, marginBottom: 8 }}>
         {taskCount} tâche{taskCount > 1 ? 's' : ''} créée{taskCount > 1 ? 's' : ''}
       </p>
-      <p style={{ fontSize: 13, color: C.subtle, marginBottom: 24 }}>
+      <p style={{ fontSize: 14, color: C.subtle, marginBottom: 24 }}>
         {personCount} personne{personCount > 1 ? 's' : ''} concernée{personCount > 1 ? 's' : ''} — les tâches sont disponibles dans la rubrique « Tâches ».
       </p>
       <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>

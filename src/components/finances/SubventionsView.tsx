@@ -208,7 +208,7 @@ export function SubventionsView() {
           <button
             key={v}
             onClick={() => setFilterStatut(v)}
-            style={{ padding: '5px 12px', borderRadius: 20, background: v === filterStatut ? C.green : '#fff', border: `1px solid ${v === filterStatut ? C.green : C.border}`, color: v === filterStatut ? '#fff' : C.muted, fontSize: 11, fontWeight: v === filterStatut ? 600 : 400, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}
+            style={{ padding: '5px 12px', borderRadius: 20, background: v === filterStatut ? C.green : '#fff', border: `1px solid ${v === filterStatut ? C.green : C.border}`, color: v === filterStatut ? '#fff' : C.muted, fontSize: 12, fontWeight: v === filterStatut ? 600 : 400, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}
           >
             {label}
           </button>
@@ -256,7 +256,7 @@ export function SubventionsView() {
                 render: (s) => (
                   <div style={{ minWidth: 0 }}>
                     <p style={{ color: C.fg, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.intitule}</p>
-                    <p style={{ fontSize: 10, color: C.subtle }}>{fmtDate(s.dateDepot)}</p>
+                    <p style={{ fontSize: 12, color: C.subtle }}>{fmtDate(s.dateDepot)}</p>
                   </div>
                 ),
               },
@@ -345,7 +345,7 @@ function SubventionDetail({ subvention, onClose, onEdit, onUpdate, onEnregistrer
     <>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
         <div>
-          <p style={{ fontSize: 11, color: C.subtle, fontFamily: "'JetBrains Mono', monospace", marginBottom: 4 }}>
+          <p style={{ fontSize: 12, color: C.subtle, fontFamily: "'JetBrains Mono', monospace", marginBottom: 4 }}>
             {subvention.reference}
           </p>
           <p style={{ fontSize: 14, color: C.fg, fontWeight: 700, lineHeight: 1.3 }}>{subvention.intitule}</p>
@@ -360,7 +360,7 @@ function SubventionDetail({ subvention, onClose, onEdit, onUpdate, onEnregistrer
 
       {subvention.description && (
         <>
-          <p style={{ fontSize: 11, color: C.muted, fontWeight: 600, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Description</p>
+          <p style={{ fontSize: 12, color: C.muted, fontWeight: 600, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Description</p>
           <p style={{ fontSize: 12, color: C.fg, lineHeight: 1.5, marginBottom: 12 }}>{subvention.description}</p>
         </>
       )}
@@ -378,7 +378,7 @@ function SubventionDetail({ subvention, onClose, onEdit, onUpdate, onEnregistrer
 
       <Separator my={10} />
 
-      <p style={{ fontSize: 11, color: C.muted, fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Calendrier</p>
+      <p style={{ fontSize: 12, color: C.muted, fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Calendrier</p>
       <div style={{ fontSize: 12, color: C.fg, lineHeight: 1.6, marginBottom: 12 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
           <span style={{ color: C.subtle }}>Date de dépôt</span><span>{fmtDate(subvention.dateDepot)}</span>
@@ -397,17 +397,17 @@ function SubventionDetail({ subvention, onClose, onEdit, onUpdate, onEnregistrer
 
       {(subvention.contactNom || subvention.contactEmail) && (
         <>
-          <p style={{ fontSize: 11, color: C.muted, fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Contact</p>
+          <p style={{ fontSize: 12, color: C.muted, fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Contact</p>
           <div style={{ fontSize: 12, color: C.fg, marginBottom: 12 }}>
             {subvention.contactNom && <p>{subvention.contactNom}</p>}
-            {subvention.contactEmail && <p style={{ color: C.subtle, fontSize: 11 }}>{subvention.contactEmail}</p>}
+            {subvention.contactEmail && <p style={{ color: C.subtle, fontSize: 12 }}>{subvention.contactEmail}</p>}
           </div>
         </>
       )}
 
       {subvention.imputationCompte && (
         <>
-          <p style={{ fontSize: 11, color: C.muted, fontWeight: 600, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Imputation comptable</p>
+          <p style={{ fontSize: 12, color: C.muted, fontWeight: 600, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Imputation comptable</p>
           <Tag label={`Compte ${subvention.imputationCompte}`} color={C.slate} />
           <div style={{ marginBottom: 12 }} />
         </>
@@ -415,8 +415,8 @@ function SubventionDetail({ subvention, onClose, onEdit, onUpdate, onEnregistrer
 
       {subvention.notes && (
         <>
-          <p style={{ fontSize: 11, color: C.muted, fontWeight: 600, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Notes</p>
-          <p style={{ fontSize: 11, color: C.fg, fontStyle: 'italic', whiteSpace: 'pre-wrap', lineHeight: 1.5, marginBottom: 12 }}>
+          <p style={{ fontSize: 12, color: C.muted, fontWeight: 600, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Notes</p>
+          <p style={{ fontSize: 12, color: C.fg, fontStyle: 'italic', whiteSpace: 'pre-wrap', lineHeight: 1.5, marginBottom: 12 }}>
             {subvention.notes}
           </p>
         </>
@@ -424,14 +424,14 @@ function SubventionDetail({ subvention, onClose, onEdit, onUpdate, onEnregistrer
 
       {subvention.motifRefus && (
         <div style={{ padding: 10, background: C.dangerLight, borderRadius: 6, marginBottom: 12 }}>
-          <p style={{ fontSize: 11, color: C.danger, fontWeight: 600, marginBottom: 4 }}>Motif du refus</p>
-          <p style={{ fontSize: 11, color: C.fg, fontStyle: 'italic' }}>« {subvention.motifRefus} »</p>
+          <p style={{ fontSize: 12, color: C.danger, fontWeight: 600, marginBottom: 4 }}>Motif du refus</p>
+          <p style={{ fontSize: 12, color: C.fg, fontStyle: 'italic' }}>« {subvention.motifRefus} »</p>
         </div>
       )}
 
       {/* Actions rapides : changement de statut */}
       <Separator my={10} />
-      <p style={{ fontSize: 11, color: C.muted, fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Actions</p>
+      <p style={{ fontSize: 12, color: C.muted, fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Actions</p>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
         {subvention.statut === 'Préparation' && (
           <Button size="sm" onClick={() => onUpdate({ statut: 'Déposée', dateDepot: subvention.dateDepot ?? new Date().toISOString().slice(0, 10) })}>
@@ -482,9 +482,9 @@ function SubventionDetail({ subvention, onClose, onEdit, onUpdate, onEnregistrer
 function Stat({ label, value, sub, color }: { label: string; value: string; sub?: string; color?: string }) {
   return (
     <div style={{ padding: 8, background: C.bg, borderRadius: 6 }}>
-      <p style={{ fontSize: 9, color: C.subtle, fontWeight: 600, marginBottom: 2, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</p>
+      <p style={{ fontSize: 11, color: C.subtle, fontWeight: 600, marginBottom: 2, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</p>
       <p style={{ fontSize: 14, color: color ?? C.fg, fontWeight: 700 }}>{value}</p>
-      {sub && <p style={{ fontSize: 10, color: C.subtle, marginTop: 2 }}>{sub}</p>}
+      {sub && <p style={{ fontSize: 12, color: C.subtle, marginTop: 2 }}>{sub}</p>}
     </div>
   )
 }
@@ -571,7 +571,7 @@ function SubventionForm({ initial, onSubmit, onCancel }: {
         <textarea value={description} onChange={e => setDescription(e.target.value)} rows={2} style={{ ...inputStyle, height: 'auto', resize: 'vertical' as const, padding: 8 }} />
       </Field>
 
-      <p style={{ fontSize: 10, color: C.subtle, fontWeight: 700, marginTop: 12, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Financeur</p>
+      <p style={{ fontSize: 12, color: C.subtle, fontWeight: 700, marginTop: 12, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Financeur</p>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
         <Field label="Source *">
           <select value={source} onChange={e => setSource(e.target.value as SourceSubvention)} style={inputStyle}>
@@ -589,7 +589,7 @@ function SubventionForm({ initial, onSubmit, onCancel }: {
         </Field>
       </div>
 
-      <p style={{ fontSize: 10, color: C.subtle, fontWeight: 700, marginTop: 6, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Montants (€)</p>
+      <p style={{ fontSize: 12, color: C.subtle, fontWeight: 700, marginTop: 6, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Montants (€)</p>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 10 }}>
         <Field label="Coût total projet (HT) *">
           <input type="number" min="0" value={montantProjet} onChange={e => setMontantProjet(e.target.value)} style={inputStyle} />
@@ -605,7 +605,7 @@ function SubventionForm({ initial, onSubmit, onCancel }: {
         </Field>
       </div>
 
-      <p style={{ fontSize: 10, color: C.subtle, fontWeight: 700, marginTop: 6, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Calendrier</p>
+      <p style={{ fontSize: 12, color: C.subtle, fontWeight: 700, marginTop: 6, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Calendrier</p>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr) 1fr', gap: 10, marginBottom: 10 }}>
         <Field label="Date de dépôt">
           <input type="date" value={dateDepot} onChange={e => setDateDepot(e.target.value)} style={inputStyle} />
@@ -635,10 +635,10 @@ function SubventionForm({ initial, onSubmit, onCancel }: {
 
       {/* Documents */}
       <div style={{ marginTop: 12 }}>
-        <p style={{ fontSize: 10, color: C.subtle, fontWeight: 600, marginBottom: 6 }}>Documents (dossier de demande, notification, conventions…)</p>
+        <p style={{ fontSize: 12, color: C.subtle, fontWeight: 600, marginBottom: 6 }}>Documents (dossier de demande, notification, conventions…)</p>
         <div style={{ border: `1px dashed ${C.border}`, borderRadius: 6, padding: 10, background: '#fff' }}>
           {documents.length === 0 && (
-            <p style={{ fontSize: 11, color: C.subtle, marginBottom: 8 }}>
+            <p style={{ fontSize: 12, color: C.subtle, marginBottom: 8 }}>
               Aucun document — joignez le dossier, la notification, le RIB, etc.
             </p>
           )}
@@ -647,8 +647,8 @@ function SubventionForm({ initial, onSubmit, onCancel }: {
               {documents.map(doc => (
                 <div key={doc.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: C.bg, border: `1px solid ${C.border}`, borderRadius: 6, padding: '6px 8px' }}>
                   <span style={{ fontSize: 14 }}>📎</span>
-                  <a href={doc.dataUrl} download={doc.name} style={{ flex: 1, fontSize: 11, color: C.fg, textDecoration: 'none', fontWeight: 500 }}>{doc.name}</a>
-                  <span style={{ fontSize: 9, color: C.subtle }}>{fmtBytes(doc.size)}</span>
+                  <a href={doc.dataUrl} download={doc.name} style={{ flex: 1, fontSize: 12, color: C.fg, textDecoration: 'none', fontWeight: 500 }}>{doc.name}</a>
+                  <span style={{ fontSize: 11, color: C.subtle }}>{fmtBytes(doc.size)}</span>
                   <button type="button" onClick={() => setDocuments(documents.filter(d => d.id !== doc.id))} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: C.danger, fontSize: 14 }}>×</button>
                 </div>
               ))}
@@ -663,7 +663,7 @@ function SubventionForm({ initial, onSubmit, onCancel }: {
           />
           <Button size="sm" onClick={() => fileInputRef.current?.click()}>+ Joindre un document</Button>
         </div>
-        {fileError && <p style={{ fontSize: 11, color: C.danger, marginTop: 6 }}>{fileError}</p>}
+        {fileError && <p style={{ fontSize: 12, color: C.danger, marginTop: 6 }}>{fileError}</p>}
       </div>
 
       <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 14 }}>
@@ -702,7 +702,7 @@ function SubventionForm({ initial, onSubmit, onCancel }: {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <p style={{ fontSize: 10, color: C.subtle, fontWeight: 600, marginBottom: 4 }}>{label}</p>
+      <p style={{ fontSize: 12, color: C.subtle, fontWeight: 600, marginBottom: 4 }}>{label}</p>
       {children}
     </div>
   )

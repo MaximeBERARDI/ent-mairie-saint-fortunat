@@ -131,7 +131,7 @@ export default function CommissionsPage() {
   if (!hydrated || !teamHydrated) {
     return (
       <Shell title="Commissions">
-        <div style={{ padding: 40, textAlign: 'center', color: C.subtle, fontSize: 13 }}>Chargement…</div>
+        <div style={{ padding: 40, textAlign: 'center', color: C.subtle, fontSize: 14 }}>Chargement…</div>
       </Shell>
     )
   }
@@ -264,19 +264,19 @@ function GrilleView({
               style={{ cursor: 'pointer', borderTop: `3px solid ${com.color}` }}
               onClick={() => onSelect(com)}
             >
-              <p style={{ fontSize: 13, color: C.fg, fontWeight: 700, marginBottom: 12 }}>{com.name}</p>
+              <p style={{ fontSize: 14, color: C.fg, fontWeight: 700, marginBottom: 12 }}>{com.name}</p>
 
               {/* Référents */}
               {responsibles.length > 0 && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
-                  <span style={{ fontSize: 9, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  <span style={{ fontSize: 11, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                     Référent{responsibles.length > 1 ? 's' : ''}
                   </span>
                   <div style={{ display: 'flex', gap: 4, flex: 1, flexWrap: 'wrap' }}>
                     {responsibles.map(p => (
                       <div key={p.id} title={p.fullName} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                         <Avatar initials={p.initials} color={p.color} size={20} />
-                        <span style={{ fontSize: 10, color: C.fg, fontWeight: 500 }}>{p.prenom}</span>
+                        <span style={{ fontSize: 12, color: C.fg, fontWeight: 500 }}>{p.prenom}</span>
                       </div>
                     ))}
                   </div>
@@ -286,20 +286,20 @@ function GrilleView({
               <div style={{ display: 'flex', gap: 16, marginBottom: 12 }}>
                 <div>
                   <p style={{ fontSize: 20, color: com.color, fontWeight: 700, lineHeight: 1 }}>{com.tasks}</p>
-                  <p style={{ fontSize: 9, color: C.subtle }}>Tâches actives</p>
+                  <p style={{ fontSize: 11, color: C.subtle }}>Tâches actives</p>
                 </div>
                 <div>
                   <p style={{ fontSize: 20, color: com.color, fontWeight: 700, lineHeight: 1 }}>{com.members}</p>
-                  <p style={{ fontSize: 9, color: C.subtle }}>Membres</p>
+                  <p style={{ fontSize: 11, color: C.subtle }}>Membres</p>
                 </div>
                 <div>
                   <p style={{ fontSize: 20, color: com.color, fontWeight: 700, lineHeight: 1 }}>{com.docs}</p>
-                  <p style={{ fontSize: 9, color: C.subtle }}>Documents</p>
+                  <p style={{ fontSize: 11, color: C.subtle }}>Documents</p>
                 </div>
               </div>
               <Separator my={10} />
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <p style={{ fontSize: 11, color: C.subtle }}>Prochaine réunion</p>
+                <p style={{ fontSize: 12, color: C.subtle }}>Prochaine réunion</p>
                 <Badge label={com.nextMeeting} variant={com.tasks > 8 ? 'danger' : 'default'} />
               </div>
             </Card>
@@ -363,7 +363,7 @@ function DetailView({
   return (
     <div style={{ display: 'flex', gap: 'var(--gap)', height: '100%' }}>
       <div style={{ width: 220, flexShrink: 0 }}>
-        <p style={{ fontSize: 11, color: C.subtle, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Commissions</p>
+        <p style={{ fontSize: 12, color: C.subtle, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Commissions</p>
         {allCommissions.map(c => (
           <button
             key={c.id}
@@ -393,7 +393,7 @@ function DetailView({
             <p style={{ fontSize: 12, color: C.subtle }}>Prochaine réunion : {commission.nextMeeting} · 14h00</p>
             {responsibles.length > 0 && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
-                <span style={{ fontSize: 11, color: C.subtle, fontWeight: 600 }}>
+                <span style={{ fontSize: 12, color: C.subtle, fontWeight: 600 }}>
                   Référent{responsibles.length > 1 ? 's' : ''} :
                 </span>
                 {responsibles.map(p => (
@@ -406,8 +406,8 @@ function DetailView({
                     textDecoration: 'none',
                   }}>
                     <Avatar initials={p.initials} color={p.color} size={20} />
-                    <span style={{ fontSize: 11, color: C.fg, fontWeight: 500 }}>{p.fullName}</span>
-                    <span style={{ fontSize: 10, color: C.subtle }}>· {ROLE_LABELS[p.role]}</span>
+                    <span style={{ fontSize: 12, color: C.fg, fontWeight: 500 }}>{p.fullName}</span>
+                    <span style={{ fontSize: 12, color: C.subtle }}>· {ROLE_LABELS[p.role]}</span>
                   </Link>
                 ))}
               </div>
@@ -439,7 +439,7 @@ function DetailView({
                   borderBottom: activeTab === tab ? `2px solid ${commission.color}` : '2px solid transparent',
                   color: activeTab === tab ? commission.color : C.muted,
                   fontWeight: activeTab === tab ? 600 : 400,
-                  fontSize: 13, cursor: 'pointer',
+                  fontSize: 14, cursor: 'pointer',
                   fontFamily: "'DM Sans', sans-serif",
                   marginBottom: -1,
                 }}
@@ -494,7 +494,7 @@ function DetailView({
                       {isResponsible && <Badge label="Référent(e)" variant="primary" />}
                       {p!.canSign && <Badge label="✍ Signataire" variant="terra" />}
                     </div>
-                    <p style={{ fontSize: 10, color: C.subtle }}>{p!.poste}</p>
+                    <p style={{ fontSize: 12, color: C.subtle }}>{p!.poste}</p>
                   </div>
                   <Badge label={ROLE_LABELS[p!.role]} variant={p!.role === 'agent' ? 'default' : 'primary'} />
                 </Link>
@@ -505,7 +505,7 @@ function DetailView({
         {activeTab === 'ged' && (
           <Card padding={14}>
             <SectionHeader level={3} title="Gestion Électronique de Documents" actions={<Button variant="primary" size="sm">+ Ajouter</Button>} />
-            <p style={{ fontSize: 11, color: C.subtle, padding: '8px 0', fontStyle: 'italic' }}>
+            <p style={{ fontSize: 12, color: C.subtle, padding: '8px 0', fontStyle: 'italic' }}>
               La GED par commission sera connectée au stockage cloud (S3 / OVH) lors de la migration vers la base de données réelle.
             </p>
             {[
@@ -515,11 +515,11 @@ function DetailView({
             ].map((doc, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: i < 2 ? `1px solid ${C.border}` : 'none', opacity: 0.7 }}>
                 <div style={{ width: 32, height: 32, background: C.infoLight, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <span style={{ fontSize: 10, color: C.info, fontWeight: 700 }}>PDF</span>
+                  <span style={{ fontSize: 12, color: C.info, fontWeight: 700 }}>PDF</span>
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{ fontSize: 12, color: C.fg, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{doc.name}</p>
-                  <p style={{ fontSize: 10, color: C.subtle }}>{doc.size} · {doc.date} (placeholder)</p>
+                  <p style={{ fontSize: 12, color: C.subtle }}>{doc.size} · {doc.date} (placeholder)</p>
                 </div>
                 <Badge label={doc.type} variant="info" />
               </div>
@@ -613,12 +613,12 @@ function CommissionTaskRow({
           {assignee && (
             <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               <Avatar initials={assignee.initials} size={16} color={assignee.color} />
-              <span style={{ fontSize: 10, color: C.subtle }}>{assignee.fullName}</span>
+              <span style={{ fontSize: 12, color: C.subtle }}>{assignee.fullName}</span>
             </span>
           )}
-          {task.dueDate && <span style={{ fontSize: 10, color: C.subtle }}>· {formatShortFR(task.dueDate)}</span>}
+          {task.dueDate && <span style={{ fontSize: 12, color: C.subtle }}>· {formatShortFR(task.dueDate)}</span>}
           {(task.documents?.length ?? 0) > 0 && (
-            <span style={{ fontSize: 10, color: C.subtle }}>· 📎 {task.documents!.length}</span>
+            <span style={{ fontSize: 12, color: C.subtle }}>· 📎 {task.documents!.length}</span>
           )}
         </div>
       </div>
@@ -652,7 +652,7 @@ function TimelineView({ commissions, tasks }: { commissions: Commission[]; tasks
           {commissions.map(c => (
             <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 20, border: `1px solid ${c.color}40`, background: `${c.color}12` }}>
               <div style={{ width: 6, height: 6, borderRadius: '50%', background: c.color }} />
-              <span style={{ fontSize: 10, color: c.color, fontWeight: 600 }}>{c.name.split(' ')[0]} ({c.tasks})</span>
+              <span style={{ fontSize: 12, color: c.color, fontWeight: 600 }}>{c.name.split(' ')[0]} ({c.tasks})</span>
             </div>
           ))}
         </div>
@@ -662,7 +662,7 @@ function TimelineView({ commissions, tasks }: { commissions: Commission[]; tasks
         <SectionHeader title="Vue Gantt — Mai 2026" />
         <div style={{ display: 'flex', marginBottom: 8, paddingLeft: 180 }}>
           {['1', '5', '10', '15', '20', '25', '30'].map(d => (
-            <p key={d} style={{ flex: 1, fontSize: 10, color: C.subtle, textAlign: 'center' }}>{d} mai</p>
+            <p key={d} style={{ flex: 1, fontSize: 12, color: C.subtle, textAlign: 'center' }}>{d} mai</p>
           ))}
         </div>
         {commissions.map(com => {
@@ -670,8 +670,8 @@ function TimelineView({ commissions, tasks }: { commissions: Commission[]; tasks
           return (
             <div key={com.id} style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 10 }}>
               <div style={{ width: 180, flexShrink: 0, paddingRight: 12 }}>
-                <p style={{ fontSize: 11, color: C.fg, fontWeight: 600 }}>{com.name.split(' ').slice(0, 2).join(' ')}</p>
-                <p style={{ fontSize: 9, color: C.subtle }}>{ctasks.length} tâches · {COMMISSION_MEMBERS[com.id]?.length ?? 0} membres</p>
+                <p style={{ fontSize: 12, color: C.fg, fontWeight: 600 }}>{com.name.split(' ').slice(0, 2).join(' ')}</p>
+                <p style={{ fontSize: 11, color: C.subtle }}>{ctasks.length} tâches · {COMMISSION_MEMBERS[com.id]?.length ?? 0} membres</p>
               </div>
               <div style={{ flex: 1, height: 28, background: `${com.color}12`, borderRadius: 6, position: 'relative', border: `1px solid ${com.color}25` }}>
                 {ctasks.slice(0, 5).map((t, ti) => {
@@ -807,7 +807,7 @@ function CommissionsAdminView({
           </Button>
         }
       />
-      <p style={{ fontSize: 11, color: C.subtle, marginBottom: 14 }}>
+      <p style={{ fontSize: 12, color: C.subtle, marginBottom: 14 }}>
         Renommer, créer ou supprimer les commissions municipales. La suppression est bloquée si des tâches y sont rattachées.
       </p>
 
@@ -815,7 +815,7 @@ function CommissionsAdminView({
         <Card padding={12} style={{ marginBottom: 14, background: C.greenLight, borderColor: C.green }}>
           <div style={{ display: 'grid', gridTemplateColumns: '2fr 1.4fr 1fr 100px', gap: 10, alignItems: 'flex-end' }}>
             <div>
-              <p style={{ fontSize: 10, color: C.subtle, fontWeight: 600, marginBottom: 4 }}>Nom *</p>
+              <p style={{ fontSize: 12, color: C.subtle, fontWeight: 600, marginBottom: 4 }}>Nom *</p>
               <input
                 type="text"
                 value={newName}
@@ -826,7 +826,7 @@ function CommissionsAdminView({
               />
             </div>
             <div>
-              <p style={{ fontSize: 10, color: C.subtle, fontWeight: 600, marginBottom: 4 }}>Prochaine réunion</p>
+              <p style={{ fontSize: 12, color: C.subtle, fontWeight: 600, marginBottom: 4 }}>Prochaine réunion</p>
               <input
                 type="text"
                 value={newMeeting}
@@ -836,7 +836,7 @@ function CommissionsAdminView({
               />
             </div>
             <div>
-              <p style={{ fontSize: 10, color: C.subtle, fontWeight: 600, marginBottom: 4 }}>Couleur</p>
+              <p style={{ fontSize: 12, color: C.subtle, fontWeight: 600, marginBottom: 4 }}>Couleur</p>
               <ColorPicker value={newColor} onChange={setNewColor} />
             </div>
             <Button variant="primary" size="sm" disabled={!newName.trim()} onClick={handleCreate}>Créer</Button>
@@ -847,7 +847,7 @@ function CommissionsAdminView({
       <Card padding={0}>
         <div style={{ display: 'grid', gridTemplateColumns: '40px 2fr 1.4fr 1fr 80px 130px', gap: 10, padding: '8px 14px', background: C.bg, borderBottom: `1px solid ${C.border}` }}>
           {['', 'Nom', 'Prochaine réunion', 'Tâches', 'Couleur', 'Actions'].map(h => (
-            <p key={h} style={{ fontSize: 10, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</p>
+            <p key={h} style={{ fontSize: 12, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</p>
           ))}
         </div>
         {commissions.map((c, i) => {
@@ -883,22 +883,22 @@ function CommissionsAdminView({
               {isEditing ? (
                 <ColorPicker value={editColor} onChange={setEditColor} />
               ) : (
-                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: C.subtle }}>{c.color}</span>
+                <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: C.subtle }}>{c.color}</span>
               )}
               <div style={{ display: 'flex', gap: 4 }}>
                 {isEditing ? (
                   <>
                     <button onClick={() => saveEdit(c.id)} title="Enregistrer" style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.success}`, background: C.successLight, color: C.success, cursor: 'pointer', fontSize: 12 }}>✓</button>
-                    <button onClick={cancelEdit} title="Annuler" style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.border}`, background: '#fff', cursor: 'pointer', fontSize: 11 }}>×</button>
+                    <button onClick={cancelEdit} title="Annuler" style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.border}`, background: '#fff', cursor: 'pointer', fontSize: 12 }}>×</button>
                   </>
                 ) : (
                   <>
-                    <button onClick={() => startEdit(c)} title="Renommer / modifier" style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.border}`, background: '#fff', cursor: 'pointer', fontSize: 11 }}>✎</button>
+                    <button onClick={() => startEdit(c)} title="Renommer / modifier" style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.border}`, background: '#fff', cursor: 'pointer', fontSize: 12 }}>✎</button>
                     <button
                       onClick={() => handleDelete(c)}
                       title={linkedTasks.length > 0 ? 'Détachez les tâches avant' : 'Supprimer'}
                       disabled={linkedTasks.length > 0}
-                      style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.danger}`, background: C.dangerLight, color: C.danger, cursor: linkedTasks.length > 0 ? 'not-allowed' : 'pointer', opacity: linkedTasks.length > 0 ? 0.4 : 1, fontSize: 11 }}
+                      style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.danger}`, background: C.dangerLight, color: C.danger, cursor: linkedTasks.length > 0 ? 'not-allowed' : 'pointer', opacity: linkedTasks.length > 0 ? 0.4 : 1, fontSize: 12 }}
                     >×</button>
                   </>
                 )}

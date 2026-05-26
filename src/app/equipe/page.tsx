@@ -98,7 +98,7 @@ export default function EquipePage() {
   if (!hydrated) {
     return (
       <Shell title="Équipe">
-        <div style={{ padding: 40, textAlign: 'center', color: C.subtle, fontSize: 13 }}>Chargement…</div>
+        <div style={{ padding: 40, textAlign: 'center', color: C.subtle, fontSize: 14 }}>Chargement…</div>
       </Shell>
     )
   }
@@ -130,7 +130,7 @@ export default function EquipePage() {
             </button>
           ))}
         </div>
-        <p style={{ fontSize: 11, color: C.subtle, marginLeft: 4 }}>
+        <p style={{ fontSize: 12, color: C.subtle, marginLeft: 4 }}>
           {view === 'liste'
             ? `${counts.tous} membre${counts.tous > 1 ? 's' : ''} actif${counts.tous > 1 ? 's' : ''}`
             : 'Organisation hiérarchique de la commune'}
@@ -194,7 +194,7 @@ export default function EquipePage() {
           {elus.length > 0 && (
             <Card padding={0}>
               <div style={{ padding: '8px 14px', background: C.bg, borderBottom: `1px solid ${C.border}` }}>
-                <p style={{ fontSize: 10, color: C.subtle, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                <p style={{ fontSize: 12, color: C.subtle, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                   Élus ({elus.length})
                 </p>
               </div>
@@ -206,7 +206,7 @@ export default function EquipePage() {
           {agents.length > 0 && (
             <Card padding={0}>
               <div style={{ padding: '8px 14px', background: C.bg, borderBottom: `1px solid ${C.border}` }}>
-                <p style={{ fontSize: 10, color: C.subtle, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                <p style={{ fontSize: 12, color: C.subtle, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
                   Agents ({agents.length})
                 </p>
               </div>
@@ -306,7 +306,7 @@ function PersonListRow({ person, selected, onSelect, currentUserId }: {
           </p>
           {person.id === currentUserId && <Badge label="Vous" variant="primary" />}
         </div>
-        <p style={{ fontSize: 10, color: C.subtle, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <p style={{ fontSize: 12, color: C.subtle, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {person.poste}
         </p>
         <div style={{ display: 'flex', gap: 4, marginTop: 4, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -356,7 +356,7 @@ function PersonDetail({ person, tasks, canEdit, canDeactivate, currentUserId, on
               {person.id === currentUserId && <Badge label="Vous" variant="success" />}
               {!person.active && <Badge label="Désactivé" variant="danger" />}
             </div>
-            <p style={{ fontSize: 13, color: C.muted, fontWeight: 500 }}>{person.poste}</p>
+            <p style={{ fontSize: 14, color: C.muted, fontWeight: 500 }}>{person.poste}</p>
             <div style={{ display: 'flex', gap: 14, marginTop: 8, flexWrap: 'wrap' }}>
               <a href={`mailto:${person.email}`} style={{ fontSize: 12, color: C.info, textDecoration: 'none' }}>
                 ✉ {person.email}
@@ -393,7 +393,7 @@ function PersonDetail({ person, tasks, canEdit, canDeactivate, currentUserId, on
             <p style={{ flex: 1, fontSize: 14, color: C.fg, fontWeight: 700 }}>Niveau d&apos;autorisation</p>
             <Badge label={AUTH_LEVEL_LABELS[person.authLevel]} variant={AUTH_BADGE_VARIANTS[person.authLevel]} />
           </div>
-          <p style={{ fontSize: 11, color: C.subtle, marginBottom: 12 }}>
+          <p style={{ fontSize: 12, color: C.subtle, marginBottom: 12 }}>
             {allEffective.size} permission{allEffective.size > 1 ? 's' : ''} sur {ALL_PERMISSIONS.length} —
             {' '}{custom.size > 0 && `dont ${custom.size} spécifique${custom.size > 1 ? 's' : ''}`}
           </p>
@@ -463,7 +463,7 @@ function PersonDetail({ person, tasks, canEdit, canDeactivate, currentUserId, on
                   <p style={{ fontSize: 12, color: C.fg, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {c.name}
                   </p>
-                  <p style={{ fontSize: 10, color: c.color, fontWeight: 500 }}>Référent(e)</p>
+                  <p style={{ fontSize: 12, color: c.color, fontWeight: 500 }}>Référent(e)</p>
                 </div>
               </div>
             ))}
@@ -474,7 +474,7 @@ function PersonDetail({ person, tasks, canEdit, canDeactivate, currentUserId, on
       {/* Activité */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--gap)' }}>
         <Card padding={16}>
-          <p style={{ fontSize: 13, color: C.fg, fontWeight: 700, marginBottom: 10 }}>
+          <p style={{ fontSize: 14, color: C.fg, fontWeight: 700, marginBottom: 10 }}>
             Tâches assignées ({myTasks.length})
           </p>
           {myTasks.length === 0 ? (
@@ -496,7 +496,7 @@ function PersonDetail({ person, tasks, canEdit, canDeactivate, currentUserId, on
         </Card>
 
         <Card padding={16}>
-          <p style={{ fontSize: 13, color: C.fg, fontWeight: 700, marginBottom: 10 }}>
+          <p style={{ fontSize: 14, color: C.fg, fontWeight: 700, marginBottom: 10 }}>
             En attente de sa validation ({myValidations.length})
           </p>
           {myValidations.length === 0 ? (
@@ -553,11 +553,11 @@ function PermissionsList({ effective, fromRole, custom }: {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxHeight: 240, overflow: 'auto' }}>
       {visibleGroups.map(group => (
         <div key={group.title}>
-          <p style={{ fontSize: 10, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
+          <p style={{ fontSize: 12, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
             {group.title}
           </p>
           {group.perms.filter(p => effective.has(p)).map(p => (
-            <div key={p} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '3px 0', fontSize: 11 }}>
+            <div key={p} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '3px 0', fontSize: 12 }}>
               <span style={{ color: custom.has(p) ? C.info : C.success, flexShrink: 0 }}>✓</span>
               <span style={{ flex: 1, color: C.fg }}>{PERMISSION_LABELS[p]}</span>
               {custom.has(p) && !fromRole.has(p) && <Badge label="Spécifique" variant="info" />}

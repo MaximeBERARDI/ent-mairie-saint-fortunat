@@ -106,7 +106,7 @@ export default function TachesPage() {
   if (!hydrated) {
     return (
       <Shell title="Mes tâches" notif={5}>
-        <div style={{ padding: 40, textAlign: 'center', color: C.subtle, fontSize: 13 }}>Chargement…</div>
+        <div style={{ padding: 40, textAlign: 'center', color: C.subtle, fontSize: 14 }}>Chargement…</div>
       </Shell>
     )
   }
@@ -250,7 +250,7 @@ function ListeView({
         <Card style={{ flex: 3 }} padding={0}>
           <div style={{ display: 'flex', gap: 0, padding: '8px 14px', borderBottom: `1px solid ${C.border}`, background: C.bg }}>
             {['Tâche', 'Commission', 'Assigné à', 'Échéance', 'Priorité', 'Statut'].map((h, i) => (
-              <span key={i} style={{ flex: [3, 1.5, 1.6, 1.2, 1, 1.4][i], fontSize: 10, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{h}</span>
+              <span key={i} style={{ flex: [3, 1.5, 1.6, 1.2, 1, 1.4][i], fontSize: 12, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{h}</span>
             ))}
           </div>
           {tasks.length === 0 ? (
@@ -277,17 +277,17 @@ function ListeView({
                   <div style={{ flex: 3 }}>
                     <p style={{ fontSize: 12, color: C.fg, fontWeight: selected?.id === t.id ? 600 : 400, textDecoration: t.status === 'Terminé' ? 'line-through' : 'none' }}>{t.label}</p>
                     {(t.documents?.length ?? 0) > 0 && (
-                      <p style={{ fontSize: 10, color: C.subtle, marginTop: 2 }}>📎 {t.documents!.length} pièce{t.documents!.length > 1 ? 's' : ''} jointe{t.documents!.length > 1 ? 's' : ''}</p>
+                      <p style={{ fontSize: 12, color: C.subtle, marginTop: 2 }}>📎 {t.documents!.length} pièce{t.documents!.length > 1 ? 's' : ''} jointe{t.documents!.length > 1 ? 's' : ''}</p>
                     )}
                   </div>
                   <div style={{ flex: 1.5 }}>
-                    {commName ? <Tag label={commName} color={commColor} /> : <span style={{ fontSize: 11, color: C.subtle }}>—</span>}
+                    {commName ? <Tag label={commName} color={commColor} /> : <span style={{ fontSize: 12, color: C.subtle }}>—</span>}
                   </div>
                   <div style={{ flex: 1.6, display: 'flex', alignItems: 'center', gap: 6 }}>
                     {assignee && <Avatar initials={assignee.initials} size={20} color={assignee.color} />}
-                    <p style={{ fontSize: 11, color: C.muted }}>{assignee ? assignee.fullName : '—'}</p>
+                    <p style={{ fontSize: 12, color: C.muted }}>{assignee ? assignee.fullName : '—'}</p>
                   </div>
-                  <div style={{ flex: 1.2 }}><p style={{ fontSize: 11, color: C.muted }}>{formatShortFR(t.dueDate)}</p></div>
+                  <div style={{ flex: 1.2 }}><p style={{ fontSize: 12, color: C.muted }}>{formatShortFR(t.dueDate)}</p></div>
                   <div style={{ flex: 1 }}><Badge label={t.priority} variant={PRIORITY_VARIANTS[t.priority]} /></div>
                   <div style={{ flex: 1.4 }}><Badge label={t.status} variant={STATUS_VARIANTS[t.status]} /></div>
                 </div>
@@ -350,7 +350,7 @@ function KanbanView({
               <div style={{ width: 8, height: 8, borderRadius: '50%', background: col.color }} />
               <p style={{ fontSize: 12, color: C.fg, fontWeight: 600 }}>{col.status}</p>
               <div style={{ marginLeft: 'auto', background: C.ph, borderRadius: 9999, padding: '1px 7px' }}>
-                <p style={{ fontSize: 10, color: C.muted, fontWeight: 600 }}>{columnTasks.length}</p>
+                <p style={{ fontSize: 12, color: C.muted, fontWeight: 600 }}>{columnTasks.length}</p>
               </div>
             </div>
             <div style={{
@@ -359,7 +359,7 @@ function KanbanView({
               border: `1px dashed ${col.color}40`, overflowY: 'auto',
             }}>
               {columnTasks.length === 0 && (
-                <p style={{ fontSize: 11, color: C.subtle, textAlign: 'center', padding: '12px 0' }}>—</p>
+                <p style={{ fontSize: 12, color: C.subtle, textAlign: 'center', padding: '12px 0' }}>—</p>
               )}
               {columnTasks.map(card => {
                 const assignee = getPerson(card.assigneeId)
@@ -378,23 +378,23 @@ function KanbanView({
                       <p style={{ fontSize: 12, color: C.fg, fontWeight: 500, marginBottom: 6 }}>{card.label}</p>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
                         {assignee && <Avatar initials={assignee.initials} size={18} color={assignee.color} />}
-                        <p style={{ flex: 1, fontSize: 10, color: C.subtle }}>
+                        <p style={{ flex: 1, fontSize: 12, color: C.subtle }}>
                           {assignee ? assignee.fullName : '—'}
                         </p>
-                        {card.dueDate && <span style={{ fontSize: 10, color: C.subtle }}>{formatShortFR(card.dueDate)}</span>}
+                        {card.dueDate && <span style={{ fontSize: 12, color: C.subtle }}>{formatShortFR(card.dueDate)}</span>}
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                         {commName && <Tag label={commName} color={commColor} />}
                         <Badge label={card.priority} variant={PRIORITY_VARIANTS[card.priority]} />
                         {(card.documents?.length ?? 0) > 0 && (
-                          <span style={{ fontSize: 10, color: C.subtle }}>📎 {card.documents!.length}</span>
+                          <span style={{ fontSize: 12, color: C.subtle }}>📎 {card.documents!.length}</span>
                         )}
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: 4, marginTop: 8 }}>
                       <Button
                         size="sm"
-                        style={{ flex: 1, fontSize: 10, padding: '3px 6px' }}
+                        style={{ flex: 1, fontSize: 12, padding: '3px 6px' }}
                         onClick={() => onCycleStatus(card)}
                       >
                         → Suivant

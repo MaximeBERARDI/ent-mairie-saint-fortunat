@@ -208,10 +208,10 @@ function AgentsView({ currentUserId, canViewAll, canManage }: { currentUserId: s
   if (!canViewAll && agents.length === 0) {
     return (
       <Card padding={32} style={{ textAlign: 'center' }}>
-        <p style={{ fontSize: 13, color: C.fg, fontWeight: 600, marginBottom: 6 }}>
+        <p style={{ fontSize: 14, color: C.fg, fontWeight: 600, marginBottom: 6 }}>
           Aucune fiche RH associée à votre profil
         </p>
-        <p style={{ fontSize: 11, color: C.subtle }}>
+        <p style={{ fontSize: 12, color: C.subtle }}>
           Les fiches RH ne concernent que les agents. Vous restez disponible
           dans le référentiel Équipe.
         </p>
@@ -259,7 +259,7 @@ function AgentsView({ currentUserId, canViewAll, canManage }: { currentUserId: s
                     <Avatar initials={a.initials} size={28} color={isAbsent ? C.terra : C.green} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p style={{ fontSize: 12, color: C.fg, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.fullName}</p>
-                      <p style={{ fontSize: 10, color: C.subtle, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.poste}</p>
+                      <p style={{ fontSize: 12, color: C.subtle, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.poste}</p>
                     </div>
                     {r && (
                       <Tag label={r.contrat === 'Titulaire' ? 'Tit.' : r.contrat.startsWith('Contractuel') ? 'CDD' : r.contrat[0]} color={r.contrat === 'Titulaire' ? C.slate : C.terra} />
@@ -268,7 +268,7 @@ function AgentsView({ currentUserId, canViewAll, canManage }: { currentUserId: s
                   </button>
                 )
               })}
-              {filtered.length === 0 && <p style={{ fontSize: 11, color: C.subtle, padding: 12, fontStyle: 'italic' }}>Aucun résultat</p>}
+              {filtered.length === 0 && <p style={{ fontSize: 12, color: C.subtle, padding: 12, fontStyle: 'italic' }}>Aucun résultat</p>}
             </Card>
           </div>
         )}
@@ -294,7 +294,7 @@ function AgentsView({ currentUserId, canViewAll, canManage }: { currentUserId: s
             />
           ) : (
             <Card padding={32} style={{ textAlign: 'center' }}>
-              <p style={{ fontSize: 13, color: C.subtle }}>Sélectionnez un agent pour voir sa fiche.</p>
+              <p style={{ fontSize: 14, color: C.subtle }}>Sélectionnez un agent pour voir sa fiche.</p>
             </Card>
           )}
         </div>
@@ -321,8 +321,8 @@ function EmployeeDetail({
   if (!record) {
     return (
       <Card padding={20}>
-        <p style={{ fontSize: 13, color: C.fg, fontWeight: 600, marginBottom: 8 }}>Aucune fiche RH pour {person.fullName}</p>
-        <p style={{ fontSize: 11, color: C.subtle, marginBottom: 12 }}>
+        <p style={{ fontSize: 14, color: C.fg, fontWeight: 600, marginBottom: 8 }}>Aucune fiche RH pour {person.fullName}</p>
+        <p style={{ fontSize: 12, color: C.subtle, marginBottom: 12 }}>
           Cette personne est dans le référentiel Équipe mais n'a pas encore de données RH.
         </p>
         <Button
@@ -394,13 +394,13 @@ function EmployeeDetail({
         <SoldeCard label="Congés annuels" solde={congesSolde} acquis={record.congesAnnuelsAcquis} pris={record.congesAnnuelsPris} pct={congesPctPris} color={congesSolde < 8 ? C.warning : C.green} />
         <SoldeCard label="RTT" solde={rttSolde} acquis={record.rttAcquis} pris={record.rttPris} pct={rttPctPris} color={rttSolde > 5 ? C.warning : C.green} />
         <div style={{ padding: 10, background: C.bg, borderRadius: 6 }}>
-          <p style={{ fontSize: 9, color: C.subtle, fontWeight: 600, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Maladie (cumul exercice)</p>
+          <p style={{ fontSize: 11, color: C.subtle, fontWeight: 600, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Maladie (cumul exercice)</p>
           <p style={{ fontSize: 18, color: record.joursMaladie > 5 ? C.warning : C.fg, fontWeight: 700 }}>{record.joursMaladie} j</p>
         </div>
         <div style={{ padding: 10, background: C.bg, borderRadius: 6 }}>
-          <p style={{ fontSize: 9, color: C.subtle, fontWeight: 600, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Ancienneté</p>
+          <p style={{ fontSize: 11, color: C.subtle, fontWeight: 600, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Ancienneté</p>
           <p style={{ fontSize: 18, color: C.fg, fontWeight: 700 }}>{ancienneteAns} an{ancienneteAns > 1 ? 's' : ''}</p>
-          <p style={{ fontSize: 9, color: C.subtle, marginTop: 2 }}>depuis {fmtDateLong(record.dateEmbauche)}</p>
+          <p style={{ fontSize: 11, color: C.subtle, marginTop: 2 }}>depuis {fmtDateLong(record.dateEmbauche)}</p>
         </div>
       </div>
 
@@ -432,7 +432,7 @@ function EmployeeDetail({
       {/* Missions en cours */}
       <SectionHeader title={`Missions (${missions.length})`} />
       {missions.length === 0 ? (
-        <p style={{ fontSize: 11, color: C.subtle, fontStyle: 'italic', padding: '6px 0', marginBottom: 14 }}>Aucune mission affectée.</p>
+        <p style={{ fontSize: 12, color: C.subtle, fontStyle: 'italic', padding: '6px 0', marginBottom: 14 }}>Aucune mission affectée.</p>
       ) : (
         <div style={{ marginBottom: 14 }}>
           {missions.map(m => {
@@ -443,10 +443,10 @@ function EmployeeDetail({
                   <p style={{ fontSize: 12, color: C.fg, fontWeight: 600 }}>{m.label}</p>
                   <Tag label={enCours ? 'En cours' : 'Terminée'} color={enCours ? C.green : C.subtle} />
                 </div>
-                <p style={{ fontSize: 10, color: C.subtle, marginTop: 2 }}>
+                <p style={{ fontSize: 12, color: C.subtle, marginTop: 2 }}>
                   Du {fmtDate(m.dateDebut)} {m.dateFin ? `au ${fmtDate(m.dateFin)}` : '— en cours'}{m.lieu && ` · ${m.lieu}`}
                 </p>
-                {m.description && <p style={{ fontSize: 11, color: C.fg, marginTop: 4 }}>{m.description}</p>}
+                {m.description && <p style={{ fontSize: 12, color: C.fg, marginTop: 4 }}>{m.description}</p>}
               </div>
             )
           })}
@@ -463,7 +463,7 @@ function EmployeeDetail({
       {record.notes && (
         <>
           <SectionHeader title="Notes RH" />
-          <p style={{ fontSize: 11, color: C.fg, fontStyle: 'italic', whiteSpace: 'pre-wrap', padding: '4px 0' }}>{record.notes}</p>
+          <p style={{ fontSize: 12, color: C.fg, fontStyle: 'italic', whiteSpace: 'pre-wrap', padding: '4px 0' }}>{record.notes}</p>
         </>
       )}
     </Card>
@@ -473,9 +473,9 @@ function EmployeeDetail({
 function SoldeCard({ label, solde, acquis, pris, pct, color }: { label: string; solde: number; acquis: number; pris: number; pct: number; color: string }) {
   return (
     <div style={{ padding: 10, background: C.bg, borderRadius: 6 }}>
-      <p style={{ fontSize: 9, color: C.subtle, fontWeight: 600, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</p>
+      <p style={{ fontSize: 11, color: C.subtle, fontWeight: 600, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</p>
       <p style={{ fontSize: 18, color, fontWeight: 700 }}>{solde} j</p>
-      <p style={{ fontSize: 9, color: C.subtle, marginTop: 2 }}>{pris} pris / {acquis} acquis</p>
+      <p style={{ fontSize: 11, color: C.subtle, marginTop: 2 }}>{pris} pris / {acquis} acquis</p>
       <div style={{ marginTop: 4 }}><Progress pct={pct} color={color} /></div>
     </div>
   )
@@ -484,7 +484,7 @@ function SoldeCard({ label, solde, acquis, pris, pct, color }: { label: string; 
 function DetailLine({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
   return (
     <div style={{ display: 'flex', gap: 8, padding: '6px 0', borderBottom: `1px solid ${C.border}` }}>
-      <p style={{ fontSize: 10, color: C.subtle, width: 140, flexShrink: 0 }}>{label}</p>
+      <p style={{ fontSize: 12, color: C.subtle, width: 140, flexShrink: 0 }}>{label}</p>
       <p style={{ fontSize: 12, color: highlight ? C.danger : C.fg, fontWeight: highlight ? 700 : 500 }}>{value}</p>
     </div>
   )
@@ -533,7 +533,7 @@ function DocumentsManager({ documents, onChange }: { documents: TaskDocument[]; 
   return (
     <div style={{ border: `1px dashed ${C.border}`, borderRadius: 6, padding: 10, background: C.bg, marginBottom: 10 }}>
       {documents.length === 0 && (
-        <p style={{ fontSize: 11, color: C.subtle, marginBottom: 8 }}>
+        <p style={{ fontSize: 12, color: C.subtle, marginBottom: 8 }}>
           Aucun document — joignez contrat, fiches de paie, certificats…
         </p>
       )}
@@ -542,8 +542,8 @@ function DocumentsManager({ documents, onChange }: { documents: TaskDocument[]; 
           {documents.map(doc => (
             <div key={doc.id} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#fff', border: `1px solid ${C.border}`, borderRadius: 6, padding: '6px 8px' }}>
               <span style={{ fontSize: 14 }}>📎</span>
-              <a href={doc.dataUrl} download={doc.name} style={{ flex: 1, fontSize: 11, color: C.fg, textDecoration: 'none', fontWeight: 500 }}>{doc.name}</a>
-              <span style={{ fontSize: 9, color: C.subtle }}>{fmtBytes(doc.size)}</span>
+              <a href={doc.dataUrl} download={doc.name} style={{ flex: 1, fontSize: 12, color: C.fg, textDecoration: 'none', fontWeight: 500 }}>{doc.name}</a>
+              <span style={{ fontSize: 11, color: C.subtle }}>{fmtBytes(doc.size)}</span>
               <button
                 onClick={() => onChange(documents.filter(d => d.id !== doc.id))}
                 aria-label="Retirer"
@@ -561,7 +561,7 @@ function DocumentsManager({ documents, onChange }: { documents: TaskDocument[]; 
         style={{ display: 'none' }}
       />
       <Button size="sm" onClick={() => fileInputRef.current?.click()}>+ Ajouter un document</Button>
-      {error && <p role="alert" style={{ fontSize: 11, color: C.danger, marginTop: 6 }}>{error}</p>}
+      {error && <p role="alert" style={{ fontSize: 12, color: C.danger, marginTop: 6 }}>{error}</p>}
     </div>
   )
 }
@@ -629,7 +629,7 @@ function EmployeeEditForm({ person, record, onSave, onCancel }: {
         </Field>
       </div>
 
-      <p style={{ fontSize: 10, color: C.subtle, fontWeight: 700, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Rémunération mensuelle</p>
+      <p style={{ fontSize: 12, color: C.subtle, fontWeight: 700, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Rémunération mensuelle</p>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 12 }}>
         <Field label="Salaire brut (€) *">
           <input type="number" value={salaireBrut} onChange={e => setSalaireBrut(e.target.value)} style={inputStyle} />
@@ -642,7 +642,7 @@ function EmployeeEditForm({ person, record, onSave, onCancel }: {
         </Field>
       </div>
 
-      <p style={{ fontSize: 10, color: C.subtle, fontWeight: 700, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Compteurs (en jours)</p>
+      <p style={{ fontSize: 12, color: C.subtle, fontWeight: 700, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Compteurs (en jours)</p>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 10, marginBottom: 12 }}>
         <Field label="Congés acquis"><input type="number" value={congesAcquis} onChange={e => setCongesAcquis(e.target.value)} style={inputStyle} /></Field>
         <Field label="Congés pris"><input type="number" value={congesPris} onChange={e => setCongesPris(e.target.value)} style={inputStyle} /></Field>
@@ -691,7 +691,7 @@ function EmployeeEditForm({ person, record, onSave, onCancel }: {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <p style={{ fontSize: 10, color: C.subtle, fontWeight: 600, marginBottom: 4 }}>{label}</p>
+      <p style={{ fontSize: 12, color: C.subtle, fontWeight: 600, marginBottom: 4 }}>{label}</p>
       {children}
     </div>
   )
@@ -766,7 +766,7 @@ function DemandesView({ currentUserId, canValidate, canViewAll }: { currentUserI
               <button
                 key={v}
                 onClick={() => setFilter(v)}
-                style={{ padding: '5px 12px', borderRadius: 20, background: v === filter ? C.green : '#fff', border: `1px solid ${v === filter ? C.green : C.border}`, color: v === filter ? '#fff' : C.muted, fontSize: 11, fontWeight: v === filter ? 600 : 400, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}
+                style={{ padding: '5px 12px', borderRadius: 20, background: v === filter ? C.green : '#fff', border: `1px solid ${v === filter ? C.green : C.border}`, color: v === filter ? '#fff' : C.muted, fontSize: 12, fontWeight: v === filter ? 600 : 400, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}
               >
                 {label}
               </button>
@@ -793,13 +793,13 @@ function DemandesView({ currentUserId, canValidate, canViewAll }: { currentUserI
 
           {filtered.length === 0 ? (
             <Card padding={24} style={{ textAlign: 'center' }}>
-              <p style={{ fontSize: 13, color: C.subtle }}>Aucune demande pour ce filtre.</p>
+              <p style={{ fontSize: 14, color: C.subtle }}>Aucune demande pour ce filtre.</p>
             </Card>
           ) : (
             <Card padding={0}>
               <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1.4fr 0.6fr 0.9fr 0.8fr', padding: '8px 14px', background: C.bg, borderBottom: `1px solid ${C.border}` }}>
                 {['Agent', 'Type', 'Période', 'Jours', 'Statut', 'Action'].map(h => (
-                  <p key={h} style={{ fontSize: 10, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</p>
+                  <p key={h} style={{ fontSize: 12, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</p>
                 ))}
               </div>
               {filtered.map((l, i) => {
@@ -816,7 +816,7 @@ function DemandesView({ currentUserId, canValidate, canViewAll }: { currentUserI
                       <p style={{ fontSize: 12, color: C.fg, fontWeight: 500 }}>{p?.fullName ?? '—'}</p>
                     </div>
                     <Tag label={l.type} color={l.type === 'Maladie' ? C.danger : l.type === 'RTT' ? C.warning : C.green} />
-                    <p style={{ fontSize: 11, color: C.fg }}>{fmtDate(l.dateDebut)} → {fmtDate(l.dateFin)}</p>
+                    <p style={{ fontSize: 12, color: C.fg }}>{fmtDate(l.dateDebut)} → {fmtDate(l.dateFin)}</p>
                     <p style={{ fontSize: 12, color: C.fg, fontWeight: 600 }}>{l.nbJoursOuvres}</p>
                     <Badge label={l.statut} variant={l.statut === 'Approuvée' ? 'success' : l.statut === 'Refusée' ? 'danger' : l.statut === 'En attente' ? 'warning' : 'default'} />
                     {l.statut === 'En attente' && canValidate ? (
@@ -892,8 +892,8 @@ function LeaveDetailPanel({
       <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
         {submitter && <Avatar initials={submitter.initials} size={32} color={submitter.color} />}
         <div style={{ flex: 1 }}>
-          <p style={{ fontSize: 13, color: C.fg, fontWeight: 700 }}>{submitter?.fullName ?? '—'}</p>
-          <p style={{ fontSize: 10, color: C.subtle }}>{submitter?.poste ?? ''}</p>
+          <p style={{ fontSize: 14, color: C.fg, fontWeight: 700 }}>{submitter?.fullName ?? '—'}</p>
+          <p style={{ fontSize: 12, color: C.subtle }}>{submitter?.poste ?? ''}</p>
         </div>
         <Badge label={leave.statut} variant={leave.statut === 'Approuvée' ? 'success' : leave.statut === 'Refusée' ? 'danger' : leave.statut === 'En attente' ? 'warning' : 'default'} />
       </div>
@@ -907,16 +907,16 @@ function LeaveDetailPanel({
         ['Soumise le', fmtDate(leave.submittedAt)],
       ].map(([k, v], i, arr) => (
         <div key={k} style={{ display: 'flex', gap: 8, padding: '5px 0', borderBottom: i < arr.length - 1 ? `1px solid ${C.border}` : 'none' }}>
-          <p style={{ fontSize: 10, color: C.subtle, width: 110, flexShrink: 0 }}>{k}</p>
-          <p style={{ fontSize: 11, color: C.fg, fontWeight: 500 }}>{v}</p>
+          <p style={{ fontSize: 12, color: C.subtle, width: 110, flexShrink: 0 }}>{k}</p>
+          <p style={{ fontSize: 12, color: C.fg, fontWeight: 500 }}>{v}</p>
         </div>
       ))}
 
       {leave.motif && (
         <>
           <Separator my={10} />
-          <p style={{ fontSize: 10, color: C.subtle, fontWeight: 600, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Motif</p>
-          <p style={{ fontSize: 11, color: C.fg, fontStyle: 'italic' }}>« {leave.motif} »</p>
+          <p style={{ fontSize: 12, color: C.subtle, fontWeight: 600, marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Motif</p>
+          <p style={{ fontSize: 12, color: C.fg, fontStyle: 'italic' }}>« {leave.motif} »</p>
         </>
       )}
 
@@ -926,13 +926,13 @@ function LeaveDetailPanel({
           <div style={{ padding: 8, background: leave.statut === 'Approuvée' ? C.successLight : C.dangerLight, borderRadius: 6 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
               <Avatar initials={decider.initials} size={20} color={decider.color} />
-              <p style={{ fontSize: 11, color: leave.statut === 'Approuvée' ? C.success : C.danger, fontWeight: 600 }}>
+              <p style={{ fontSize: 12, color: leave.statut === 'Approuvée' ? C.success : C.danger, fontWeight: 600 }}>
                 {leave.statut === 'Approuvée' ? 'Approuvée' : 'Refusée'} par {decider.fullName}
               </p>
             </div>
-            <p style={{ fontSize: 10, color: C.muted, paddingLeft: 26 }}>{fmtDate(leave.decidedAt)}</p>
+            <p style={{ fontSize: 12, color: C.muted, paddingLeft: 26 }}>{fmtDate(leave.decidedAt)}</p>
             {leave.decisionMotif && (
-              <p style={{ fontSize: 11, color: C.fg, fontStyle: 'italic', paddingLeft: 26, marginTop: 4 }}>« {leave.decisionMotif} »</p>
+              <p style={{ fontSize: 12, color: C.fg, fontStyle: 'italic', paddingLeft: 26, marginTop: 4 }}>« {leave.decisionMotif} »</p>
             )}
           </div>
         </>
@@ -942,7 +942,7 @@ function LeaveDetailPanel({
       {leave.statut === 'En attente' && canValidate && (
         <>
           <Separator my={10} />
-          <p style={{ fontSize: 11, color: C.muted, fontWeight: 600, marginBottom: 6 }}>Commentaire (obligatoire si refus)</p>
+          <p style={{ fontSize: 12, color: C.muted, fontWeight: 600, marginBottom: 6 }}>Commentaire (obligatoire si refus)</p>
           <textarea
             value={comment}
             onChange={e => setComment(e.target.value)}
@@ -1032,8 +1032,8 @@ function LeaveRequestForm({ agents, records, defaultPersonId, onSubmit, onCancel
 
       <div style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 10 }}>
         <Tag label={`${nbOuvres} jour${nbOuvres > 1 ? 's' : ''} ouvré${nbOuvres > 1 ? 's' : ''}`} color={C.slate} />
-        {!personIsAgent && <span style={{ fontSize: 11, color: C.warning }}>⚠ Cette personne n'est pas un agent.</span>}
-        {warning && <span style={{ fontSize: 11, color: C.warning }}>{warning}</span>}
+        {!personIsAgent && <span style={{ fontSize: 12, color: C.warning }}>⚠ Cette personne n'est pas un agent.</span>}
+        {warning && <span style={{ fontSize: 12, color: C.warning }}>{warning}</span>}
       </div>
 
       <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 12 }}>
@@ -1102,7 +1102,7 @@ function CalendrierView() {
         {/* En-tête jours */}
         <div style={{ display: 'grid', gridTemplateColumns: `160px repeat(${daysInMonth}, 1fr)`, gap: 1, background: C.border, border: `1px solid ${C.border}`, borderRadius: 6, overflow: 'hidden' }}>
           <div style={{ background: C.bg, padding: '6px 8px' }}>
-            <p style={{ fontSize: 10, color: C.subtle, fontWeight: 600 }}>Agent</p>
+            <p style={{ fontSize: 12, color: C.subtle, fontWeight: 600 }}>Agent</p>
           </div>
           {Array.from({ length: daysInMonth }).map((_, i) => {
             const day = i + 1
@@ -1110,7 +1110,7 @@ function CalendrierView() {
             const isToday = today.getFullYear() === year && today.getMonth() === month && today.getDate() === day
             return (
               <div key={day} style={{ background: isToday ? `${C.green}25` : we ? C.ph : C.bg, padding: '4px 0', textAlign: 'center' }}>
-                <p style={{ fontSize: 9, color: isToday ? C.green : we ? C.subtle : C.fg, fontWeight: isToday ? 700 : 500 }}>{day}</p>
+                <p style={{ fontSize: 11, color: isToday ? C.green : we ? C.subtle : C.fg, fontWeight: isToday ? 700 : 500 }}>{day}</p>
               </div>
             )
           })}
@@ -1121,7 +1121,7 @@ function CalendrierView() {
               <div style={{ background: '#fff', padding: '6px 8px', display: 'flex', alignItems: 'center', gap: 6 }}>
                 <Avatar initials={a.initials} size={22} color={a.color} />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontSize: 11, color: C.fg, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.fullName}</p>
+                  <p style={{ fontSize: 12, color: C.fg, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.fullName}</p>
                 </div>
               </div>
               {Array.from({ length: daysInMonth }).map((_, i) => {
@@ -1155,7 +1155,7 @@ function CalendrierView() {
           ] as [string, string][]).map(([l, color]) => (
             <div key={l} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
               <div style={{ width: 12, height: 12, borderRadius: 2, background: color, border: `1px solid ${C.border}` }} />
-              <p style={{ fontSize: 10, color: C.subtle }}>{l}</p>
+              <p style={{ fontSize: 12, color: C.subtle }}>{l}</p>
             </div>
           ))}
         </div>
@@ -1246,7 +1246,7 @@ function PaiesView() {
       {/* Génération mensuelle */}
       <Card padding={14} style={{ marginBottom: 'var(--gap)', background: `${C.green}08`, borderColor: `${C.green}40` }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <p style={{ fontSize: 13, color: C.fg, fontWeight: 600, flex: 1, minWidth: 200 }}>
+          <p style={{ fontSize: 14, color: C.fg, fontWeight: 600, flex: 1, minWidth: 200 }}>
             Générer les bulletins de paie pour le mois
           </p>
           <input
@@ -1272,7 +1272,7 @@ function PaiesView() {
         </div>
         {bulletinsMois.length === 0 ? (
           <div style={{ padding: 32, textAlign: 'center' }}>
-            <p style={{ fontSize: 13, color: C.fg, fontWeight: 600, marginBottom: 6 }}>
+            <p style={{ fontSize: 14, color: C.fg, fontWeight: 600, marginBottom: 6 }}>
               Aucun bulletin émis pour {moisLabel}
             </p>
             <p style={{ fontSize: 12, color: C.subtle }}>
@@ -1288,7 +1288,7 @@ function PaiesView() {
                 key: 'numero',
                 label: 'N°',
                 width: '130px',
-                render: (b) => <span style={{ fontFamily: "'JetBrains Mono', monospace", color: C.subtle, fontSize: 11 }}>{b.numero}</span>,
+                render: (b) => <span style={{ fontFamily: "'JetBrains Mono', monospace", color: C.subtle, fontSize: 12 }}>{b.numero}</span>,
               },
               {
                 key: 'agent',
@@ -1302,7 +1302,7 @@ function PaiesView() {
                       {person && <Avatar initials={person.initials} size={28} color={person.color} />}
                       <div style={{ minWidth: 0 }}>
                         <p style={{ color: C.fg, fontWeight: 600 }}>{b.snapshot.fullName}</p>
-                        <p style={{ fontSize: 10, color: C.subtle }}>
+                        <p style={{ fontSize: 12, color: C.subtle }}>
                           {b.snapshot.numAgent} · {b.snapshot.poste}
                         </p>
                       </div>
@@ -1365,19 +1365,19 @@ function PaiesView() {
       {bulletinsMois.length > 0 && (
         <Card padding={14} style={{ marginTop: 'var(--gap)', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
           <div>
-            <p style={{ fontSize: 9, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Total brut</p>
+            <p style={{ fontSize: 11, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Total brut</p>
             <p style={{ fontSize: 16, color: C.fg, fontWeight: 700 }}>{fmtMontant(liveStats.brut)}</p>
           </div>
           <div>
-            <p style={{ fontSize: 9, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Total cot. salariales</p>
+            <p style={{ fontSize: 11, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Total cot. salariales</p>
             <p style={{ fontSize: 16, color: C.warning, fontWeight: 700 }}>{fmtMontant(liveStats.salariales)}</p>
           </div>
           <div>
-            <p style={{ fontSize: 9, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Total cot. patronales</p>
+            <p style={{ fontSize: 11, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Total cot. patronales</p>
             <p style={{ fontSize: 16, color: C.muted, fontWeight: 700 }}>{fmtMontant(liveStats.patronales)}</p>
           </div>
           <div>
-            <p style={{ fontSize: 9, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Coût total employeur</p>
+            <p style={{ fontSize: 11, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Coût total employeur</p>
             <p style={{ fontSize: 16, color: C.danger, fontWeight: 700 }}>{fmtMontant(liveStats.cout)}</p>
           </div>
         </Card>
@@ -1385,14 +1385,14 @@ function PaiesView() {
 
       <Card padding={14} style={{ marginTop: 'var(--gap)' }}>
         <SectionHeader title="Imputation comptable (M14)" />
-        <p style={{ fontSize: 11, color: C.subtle, marginBottom: 8 }}>
+        <p style={{ fontSize: 12, color: C.subtle, marginBottom: 8 }}>
           La masse salariale s'impute sur le chapitre <strong>012 — Charges de personnel</strong>.
           Les comptes <strong>6411</strong> (titulaires) et <strong>6413</strong> (contractuels)
           reçoivent les rémunérations brutes. Les cotisations patronales se ventilent sur
           <strong> 6451</strong> (URSSAF), <strong>6453</strong> (CNRACL/IRCANTEC), <strong>6454</strong> (Pôle Emploi),
           et <strong>6455</strong> (assurance du personnel).
         </p>
-        <p style={{ fontSize: 11, color: C.fg }}>
+        <p style={{ fontSize: 12, color: C.fg }}>
           Annualisé estimé : <strong>{fmtMontant(liveStats.cout * 12)}</strong> — à comparer
           au budget alloué chap. 012 dans le module Finances.
         </p>
@@ -1411,7 +1411,7 @@ function BulletinActions({ bulletin, agentEmail, onDelete }: {
       <button
         onClick={() => openBulletinPreview(bulletin)}
         title="Aperçu / Imprimer / PDF"
-        style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.border}`, background: '#fff', cursor: 'pointer', fontSize: 11 }}
+        style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.border}`, background: '#fff', cursor: 'pointer', fontSize: 12 }}
       >🧾</button>
       <button
         onClick={() => {
@@ -1420,12 +1420,12 @@ function BulletinActions({ bulletin, agentEmail, onDelete }: {
         }}
         title="Envoyer par email"
         disabled={!agentEmail}
-        style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.border}`, background: '#fff', cursor: agentEmail ? 'pointer' : 'not-allowed', opacity: agentEmail ? 1 : 0.5, fontSize: 11 }}
+        style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.border}`, background: '#fff', cursor: agentEmail ? 'pointer' : 'not-allowed', opacity: agentEmail ? 1 : 0.5, fontSize: 12 }}
       >✉</button>
       <button
         onClick={() => { if (confirm(`Supprimer le bulletin ${bulletin.numero} ?`)) onDelete() }}
         title="Supprimer"
-        style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.danger}`, background: C.dangerLight, color: C.danger, cursor: 'pointer', fontSize: 11 }}
+        style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.danger}`, background: C.dangerLight, color: C.danger, cursor: 'pointer', fontSize: 12 }}
       >×</button>
     </div>
   )
@@ -1481,7 +1481,7 @@ function MissionsView() {
         ['Passées', passees],
       ].map(([label, list]) => (
         <div key={label as string} style={{ marginBottom: 'var(--gap)' }}>
-          <p style={{ fontSize: 11, color: C.slate, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label as string}</p>
+          <p style={{ fontSize: 12, color: C.slate, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label as string}</p>
           {(list as Mission[]).length === 0 ? (
             <Card padding={20} style={{ textAlign: 'center' }}>
               <p style={{ fontSize: 12, color: C.subtle, fontStyle: 'italic' }}>Aucune mission.</p>
@@ -1498,15 +1498,15 @@ function MissionsView() {
                     </div>
                     <div>
                       <p style={{ fontSize: 12, color: C.fg, fontWeight: 600 }}>{m.label}</p>
-                      {m.description && <p style={{ fontSize: 10, color: C.subtle }}>{m.description}</p>}
+                      {m.description && <p style={{ fontSize: 12, color: C.subtle }}>{m.description}</p>}
                     </div>
-                    <p style={{ fontSize: 11, color: C.subtle }}>
+                    <p style={{ fontSize: 12, color: C.subtle }}>
                       {fmtDate(m.dateDebut)} {m.dateFin ? `→ ${fmtDate(m.dateFin)}` : '— en cours'}
                     </p>
-                    <p style={{ fontSize: 11, color: C.fg }}>{m.lieu ?? '—'}</p>
+                    <p style={{ fontSize: 12, color: C.fg }}>{m.lieu ?? '—'}</p>
                     <div style={{ display: 'flex', gap: 4, justifyContent: 'flex-end' }}>
-                      <button onClick={() => { setEditing(m); setShowForm(true) }} style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.border}`, background: '#fff', cursor: 'pointer', fontSize: 11 }}>✎</button>
-                      <button onClick={() => { if (confirm('Supprimer cette mission ?')) deleteMission(m.id) }} style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.danger}`, background: C.dangerLight, color: C.danger, cursor: 'pointer', fontSize: 11 }}>×</button>
+                      <button onClick={() => { setEditing(m); setShowForm(true) }} style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.border}`, background: '#fff', cursor: 'pointer', fontSize: 12 }}>✎</button>
+                      <button onClick={() => { if (confirm('Supprimer cette mission ?')) deleteMission(m.id) }} style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.danger}`, background: C.dangerLight, color: C.danger, cursor: 'pointer', fontSize: 12 }}>×</button>
                     </div>
                   </div>
                 )

@@ -316,7 +316,7 @@ function MaPointageView({
           <Avatar initials={person.initials} size={56} color={isPresent ? C.success : C.subtle} />
           <div style={{ flex: 1 }}>
             <p style={{ fontSize: 16, color: C.fg, fontWeight: 700 }}>{person.fullName}</p>
-            <p style={{ fontSize: 11, color: C.subtle }}>{person.poste}</p>
+            <p style={{ fontSize: 12, color: C.subtle }}>{person.poste}</p>
             <Badge
               label={isPresent ? '🟢 Au travail' : '○ Absent'}
               variant={isPresent ? 'success' : 'default'}
@@ -324,7 +324,7 @@ function MaPointageView({
           </div>
         </div>
 
-        <p style={{ fontSize: 11, color: C.muted, fontWeight: 600, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+        <p style={{ fontSize: 12, color: C.muted, fontWeight: 600, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
           Pointer maintenant — {new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
         </p>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 14 }}>
@@ -332,7 +332,7 @@ function MaPointageView({
             variant="primary"
             disabled={!canEntree}
             onClick={() => onBadger('entree')}
-            style={{ height: 48, fontSize: 13, justifyContent: 'center' }}
+            style={{ height: 48, fontSize: 14, justifyContent: 'center' }}
           >
             🟢 Pointer ENTRÉE
           </Button>
@@ -340,7 +340,7 @@ function MaPointageView({
             variant="danger"
             disabled={!canSortie}
             onClick={() => onBadger('sortie')}
-            style={{ height: 48, fontSize: 13, justifyContent: 'center' }}
+            style={{ height: 48, fontSize: 14, justifyContent: 'center' }}
           >
             🔴 Pointer SORTIE
           </Button>
@@ -362,7 +362,7 @@ function MaPointageView({
 
         <Separator my={14} />
 
-        <p style={{ fontSize: 11, color: C.muted, fontWeight: 600, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+        <p style={{ fontSize: 12, color: C.muted, fontWeight: 600, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
           Mes pointages d'aujourd'hui
         </p>
         {ptsToday.length === 0 ? (
@@ -403,7 +403,7 @@ function MaPointageView({
             <div key={d.date} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 0', borderBottom: `1px solid ${C.border}`, fontSize: 12 }}>
               <span style={{ flex: 1, color: isWeekend ? C.subtle : C.fg, textTransform: 'capitalize' }}>{dayName}</span>
               {d.minutes === 0 && !isWeekend && (
-                <span style={{ fontSize: 10, color: C.subtle, fontStyle: 'italic' }}>—</span>
+                <span style={{ fontSize: 12, color: C.subtle, fontStyle: 'italic' }}>—</span>
               )}
               {d.minutes > 0 && (
                 <span style={{
@@ -413,7 +413,7 @@ function MaPointageView({
                 }}>{fmtMinutes(d.minutes)}</span>
               )}
               {isWeekend && d.minutes === 0 && (
-                <span style={{ fontSize: 10, color: C.subtle }}>WE</span>
+                <span style={{ fontSize: 12, color: C.subtle }}>WE</span>
               )}
             </div>
           )
@@ -441,10 +441,10 @@ function MaPointageView({
 
         {(hsupHebdo > config.seuilAlerteHebdo || hsupMensuel > config.seuilAlerteMensuel) && (
           <div style={{ marginTop: 12, padding: 10, background: C.warningLight, border: `1px solid ${C.warning}40`, borderRadius: 6 }}>
-            <p style={{ fontSize: 11, color: C.warning, fontWeight: 600 }}>
+            <p style={{ fontSize: 12, color: C.warning, fontWeight: 600 }}>
               ⚠ Seuil heures supplémentaires dépassé
             </p>
-            <p style={{ fontSize: 10, color: C.muted, marginTop: 2 }}>
+            <p style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>
               Une demande de récupération ou compensation peut être nécessaire.
             </p>
           </div>
@@ -474,7 +474,7 @@ function EquipePointageView({
     <Card padding={0}>
       <div style={{ display: 'grid', gridTemplateColumns: '2fr 70px 90px 90px 110px 110px 80px', gap: 10, padding: '8px 14px', background: C.bg, borderBottom: `1px solid ${C.border}` }}>
         {['Agent', 'Statut', 'Réf.', 'Sem. en cours', 'HSup semaine', 'HSup mois', 'Alerte'].map(h => (
-          <p key={h} style={{ fontSize: 10, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</p>
+          <p key={h} style={{ fontSize: 12, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</p>
         ))}
       </div>
       {agents.map((a, i) => {
@@ -490,7 +490,7 @@ function EquipePointageView({
               <Avatar initials={a.initials} size={26} color={present ? C.success : C.subtle} />
               <div>
                 <p style={{ color: C.fg, fontWeight: 500 }}>{a.fullName}</p>
-                <p style={{ fontSize: 10, color: C.subtle }}>{a.poste}</p>
+                <p style={{ fontSize: 12, color: C.subtle }}>{a.poste}</p>
               </div>
             </div>
             <Badge label={present ? 'Présent' : 'Absent'} variant={present ? 'success' : 'default'} />
@@ -542,7 +542,7 @@ function ValidationView({
     <Card padding={0}>
       <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 100px 130px 2fr 1fr 200px', gap: 10, padding: '8px 14px', background: C.bg, borderBottom: `1px solid ${C.border}` }}>
         {['Agent', 'Type', 'Date / Heure', 'Motif', 'Saisi le', 'Action'].map(h => (
-          <p key={h} style={{ fontSize: 10, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</p>
+          <p key={h} style={{ fontSize: 12, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</p>
         ))}
       </div>
       {enAttente.map((p, i) => {
@@ -561,16 +561,16 @@ function ValidationView({
               <p style={{ color: C.fg, fontStyle: 'italic', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {p.motif ? `« ${p.motif} »` : <span style={{ color: C.subtle, fontStyle: 'italic' }}>aucun</span>}
               </p>
-              <span style={{ color: C.subtle, fontSize: 11 }}>{fmtDateTime(p.createdAt)}</span>
+              <span style={{ color: C.subtle, fontSize: 12 }}>{fmtDateTime(p.createdAt)}</span>
               <div style={{ display: 'flex', gap: 4 }}>
                 <Button size="sm" variant="primary" onClick={() => onApprove(p.id)}>✓ Approuver</Button>
                 <Button size="sm" variant="danger" onClick={() => { setRefusing(p.id); setMotif('') }}>✕ Refuser</Button>
-                <button onClick={() => { if (confirm('Supprimer cette saisie ?')) onDelete(p.id) }} style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.border}`, background: '#fff', cursor: 'pointer', fontSize: 11, color: C.subtle }}>×</button>
+                <button onClick={() => { if (confirm('Supprimer cette saisie ?')) onDelete(p.id) }} style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.border}`, background: '#fff', cursor: 'pointer', fontSize: 12, color: C.subtle }}>×</button>
               </div>
             </div>
             {refusing === p.id && (
               <div style={{ padding: '12px 14px', background: C.dangerLight, borderBottom: i < enAttente.length - 1 ? `1px solid ${C.border}` : 'none' }}>
-                <p style={{ fontSize: 11, color: C.muted, fontWeight: 600, marginBottom: 6 }}>
+                <p style={{ fontSize: 12, color: C.muted, fontWeight: 600, marginBottom: 6 }}>
                   Motif du refus (obligatoire)
                 </p>
                 <textarea
@@ -625,7 +625,7 @@ function ManualPointageForm({
   return (
     <Card padding={14} style={{ marginBottom: 12, background: C.greenLight, borderColor: C.green }}>
       <SectionHeader title="Saisie manuelle d'un pointage" />
-      <p style={{ fontSize: 11, color: C.muted, marginBottom: 12 }}>
+      <p style={{ fontSize: 12, color: C.muted, marginBottom: 12 }}>
         Cette saisie sera <strong>en attente de validation</strong> par le maire ou un responsable
         de la commission Administration générale & Finances.
       </p>
@@ -764,7 +764,7 @@ function ConfigView({ config, onUpdate }: {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <p style={{ fontSize: 10, color: C.subtle, fontWeight: 600, marginBottom: 4 }}>{label}</p>
+      <p style={{ fontSize: 12, color: C.subtle, fontWeight: 600, marginBottom: 4 }}>{label}</p>
       {children}
     </div>
   )
