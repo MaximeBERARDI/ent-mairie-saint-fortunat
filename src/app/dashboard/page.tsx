@@ -107,7 +107,7 @@ export default function DashboardPage() {
   if (!hydrated) {
     return (
       <Shell title="Tableau de bord" notif={3}>
-        <div style={{ padding: 40, textAlign: 'center', color: C.subtle, fontSize: 13 }}>Chargement…</div>
+        <div style={{ padding: 40, textAlign: 'center', color: C.subtle, fontSize: 14 }}>Chargement…</div>
       </Shell>
     )
   }
@@ -303,10 +303,10 @@ function DashConseiller({ tasks, updateTask, currentUserId }: { tasks: Task[]; u
                 const icon = item.type === 'facture' ? '💶' : item.type === 'leave' ? '🏝' : '📋'
                 return (
                   <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 0', borderBottom: i < recent.length - 1 ? `1px solid ${C.border}` : 'none' }}>
-                    <span style={{ fontSize: 13, width: 18, textAlign: 'center' }}>{icon}</span>
+                    <span style={{ fontSize: 14, width: 18, textAlign: 'center' }}>{icon}</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p style={{ fontSize: 12, color: C.fg, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.label}</p>
-                      <p style={{ fontSize: 10, color: C.subtle }}>{item.sub}</p>
+                      <p style={{ fontSize: 12, color: C.subtle }}>{item.sub}</p>
                     </div>
                     {item.badge && <Badge label={item.badge} variant={item.badgeVariant ?? 'default'} />}
                   </div>
@@ -340,7 +340,7 @@ function DashboardTaskRow({
       <div style={{ width: 7, height: 7, borderRadius: '50%', background: dot, flexShrink: 0 }} />
       <Link href="/taches" style={{ flex: 1, minWidth: 0, textDecoration: 'none' }}>
         <p style={{ fontSize: 12, color: C.fg, fontWeight: 500 }}>{task.label}</p>
-        <p style={{ fontSize: 10, color: C.subtle, marginTop: 1 }}>
+        <p style={{ fontSize: 12, color: C.subtle, marginTop: 1 }}>
           {commission ?? 'Sans commission'} · Échéance : {formatShortFR(task.dueDate)}
         </p>
       </Link>
@@ -406,7 +406,7 @@ function DashAgent({ tasks, updateTask, currentUserId }: { tasks: Task[]; update
         <h2 style={{ fontSize: 22, color: C.fg, fontWeight: 700, marginBottom: 4 }}>
           {getGreeting()}, {me?.prenom ?? 'Jean'} — {getTodayLabel()}
         </h2>
-        <p style={{ fontSize: 13, color: C.subtle }}>
+        <p style={{ fontSize: 14, color: C.subtle }}>
           {allDoneToday
             ? 'Aucune tâche urgente aujourd\'hui. Profitez-en pour avancer sur les tâches de la semaine.'
             : `Vous avez ${todayTasks.length} tâche${todayTasks.length > 1 ? 's' : ''} à traiter aujourd'hui${meetingsThisWeek.length > 0 ? ` et ${meetingsThisWeek.length} réunion${meetingsThisWeek.length > 1 ? 's' : ''} cette semaine` : ''}.`}
@@ -445,7 +445,7 @@ function DashAgent({ tasks, updateTask, currentUserId }: { tasks: Task[]; update
                       }}
                     />
                     <Link href="/taches" style={{ flex: 1, minWidth: 0, textDecoration: 'none' }}>
-                      <p style={{ fontSize: 13, color: C.fg, fontWeight: 500 }}>{t.label}</p>
+                      <p style={{ fontSize: 14, color: C.fg, fontWeight: 500 }}>{t.label}</p>
                     </Link>
                     {c && <Tag label={c.name.split(' ')[0]} color={c.color} />}
                     <Badge label={t.priority} variant={PRIORITY_VARIANTS[t.priority]} />
@@ -499,21 +499,21 @@ function DashAgent({ tasks, updateTask, currentUserId }: { tasks: Task[]; update
               <SectionHeader title="Mes infos RH" actions={<Link href="/rh"><Button size="sm">Voir</Button></Link>} />
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
                 <div>
-                  <p style={{ fontSize: 9, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Congés restants</p>
+                  <p style={{ fontSize: 11, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Congés restants</p>
                   <p style={{ fontSize: 16, color: C.fg, fontWeight: 700 }}>{myRecord.congesAnnuelsAcquis - myRecord.congesAnnuelsPris} j</p>
                 </div>
                 <div>
-                  <p style={{ fontSize: 9, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>RTT restants</p>
+                  <p style={{ fontSize: 11, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>RTT restants</p>
                   <p style={{ fontSize: 16, color: C.fg, fontWeight: 700 }}>{myRecord.rttAcquis - myRecord.rttPris} j</p>
                 </div>
               </div>
               {myUpcomingLeaves.length > 0 && (
                 <>
-                  <p style={{ fontSize: 9, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>Mes prochaines absences</p>
+                  <p style={{ fontSize: 11, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>Mes prochaines absences</p>
                   {myUpcomingLeaves.map((l, i) => (
                     <div key={l.id} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 0', borderBottom: i < myUpcomingLeaves.length - 1 ? `1px solid ${C.border}` : 'none' }}>
                       <Tag label={l.type === 'Congés annuels' ? 'CA' : l.type === 'RTT' ? 'RTT' : l.type[0]} color={l.type === 'Maladie' ? C.danger : C.terra} />
-                      <p style={{ fontSize: 11, color: C.fg, flex: 1 }}>{formatShortFR(l.dateDebut)} → {formatShortFR(l.dateFin)}</p>
+                      <p style={{ fontSize: 12, color: C.fg, flex: 1 }}>{formatShortFR(l.dateDebut)} → {formatShortFR(l.dateFin)}</p>
                       <Badge label={l.statut === 'En attente' ? 'En attente' : 'OK'} variant={l.statut === 'En attente' ? 'warning' : 'success'} />
                     </div>
                   ))}
@@ -528,7 +528,7 @@ function DashAgent({ tasks, updateTask, currentUserId }: { tasks: Task[]; update
               {myActiveMissions.map((m, i) => (
                 <div key={m.id} style={{ padding: '7px 0', borderBottom: i < myActiveMissions.length - 1 ? `1px solid ${C.border}` : 'none' }}>
                   <p style={{ fontSize: 12, color: C.fg, fontWeight: 500 }}>{m.label}</p>
-                  <p style={{ fontSize: 10, color: C.subtle }}>
+                  <p style={{ fontSize: 12, color: C.subtle }}>
                     Du {formatShortFR(m.dateDebut)} {m.dateFin ? `au ${formatShortFR(m.dateFin)}` : '— en cours'}{m.lieu && ` · ${m.lieu}`}
                   </p>
                 </div>
@@ -613,7 +613,7 @@ function NotificationsList({ tasks, currentUserId }: { tasks: Task[]; currentUse
           }} />
           <div>
             <p style={{ fontSize: 12, color: C.fg, fontWeight: 500 }}>{n.text}</p>
-            <p style={{ fontSize: 10, color: C.subtle }}>{n.sub}</p>
+            <p style={{ fontSize: 12, color: C.subtle }}>{n.sub}</p>
           </div>
         </div>
       ))}
@@ -722,7 +722,7 @@ function DashMaire({ tasks, currentUserId }: { tasks: Task[]; currentUserId: str
       {totalLate > 0 && (
         <div style={{ background: C.dangerLight, border: `1px solid ${C.danger}40`, borderRadius: 8, padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
           <div style={{ width: 8, height: 8, borderRadius: '50%', background: C.danger, flexShrink: 0 }} />
-          <p style={{ fontSize: 13, color: C.danger, fontWeight: 600, flex: 1 }}>
+          <p style={{ fontSize: 14, color: C.danger, fontWeight: 600, flex: 1 }}>
             {totalLate} tâche{totalLate > 1 ? 's' : ''} en retard sur l&apos;ensemble de l&apos;équipe
           </p>
           <Link href="/taches"><Button size="sm" style={{ borderColor: C.danger, color: C.danger }}>Voir</Button></Link>
@@ -732,7 +732,7 @@ function DashMaire({ tasks, currentUserId }: { tasks: Task[]; currentUserId: str
       {pendingValidation + facturesEnAttente.length + leavesPending.length > 0 && (
         <div style={{ background: C.warningLight, border: `1px solid ${C.warning}40`, borderRadius: 8, padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
           <div style={{ width: 8, height: 8, borderRadius: '50%', background: C.warning, flexShrink: 0 }} />
-          <p style={{ fontSize: 13, color: C.warning, fontWeight: 600, flex: 1 }}>
+          <p style={{ fontSize: 14, color: C.warning, fontWeight: 600, flex: 1 }}>
             À valider :
             {pendingValidation > 0 && ` ${pendingValidation} tâche${pendingValidation > 1 ? 's' : ''}`}
             {pendingValidation > 0 && (facturesEnAttente.length > 0 || leavesPending.length > 0) && ' ·'}
@@ -751,7 +751,7 @@ function DashMaire({ tasks, currentUserId }: { tasks: Task[]; currentUserId: str
       {contratsAReno.length > 0 && (
         <div style={{ background: C.dangerLight, border: `1px solid ${C.danger}40`, borderRadius: 8, padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
           <div style={{ width: 8, height: 8, borderRadius: '50%', background: C.danger, flexShrink: 0 }} />
-          <p style={{ fontSize: 13, color: C.danger, fontWeight: 600, flex: 1 }}>
+          <p style={{ fontSize: 14, color: C.danger, fontWeight: 600, flex: 1 }}>
             {contratsAReno.length} contrat{contratsAReno.length > 1 ? 's à renouveler' : ' à renouveler'} dans les 90 jours
           </p>
           <Link href="/rh"><Button size="sm" style={{ borderColor: C.danger, color: C.danger }}>Voir RH</Button></Link>
@@ -788,10 +788,10 @@ function DashMaire({ tasks, currentUserId }: { tasks: Task[]; currentUserId: str
             topChapitres.map((c) => (
               <div key={c.chapitre.code} style={{ marginBottom: 12 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4, alignItems: 'center', gap: 6 }}>
-                  <span style={{ fontSize: 10, color: C.subtle, fontFamily: "'JetBrains Mono', monospace", fontWeight: 600, minWidth: 40 }}>Ch. {c.chapitre.code}</span>
+                  <span style={{ fontSize: 12, color: C.subtle, fontFamily: "'JetBrains Mono', monospace", fontWeight: 600, minWidth: 40 }}>Ch. {c.chapitre.code}</span>
                   <p style={{ fontSize: 12, color: C.fg, fontWeight: 500, flex: 1 }}>{c.chapitre.label}</p>
-                  <p style={{ fontSize: 11, color: C.subtle }}>{fmtMontant(c.realise)} / {fmtMontant(c.budget)}</p>
-                  <p style={{ fontSize: 11, color: c.pct > 80 ? C.danger : c.pct > 60 ? C.warning : C.success, fontWeight: 700, minWidth: 40, textAlign: 'right' }}>{c.pct}%</p>
+                  <p style={{ fontSize: 12, color: C.subtle }}>{fmtMontant(c.realise)} / {fmtMontant(c.budget)}</p>
+                  <p style={{ fontSize: 12, color: c.pct > 80 ? C.danger : c.pct > 60 ? C.warning : C.success, fontWeight: 700, minWidth: 40, textAlign: 'right' }}>{c.pct}%</p>
                 </div>
                 <Progress pct={Math.min(100, c.pct)} />
               </div>
@@ -808,16 +808,16 @@ function DashMaire({ tasks, currentUserId }: { tasks: Task[]; currentUserId: str
             <RatioMini helpKey="ratio7_personnelSurDrf" label="Personnel / DRF" value={`${ratios.ratio7_personnelSurDrf}%`} />
             <RatioMini helpKey="ratio5_encoursDetteParHab" label="Dette / habitant" value={`${ratios.ratio5_encoursDetteParHab} €`} />
           </div>
-          <p style={{ fontSize: 10, color: C.subtle, fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Postes en alerte</p>
+          <p style={{ fontSize: 12, color: C.subtle, fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Postes en alerte</p>
           {postesEnAlerte.length === 0 ? (
-            <p style={{ fontSize: 11, color: C.subtle, fontStyle: 'italic' }}>Aucun poste en alerte 👌</p>
+            <p style={{ fontSize: 12, color: C.subtle, fontStyle: 'italic' }}>Aucun poste en alerte 👌</p>
           ) : (
             postesEnAlerte.map(p => (
               <div key={p.code} style={{ marginBottom: 8 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 2, alignItems: 'center', gap: 4 }}>
-                  <span style={{ fontSize: 9, color: C.subtle, fontFamily: "'JetBrains Mono', monospace", minWidth: 38 }}>{p.code}</span>
-                  <p style={{ fontSize: 11, color: C.fg, flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.label}</p>
-                  <p style={{ fontSize: 11, color: p.pctConsomme > 95 ? C.danger : C.warning, fontWeight: 700 }}>{p.pctConsomme}%</p>
+                  <span style={{ fontSize: 11, color: C.subtle, fontFamily: "'JetBrains Mono', monospace", minWidth: 38 }}>{p.code}</span>
+                  <p style={{ fontSize: 12, color: C.fg, flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.label}</p>
+                  <p style={{ fontSize: 12, color: p.pctConsomme > 95 ? C.danger : C.warning, fontWeight: 700 }}>{p.pctConsomme}%</p>
                 </div>
                 <Progress pct={Math.min(100, p.pctConsomme)} />
               </div>
@@ -834,7 +834,7 @@ function DashMaire({ tasks, currentUserId }: { tasks: Task[]; currentUserId: str
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0', borderBottom: i < commissionStats.length - 1 ? `1px solid ${C.border}` : 'none', cursor: 'pointer' }}>
                 <div style={{ width: 8, height: 8, borderRadius: '50%', background: c.lateCount > 0 ? C.danger : c.activeCount > 8 ? C.warning : C.success, flexShrink: 0 }} />
                 <p style={{ fontSize: 12, color: C.fg, flex: 1 }}>{c.name}</p>
-                <p style={{ fontSize: 10, color: C.subtle }}>{c.activeCount} tâches{c.lateCount > 0 ? ` · ${c.lateCount} retard` : ''}</p>
+                <p style={{ fontSize: 12, color: C.subtle }}>{c.activeCount} tâches{c.lateCount > 0 ? ` · ${c.lateCount} retard` : ''}</p>
                 <Badge label={c.nextMeeting} variant={c.lateCount > 0 ? 'danger' : c.activeCount > 8 ? 'warning' : 'default'} />
               </div>
             </Link>
@@ -849,8 +849,8 @@ function DashMaire({ tasks, currentUserId }: { tasks: Task[]; currentUserId: str
             chargeByPerson.map(({ person, count }) => (
               <div key={person.id} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                 <Avatar initials={person.initials} size={22} color={person.color} />
-                <p style={{ fontSize: 11, color: C.fg, flex: 1 }}>{person.fullName}</p>
-                <p style={{ fontSize: 11, color: C.subtle, fontWeight: 600 }}>{count} tâche{count > 1 ? 's' : ''}</p>
+                <p style={{ fontSize: 12, color: C.fg, flex: 1 }}>{person.fullName}</p>
+                <p style={{ fontSize: 12, color: C.subtle, fontWeight: 600 }}>{count} tâche{count > 1 ? 's' : ''}</p>
               </div>
             ))
           )}
@@ -860,7 +860,7 @@ function DashMaire({ tasks, currentUserId }: { tasks: Task[]; currentUserId: str
         <Card style={{ flex: 1.5 }} padding={14}>
           <SectionHeader title="Absences du jour" actions={<Link href="/rh"><Button size="sm">RH</Button></Link>} />
           {absentToday.length === 0 ? (
-            <p style={{ fontSize: 11, color: C.subtle, fontStyle: 'italic', padding: '8px 0' }}>Tous les agents sont présents 👌</p>
+            <p style={{ fontSize: 12, color: C.subtle, fontStyle: 'italic', padding: '8px 0' }}>Tous les agents sont présents 👌</p>
           ) : (
             absentToday.map(l => {
               const p = people.find(x => x.id === l.personId)
@@ -869,8 +869,8 @@ function DashMaire({ tasks, currentUserId }: { tasks: Task[]; currentUserId: str
                 <div key={l.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 0', borderBottom: `1px solid ${C.border}` }}>
                   <Avatar initials={p.initials} size={22} color={C.terra} />
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: 11, color: C.fg, fontWeight: 500 }}>{p.fullName}</p>
-                    <p style={{ fontSize: 9, color: C.subtle }}>{l.type} · jusqu&apos;au {formatShortFR(l.dateFin)}</p>
+                    <p style={{ fontSize: 12, color: C.fg, fontWeight: 500 }}>{p.fullName}</p>
+                    <p style={{ fontSize: 11, color: C.subtle }}>{l.type} · jusqu&apos;au {formatShortFR(l.dateFin)}</p>
                   </div>
                 </div>
               )
@@ -886,7 +886,7 @@ function RatioMini({ label, value, helpKey }: { label: string; value: string; he
   return (
     <div style={{ padding: 8, background: C.bg, borderRadius: 6 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-        <p style={{ fontSize: 9, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</p>
+        <p style={{ fontSize: 11, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</p>
         {helpKey && <InfoTooltip indicatorKey={helpKey} size={12} />}
       </div>
       <p style={{ fontSize: 14, color: C.fg, fontWeight: 700 }}>{value}</p>
