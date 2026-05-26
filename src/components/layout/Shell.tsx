@@ -36,6 +36,8 @@ function ShellInner({ title, children, notif }: ShellProps) {
       overflow: 'hidden',
       position: 'relative',
     }}>
+      <a href="#main-content" className="skip-link">Aller au contenu principal</a>
+
       {!isTopNav && !isMobile && <Sidebar />}
 
       {!isTopNav && isMobile && (
@@ -65,7 +67,7 @@ function ShellInner({ title, children, notif }: ShellProps) {
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
         <TopBar title={title} notif={notif} />
-        <main style={{ flex: 1, overflow: 'auto', padding: 'var(--content-pad)' }}>
+        <main id="main-content" tabIndex={-1} style={{ flex: 1, overflow: 'auto', padding: 'var(--content-pad)' }}>
           {children}
         </main>
       </div>

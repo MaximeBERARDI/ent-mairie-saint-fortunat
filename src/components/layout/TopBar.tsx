@@ -53,12 +53,19 @@ export function TopBar({ title, notif = 2 }: TopBarProps) {
         setUserMenuOpen(false)
       }
     }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setUserMenuOpen(false)
+    }
     document.addEventListener('mousedown', onClick)
-    return () => document.removeEventListener('mousedown', onClick)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onClick)
+      document.removeEventListener('keydown', onKey)
+    }
   }, [userMenuOpen])
 
   return (
-    <div style={{
+    <header style={{
       height: 'var(--topbar-h)',
       background: 'var(--topbar-bg)',
       borderBottom: '1px solid var(--card-border)',
@@ -88,8 +95,8 @@ export function TopBar({ title, notif = 2 }: TopBarProps) {
       {isTopNav && (
         <>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginRight: 8, flexShrink: 0 }}>
-            <div style={{ width: 24, height: 24, borderRadius: 5, background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <span style={{ fontSize: 9, color: '#fff', fontWeight: 700 }}>SFE</span>
+            <div style={{ width: 24, height: 24, borderRadius: 6, background: 'var(--accent-dark)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <span style={{ fontSize: 10, color: '#fff', fontWeight: 700, letterSpacing: 0.3 }}>SF</span>
             </div>
             <span style={{ fontSize: 12, color: 'var(--topbar-text)', fontWeight: 700 }}>Saint-Fortunat</span>
           </div>
@@ -97,7 +104,7 @@ export function TopBar({ title, notif = 2 }: TopBarProps) {
             {NAV_ITEMS.map(item => {
               const active = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))
               return (
-                <Link key={item.href} href={item.href} style={{ textDecoration: 'none' }}>
+                <Link key={item.href} href={item.href} aria-current={active ? 'page' : undefined} style={{ textDecoration: 'none' }}>
                   <div style={{ padding: '5px 10px', borderRadius: 6, background: active ? `var(--accent-light)` : 'transparent' }}>
                     <span style={{ fontSize: 11, color: active ? 'var(--accent)' : 'var(--text-muted)', fontWeight: active ? 600 : 400 }}>{item.label}</span>
                   </div>
@@ -122,6 +129,8 @@ export function TopBar({ title, notif = 2 }: TopBarProps) {
         <button
           onClick={() => setUserMenuOpen(o => !o)}
           aria-label="Mon profil"
+          aria-haspopup="menu"
+          aria-expanded={userMenuOpen}
           title={currentUser ? `${currentUser.fullName} — ${AUTH_LEVEL_LABELS[currentUser.authLevel]}` : 'Profil'}
           style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
         >
@@ -197,6 +206,6 @@ export function TopBar({ title, notif = 2 }: TopBarProps) {
           </div>
         )}
       </div>
-    </div>
+    </header>
   )
 }

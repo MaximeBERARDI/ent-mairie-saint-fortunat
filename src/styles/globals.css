@@ -176,6 +176,28 @@ textarea:focus {
   border-color: var(--accent-dark) !important;
 }
 
+/* ─── Skip-link — « Aller au contenu principal » (RGAA 12.7 bloquant) ───
+ * Hors écran par défaut, ramené en haut à gauche dès qu'il reçoit le focus
+ * clavier (premier Tab). Le conteneur Shell est position:relative. */
+.skip-link {
+  position: absolute;
+  left: 8px;
+  top: -48px;
+  z-index: 200;
+  padding: 8px 14px;
+  background: var(--accent-dark);
+  color: #fff;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: top 160ms ease;
+}
+
+.skip-link:focus {
+  top: 8px;
+}
+
 /* ─── Responsive mobile ─────────────────────────────────────────────
  * Sur écrans < 768px : padding réduit, top bar plus haute pour le burger,
  * et on contraint les éléments à ne pas dépasser la viewport.
