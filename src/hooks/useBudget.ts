@@ -1,42 +1,20 @@
 'use client'
 
+// Plan comptable M14 branché sur /api/budget (PostgreSQL via Prisma).
+// La structure du plan vient du seed (COMPTES_M14) ; les montants
+// (budgetAlloue, consommationInitiale) sont édités et persistés en base.
+// Pattern optimistic (cf. useTasks). computePosteWithConsumption et
+// totalSectionSens restent des calculs purs côté client.
+
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import type { CompteM14, Ecriture, Facture, Section, Sens } from '@/lib/types'
-import { COMPTES_M14, CHAPITRES_M14 } from '@/lib/m14-plan'
-
-const STORAGE_KEY = 'ent-mairie:budget:v2'
-
-function loadFromStorage(): CompteM14[] | null {
-  if (typeof window === 'undefined') return null
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY)
-    if (!raw) return null
-    const parsed = JSON.parse(raw)
-    return Array.isArray(parsed) ? parsed : null
-  } catch {
-    return null
-  }
-}
-
-function saveToStorage(postes: CompteM14[]) {
-  if (typeof window === 'undefined') return
-  try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(postes))
-  } catch {}
-}
+import { CHAPITRES_M14 } from '@/lib/m14-plan'
 
 // Vue enrichie d'un compte M14 avec ses consommations calculées.
 export interface CompteWithConsumption extends CompteM14 {
-  // Source 1 : consommation héritée (exercice en cours avant l'app)
   consoInitiale: number
-  // Source 2 : factures validées imputées sur ce compte
   consoFactures: number
-  // Source 3 : écritures comptables passées sur ce compte (tous journaux)
-  // Pour les comptes de charge (sens D) : sum(debit) - sum(credit)
-  // Pour les comptes de produit (sens R) : sum(credit) - sum(debit)
   consoEcritures: number
-  // Total réel mouvementé (sans double-comptage : on prend max(factures, écritures)
-  // car l'écriture AC d'une facture validée a déjà été ajoutée par le hook)
   consommationTotale: number
   pctConsomme: number
   reste: number
@@ -44,55 +22,63 @@ export interface CompteWithConsumption extends CompteM14 {
 }
 
 export function useBudget() {
-  const [postes, setPostes] = useState<CompteM14[]>(COMPTES_M14)
+  const [postes, setPostes] = useState<CompteM14[]>([])
   const [hydrated, setHydrated] = useState(false)
 
   useEffect(() => {
-    const stored = loadFromStorage()
-    if (stored && stored.length > 0) {
-      // Merge : on garde les codes du seed à jour mais on conserve les budgets
-      // saisis par la commune (s'ils existent dans le storage).
-      const storedMap = new Map(stored.map(p => [p.code, p]))
-      const merged = COMPTES_M14.map(p => {
-        const s = storedMap.get(p.code)
-        return s ? { ...p, budgetAlloue: s.budgetAlloue, consommationInitiale: s.consommationInitiale } : p
-      })
-      // Comptes ajoutés à la main qui ne sont pas dans le seed (au cas où)
-      stored.forEach(s => {
-        if (!merged.find(m => m.code === s.code)) merged.push(s)
-      })
-      setPostes(merged)
-    } else {
-      saveToStorage(COMPTES_M14)
-    }
-    setHydrated(true)
+    let cancelled = false
+    fetch('/api/budget')
+      .then(r => (r.ok ? r.json() : Promise.reject(r)))
+      .then((data: CompteM14[]) => { if (!cancelled) { setPostes(data); setHydrated(true) } })
+      .catch(e => { if (!cancelled) { console.error('[useBudget] load error:', e); setHydrated(true) } })
+    return () => { cancelled = true }
   }, [])
 
-  useEffect(() => {
-    if (hydrated) saveToStorage(postes)
-  }, [postes, hydrated])
-
   const updatePoste = useCallback((code: string, patch: Partial<CompteM14>) => {
-    setPostes(prev => prev.map(p => (p.code === code ? { ...p, ...patch } : p)))
+    let previous: CompteM14[] = []
+    setPostes(prev => { previous = prev; return prev.map(p => (p.code === code ? { ...p, ...patch } : p)) })
+    fetch(`/api/budget/${encodeURIComponent(code)}`, {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch),
+    })
+      .then(r => { if (!r.ok) throw r })
+      .catch(e => {
+        console.error('[useBudget] update error:', e)
+        setPostes(previous)
+        alert('Impossible de mettre à jour le poste (droits insuffisants ?).')
+      })
   }, [])
 
   const createPoste = useCallback((data: CompteM14) => {
     setPostes(prev => [...prev, data])
+    fetch('/api/budget', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data),
+    })
+      .then(r => { if (!r.ok) throw r })
+      .catch(e => {
+        console.error('[useBudget] create error:', e)
+        setPostes(prev => prev.filter(p => p.code !== data.code))
+        alert('Impossible de créer le poste.')
+      })
   }, [])
 
   const deletePoste = useCallback((code: string) => {
-    setPostes(prev => prev.filter(p => p.code !== code))
+    let previous: CompteM14[] = []
+    setPostes(prev => { previous = prev; return prev.filter(p => p.code !== code) })
+    fetch(`/api/budget/${encodeURIComponent(code)}`, { method: 'DELETE' })
+      .then(r => { if (!r.ok) throw r })
+      .catch(e => {
+        console.error('[useBudget] delete error:', e)
+        setPostes(previous)
+        alert('Impossible de supprimer le poste.')
+      })
   }, [])
 
+  // Le reset n'a plus de sens en mode DB (le plan vient du seed).
   const resetPostes = useCallback(() => {
-    setPostes(COMPTES_M14)
-    saveToStorage(COMPTES_M14)
+    console.warn('[useBudget] resetPostes() est obsolète en mode DB.')
   }, [])
 
   // Calcule la consommation enrichie d'un compte à partir des factures et écritures.
-  // L'écriture d'engagement générée automatiquement à la validation d'une facture
-  // pèse aussi dans ecritures → on prend le max pour éviter de compter deux fois
-  // une facture validée.
   const computePosteWithConsumption = useCallback(
     (poste: CompteM14, factures: Facture[], ecritures: Ecriture[] = []): CompteWithConsumption => {
       const consoFactures = factures
@@ -108,8 +94,6 @@ export function useBudget() {
         }
       }
 
-      // Évite le double comptage : si une facture validée a généré son écriture
-      // d'engagement, le montant figure dans les deux. On prend le max.
       const realisé = Math.max(consoFactures, consoEcritures)
       const consoTotale = poste.consommationInitiale + realisé
       const pct = poste.budgetAlloue > 0
@@ -129,7 +113,6 @@ export function useBudget() {
     [],
   )
 
-  // Index utilitaires
   const compteByCode = useMemo(() => {
     const m = new Map<string, CompteM14>()
     postes.forEach(p => m.set(p.code, p))
