@@ -9,6 +9,8 @@ import { Avatar } from '@/components/ui/Avatar'
 import { COLORS as C } from '@/lib/theme'
 import { AUTH_LEVEL_LABELS } from '@/lib/permissions'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
+import { useModuleAccess } from '@/hooks/useModuleAccess'
+import { moduleKeyForHref } from '@/lib/modules'
 import { useMobileNav } from '@/context/MobileNavContext'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import { GlobalSearch } from './GlobalSearch'
@@ -36,7 +38,8 @@ export function TopBar({ title, notif = 2 }: TopBarProps) {
   const isTopNav = nav === 'top'
   const isMobile = useIsMobile()
   const { toggle: toggleMobileNav } = useMobileNav()
-  const { currentUser } = useCurrentUser()
+  const { currentUser, currentUserId, can } = useCurrentUser()
+  const { isVisible } = useModuleAccess()
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
 
@@ -63,6 +66,13 @@ export function TopBar({ title, notif = 2 }: TopBarProps) {
       document.removeEventListener('keydown', onKey)
     }
   }, [userMenuOpen])
+
+  const visibleNav = NAV_ITEMS.filter(item => {
+    const key = moduleKeyForHref(item.href)
+    if (!key) return true
+    if (key === 'equipe' && can('team.edit-roles')) return true
+    return isVisible(currentUserId, key)
+  })
 
   return (
     <header style={{
@@ -101,7 +111,7 @@ export function TopBar({ title, notif = 2 }: TopBarProps) {
             <span style={{ fontSize: 12, color: 'var(--topbar-text)', fontWeight: 700 }}>Saint-Fortunat</span>
           </div>
           <div style={{ display: 'flex', gap: 2, flex: 1 }}>
-            {NAV_ITEMS.map(item => {
+            {visibleNav.map(item => {
               const active = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))
               return (
                 <Link key={item.href} href={item.href} aria-current={active ? 'page' : undefined} style={{ textDecoration: 'none' }}>

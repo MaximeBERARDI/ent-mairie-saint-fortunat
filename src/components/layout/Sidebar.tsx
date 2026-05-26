@@ -6,7 +6,9 @@ import { useSettings } from '@/context/SettingsContext'
 import { Avatar } from '@/components/ui/Avatar'
 import { COLORS as C } from '@/lib/theme'
 import { ROLE_LABELS } from '@/lib/people'
+import { moduleKeyForHref } from '@/lib/modules'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
+import { useModuleAccess } from '@/hooks/useModuleAccess'
 
 type IconName = 'dashboard' | 'check' | 'users' | 'doc' | 'briefcase' | 'euro' | 'team'
 
@@ -55,9 +57,19 @@ function NavIcon({ name }: { name: IconName }) {
 export function Sidebar() {
   const pathname = usePathname()
   const { nav } = useSettings()
-  const { currentUser: me } = useCurrentUser()
+  const { currentUser: me, currentUserId, can } = useCurrentUser()
+  const { isVisible } = useModuleAccess()
   const isIcons = nav === 'icons'
   const w = isIcons ? 54 : 212
+
+  // Filtrage par profil (config admin). Équipe reste visible pour qui peut
+  // gérer les accès, sinon l'admin se couperait l'accès à la configuration.
+  const visibleNav = NAV_ITEMS.filter(item => {
+    const key = moduleKeyForHref(item.href)
+    if (!key) return true
+    if (key === 'equipe' && can('team.edit-roles')) return true
+    return isVisible(currentUserId, key)
+  })
 
   return (
     <div style={{
@@ -96,7 +108,7 @@ export function Sidebar() {
 
       {/* Nav */}
       <nav aria-label="Navigation principale" style={{ flex: 1, padding: 8, display: 'flex', flexDirection: 'column', gap: 1, overflowY: 'auto' }}>
-        {NAV_ITEMS.map(item => {
+        {visibleNav.map(item => {
           const active = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))
           return (
             <Link
