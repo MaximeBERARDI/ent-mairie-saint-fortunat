@@ -18,7 +18,7 @@ import { useCommissions } from '@/hooks/useCommissions'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { TaskForm } from '@/components/tasks/TaskForm'
 import { TaskDetailModal } from '@/components/tasks/TaskDetail'
-import { getPerson, PEOPLE, ROLE_LABELS, CURRENT_USER_ID, type Person } from '@/lib/people'
+import { getPerson, PEOPLE, ROLE_LABELS, type Person } from '@/lib/people'
 import { formatShortFR } from '@/lib/dateUtils'
 import type { Commission, Task, TaskStatus } from '@/lib/types'
 
@@ -50,7 +50,7 @@ export default function CommissionsPage() {
   const { tasks, hydrated, createTask, updateTask, deleteTask, addComment, deleteComment } = useTasks()
   const { people, hydrated: teamHydrated } = useTeam()
   const { commissions, hydrated: commHydrated, createCommission, updateCommission, deleteCommission } = useCommissions()
-  const { can } = useCurrentUser()
+  const { can, currentUserId } = useCurrentUser()
   const canManageCommissions = can('commissions.manage')
   const [view, setView] = useState<CommView>('grille')
   const [selected, setSelected] = useState<Commission | null>(null)
@@ -215,7 +215,7 @@ export default function CommissionsPage() {
           <TaskDetailModal
             open={!!t}
             task={t}
-            currentUserId={CURRENT_USER_ID}
+            currentUserId={currentUserId}
             onClose={() => setDetailOpenId(null)}
             onUpdate={(patch) => updateTask(t.id, patch)}
             onCycleStatus={() => {
@@ -224,7 +224,7 @@ export default function CommissionsPage() {
             }}
             onEdit={() => handleOpenForm(t)}
             onDelete={() => { deleteTask(t.id); setDetailOpenId(null) }}
-            onAddComment={(content) => addComment(t.id, CURRENT_USER_ID, content)}
+            onAddComment={(content) => addComment(t.id, currentUserId, content)}
             onDeleteComment={(commentId) => deleteComment(t.id, commentId)}
           />
         )

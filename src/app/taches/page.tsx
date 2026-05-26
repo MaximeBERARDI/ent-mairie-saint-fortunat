@@ -16,7 +16,8 @@ import { TaskDetailContent, TaskDetailModal } from '@/components/tasks/TaskDetai
 import { useTasks } from '@/hooks/useTasks'
 import { useCommissions } from '@/hooks/useCommissions'
 import type { Commission } from '@/lib/types'
-import { getPerson, getPersonName, CURRENT_USER_ID } from '@/lib/people'
+import { getPerson, getPersonName } from '@/lib/people'
+import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { formatShortFR, formatLongFR, relativeBucket } from '@/lib/dateUtils'
 import type { Task, TaskStatus } from '@/lib/types'
 
@@ -53,6 +54,7 @@ function getCommissionColor(commissions: Commission[], id?: string): string {
 
 export default function TachesPage() {
   const { tasks, hydrated, createTask, updateTask, deleteTask, addComment, deleteComment } = useTasks()
+  const { currentUserId } = useCurrentUser()
   const [view, setView] = useState<TaskView>('liste')
   const [filter, setFilter] = useState<TaskFilter>('toutes')
   const [selectedId, setSelectedId] = useState<string | null>(null)
@@ -62,19 +64,19 @@ export default function TachesPage() {
 
   const counts = useMemo(() => ({
     toutes: tasks.length,
-    mes: tasks.filter(t => t.assigneeId === CURRENT_USER_ID || t.validatorId === CURRENT_USER_ID).length,
+    mes: tasks.filter(t => t.assigneeId === currentUserId || t.validatorId === currentUserId).length,
     enAttente: tasks.filter(t => t.status === 'En attente validation').length,
     terminees: tasks.filter(t => t.status === 'Terminé').length,
-  }), [tasks])
+  }), [tasks, currentUserId])
 
   const filteredTasks = useMemo(() => {
     return tasks.filter(t => {
-      if (filter === 'mes') return t.assigneeId === CURRENT_USER_ID || t.validatorId === CURRENT_USER_ID
+      if (filter === 'mes') return t.assigneeId === currentUserId || t.validatorId === currentUserId
       if (filter === 'en-attente') return t.status === 'En attente validation'
       if (filter === 'terminees') return t.status === 'Terminé'
       return true
     })
-  }, [tasks, filter])
+  }, [tasks, filter, currentUserId])
 
   const selected = selectedId ? tasks.find(t => t.id === selectedId) ?? null : null
 
@@ -181,13 +183,13 @@ export default function TachesPage() {
           <TaskDetailModal
             open={!!t}
             task={t}
-            currentUserId={CURRENT_USER_ID}
+            currentUserId={currentUserId}
             onClose={() => setDetailOpenId(null)}
             onUpdate={(patch) => updateTask(t.id, patch)}
             onCycleStatus={() => cycleStatus(t)}
             onEdit={() => { setDetailOpenId(null); openEdit(t) }}
             onDelete={() => { deleteTask(t.id); setDetailOpenId(null) }}
-            onAddComment={(content) => addComment(t.id, CURRENT_USER_ID, content)}
+            onAddComment={(content) => addComment(t.id, currentUserId, content)}
             onDeleteComment={(commentId) => deleteComment(t.id, commentId)}
           />
         )
@@ -216,6 +218,7 @@ function ListeView({
   onDeleteComment: (taskId: string, commentId: string) => void
 }) {
   const { commissions } = useCommissions()
+  const { currentUserId } = useCurrentUser()
   const FILTERS: [TaskFilter, string][] = [
     ['toutes', `Toutes (${counts.toutes})`],
     ['mes', `Mes tâches (${counts.mes})`],
@@ -297,13 +300,13 @@ function ListeView({
           <Card style={{ flex: 1.8 }} padding={16}>
             <TaskDetailContent
               task={selected}
-              currentUserId={CURRENT_USER_ID}
+              currentUserId={currentUserId}
               onClose={() => setSelected(null)}
               onEdit={() => onEdit(selected)}
               onUpdate={(patch) => onUpdate(selected.id, patch)}
               onCycleStatus={() => onCycleStatus(selected)}
               onDelete={() => onDelete(selected.id)}
-              onAddComment={(content) => onAddComment(selected.id, CURRENT_USER_ID, content)}
+              onAddComment={(content) => onAddComment(selected.id, currentUserId, content)}
               onDeleteComment={(commentId) => onDeleteComment(selected.id, commentId)}
               compact
             />

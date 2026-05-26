@@ -18,7 +18,7 @@ MVP / démo. Pas de back-end : toutes les données vivent en `localStorage` côt
 
 - `src/lib/people.ts` — `PEOPLE` : tous les utilisateurs (élus + agents) avec niveaux d'autorisation (`AuthLevel`), permissions custom, signatures, délégations. **Source unique** de qui est qui.
 - `src/lib/permissions.ts` — types `AuthLevel`, `Permission`, `SignatureDomain` + helpers `hasPermission()`. Toujours passer par `hasPermission(authLevel, permission, customPermissions)`.
-- `CURRENT_USER_ID = 'p-jm'` (Jean Martin, maire) — codé en dur en attendant une vraie auth.
+- Utilisateur courant dérivé de la session NextAuth via `useCurrentUser()` / `TeamContext` (`currentUserId = session.user.personId`, `currentUser`, `can()`). **Ne plus coder en dur** d'identité : toujours passer par `useCurrentUser()`.
 
 ### Modules métier (persistés en localStorage)
 
@@ -116,7 +116,7 @@ Toujours type-checker avant de commit. Le build inclut le type-check + le lint N
 - ✅ **RH** — agents/contrats/grades/IFSE, workflow congés avec maj auto compteurs, calendrier mensuel réel, paies M14, missions, pointage des heures + suivi heures supplémentaires (workflow validation des saisies manuelles par maire / responsable Admin & Finances), génération de bulletins de paie format fonction publique territoriale (CSG/CRDS, CNRACL ou IRCANTEC, RAFP, etc.) en PDF imprimable
 - ✅ **Dashboard** — câblé aux vraies données (3 vues Élu/Agent/Maire)
 - 🟡 **Commissions** — CRUD tâches OK + onglet admin pour renommer/créer/supprimer les commissions ; membres statiques, pas de planning réunions, GED mock
-- ❌ **Auth réelle** — pas de NextAuth/Clerk, `CURRENT_USER_ID` codé en dur
+- 🟡 **Auth réelle** — NextAuth (Credentials + bcrypt) branché pour l'identité : login, session JWT, `useCurrentUser()`/`TeamContext` dérivent l'utilisateur courant. Reste à étendre la persistance Prisma aux autres modules (Phase C).
 
 ## Dette technique connue
 

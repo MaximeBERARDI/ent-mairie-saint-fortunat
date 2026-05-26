@@ -14,6 +14,7 @@ import { useFournisseurs } from '@/hooks/useFournisseurs'
 import { useBudget, type CompteWithConsumption } from '@/hooks/useBudget'
 import { useEcritures, isBalanced } from '@/hooks/useEcritures'
 import { useTeam } from '@/hooks/useTeam'
+import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { CHAPITRES_M14, COMPTE_LABEL, COMPTES_TIERS } from '@/lib/m14-plan'
 import { computeRatios, ratioStatus } from '@/lib/ratios'
 import { exportPlanComptable, exportGrandLivre, exportRapportBudgetaire } from '@/lib/excel-export'
@@ -21,8 +22,6 @@ import type { Section, Sens, Ecriture, JournalCode, LigneEcriture } from '@/lib/
 import { HistoriqueView } from './HistoriqueView'
 import { ProjectionView } from './ProjectionView'
 import { InfoTooltip } from '@/components/ui/InfoTooltip'
-
-const CURRENT_USER_ID = 'p-jm'
 
 const fmtMontant = (v: number) =>
   new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v)
@@ -600,6 +599,7 @@ function EcrituresView({
   onAdd: ReturnType<typeof useEcritures>['addEcriture']
   onDelete: (id: string) => void
 }) {
+  const { currentUserId } = useCurrentUser()
   const [search, setSearch] = useState('')
   const [journalFilter, setJournalFilter] = useState<JournalCode | 'all'>('all')
 
@@ -640,7 +640,7 @@ function EcrituresView({
       {showForm && (
         <NewEcritureForm
           onSubmit={(data) => {
-            const e = onAdd({ ...data, createdBy: CURRENT_USER_ID })
+            const e = onAdd({ ...data, createdBy: currentUserId })
             if (e) setShowForm(false)
             else alert('Écriture non équilibrée — la somme des débits doit égaler la somme des crédits.')
           }}

@@ -17,6 +17,7 @@ import { useFournisseurs } from '@/hooks/useFournisseurs'
 import { useBudget } from '@/hooks/useBudget'
 import { useEcritures } from '@/hooks/useEcritures'
 import { useTeam } from '@/hooks/useTeam'
+import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { hasPermission } from '@/lib/permissions'
 import type { Facture, FactureStatut, Fournisseur, PosteBudget, TaskDocument } from '@/lib/types'
 import { BudgetM14View } from '@/components/finances/BudgetM14View'
@@ -24,9 +25,6 @@ import { ParcImmobilierView } from '@/components/finances/ParcImmobilierView'
 import { SubventionsView } from '@/components/finances/SubventionsView'
 
 type FinView = 'factures' | 'budget' | 'fournisseurs' | 'parc-immobilier' | 'subventions'
-
-// Pas encore de système d'auth réel : on simule la session du maire (Jean Martin)
-const CURRENT_USER_ID = 'p-jm'
 
 const fmtMontant = (v: number) =>
   new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v)
@@ -111,12 +109,13 @@ function FacturesView() {
   const { postes } = useBudget()
   const { generateEngagementFromFacture, deleteEcrituresByFacture } = useEcritures()
   const { people } = useTeam()
+  const { currentUserId } = useCurrentUser()
 
   // Wraps : valider une facture déclenche aussi l'écriture d'engagement.
   const handleValidate = (factureId: string) => {
-    validateFacture(factureId, CURRENT_USER_ID)
+    validateFacture(factureId, currentUserId)
     const f = factures.find(x => x.id === factureId)
-    if (f) generateEngagementFromFacture(f, CURRENT_USER_ID)
+    if (f) generateEngagementFromFacture(f, currentUserId)
   }
   // Réouvrir / supprimer : on retire aussi les écritures liées
   const handleReopen = (factureId: string) => {
@@ -128,7 +127,7 @@ function FacturesView() {
     deleteEcrituresByFacture(factureId)
   }
 
-  const currentUser = people.find(p => p.id === CURRENT_USER_ID)
+  const currentUser = people.find(p => p.id === currentUserId)
   const canValidate = currentUser ? hasPermission(currentUser.authLevel, 'finance.validate-invoices', currentUser.customPermissions) : false
 
   const [filter, setFilter] = useState<'toutes' | FactureStatut>('toutes')
@@ -309,7 +308,7 @@ function FacturesView() {
               postes={postes}
               canValidate={canValidate}
               onValidate={() => handleValidate(selected.id)}
-              onReject={(reason) => rejectFacture(selected.id, CURRENT_USER_ID, reason)}
+              onReject={(reason) => rejectFacture(selected.id, currentUserId, reason)}
               onReopen={() => handleReopen(selected.id)}
               onDelete={() => { handleDelete(selected.id); setSelectedId(null) }}
             />
@@ -339,12 +338,13 @@ function SubmitFactureForm({
   onCancel: () => void
 }) {
   const { people } = useTeam()
+  const { currentUserId } = useCurrentUser()
   const [fournisseurId, setFournisseurId] = useState('')
   const [montant, setMontant] = useState('')
   const [posteCode, setPosteCode] = useState('')
   const [dateFacture, setDateFacture] = useState(new Date().toISOString().slice(0, 10))
   const [dateEcheance, setDateEcheance] = useState('')
-  const [submittedById, setSubmittedById] = useState(CURRENT_USER_ID)
+  const [submittedById, setSubmittedById] = useState(currentUserId)
   const [notes, setNotes] = useState('')
   const [documents, setDocuments] = useState<TaskDocument[]>([])
   const [fileError, setFileError] = useState<string | null>(null)

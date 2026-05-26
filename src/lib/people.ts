@@ -216,6 +216,3 @@ export function getPerson(id: string | undefined): Person | null {
 export function getPersonName(id: string | undefined): string {
   return getPerson(id)?.fullName ?? '—'
 }
-
-// Personne courante (= "moi") — sera remplacée par l'auth réelle plus tard
-export const CURRENT_USER_ID = 'p-jm'

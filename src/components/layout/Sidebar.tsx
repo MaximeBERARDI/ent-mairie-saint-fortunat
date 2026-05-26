@@ -5,7 +5,8 @@ import { usePathname } from 'next/navigation'
 import { useSettings } from '@/context/SettingsContext'
 import { Avatar } from '@/components/ui/Avatar'
 import { COLORS as C } from '@/lib/theme'
-import { getPerson, ROLE_LABELS, CURRENT_USER_ID } from '@/lib/people'
+import { ROLE_LABELS } from '@/lib/people'
+import { useCurrentUser } from '@/hooks/useCurrentUser'
 
 type IconName = 'dashboard' | 'check' | 'users' | 'doc' | 'briefcase' | 'euro' | 'team'
 
@@ -54,6 +55,7 @@ function NavIcon({ name }: { name: IconName }) {
 export function Sidebar() {
   const pathname = usePathname()
   const { nav } = useSettings()
+  const { currentUser: me } = useCurrentUser()
   const isIcons = nav === 'icons'
   const w = isIcons ? 54 : 212
 
@@ -150,12 +152,11 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* User courant — toujours rendu depuis PEOPLE (les modifs équipe le mettront à jour) */}
+      {/* User courant — dérivé de la session NextAuth via useCurrentUser */}
       {(() => {
-        const me = getPerson(CURRENT_USER_ID)
-        const initials = me?.initials ?? 'JM'
-        const fullName = me?.fullName ?? 'Jean Martin'
-        const roleLabel = me ? ROLE_LABELS[me.role] : 'Conseiller'
+        const initials = me?.initials ?? '?'
+        const fullName = me?.fullName ?? '—'
+        const roleLabel = me ? ROLE_LABELS[me.role] : ''
         const color = me?.color ?? C.terra
         if (!isIcons) {
           return (
