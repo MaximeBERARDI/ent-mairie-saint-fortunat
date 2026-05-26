@@ -29,7 +29,7 @@ export function Badge({ label, variant = 'default' }: BadgeProps) {
       borderRadius: 9999,
       background: bg,
       color,
-      fontSize: 10,
+      fontSize: 11,
       fontWeight: 600,
       whiteSpace: 'nowrap',
       lineHeight: 1.6,

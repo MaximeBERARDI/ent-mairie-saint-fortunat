@@ -14,7 +14,7 @@ export function FormError({ message }: { message?: string | null }) {
         <div style={{
           padding: '10px 12px', marginBottom: 14,
           background: C.dangerLight, border: `1px solid ${C.danger}40`,
-          borderRadius: 6, color: C.danger, fontSize: 12,
+          borderRadius: 6, color: C.danger, fontSize: 13,
         }}>
           {message}
         </div>

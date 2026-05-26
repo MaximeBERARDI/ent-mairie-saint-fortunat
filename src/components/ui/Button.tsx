@@ -35,8 +35,8 @@ export function Button({
     // line-height : sm >= 32px, md >= 40px. Un style.height explicite passe
     // devant (spread apres base).
     ...(size === 'sm'
-      ? { minHeight: 32, padding: '5px 12px', fontSize: 12 }
-      : { minHeight: 40, padding: '8px 16px', fontSize: 13 }),
+      ? { minHeight: 32, padding: '5px 12px', fontSize: 13 }
+      : { minHeight: 40, padding: '8px 16px', fontSize: 14 }),
   }
 
   // primary utilise --accent-dark (et non --accent) car le texte est blanc

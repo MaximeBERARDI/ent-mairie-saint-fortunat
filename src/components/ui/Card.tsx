@@ -41,9 +41,9 @@ interface KpiCardProps {
 export function KpiCard({ label, value, sub, color = '#6ab123', style }: KpiCardProps) {
   return (
     <Card padding={16} style={{ flex: '1 1 200px', minWidth: 180, ...style }}>
-      <p style={{ fontSize: 10, color: 'var(--text-subtle)', marginBottom: 6, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</p>
+      <p style={{ fontSize: 11, color: 'var(--text-subtle)', marginBottom: 6, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</p>
       <p style={{ fontSize: 24, color, fontWeight: 700, lineHeight: 1.1, marginBottom: 4 }}>{value}</p>
-      {sub && <p style={{ fontSize: 11, color: 'var(--text-subtle)' }}>{sub}</p>}
+      {sub && <p style={{ fontSize: 12, color: 'var(--text-subtle)' }}>{sub}</p>}
     </Card>
   )
 }

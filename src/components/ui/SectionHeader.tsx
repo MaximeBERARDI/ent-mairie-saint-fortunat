@@ -13,7 +13,7 @@ export function SectionHeader({ title, actions, level = 2 }: SectionHeaderProps)
   const Heading = level === 3 ? 'h3' : 'h2'
   return (
     <div style={{ display: 'flex', alignItems: 'center', marginBottom: 14, gap: 8 }}>
-      <Heading style={{ fontSize: 14, color: 'var(--text-fg)', fontWeight: 600, flex: 1 }}>{title}</Heading>
+      <Heading style={{ fontSize: level === 3 ? 14 : 16, color: 'var(--text-fg)', fontWeight: 600, flex: 1 }}>{title}</Heading>
       {actions}
     </div>
   )

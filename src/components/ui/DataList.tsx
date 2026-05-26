@@ -80,7 +80,7 @@ export function DataList<T>({
         border: `1px solid ${C.border}`,
         borderRadius: 8,
       }}>
-        <p style={{ fontSize: 13, color: C.subtle, fontStyle: 'italic' }}>{emptyMessage}</p>
+        <p style={{ fontSize: 14, color: C.subtle, fontStyle: 'italic' }}>{emptyMessage}</p>
       </div>
     )
   }
@@ -119,7 +119,7 @@ export function DataList<T>({
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 8, paddingTop: 8, borderTop: `1px solid ${C.border}` }}>
                   {otherCols.map(col => (
                     <div key={col.key}>
-                      <p style={{ fontSize: 9, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 2 }}>
+                      <p style={{ fontSize: 11, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 2 }}>
                         {col.label}
                       </p>
                       <div style={{ fontSize: 12, color: C.fg }}>
@@ -165,7 +165,7 @@ export function DataList<T>({
           <p
             key={col.key}
             style={{
-              fontSize: 10,
+              fontSize: 12,
               color: C.subtle,
               fontWeight: 700,
               textTransform: 'uppercase',
@@ -195,7 +195,7 @@ export function DataList<T>({
               background: bg,
               alignItems: 'center',
               cursor: onRowClick ? 'pointer' : 'default',
-              fontSize: 13,
+              fontSize: 14,
             }}
           >
             {columns.map(col => (

@@ -16,7 +16,7 @@ export function Tag({ label, color = '#6ab123', truncate }: TagProps) {
         borderRadius: 3,
         background: `${color}18`,
         border: `1px solid ${color}40`,
-        fontSize: 10,
+        fontSize: 11,
         fontWeight: 600,
         color,
         whiteSpace: 'nowrap',

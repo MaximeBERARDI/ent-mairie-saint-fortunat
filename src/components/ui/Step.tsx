@@ -20,7 +20,7 @@ export function Step({ steps, current }: StepProps) {
                 : <span style={{ fontSize: 11, color: i === current ? '#fff' : '#94aab7', fontWeight: 600 }}>{i + 1}</span>
               }
             </div>
-            <span style={{ fontSize: 9, color: i === current ? '#6ab123' : '#94aab7', fontWeight: i === current ? 600 : 400, whiteSpace: 'nowrap' }}>
+            <span style={{ fontSize: 11, color: i === current ? '#6ab123' : '#94aab7', fontWeight: i === current ? 600 : 400, whiteSpace: 'nowrap' }}>
               {s}
             </span>
           </div>
