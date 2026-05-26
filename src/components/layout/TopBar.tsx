@@ -9,7 +9,6 @@ import { Avatar } from '@/components/ui/Avatar'
 import { COLORS as C } from '@/lib/theme'
 import { AUTH_LEVEL_LABELS } from '@/lib/permissions'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
-import { useModuleAccess } from '@/hooks/useModuleAccess'
 import { moduleKeyForHref } from '@/lib/modules'
 import { useMobileNav } from '@/context/MobileNavContext'
 import { useIsMobile } from '@/hooks/useIsMobile'
@@ -38,8 +37,7 @@ export function TopBar({ title, notif = 2 }: TopBarProps) {
   const isTopNav = nav === 'top'
   const isMobile = useIsMobile()
   const { toggle: toggleMobileNav } = useMobileNav()
-  const { currentUser, currentUserId, can } = useCurrentUser()
-  const { isVisible } = useModuleAccess()
+  const { currentUser, can } = useCurrentUser()
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
 
@@ -67,11 +65,12 @@ export function TopBar({ title, notif = 2 }: TopBarProps) {
     }
   }, [userMenuOpen])
 
+  const hiddenModules = new Set(currentUser?.hiddenModules ?? [])
   const visibleNav = NAV_ITEMS.filter(item => {
     const key = moduleKeyForHref(item.href)
     if (!key) return true
     if (key === 'equipe' && can('team.edit-roles')) return true
-    return isVisible(currentUserId, key)
+    return !hiddenModules.has(key)
   })
 
   return (

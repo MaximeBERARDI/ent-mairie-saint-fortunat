@@ -32,6 +32,7 @@ interface CreateBody {
   canSign?: boolean
   signatureDomains?: SignatureDomain[]
   responsibleCommissions?: string[]
+  hiddenModules?: string[]
   active?: boolean
   startDate?: string | null
 }
@@ -72,6 +73,7 @@ export async function POST(req: Request) {
       canSign: body.canSign ?? false,
       signatureDomains: body.signatureDomains ?? [],
       responsibleCommissions: body.responsibleCommissions ?? [],
+      hiddenModules: body.hiddenModules ?? [],
       active: body.active ?? true,
       startDate: body.startDate ? new Date(body.startDate) : null,
     },

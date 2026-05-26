@@ -26,6 +26,7 @@ export interface Person {
   signatureDomains: SignatureDomain[]
   // Délégations
   responsibleCommissions: string[]   // IDs de commissions dont la personne est référent(e)
+  hiddenModules?: string[]           // clés de modules de nav masqués pour ce profil (cf. lib/modules)
   // Statut
   active: boolean
   // Métadonnées

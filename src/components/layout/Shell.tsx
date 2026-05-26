@@ -7,7 +7,6 @@ import { useSettings } from '@/context/SettingsContext'
 import { MobileNavProvider, useMobileNav } from '@/context/MobileNavContext'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
-import { useModuleAccess } from '@/hooks/useModuleAccess'
 import { moduleKeyForHref } from '@/lib/modules'
 import { Sidebar } from './Sidebar'
 import { TopBar } from './TopBar'
@@ -32,16 +31,16 @@ function ShellInner({ title, children, notif }: ShellProps) {
   const isMobile = useIsMobile()
   const { open: mobileNavOpen, setOpen: setMobileNavOpen } = useMobileNav()
   const pathname = usePathname()
-  const { currentUserId, can } = useCurrentUser()
-  const { isVisible, hydrated: accessHydrated } = useModuleAccess()
+  const { currentUser, can, hydrated } = useCurrentUser()
 
   // Garde de route : si le module de la page courante est masqué pour ce
-  // profil (config admin), on bloque l'accès direct en plus du filtrage de la
-  // nav. Équipe reste accessible à qui gère les accès (anti-verrouillage).
+  // profil (config admin, persistée en DB), on bloque l'accès direct en plus
+  // du filtrage de la nav. Équipe reste accessible à qui gère les accès.
   const moduleKey = moduleKeyForHref('/' + (pathname?.split('/')[1] ?? ''))
-  const blocked = accessHydrated && moduleKey !== null
+  const hiddenModules = new Set(currentUser?.hiddenModules ?? [])
+  const blocked = hydrated && moduleKey !== null
     && !(moduleKey === 'equipe' && can('team.edit-roles'))
-    && !isVisible(currentUserId, moduleKey)
+    && hiddenModules.has(moduleKey)
 
   return (
     <div style={{

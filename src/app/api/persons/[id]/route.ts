@@ -24,6 +24,7 @@ interface PatchBody {
   canSign?: boolean
   signatureDomains?: SignatureDomain[]
   responsibleCommissions?: string[]
+  hiddenModules?: string[]
   active?: boolean
   startDate?: string | null
 }
@@ -72,6 +73,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     if (body.canSign !== undefined) data.canSign = body.canSign
     if (body.signatureDomains !== undefined) data.signatureDomains = body.signatureDomains
     if (body.responsibleCommissions !== undefined) data.responsibleCommissions = body.responsibleCommissions
+    if (body.hiddenModules !== undefined) data.hiddenModules = body.hiddenModules
     if (body.active !== undefined) data.active = body.active
   }
 

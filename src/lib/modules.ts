@@ -1,6 +1,6 @@
 // Modules de navigation dont la visibilité peut être restreinte par profil
-// (par personne) via la configuration admin — cf. useModuleAccess + la section
-// « Accès aux modules » de PersonForm.
+// (par personne) via la configuration admin — persisté en DB sur
+// Person.hiddenModules (cf. la section « Accès aux modules » de PersonForm).
 //
 // Le tableau de bord n'est jamais masquable (point d'entrée de l'app).
 

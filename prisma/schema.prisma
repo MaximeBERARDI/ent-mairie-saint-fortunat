@@ -114,6 +114,7 @@ model Person {
   canSign                  Boolean    @default(false)
   signatureDomains         String[]   // tableau de SignatureDomain keys
   responsibleCommissions   String[]   // tableau de Commission ids
+  hiddenModules            String[]   // clés de modules de nav masqués pour ce profil (cf. lib/modules)
   active                   Boolean    @default(true)
   startDate                DateTime?
 

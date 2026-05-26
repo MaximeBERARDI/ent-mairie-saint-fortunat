@@ -8,7 +8,6 @@ import { COLORS as C } from '@/lib/theme'
 import { ROLE_LABELS } from '@/lib/people'
 import { moduleKeyForHref } from '@/lib/modules'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
-import { useModuleAccess } from '@/hooks/useModuleAccess'
 
 type IconName = 'dashboard' | 'check' | 'users' | 'doc' | 'briefcase' | 'euro' | 'team'
 
@@ -57,18 +56,18 @@ function NavIcon({ name }: { name: IconName }) {
 export function Sidebar() {
   const pathname = usePathname()
   const { nav } = useSettings()
-  const { currentUser: me, currentUserId, can } = useCurrentUser()
-  const { isVisible } = useModuleAccess()
+  const { currentUser: me, can } = useCurrentUser()
   const isIcons = nav === 'icons'
   const w = isIcons ? 54 : 212
 
-  // Filtrage par profil (config admin). Équipe reste visible pour qui peut
-  // gérer les accès, sinon l'admin se couperait l'accès à la configuration.
+  // Filtrage par profil (config admin, persistée en DB sur Person.hiddenModules).
+  // Équipe reste visible pour qui peut gérer les accès (anti-verrouillage).
+  const hiddenModules = new Set(me?.hiddenModules ?? [])
   const visibleNav = NAV_ITEMS.filter(item => {
     const key = moduleKeyForHref(item.href)
     if (!key) return true
     if (key === 'equipe' && can('team.edit-roles')) return true
-    return isVisible(currentUserId, key)
+    return !hiddenModules.has(key)
   })
 
   return (
