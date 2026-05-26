@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo } from 'react'
 import Link from 'next/link'
 import { Shell } from '@/components/layout/Shell'
 import { Card, KpiCard } from '@/components/ui/Card'
@@ -35,12 +35,6 @@ const fmtMontant = (v: number) =>
   new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v)
 
 type DashView = 'conseiller' | 'agent' | 'maire'
-
-const VIEW_LABELS: Record<DashView, string> = {
-  conseiller: 'Élu / Conseiller',
-  agent: 'Agent',
-  maire: 'Maire / Pilotage',
-}
 
 const STATUS_VARIANTS: Record<TaskStatus, 'warning' | 'info' | 'success' | 'default' | 'terra'> = {
   'À faire': 'default',
@@ -89,12 +83,10 @@ function getUpcomingMeetings(commissions: Commission[]) {
 }
 
 export default function DashboardPage() {
-  const [view, setView] = useState<DashView>('conseiller')
   const { tasks, hydrated, updateTask } = useTasks()
   const { currentUser, currentUserId, can } = useCurrentUser()
 
-  // Vue "Maire / Pilotage" : visible uniquement aux personnes avec un
-  // rôle de pilotage / signature / validation. Sinon le bouton est masqué.
+  // Rôle de pilotage / signature / validation (maire, adjoint, signataire…).
   const canPilot = currentUser?.role === 'maire'
     || currentUser?.role === 'adjoint'
     || can('finance.validate-invoices')
@@ -102,27 +94,15 @@ export default function DashboardPage() {
     || can('tasks.validate')
     || (currentUser?.canSign ?? false)
 
-  // Vue "Élu / Conseiller" : visible aux élus (maire/adjoint/elu).
+  // Élu (maire/adjoint/elu).
   const canConsult = currentUser?.role === 'maire'
     || currentUser?.role === 'adjoint'
     || currentUser?.role === 'elu'
 
-  // Vue par défaut : la plus pertinente selon le rôle
-  const defaultView: DashView = canPilot ? 'maire' : canConsult ? 'conseiller' : 'agent'
-
-  // Recalibrer la vue si l'utilisateur change
-  useEffect(() => {
-    if (view === 'maire' && !canPilot) setView(defaultView)
-    if (view === 'conseiller' && !canConsult) setView(defaultView)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentUserId, canPilot, canConsult])
-
-  // Onglets visibles selon les permissions
-  const visibleViews: [DashView, string][] = [
-    canConsult ? (['conseiller', VIEW_LABELS.conseiller] as [DashView, string]) : null,
-    ['agent', VIEW_LABELS.agent] as [DashView, string],
-    canPilot ? (['maire', VIEW_LABELS.maire] as [DashView, string]) : null,
-  ].filter((x): x is [DashView, string] => x !== null)
+  // La vue est imposée par le statut de la personne connectée (plus de choix
+  // manuel) : pilotage pour les responsables, conseiller pour les élus,
+  // agent pour le reste.
+  const view: DashView = canPilot ? 'maire' : canConsult ? 'conseiller' : 'agent'
 
   if (!hydrated) {
     return (
@@ -134,28 +114,6 @@ export default function DashboardPage() {
 
   return (
     <Shell title="Tableau de bord" notif={3}>
-      <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
-        {visibleViews.map(([v, label]) => (
-          <button
-            key={v}
-            onClick={() => setView(v)}
-            style={{
-              padding: '5px 14px',
-              borderRadius: 20,
-              border: `1px solid ${v === view ? C.green : C.border}`,
-              background: v === view ? C.green : '#fff',
-              color: v === view ? '#fff' : C.muted,
-              fontSize: 12,
-              fontWeight: v === view ? 600 : 400,
-              cursor: 'pointer',
-              fontFamily: "'DM Sans', sans-serif",
-            }}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
       {view === 'conseiller' && <DashConseiller tasks={tasks} updateTask={updateTask} currentUserId={currentUserId} />}
       {view === 'agent' && <DashAgent tasks={tasks} updateTask={updateTask} currentUserId={currentUserId} />}
       {view === 'maire' && <DashMaire tasks={tasks} currentUserId={currentUserId} />}
