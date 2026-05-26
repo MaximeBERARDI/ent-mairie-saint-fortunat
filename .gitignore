@@ -11,6 +11,9 @@ node_modules/.prisma/
 # Local env
 .env
 
+# Bundle de référence Claude Design (extrait localement, non nécessaire au repo)
+docs/presentation/_design/
+
 # Scripts utilitaires de session (assistant)
 check-sprint1.bat
 check-sprint1-output.txt

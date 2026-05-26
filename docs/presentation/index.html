@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ENT — Mairie de Saint-Fortunat-sur-Eyrieux · Présentation</title>
+<!-- Polices du design system (fallbacks robustes si pas d'internet : Georgia / system-ui). -->
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+/* ===== Design system Saint-Fortunat (tokens) ===== */
+:root{
+  --green-50:#f2f9e8;--green-100:#e0f0c4;--green-200:#c4e18a;--green-400:#7dc12b;--green-500:#6ab123;--green-600:#569018;--green-700:#416d11;--green-800:#2d4d0c;
+  --slate-50:#f0f3f5;--slate-100:#dde4e9;--slate-300:#94aab7;--slate-500:#4d5e6c;--slate-700:#2e3b45;--slate-800:#1f2a31;--slate-900:#111820;
+  --terra-50:#fdf4ec;--terra-100:#fae3cc;--terra-500:#c4793a;--terra-600:#a8612a;--terra-700:#8a4c1e;
+  --neutral-50:#f4f6f1;--neutral-100:#e8ece5;
+  --bg:#f4f6f1;--surface:#ffffff;--border:#dde4e9;
+  --fg:#1f2a31;--fg-muted:#4d5e6c;--fg-subtle:#6e8899;--fg-inverse:#fff;
+  --primary:#6ab123;--primary-hover:#569018;--accent:#c4793a;
+  --success:#2d9c6e;--success-bg:#e8f7f1;--warning:#d4860a;--warning-bg:#fef5e4;--danger:#c4393a;--danger-bg:#fdeaea;--info:#2563a8;--info-bg:#eaf1fb;
+  --font-display:'Playfair Display',Georgia,'Times New Roman',serif;
+  --font-body:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --font-mono:'JetBrains Mono','Courier New',monospace;
+  --radius-md:8px;--radius-lg:12px;--radius-xl:16px;--radius-2xl:24px;--radius-pill:9999px;
+  --shadow-1:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);
+  --shadow-2:0 4px 12px rgba(0,0,0,.10),0 2px 4px rgba(0,0,0,.06);
+  --shadow-3:0 8px 32px rgba(0,0,0,.14),0 4px 8px rgba(0,0,0,.08);
+  --caps:.12em;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:var(--font-body);background:var(--slate-900);color:var(--fg);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;overflow:hidden}
+
+/* ===== Deck & slides ===== */
+.deck{position:fixed;inset:0}
+.slide{position:absolute;inset:0;display:none;flex-direction:column;justify-content:center;padding:6.5vh 8vw 9vh;background:var(--bg);overflow:hidden}
+.slide.active{display:flex;animation:fade .35s ease}
+@keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.kicker{font-family:var(--font-body);font-weight:600;font-size:.78rem;letter-spacing:var(--caps);text-transform:uppercase;color:var(--primary);margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.kicker::before{content:"";width:26px;height:2px;background:var(--primary);display:inline-block}
+.slide h2{font-family:var(--font-display);font-weight:700;font-size:clamp(1.9rem,3.4vw,2.9rem);line-height:1.12;letter-spacing:-.02em;color:var(--slate-800);margin-bottom:8px}
+.slide .lead{font-size:clamp(1rem,1.5vw,1.2rem);color:var(--fg-muted);max-width:60ch;line-height:1.55;margin-bottom:26px}
+.slide h3{font-family:var(--font-display);font-weight:600;font-size:1.35rem;color:var(--slate-800)}
+
+/* footer + chrome */
+.foot{position:absolute;left:8vw;right:8vw;bottom:3.4vh;display:flex;align-items:center;justify-content:space-between;font-size:.72rem;color:var(--fg-subtle)}
+.foot__brand{display:flex;align-items:center;gap:8px;font-weight:600;letter-spacing:.02em}
+.foot__dot{width:8px;height:8px;border-radius:50%;background:var(--primary)}
+.progress{position:fixed;left:0;bottom:0;height:4px;background:var(--primary);transition:width .35s ease;z-index:50}
+.counter{position:fixed;right:18px;top:16px;font-size:.72rem;color:var(--fg-subtle);background:rgba(255,255,255,.7);padding:4px 10px;border-radius:var(--radius-pill);z-index:50}
+.slide.cover .counter,.slide.cover~.counter{color:rgba(255,255,255,.7)}
+.hint{position:fixed;left:18px;bottom:14px;font-size:.68rem;color:var(--fg-subtle);opacity:.6;z-index:50}
+
+/* ===== Cover ===== */
+.cover{justify-content:center;background:radial-gradient(1200px 600px at 80% -10%,rgba(106,177,35,.28),transparent 60%),linear-gradient(135deg,var(--slate-800),var(--slate-900))}
+.cover *{color:#fff}
+.cover .logo-badge{width:64px;height:64px;border-radius:var(--radius-lg);background:var(--primary);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:1.6rem;color:#fff;margin-bottom:30px;box-shadow:var(--shadow-3)}
+.cover h1{font-family:var(--font-display);font-weight:700;font-size:clamp(2.6rem,6vw,4.6rem);line-height:1.04;letter-spacing:-.02em;max-width:18ch}
+.cover .sub{font-size:clamp(1.1rem,2vw,1.5rem);color:rgba(255,255,255,.82);margin-top:18px;max-width:46ch;line-height:1.5}
+.cover .meta{margin-top:42px;display:flex;gap:30px;flex-wrap:wrap;font-size:.9rem;color:rgba(255,255,255,.7)}
+.cover .meta b{color:#fff;font-weight:600}
+.cover .pill{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);padding:7px 16px;border-radius:var(--radius-pill);font-size:.82rem;font-weight:600;letter-spacing:.03em;margin-bottom:26px;color:#fff}
+
+/* ===== Generic content ===== */
+.cols{display:grid;grid-template-columns:repeat(2,1fr);gap:24px;align-items:start}
+.cols-3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.cols-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px;box-shadow:var(--shadow-1)}
+.card h4{font-family:var(--font-body);font-weight:700;font-size:1.05rem;color:var(--slate-800);margin-bottom:6px}
+.card p{font-size:.92rem;color:var(--fg-muted);line-height:1.5}
+.icon{width:42px;height:42px;border-radius:var(--radius-md);background:var(--green-50);color:var(--green-700);display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+.icon svg{width:22px;height:22px}
+.icon.terra{background:var(--terra-50);color:var(--terra-700)}
+.icon.slate{background:var(--slate-50);color:var(--slate-700)}
+.icon.info{background:var(--info-bg);color:var(--info)}
+
+ul.checks{list-style:none;display:flex;flex-direction:column;gap:14px;margin-top:6px}
+ul.checks li{display:flex;gap:13px;align-items:flex-start;font-size:1.05rem;color:var(--fg);line-height:1.45}
+ul.checks li svg{width:24px;height:24px;flex-shrink:0;color:var(--primary);margin-top:1px}
+ul.checks li b{font-weight:700}
+ul.checks li span{color:var(--fg-muted);font-size:.95rem}
+
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px 20px;box-shadow:var(--shadow-1)}
+.kpi .lbl{font-size:.72rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--fg-subtle);margin-bottom:8px}
+.kpi .val{font-family:var(--font-display);font-weight:700;font-size:2rem;line-height:1;color:var(--slate-800)}
+.kpi .val.green{color:var(--green-700)}.kpi .val.terra{color:var(--terra-600)}.kpi .val.warn{color:var(--warning)}
+.kpi .sub{font-size:.78rem;color:var(--fg-subtle);margin-top:8px}
+
+.badge{display:inline-flex;align-items:center;padding:3px 11px;border-radius:var(--radius-pill);font-size:.74rem;font-weight:600;line-height:1.5}
+.b-green{background:var(--green-50);color:var(--green-700)}.b-terra{background:var(--terra-50);color:var(--terra-700)}
+.b-warn{background:var(--warning-bg);color:var(--warning)}.b-info{background:var(--info-bg);color:var(--info)}.b-danger{background:var(--danger-bg);color:var(--danger)}.b-slate{background:var(--slate-50);color:var(--slate-500)}
+
+/* device frame for app mockups */
+.demo{display:grid;grid-template-columns:1.25fr 1fr;gap:34px;align-items:center}
+.frame{border:1px solid var(--border);border-radius:var(--radius-xl);background:var(--surface);box-shadow:var(--shadow-3);overflow:hidden}
+.frame__bar{display:flex;align-items:center;gap:7px;padding:11px 15px;background:var(--slate-50);border-bottom:1px solid var(--border)}
+.frame__bar i{width:11px;height:11px;border-radius:50%;background:var(--slate-300);display:inline-block}
+.frame__bar .url{margin-left:12px;font-size:.72rem;color:var(--fg-subtle);font-family:var(--font-mono)}
+.frame__body{padding:18px}
+.shot-note{margin-top:14px;font-size:.78rem;color:var(--accent);background:var(--terra-50);border:1px dashed var(--terra-500);border-radius:var(--radius-md);padding:9px 13px;display:flex;gap:9px;align-items:center}
+.shot-note svg{width:18px;height:18px;flex-shrink:0}
+
+.row{display:flex;align-items:center;gap:11px;padding:10px 0;border-bottom:1px solid var(--border);font-size:.86rem}
+.row:last-child{border-bottom:none}
+.row .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.row .t{flex:1;min-width:0;color:var(--fg)}
+.row .t small{display:block;color:var(--fg-subtle);font-size:.74rem}
+
+/* before / after */
+.ba{display:grid;grid-template-columns:1fr auto 1fr;gap:0;align-items:stretch;margin-top:8px}
+.ba .side{padding:22px 24px;border-radius:var(--radius-lg)}
+.ba .before{background:var(--surface);border:1px solid var(--border)}
+.ba .after{background:linear-gradient(135deg,var(--green-50),#fff);border:1.5px solid var(--green-200)}
+.ba .side h4{font-family:var(--font-body);font-size:.78rem;letter-spacing:var(--caps);text-transform:uppercase;margin-bottom:14px}
+.ba .before h4{color:var(--fg-subtle)}.ba .after h4{color:var(--green-700)}
+.ba .side ul{list-style:none;display:flex;flex-direction:column;gap:11px}
+.ba .side li{font-size:.92rem;color:var(--fg-muted);display:flex;gap:9px;line-height:1.4}
+.ba .arrow{display:flex;align-items:center;justify-content:center;padding:0 18px;color:var(--primary)}
+.ba .arrow svg{width:34px;height:34px}
+
+.stat-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:6px}
+.stat{text-align:left}
+.stat .big{font-family:var(--font-display);font-weight:700;font-size:clamp(2.2rem,4vw,3.2rem);color:var(--green-700);line-height:1}
+.stat .cap{font-size:.92rem;color:var(--fg-muted);margin-top:8px;line-height:1.4}
+
+/* timeline */
+.tl{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:10px}
+.tl .step{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;position:relative}
+.tl .step.now{border-color:var(--green-200);background:linear-gradient(135deg,var(--green-50),#fff)}
+.tl .step .when{font-size:.74rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--fg-subtle);margin-bottom:10px}
+.tl .step.now .when{color:var(--green-700)}
+.tl .step h4{font-family:var(--font-display);font-weight:600;font-size:1.2rem;color:var(--slate-800);margin-bottom:10px}
+.tl .step ul{list-style:none;display:flex;flex-direction:column;gap:7px}
+.tl .step li{font-size:.84rem;color:var(--fg-muted);display:flex;gap:8px}
+
+/* vote CTA */
+.vote{background:linear-gradient(135deg,var(--slate-800),var(--slate-900));color:#fff}
+.vote *{color:#fff}
+.vote h2{color:#fff}
+.vote .ask{margin-top:18px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.16);border-radius:var(--radius-xl);padding:30px 34px;max-width:62ch}
+.vote .ask .q{font-family:var(--font-display);font-size:1.5rem;font-weight:600;line-height:1.3}
+.vote .ask .sub{color:rgba(255,255,255,.75);margin-top:12px;font-size:1rem}
+.vote .opts{display:flex;gap:14px;margin-top:24px;flex-wrap:wrap}
+.vote .opt{padding:12px 22px;border-radius:var(--radius-pill);font-weight:600;font-size:.95rem}
+.vote .opt.yes{background:var(--primary);color:#fff}
+.vote .opt.no{background:transparent;border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.85)}
+
+.note{font-size:.82rem;color:var(--fg-subtle);margin-top:18px;font-style:italic}
+.modgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:4px}
+.mod{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:18px;box-shadow:var(--shadow-1)}
+.mod .icon{margin-bottom:11px;width:38px;height:38px}
+.mod h4{font-size:.98rem;margin-bottom:4px}
+.mod p{font-size:.8rem;color:var(--fg-muted);line-height:1.4}
+
+/* ===== Print = PDF ===== */
+@media print{
+  @page{size:1280px 720px;margin:0}
+  body{overflow:visible;background:#fff}
+  .counter,.hint,.progress{display:none!important}
+  .slide{display:flex!important;position:relative;inset:auto;height:720px;width:1280px;page-break-after:always;animation:none}
+}
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+<!-- 1 · COUVERTURE -->
+<section class="slide cover active">
+  <span class="pill">● Conseil municipal — Validation interne</span>
+  <h1>L'Espace Numérique de Travail de la commune</h1>
+  <p class="sub">Un outil unique pour piloter la vie municipale : tâches, finances, RH, commissions et comptes rendus — au même endroit, en toute sécurité.</p>
+  <div class="meta">
+    <span><b>Mairie de Saint-Fortunat-sur-Eyrieux</b> · Vallée de l'Eyrieux, Ardèche</span>
+    <span>Présenté au Conseil municipal · <b>2026</b></span>
+  </div>
+</section>
+
+<!-- 2 · LE CONSTAT -->
+<section class="slide">
+  <span class="kicker">Le constat aujourd'hui</span>
+  <h2>Nos outils sont dispersés — et cela nous coûte du temps</h2>
+  <p class="lead">La gestion communale repose encore sur une mosaïque d'outils. Chaque information vit à plusieurs endroits, ce qui multiplie les ressaisies, les oublis et les risques d'erreur.</p>
+  <div class="cols-3">
+    <div class="card"><div class="icon slate">REC</div><h4>Ressaisies multiples</h4><p>La même donnée est recopiée dans un tableur, un courriel, un document Word… À chaque copie, un risque d'erreur.</p></div>
+    <div class="card"><div class="icon terra">!</div><h4>Oublis & échéances ratées</h4><p>Tâches sans suivi, congés mal décomptés, loyers ou contrats dont l'échéance passe inaperçue.</p></div>
+    <div class="card"><div class="icon slate">?</div><h4>Pas de vue d'ensemble</h4><p>Difficile pour le maire et les adjoints de savoir, en un coup d'œil, où en sont les finances, les tâches, les validations.</p></div>
+  </div>
+  <p class="note">Pour une commune de ~900 habitants, ce temps perdu se compte en heures chaque semaine.</p>
+</section>
+
+<!-- 3 · NOTRE AMBITION -->
+<section class="slide">
+  <span class="kicker">Notre ambition</span>
+  <h2>Un conseil renouvelé, des outils à la hauteur</h2>
+  <p class="lead">Nous avons fait construire un outil sur-mesure, pensé pour notre commune — simple, interne et souverain.</p>
+  <ul class="checks">
+    <li>✦<div><b>Centraliser</b> toute l'information municipale en un seul espace <span>— fini les fichiers éparpillés.</span></div></li>
+    <li>✦<div><b>Automatiser</b> les calculs et les tâches répétitives <span>— l'outil fait le travail fastidieux à notre place.</span></div></li>
+    <li>✦<div><b>Sécuriser</b> les données et les accès <span>— chacun voit ce qui le concerne, l'hébergement reste en France.</span></div></li>
+    <li>✦<div><b>Rester maîtres</b> de l'outil <span>— interne, sans abonnement par utilisateur, évolutif selon nos besoins.</span></div></li>
+  </ul>
+</section>
+
+<!-- 4 · QU'EST-CE QUE L'ENT -->
+<section class="slide">
+  <span class="kicker">L'outil</span>
+  <h2>Qu'est-ce que l'ENT ?</h2>
+  <div class="cols">
+    <div>
+      <p class="lead">L'<b>Espace Numérique de Travail</b> est une application web interne, réservée aux élus et aux agents municipaux. On y accède depuis n'importe quel ordinateur, avec un identifiant et un mot de passe.</p>
+      <ul class="checks">
+        <li>✓<div><b>Pour tout le monde</b> <span>— élus et agents, chacun avec son profil et ses droits.</span></div></li>
+        <li>✓<div><b>Sécurisé</b> <span>— connexion protégée, données hébergées en France (Union européenne).</span></div></li>
+        <li>✓<div><b>Sur-mesure</b> <span>— construit pour les besoins réels d'une commune rurale, conforme à la comptabilité publique M14.</span></div></li>
+      </ul>
+    </div>
+    <div class="card" style="background:linear-gradient(135deg,var(--green-50),#fff);border-color:var(--green-200)">
+      <h3 style="margin-bottom:14px">En une phrase</h3>
+      <p style="font-size:1.15rem;line-height:1.6;color:var(--slate-700)">« Un seul endroit où l'on retrouve <b>tout</b> ce qui fait tourner la mairie — et où l'outil nous épargne les tâches répétitives et les erreurs de calcul. »</p>
+    </div>
+  </div>
+</section>
+
+<!-- 5 · LES MODULES -->
+<section class="slide">
+  <span class="kicker">Vue d'ensemble</span>
+  <h2>Sept modules, un seul outil</h2>
+  <div class="modgrid">
+    <div class="mod"><div class="icon" data-i="grid"></div><h4>Tableau de bord</h4><p>Vue de pilotage adaptée à chaque rôle (maire, élu, agent).</p></div>
+    <div class="mod"><div class="icon" data-i="check"></div><h4>Tâches</h4><p>Qui fait quoi, échéances, validation, documents.</p></div>
+    <div class="mod"><div class="icon" data-i="users"></div><h4>Commissions</h4><p>Suivi des travaux et décisions par commission.</p></div>
+    <div class="mod"><div class="icon" data-i="doc"></div><h4>Comptes rendus</h4><p>Import + extraction des tâches par l'IA.</p></div>
+    <div class="mod"><div class="icon terra" data-i="briefcase"></div><h4>Ressources humaines</h4><p>Agents, congés, paies, pointage des heures.</p></div>
+    <div class="mod"><div class="icon terra" data-i="euro"></div><h4>Finances M14</h4><p>Budget, écritures, ratios DGFiP, exports.</p></div>
+    <div class="mod"><div class="icon info" data-i="home"></div><h4>Parc immobilier</h4><p>Baux, quittances, relances de loyers.</p></div>
+    <div class="mod"><div class="icon slate" data-i="team"></div><h4>Équipe</h4><p>Annuaire, rôles, droits d'accès par profil.</p></div>
+  </div>
+</section>
+
+<!-- 6 · DEMO : TABLEAU DE BORD MAIRE -->
+<section class="slide">
+  <span class="kicker">Démonstration · Pilotage</span>
+  <h2>Le tableau de bord du Maire</h2>
+  <div class="demo">
+    <div>
+      <div class="frame">
+        <div class="frame__bar"><i></i><i></i><i></i><span class="url">ent-mairie-saint-fortunat · /dashboard</span></div>
+        <div class="frame__body">
+          <div style="background:var(--danger-bg);border:1px solid #c4393a40;border-radius:8px;padding:9px 13px;font-size:.8rem;color:var(--danger);font-weight:600;margin-bottom:14px">● 2 tâches en retard · 3 factures à valider</div>
+          <div class="cols-4" style="gap:11px">
+            <div class="kpi"><div class="lbl">CAF brute</div><div class="val green" style="font-size:1.3rem">112 k€</div><div class="sub">Épargne 14 %</div></div>
+            <div class="kpi"><div class="lbl">Désendett.</div><div class="val" style="font-size:1.3rem">4,2 ans</div><div class="sub">sain</div></div>
+            <div class="kpi"><div class="lbl">À valider</div><div class="val warn" style="font-size:1.3rem">5</div><div class="sub">tâches · factures</div></div>
+            <div class="kpi"><div class="lbl">Présents</div><div class="val" style="font-size:1.3rem">6/7</div><div class="sub">agents</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <ul class="checks">
+        <li>✓<div><b>Tout en un coup d'œil</b> <span>— santé financière, validations en attente, alertes, absences du jour.</span></div></li>
+        <li>✓<div><b>Des alertes proactives</b> <span>— retards, contrats à renouveler, dépassements de budget remontent automatiquement.</span></div></li>
+        <li>✓<div><b>Adapté au rôle</b> <span>— le maire pilote, l'élu suit ses dossiers, l'agent voit ses tâches du jour.</span></div></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 7 · DEMO : TACHES & COMMISSIONS -->
+<section class="slide">
+  <span class="kicker">Démonstration · Organisation</span>
+  <h2>Tâches & commissions : qui fait quoi, et où ça en est</h2>
+  <div class="demo">
+    <div>
+      <div class="frame">
+        <div class="frame__bar"><i></i><i></i><i></i><span class="url">/taches</span></div>
+        <div class="frame__body">
+          <div class="row"><span class="dot" style="background:var(--danger)"></span><span class="t">Préparer le budget primitif 2026<small>Commission Finances · échéance 12 mai</small></span><span class="badge b-danger">Urgent</span></div>
+          <div class="row"><span class="dot" style="background:var(--warning)"></span><span class="t">Devis voirie chemin des Vignes<small>Commission Travaux · échéance 18 mai</small></span><span class="badge b-warn">En cours</span></div>
+          <div class="row"><span class="dot" style="background:var(--slate-300)"></span><span class="t">Validation compte rendu du 5 avril<small>En attente — Mme la 1ère adjointe</small></span><span class="badge b-terra">À valider</span></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <ul class="checks">
+        <li>✓<div><b>Responsabilités claires</b> <span>— chaque tâche a un responsable, une échéance, une commission.</span></div></li>
+        <li>✓<div><b>Circuit de validation</b> <span>— une tâche « terminée » est validée par l'élu compétent. Traçabilité complète.</span></div></li>
+        <li>✓<div><b>Plus rien ne se perd</b> <span>— priorités et retards sont visibles immédiatement.</span></div></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 8 · DEMO : CR + IA -->
+<section class="slide">
+  <span class="kicker">Démonstration · Intelligence artificielle</span>
+  <h2>Comptes rendus : l'IA extrait les tâches à votre place</h2>
+  <div class="demo">
+    <div>
+      <div class="frame">
+        <div class="frame__bar"><i></i><i></i><i></i><span class="url">/comptes-rendus</span></div>
+        <div class="frame__body">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px"><span class="badge b-info">PDF</span><b style="font-size:.92rem">CR — Réunion du 12 avril 2026</b></div>
+          <div style="font-size:.74rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--green-700);margin-bottom:10px">✦ 3 tâches détectées par l'IA</div>
+          <div class="row"><span class="dot" style="background:var(--green-500)"></span><span class="t">Demander 3 devis pour l'éclairage public</span><span class="badge b-green">Créer</span></div>
+          <div class="row"><span class="dot" style="background:var(--green-500)"></span><span class="t">Fixer la date de la prochaine commission</span><span class="badge b-green">Créer</span></div>
+          <div class="row"><span class="dot" style="background:var(--green-500)"></span><span class="t">Relancer le SDIS pour la convention</span><span class="badge b-green">Créer</span></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <ul class="checks">
+        <li>✓<div><b>On importe le compte rendu</b> <span>— l'IA lit le document et propose les tâches à créer.</span></div></li>
+        <li>✓<div><b>On valide d'un clic</b> <span>— les tâches sont assignées, plus besoin de tout recopier.</span></div></li>
+        <li>✓<div><b>Aucune décision oubliée</b> <span>— ce qui est décidé en réunion devient une tâche suivie.</span></div></li>
+      </ul>
+      <p class="note">De ~30 minutes de ressaisie à <b>quelques minutes</b> de vérification.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 9 · DEMO : FINANCES M14 -->
+<section class="slide">
+  <span class="kicker">Démonstration · Finances</span>
+  <h2>Finances M14 : la rigueur comptable, automatisée</h2>
+  <div class="demo">
+    <div>
+      <div class="frame">
+        <div class="frame__bar"><i></i><i></i><i></i><span class="url">/finances · budget M14</span></div>
+        <div class="frame__body">
+          <div style="font-family:var(--font-mono);font-size:.78rem;color:var(--fg-muted);background:var(--slate-50);border-radius:8px;padding:12px 14px;margin-bottom:13px">
+            <div style="display:flex;justify-content:space-between"><span>D · 6064 Fournitures</span><span>1&nbsp;250,00 €</span></div>
+            <div style="display:flex;justify-content:space-between"><span>&nbsp;&nbsp;&nbsp;C · 4011 Fournisseurs</span><span>1&nbsp;250,00 €</span></div>
+            <div style="border-top:1px dashed var(--slate-300);margin-top:7px;padding-top:7px;display:flex;justify-content:space-between;color:var(--green-700);font-weight:600"><span>✓ Équilibrée</span><span>Δ 0,00 €</span></div>
+          </div>
+          <div class="cols-3" style="gap:10px">
+            <div class="kpi" style="padding:12px"><div class="lbl">CAF</div><div class="val green" style="font-size:1.15rem">112 k€</div></div>
+            <div class="kpi" style="padding:12px"><div class="lbl">Désendett.</div><div class="val" style="font-size:1.15rem">4,2 ans</div></div>
+            <div class="kpi" style="padding:12px"><div class="lbl">Épargne</div><div class="val" style="font-size:1.15rem">14 %</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <ul class="checks">
+        <li>✓<div><b>Écritures toujours équilibrées</b> <span>— l'outil refuse une écriture dont le débit ≠ crédit. Zéro erreur d'équilibre.</span></div></li>
+        <li>✓<div><b>Ratios DGFiP automatiques</b> <span>— CAF, capacité de désendettement, taux d'épargne calculés en temps réel.</span></div></li>
+        <li>✓<div><b>Exports en un clic</b> <span>— plan comptable, grand livre, rapport budgétaire au format Excel.</span></div></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 10 · DEMO : RH -->
+<section class="slide">
+  <span class="kicker">Démonstration · Ressources humaines</span>
+  <h2>RH : congés, paies et pointage sans calcul manuel</h2>
+  <div class="demo">
+    <div>
+      <div class="frame">
+        <div class="frame__bar"><i></i><i></i><i></i><span class="url">/rh</span></div>
+        <div class="frame__body">
+          <div class="cols-3" style="gap:10px;margin-bottom:13px">
+            <div class="kpi" style="padding:12px"><div class="lbl">Congés restants</div><div class="val" style="font-size:1.3rem">18 j</div></div>
+            <div class="kpi" style="padding:12px"><div class="lbl">RTT</div><div class="val" style="font-size:1.3rem">6 j</div></div>
+            <div class="kpi" style="padding:12px"><div class="lbl">Agents</div><div class="val" style="font-size:1.3rem">7</div></div>
+          </div>
+          <div class="row"><span class="badge b-terra">CA</span><span class="t">Demande de congés — 5 j<small>Décompte automatique du solde</small></span><span class="badge b-warn">En attente</span></div>
+          <div class="row"><span class="badge b-info">Paie</span><span class="t">Bulletin mai — format fonction publique<small>CSG/CRDS · CNRACL · RAFP</small></span><span class="badge b-green">Généré</span></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <ul class="checks">
+        <li>✓<div><b>Compteurs à jour automatiquement</b> <span>— valider un congé décompte le solde. Plus de tableur de suivi.</span></div></li>
+        <li>✓<div><b>Bulletins de paie conformes</b> <span>— format fonction publique territoriale, cotisations calculées (CNRACL/IRCANTEC, RAFP…).</span></div></li>
+        <li>✓<div><b>Pointage & heures sup.</b> <span>— saisie des heures, validation par le responsable.</span></div></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 11 · DEMO : PARC IMMOBILIER -->
+<section class="slide">
+  <span class="kicker">Démonstration · Parc immobilier</span>
+  <h2>Parc immobilier : baux, quittances et relances</h2>
+  <div class="demo">
+    <div>
+      <div class="frame">
+        <div class="frame__bar"><i></i><i></i><i></i><span class="url">/finances · parc immobilier</span></div>
+        <div class="frame__body">
+          <div class="row"><span class="dot" style="background:var(--green-500)"></span><span class="t">Quittance mai 2026 — Logement communal n°2<small>Générée en PDF · envoyée</small></span><span class="badge b-green">Payée</span></div>
+          <div class="row"><span class="dot" style="background:var(--danger)"></span><span class="t">Loyer avril — Local commercial<small>Relance automatique proposée</small></span><span class="badge b-danger">Impayé</span></div>
+          <div class="row"><span class="dot" style="background:var(--slate-300)"></span><span class="t">Bail garage — échéance dans 60 j<small>Renouvellement à prévoir</small></span><span class="badge b-slate">À suivre</span></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <ul class="checks">
+        <li>✓<div><b>Quittances générées en PDF</b> <span>— prêtes à envoyer, sans recalcul ni mise en forme manuelle.</span></div></li>
+        <li>✓<div><b>Impayés repérés</b> <span>— les loyers en retard remontent, avec relance proposée.</span></div></li>
+        <li>✓<div><b>Échéances de baux suivies</b> <span>— plus de renouvellement oublié.</span></div></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 12 · GAIN DE TEMPS -->
+<section class="slide">
+  <span class="kicker">Les bénéfices · 1</span>
+  <h2>Un gain de temps concret, chaque semaine</h2>
+  <div class="ba">
+    <div class="side before"><h4>Avant</h4><ul>
+      <li>– Recopier les décisions du CR à la main</li>
+      <li>– Calculer les ratios financiers sur tableur</li>
+      <li>– Mettre à jour les soldes de congés un par un</li>
+      <li>– Rédiger chaque quittance manuellement</li>
+    </ul></div>
+    <div class="arrow">➜</div>
+    <div class="side after"><h4>Avec l'ENT</h4><ul>
+      <li style="color:var(--slate-700)">✓ L'IA propose les tâches — validation en 1 clic</li>
+      <li style="color:var(--slate-700)">✓ Ratios DGFiP calculés en temps réel</li>
+      <li style="color:var(--slate-700)">✓ Soldes décomptés automatiquement</li>
+      <li style="color:var(--slate-700)">✓ Quittances PDF générées en série</li>
+    </ul></div>
+  </div>
+  <div class="stat-strip" style="margin-top:26px">
+    <div class="stat"><div class="big">~30→3 min</div><div class="cap">pour traiter les tâches d'un compte rendu</div></div>
+    <div class="stat"><div class="big">Instantané</div><div class="cap">pour les ratios financiers (vs tableur)</div></div>
+    <div class="stat"><div class="big">1 clic</div><div class="cap">pour les exports comptables et les quittances</div></div>
+  </div>
+</section>
+
+<!-- 13 · REDUCTION ERREUR -->
+<section class="slide">
+  <span class="kicker">Les bénéfices · 2</span>
+  <h2>Moins d'erreurs humaines, plus de fiabilité</h2>
+  <p class="lead">L'outil pose des garde-fous là où l'erreur coûte cher : la comptabilité, la paie, les droits d'accès.</p>
+  <div class="cols-3">
+    <div class="card"><div class="icon">=</div><h4>Comptabilité verrouillée</h4><p>Toute écriture doit être équilibrée (débit = crédit). L'outil refuse les saisies incohérentes.</p></div>
+    <div class="card"><div class="icon">∑</div><h4>Calculs automatisés</h4><p>Soldes de congés, cotisations de paie, ratios : calculés par la machine, pas à la main.</p></div>
+    <div class="card"><div class="icon">↻</div><h4>Une seule source de vérité</h4><p>La donnée est saisie une fois, partagée par tous. Fini les versions divergentes entre postes.</p></div>
+    <div class="card"><div class="icon info">✓</div><h4>Traçabilité</h4><p>Qui a validé quoi, et quand. Chaque action est enregistrée.</p></div>
+    <div class="card"><div class="icon info">⚷</div><h4>Droits par rôle</h4><p>Chacun n'accède qu'à ce qui le concerne. 5 niveaux d'autorisation.</p></div>
+    <div class="card"><div class="icon terra">⌥</div><h4>Exports normés</h4><p>Documents au format attendu (M14, fonction publique) — moins de reprises.</p></div>
+  </div>
+</section>
+
+<!-- 14 · SECURITE / SOUVERAINETE / A11Y -->
+<section class="slide">
+  <span class="kicker">Les bénéfices · 3</span>
+  <h2>Sécurisé, souverain, accessible à tous</h2>
+  <div class="cols-3">
+    <div class="card"><div class="icon slate" data-i="lock"></div><h4>Sécurité & données</h4><p>Connexion par identifiant, mots de passe chiffrés, accès par profil. Données hébergées en <b>France / UE</b>.</p></div>
+    <div class="card"><div class="icon" data-i="flag"></div><h4>Souveraineté & RGPD</h4><p>Pas de dépendance à des services tiers opaques. Polices et ressources hébergées en propre — conforme RGPD.</p></div>
+    <div class="card"><div class="icon terra" data-i="eye"></div><h4>Accessibilité</h4><p>Conçu selon les normes <b>RGAA / WCAG AA</b> : texte lisible, contrastes, navigation au clavier — pour tous les âges.</p></div>
+  </div>
+  <p class="note">L'accessibilité n'est pas un détail : l'outil doit être confortable pour chaque élu et chaque agent, quel que soit son aisance avec l'informatique.</p>
+</section>
+
+<!-- 15 · DEPLOIEMENT -->
+<section class="slide">
+  <span class="kicker">Mise en place</span>
+  <h2>Un déploiement simple et accompagné</h2>
+  <div class="cols">
+    <ul class="checks">
+      <li>①<div><b>Un accès par personne</b> <span>— chaque élu et agent reçoit son identifiant et son profil de droits.</span></div></li>
+      <li>②<div><b>Prise en main guidée</b> <span>— une courte session de formation par module, et un accompagnement au démarrage.</span></div></li>
+      <li>③<div><b>Démarrage progressif</b> <span>— on commence par 1-2 modules (ex. tâches + comptes rendus), puis on étend.</span></div></li>
+      <li>④<div><b>Support continu</b> <span>— corrections et améliorations au fil de l'usage.</span></div></li>
+    </ul>
+    <div class="card" style="background:var(--green-50);border-color:var(--green-200)">
+      <h3 style="margin-bottom:12px">Déjà opérationnel</h3>
+      <p style="color:var(--slate-700);line-height:1.6">L'application est <b>développée et en ligne</b>. Les données sont désormais partagées entre tous les utilisateurs (base de données commune). Il ne reste qu'à <b>décider de l'adopter</b>.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 16 · COUT / MODELE -->
+<section class="slide">
+  <span class="kicker">Modèle</span>
+  <h2>Un outil qui nous appartient</h2>
+  <div class="cols">
+    <div>
+      <ul class="checks">
+        <li>✓<div><b>Pas d'abonnement par utilisateur</b> <span>— contrairement aux logiciels du marché facturés par agent et par mois.</span></div></li>
+        <li>✓<div><b>Une seule base de code</b> <span>— web + (demain) mobile, sans multiplier les licences.</span></div></li>
+        <li>✓<div><b>Évolutif</b> <span>— on ajoute les fonctions dont la commune a réellement besoin.</span></div></li>
+        <li>✓<div><b>Réversible & souverain</b> <span>— les données restent les nôtres, exportables à tout moment.</span></div></li>
+      </ul>
+    </div>
+    <div class="card" style="border-color:var(--terra-100);background:var(--terra-50)">
+      <h3 style="margin-bottom:12px;color:var(--terra-700)">Le vrai coût évité</h3>
+      <p style="color:var(--slate-700);line-height:1.6">Le coût principal d'aujourd'hui n'est pas le logiciel : c'est le <b>temps passé</b> en ressaisies et le <b>risque d'erreur</b> sur la paie et la comptabilité. C'est ce que l'ENT réduit.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 17 · LE VOTE -->
+<section class="slide vote">
+  <span class="kicker" style="color:var(--green-200)">La décision</span>
+  <h2>Ce que nous vous proposons aujourd'hui</h2>
+  <div class="ask">
+    <div class="q">Validez-vous l'adoption de l'Espace Numérique de Travail comme outil interne de la commune ?</div>
+    <div class="sub">Un outil unique, sécurisé et souverain, qui fait gagner du temps à chacun et réduit les risques d'erreur — déjà opérationnel.</div>
+    <div class="opts">
+      <span class="opt yes">✓ Pour l'adoption</span>
+      <span class="opt no">Contre</span>
+      <span class="opt no">Abstention</span>
+    </div>
+  </div>
+</section>
+
+<!-- 18 · LOT 2 VISION -->
+<section class="slide">
+  <span class="kicker">Et demain · Lot 2</span>
+  <h2>L'ENT n'est qu'un début</h2>
+  <p class="lead">Une fois l'outil adopté, trois directions le rendront encore plus puissant : <b>automatiser</b> davantage, <b>se connecter</b> aux services de l'État, et <b>s'ouvrir</b> aux citoyens.</p>
+  <div class="cols-3">
+    <div class="card"><div class="icon" data-i="bolt"></div><h4>Automatiser</h4><p>Laisser l'outil exécuter seul les tâches répétitives et les relances.</p></div>
+    <div class="card"><div class="icon info" data-i="link"></div><h4>Connecter</h4><p>Dialoguer avec les plateformes officielles (Chorus Pro, DGFiP…).</p></div>
+    <div class="card"><div class="icon terra" data-i="globe"></div><h4>Ouvrir</h4><p>Un portail pour les démarches des habitants, relié à la mairie.</p></div>
+  </div>
+</section>
+
+<!-- 19 · LOT 2 AUTOMATISATION + IA -->
+<section class="slide">
+  <span class="kicker">Lot 2 · Automatisation & IA</span>
+  <h2>L'outil travaille pendant que nous gérons</h2>
+  <div class="cols">
+    <div>
+      <h3 style="margin-bottom:14px;color:var(--green-700)">Automatisation (moteur n8n)</h3>
+      <ul class="checks">
+        <li>⚡<div><b>Relances automatiques</b> <span>— loyers impayés, factures, échéances.</span></div></li>
+        <li>⚡<div><b>Alertes intelligentes</b> <span>— fin de contrat, seuil de budget atteint, congé à valider.</span></div></li>
+        <li>⚡<div><b>Notifications</b> <span>— par e-mail / SMS, sans intervention.</span></div></li>
+      </ul>
+    </div>
+    <div>
+      <h3 style="margin-bottom:14px;color:var(--info)">Intelligence artificielle étendue</h3>
+      <ul class="checks">
+        <li>✦<div><b>Rédaction assistée</b> <span>— comptes rendus et projets de délibération.</span></div></li>
+        <li>✦<div><b>Recherche intelligente</b> <span>— retrouver un document ou une décision en langage courant.</span></div></li>
+        <li>✦<div><b>Assistant municipal</b> <span>— « Combien reste-t-il sur le chapitre 011 ? »</span></div></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 20 · LOT 2 INTEGRATIONS + PORTAIL -->
+<section class="slide">
+  <span class="kicker">Lot 2 · Intégrations & citoyens</span>
+  <h2>Connecté à l'État, ouvert aux habitants</h2>
+  <div class="cols">
+    <div>
+      <h3 style="margin-bottom:14px;color:var(--info)">Intégrations officielles (État)</h3>
+      <ul class="checks">
+        <li>↔<div><b>Chorus Pro</b> <span>— réception des factures fournisseurs (API PISTE). Plateforme de référence du secteur public, confortée par la réforme de la facturation électronique 2026-2027.</span></div></li>
+        <li>↔<div><b>Hélios / DGFiP</b> <span>— comptabilité publique via flux PES V2 + tiers de télétransmission homologué.</span></div></li>
+        <li>↔<div><b>@ctes + parapheur</b> <span>— télétransmission des actes à la préfecture (contrôle de légalité) + signature électronique (eIDAS).</span></div></li>
+        <li>↔<div><b>ProConnect</b> <span>— authentification des agents (ex-AgentConnect, DINUM).</span></div></li>
+      </ul>
+    </div>
+    <div>
+      <h3 style="margin-bottom:14px;color:var(--terra-700)">Ouverture aux citoyens</h3>
+      <ul class="checks">
+        <li>◎<div><b>FranceConnect</b> <span>— identité des habitants pour le portail de démarches.</span></div></li>
+        <li>◎<div><b>Portail de démarches</b> <span>— état civil, urbanisme, signalements en ligne.</span></div></li>
+        <li>◎<div><b>Application mobile (PWA)</b> <span>— l'ENT installable sur le téléphone.</span></div></li>
+        <li>◎<div><b>Transparence</b> <span>— publication des délibérations et du budget.</span></div></li>
+      </ul>
+    </div>
+  </div>
+  <p class="note">Les intégrations financières et juridiques (Hélios, @ctes) passent par un <b>tiers de télétransmission homologué</b> — souvent en s'appuyant sur un opérateur existant (Berger-Levrault, JVS-Mairistem, SRCI…) plutôt qu'en repartant de zéro.</p>
+</section>
+
+<!-- 21 · FEUILLE DE ROUTE -->
+<section class="slide">
+  <span class="kicker">Feuille de route</span>
+  <h2>Où nous en sommes, où nous allons</h2>
+  <div class="tl">
+    <div class="step now"><div class="when">Lot 1 · Livré</div><h4>La fondation</h4><ul>
+      <li>✓ 7 modules opérationnels</li>
+      <li>✓ Données partagées (base commune)</li>
+      <li>✓ Sécurité, droits, accessibilité</li>
+      <li>✓ IA d'extraction des comptes rendus</li>
+    </ul></div>
+    <div class="step"><div class="when">Lot 2 · Prochaines étapes</div><h4>Automatiser & connecter</h4><ul>
+      <li>○ Automatisations n8n (relances, alertes)</li>
+      <li>○ IA étendue (rédaction, recherche)</li>
+      <li>○ Application mobile</li>
+      <li>○ Intégrations Chorus Pro / DGFiP</li>
+    </ul></div>
+    <div class="step"><div class="when">Horizon</div><h4>Ouvrir au territoire</h4><ul>
+      <li>○ Portail citoyen</li>
+      <li>○ Signature électronique des actes</li>
+      <li>○ Transparence & open data</li>
+    </ul></div>
+  </div>
+</section>
+
+<!-- 22 · MERCI -->
+<section class="slide cover" style="background:radial-gradient(1000px 500px at 20% 110%,rgba(196,121,58,.25),transparent 60%),linear-gradient(135deg,var(--slate-800),var(--slate-900))">
+  <span class="pill">Merci de votre attention</span>
+  <h1 style="font-size:clamp(2.4rem,5vw,3.8rem)">Des questions ?</h1>
+  <p class="sub">L'ENT est prêt. Avec votre vote, la commune se dote d'un outil moderne, sûr et durable — au service des élus, des agents et, demain, des habitants.</p>
+  <div class="meta"><span><b>Mairie de Saint-Fortunat-sur-Eyrieux</b> — Espace Numérique de Travail</span></div>
+</section>
+
+</div>
+
+<div class="counter" id="counter">1 / 22</div>
+<div class="progress" id="progress" style="width:4.5%"></div>
+<div class="hint">← → ou espace pour naviguer · Ctrl/Cmd+P pour exporter en PDF</div>
+
+<script>
+// Icônes SVG inline (robuste hors-ligne) — style trait Lucide-like
+const ICONS = {
+  grid:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/>',
+  check:'<polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
+  users:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  doc:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>',
+  briefcase:'<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>',
+  euro:'<path d="M18 7a6 6 0 1 0 0 10"/><line x1="4" y1="10" x2="13" y2="10"/><line x1="4" y1="14" x2="13" y2="14"/>',
+  home:'<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',
+  team:'<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  camera:'<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>',
+  lock:'<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+  flag:'<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>',
+  eye:'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',
+  bolt:'<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+  link:'<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+  globe:'<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>',
+};
+function svg(name){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(ICONS[name]||'')+'</svg>'}
+document.querySelectorAll('[data-i]').forEach(el=>{el.innerHTML=svg(el.getAttribute('data-i'))});
+
+// Navigation
+const slides=[...document.querySelectorAll('.slide')];
+let cur=0;
+const counter=document.getElementById('counter');
+const progress=document.getElementById('progress');
+function show(i){
+  cur=Math.max(0,Math.min(slides.length-1,i));
+  slides.forEach((s,k)=>s.classList.toggle('active',k===cur));
+  counter.textContent=(cur+1)+' / '+slides.length;
+  progress.style.width=(((cur+1)/slides.length)*100)+'%';
+}
+function next(){show(cur+1)} function prev(){show(cur-1)}
+document.addEventListener('keydown',e=>{
+  if(['ArrowRight','ArrowDown','PageDown',' '].includes(e.key)){e.preventDefault();next()}
+  else if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){e.preventDefault();prev()}
+  else if(e.key==='Home'){show(0)} else if(e.key==='End'){show(slides.length-1)}
+});
+document.addEventListener('click',e=>{ if(e.clientX < window.innerWidth*0.25){prev()} else {next()} });
+show(0);
+</script>
+</body>
+</html>
