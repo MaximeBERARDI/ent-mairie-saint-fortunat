@@ -62,9 +62,9 @@ des données métier) :
 
 - Config heures sup (`usePointages` → `:hsup-config:v1`)
 - Thème UI (`SettingsContext` → `ent-settings`)
-- Mots de passe démo (`useAuth` → `:auth:v1`) — **en clair, vestige à
-  réconcilier avec NextAuth** (l'identité réelle passe déjà par la session ;
-  ce store ne sert plus qu'au flux login/setup-password/reset de démo).
+
+Les mots de passe sont entièrement gérés par NextAuth (bcrypt en DB) — plus
+aucun store de mots de passe en `localStorage`.
 
 L'**utilisateur courant** (`useCurrentUser`) est désormais dérivé de la
 session NextAuth via `TeamContext` — plus de clé `localStorage`, et le
@@ -133,16 +133,16 @@ Toujours type-checker avant de commit. Le build inclut le type-check + le lint N
 - ✅ **a11y / UX (audit 2026-05)** — Sprint 1 (P0 : contrastes WCAG AA, focus-visible, self-host fonts/RGPD) + Sprint 2 (P1 : icônes SVG sidebar, échelle typo, cibles tactiles 40-44 px, ARIA/skip-link/landmarks/modales focus-trap, responsive mobile). Cf. `docs/audit-ux-2026-05/`.
 - ✅ **Visibilité des modules par profil** — `Person.hiddenModules` en DB, UI admin dans `PersonForm`, garde de route côté nav.
 - 🟡 **Commissions** — CRUD tâches OK + onglet admin pour renommer/créer/supprimer les commissions ; membres statiques, pas de planning réunions, GED encore mock (cf. `(placeholder)` dans `commissions/page.tsx`).
-- 🟡 **Auth réelle** — NextAuth (Credentials + bcrypt) branché : login, session JWT, `useCurrentUser()`/`TeamContext` dérivent l'utilisateur courant ; route `/api/auth/change-password`. **Reste** : retirer le store de mots de passe démo en clair de `useAuth` (`localStorage`) et router les flux login/reset/première-connexion entièrement via NextAuth.
+- ✅ **Auth réelle** — NextAuth (Credentials + bcrypt) : login, session JWT, `useCurrentUser()`/`TeamContext` dérivent l'utilisateur courant. Changement de mot de passe via `/api/auth/change-password` (Profil → Sécurité). Réinitialisation par un admin via `POST /api/persons/[id]/reset-password` (mot de passe temporaire affiché une fois, gaté `team.edit-roles`, action dans `PersonForm`). Page « mot de passe oublié » informative (renvoie vers l'admin, pas de SMTP). Plus de store de mots de passe en `localStorage`. Mot de passe par défaut au seed : `saintfortunat2026`.
 
 ## Dette technique connue
 
-- **`useAuth` en `localStorage`** (mots de passe démo en clair) : doublonne
-  NextAuth. À supprimer une fois les flux login/reset/première-connexion
-  entièrement passés par NextAuth.
 - **Pas de migrations Prisma versionnées** : `prisma/migrations/` est absent,
   le schéma est synchronisé via `prisma db push` (workflow MVP, sans
   historique de migration). À formaliser avant la mise en prod « sérieuse ».
+- **Auth, choix MVP assumés** : pas de changement de mot de passe forcé à la
+  1ère connexion (tous partent du défaut au seed), pas de reset self-service
+  par email (pas de SMTP) → le reset passe par un admin.
 - **GED des commissions** encore mock (documents `(placeholder)`).
 
 ## Back-end (Supabase + Prisma + NextAuth)
@@ -178,8 +178,8 @@ Tous les hooks métier appellent désormais les route handlers `/api`
 (cf. table « Modules métier » ci-dessus). Le pattern optimistic-update
 préserve l'interface des hooks, donc les pages n'ont pas bougé.
 
-**Reliquats** (cf. dette technique) : `useAuth` (mots de passe démo en
-`localStorage`), formalisation des migrations Prisma, GED des commissions.
+**Reliquats** (cf. dette technique) : formalisation des migrations Prisma,
+GED des commissions.
 
 ## Contraintes de persistance
 

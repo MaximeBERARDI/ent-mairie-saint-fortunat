@@ -74,6 +74,9 @@ export function PersonForm({ open, onClose, onSubmit, onDelete, initial }: Perso
   const [signatureDomains, setSignatureDomains] = useState<Set<SignatureDomain>>(new Set())
   const [responsibleCommissions, setResponsibleCommissions] = useState<Set<string>>(new Set())
   const [error, setError] = useState<string | null>(null)
+  const [resetPwd, setResetPwd] = useState<string | null>(null)
+  const [resetError, setResetError] = useState<string | null>(null)
+  const [resetting, setResetting] = useState(false)
 
   useEffect(() => {
     if (!open) return
@@ -93,6 +96,9 @@ export function PersonForm({ open, onClose, onSubmit, onDelete, initial }: Perso
     setResponsibleCommissions(new Set(initial?.responsibleCommissions ?? []))
     setHiddenModules(initial?.hiddenModules ?? [])
     setError(null)
+    setResetPwd(null)
+    setResetError(null)
+    setResetting(false)
   }, [open, initial])
 
   const modalRef = useModalA11y<HTMLFormElement>(open, onClose)
@@ -149,6 +155,25 @@ export function PersonForm({ open, onClose, onSubmit, onDelete, initial }: Perso
       startDate: initial?.startDate,
     })
     onClose()
+  }
+
+  const handleReset = async () => {
+    if (!initial?.id) return
+    setResetError(null)
+    setResetting(true)
+    try {
+      const res = await fetch(`/api/persons/${initial.id}/reset-password`, { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) {
+        setResetError(data.error ?? 'Échec de la réinitialisation.')
+        return
+      }
+      setResetPwd(data.tempPassword)
+    } catch {
+      setResetError('Erreur réseau.')
+    } finally {
+      setResetting(false)
+    }
   }
 
   const inputStyle: React.CSSProperties = {
@@ -312,6 +337,31 @@ export function PersonForm({ open, onClose, onSubmit, onDelete, initial }: Perso
                   Compte {active ? 'actif' : 'désactivé'} — {active ? 'la personne peut se connecter et apparaît dans les listes.' : 'la personne ne peut plus se connecter.'}
                 </label>
               </div>
+
+              {canEditModules && initial?.id && (
+                <div style={{ padding: '12px 14px', border: `1px solid ${C.border}`, borderRadius: 8 }}>
+                  <label style={labelStyle}>Mot de passe</label>
+                  <p style={{ fontSize: 12, color: C.subtle, marginBottom: 10, lineHeight: 1.5 }}>
+                    Génère un mot de passe temporaire pour {prenom || 'ce membre'}. Communiquez-le
+                    lui ; il pourra le changer depuis Profil → Sécurité.
+                  </p>
+                  {resetPwd ? (
+                    <div style={{ padding: '10px 12px', background: C.successLight, border: `1px solid ${C.success}40`, borderRadius: 6 }}>
+                      <p style={{ fontSize: 11, color: C.muted, marginBottom: 4 }}>Mot de passe temporaire (affiché une seule fois) :</p>
+                      <code style={{ fontSize: 15, fontWeight: 700, color: C.fg, fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.04em' }}>
+                        {resetPwd}
+                      </code>
+                    </div>
+                  ) : (
+                    <Button type="button" size="sm" onClick={handleReset} disabled={resetting}>
+                      {resetting ? 'Réinitialisation…' : 'Réinitialiser le mot de passe'}
+                    </Button>
+                  )}
+                  {resetError && (
+                    <p style={{ fontSize: 12, color: C.danger, marginTop: 8 }}>{resetError}</p>
+                  )}
+                </div>
+              )}
             </>
           )}
 

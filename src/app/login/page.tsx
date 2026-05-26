@@ -7,7 +7,6 @@ import { signIn, getSession } from 'next-auth/react'
 import { Button } from '@/components/ui/Button'
 import { FormError } from '@/components/ui/FormError'
 import { COLORS as C } from '@/lib/theme'
-import { useCurrentUser } from '@/hooks/useCurrentUser'
 
 // Photo locale (cf. public/images/README.md). Servie depuis /public, aucun
 // hotlink externe : conformité RGPD + résilience (pas de dépendance à
@@ -17,16 +16,14 @@ const COMMUNE_PHOTO_FALLBACK = '/images/saint-fortunat-placeholder.svg'
 
 export default function LoginPage() {
   const router = useRouter()
-  const { setCurrentUserId } = useCurrentUser()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
   // Connexion via NextAuth (Credentials provider + bcrypt côté serveur).
-  // En succès : on synchronise currentUserId localStorage avec le
-  // personId de la session pour que le reste de l'app (qui utilise
-  // encore localStorage) reconnaisse l'utilisateur connecté.
+  // L'identité de l'utilisateur courant est dérivée de la session côté
+  // TeamContext — rien à synchroniser ici.
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
@@ -56,7 +53,6 @@ export default function LoginPage() {
       return
     }
 
-    setCurrentUserId(session.user.personId)
     router.push('/dashboard')
   }
 
