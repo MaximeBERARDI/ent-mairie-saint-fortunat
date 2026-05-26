@@ -125,7 +125,7 @@ export function TopBar({ title, notif = 2 }: TopBarProps) {
         </>
       )}
       {!isTopNav && (
-        <h1 style={{ fontSize: 15, color: 'var(--topbar-text)', fontWeight: 600, flex: 1 }}>{title}</h1>
+        <h1 style={{ fontSize: 15, color: 'var(--topbar-text)', fontWeight: 600, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{title}</h1>
       )}
 
       {/* Search global */}
@@ -151,7 +151,7 @@ export function TopBar({ title, notif = 2 }: TopBarProps) {
           />
         </button>
         {userMenuOpen && (
-          <div style={{
+          <div className="topbar-dropdown" style={{
             position: 'absolute',
             top: 36,
             right: 0,

@@ -217,7 +217,7 @@ export function NotificationsBell() {
       )}
 
       {open && (
-        <div style={{
+        <div className="topbar-dropdown" style={{
           position: 'absolute',
           top: 36, right: 0,
           width: 360,

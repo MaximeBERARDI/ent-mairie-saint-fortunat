@@ -208,6 +208,12 @@ textarea:focus {
 @media (max-width: 767px) {
   .tabs-buttons { display: none !important; }
   .tabs-select { display: block; }
+
+  /* TopBar mobile : la recherche (220px non-rétrécissable) faisait déborder
+     la barre — cloche coupée, avatar profil hors écran. On la masque. Et on
+     plafonne les menus déroulants pour éviter le débordement horizontal. */
+  .topbar-search { display: none !important; }
+  .topbar-dropdown { max-width: calc(100vw - 24px); }
 }
 
 /* ─── Responsive mobile ─────────────────────────────────────────────

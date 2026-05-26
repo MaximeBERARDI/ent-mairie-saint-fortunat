@@ -233,7 +233,7 @@ export function GlobalSearch() {
   }
 
   return (
-    <div ref={wrapperRef} style={{ position: 'relative', flexShrink: 0 }}>
+    <div ref={wrapperRef} className="topbar-search" style={{ position: 'relative', flexShrink: 0 }}>
       <div style={{
         width: 220,
         height: 30,
