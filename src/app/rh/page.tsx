@@ -48,7 +48,6 @@ const inputStyle: React.CSSProperties = {
   fontSize: 12,
   color: C.fg,
   fontFamily: "'DM Sans', sans-serif",
-  outline: 'none',
 }
 
 const MAX_FILE_SIZE = 1024 * 1024
@@ -948,7 +947,7 @@ function LeaveDetailPanel({
             value={comment}
             onChange={e => setComment(e.target.value)}
             placeholder="Motif…"
-            style={{ width: '100%', height: 56, border: `1px solid ${C.border}`, borderRadius: 6, padding: 8, fontSize: 12, resize: 'none', outline: 'none', fontFamily: "'DM Sans', sans-serif", color: C.fg, marginBottom: 10 }}
+            style={{ width: '100%', height: 56, border: `1px solid ${C.border}`, borderRadius: 6, padding: 8, fontSize: 12, resize: 'none', fontFamily: "'DM Sans', sans-serif", color: C.fg, marginBottom: 10 }}
           />
           <div style={{ display: 'flex', gap: 6 }}>
             <Button variant="primary" style={{ flex: 1, justifyContent: 'center' }} onClick={onApprove}>Approuver</Button>

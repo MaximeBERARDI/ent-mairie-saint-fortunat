@@ -44,9 +44,10 @@ export default function EquipePage() {
   const [formOpen, setFormOpen] = useState(false)
   const [editingPerson, setEditingPerson] = useState<Person | null>(null)
 
-  // Permissions équipe : seuls les administrateurs peuvent éditer les rôles,
-  // inviter ou désactiver. Les autres peuvent uniquement consulter.
-  const canManage = can('team.edit-roles') || can('team.invite') || can('team.deactivate')
+  // Permissions équipe par action (alignées sur les gardes serveur /api/persons).
+  const canInvite = can('team.invite')
+  const canEditRoles = can('team.edit-roles')
+  const canDeactivate = can('team.deactivate')
 
   const filtered = useMemo(() => {
     return people.filter(p => {
@@ -179,12 +180,12 @@ export default function EquipePage() {
             flex: 1, minWidth: 200, maxWidth: 280,
             border: `1px solid ${C.border}`, borderRadius: 20,
             padding: '6px 14px', fontSize: 12, color: C.fg,
-            outline: 'none', fontFamily: "'DM Sans', sans-serif",
+            fontFamily: "'DM Sans', sans-serif",
             background: '#fff',
           }}
         />
         <div style={{ flex: 1 }} />
-        {canManage && <Button variant="primary" size="sm" onClick={openCreate}>+ Nouveau membre</Button>}
+        {canInvite && <Button variant="primary" size="sm" onClick={openCreate}>+ Nouveau membre</Button>}
       </div>
 
       <div style={{ display: 'flex', gap: 'var(--gap)' }}>
@@ -227,7 +228,8 @@ export default function EquipePage() {
             <PersonDetail
               person={selected}
               tasks={tasks}
-              canManage={canManage}
+              canEdit={canEditRoles}
+              canDeactivate={canDeactivate}
               currentUserId={currentUserId}
               onEdit={() => openEdit(selected)}
               onToggleActive={() => updatePerson(selected.id, { active: !selected.active })}
@@ -254,7 +256,8 @@ export default function EquipePage() {
           <PersonDetail
             person={selected}
             tasks={tasks}
-            canManage={canManage}
+            canEdit={canEditRoles}
+            canDeactivate={canDeactivate}
             currentUserId={currentUserId}
             onEdit={() => openEdit(selected)}
             onToggleActive={() => updatePerson(selected.id, { active: !selected.active })}
@@ -266,7 +269,7 @@ export default function EquipePage() {
         open={formOpen}
         onClose={() => setFormOpen(false)}
         onSubmit={handleSubmit}
-        onDelete={editingPerson?.id ? handleDelete : undefined}
+        onDelete={editingPerson?.id && canDeactivate ? handleDelete : undefined}
         initial={editingPerson ?? undefined}
       />
     </Shell>
@@ -318,10 +321,11 @@ function PersonListRow({ person, selected, onSelect, currentUserId }: {
 
 // ── Fiche détaillée ──────────────────────────────────────────────────────────
 
-function PersonDetail({ person, tasks, canManage, currentUserId, onEdit, onToggleActive }: {
+function PersonDetail({ person, tasks, canEdit, canDeactivate, currentUserId, onEdit, onToggleActive }: {
   person: Person
   tasks: ReturnType<typeof useTasks>['tasks']
-  canManage: boolean
+  canEdit: boolean
+  canDeactivate: boolean
   currentUserId: string
   onEdit: () => void
   onToggleActive: () => void
@@ -369,10 +373,10 @@ function PersonDetail({ person, tasks, canManage, currentUserId, onEdit, onToggl
               )}
             </div>
           </div>
-          {canManage && (
+          {(canEdit || canDeactivate) && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <Button variant="primary" size="sm" onClick={onEdit}>✎ Modifier</Button>
-              {person.id !== currentUserId && (
+              {canEdit && <Button variant="primary" size="sm" onClick={onEdit}>✎ Modifier</Button>}
+              {canDeactivate && person.id !== currentUserId && (
                 <Button size="sm" onClick={onToggleActive}>
                   {person.active ? '⊘ Désactiver' : '✓ Réactiver'}
                 </Button>

@@ -36,10 +36,14 @@ export function Button({
       : { padding: '7px 16px', fontSize: 13 }),
   }
 
+  // primary utilise --accent-dark (et non --accent) car le texte est blanc
+  // et il faut un contraste WCAG AA >= 4,5:1. --accent reste utilise pour
+  // les fonds sans texte (badges decoratifs, bordures, icones).
+  // danger : on durcit le rouge du texte (#9c2d2e) pour passer 5,76:1.
   const variants: Record<string, React.CSSProperties> = {
-    primary: { background: 'var(--accent)', borderColor: 'var(--accent)', color: 'var(--accent-text)' },
+    primary: { background: 'var(--accent-dark)', borderColor: 'var(--accent-dark)', color: 'var(--accent-text)' },
     default: { background: 'var(--surface)', borderColor: 'var(--card-border)', color: 'var(--text-fg)' },
-    danger:  { background: '#fdeaea', borderColor: '#c4393a', color: '#c4393a' },
+    danger:  { background: '#fdeaea', borderColor: '#9c2d2e', color: '#9c2d2e' },
     ghost:   { background: 'transparent', borderColor: 'transparent', color: 'var(--text-muted)' },
   }
 

@@ -160,7 +160,6 @@ export function TaskForm({ open, onClose, onSubmit, onDelete, initial, title }: 
     fontSize: 13,
     color: C.fg,
     fontFamily: "'DM Sans', sans-serif",
-    outline: 'none',
     background: '#fff',
     boxSizing: 'border-box',
   }

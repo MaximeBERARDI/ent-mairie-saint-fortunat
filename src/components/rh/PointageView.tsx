@@ -45,7 +45,6 @@ const inputStyle: React.CSSProperties = {
   fontSize: 12,
   color: C.fg,
   fontFamily: "'DM Sans', sans-serif",
-  outline: 'none',
 }
 
 const TYPE_LABELS: Record<PointageType, string> = {

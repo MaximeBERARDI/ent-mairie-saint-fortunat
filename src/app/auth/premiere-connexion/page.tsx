@@ -125,7 +125,7 @@ function PremiereConnexionContent() {
                 width: '100%', height: 42, padding: '0 12px',
                 border: `1px solid ${C.border}`, borderRadius: 6,
                 background: emailFromUrl ? C.bg : '#fff', fontSize: 13, color: C.fg,
-                outline: 'none', fontFamily: "'DM Sans', sans-serif",
+                fontFamily: "'DM Sans', sans-serif",
                 boxSizing: 'border-box',
               }}
             />
@@ -156,7 +156,7 @@ function PremiereConnexionContent() {
                 width: '100%', height: 42, padding: '0 12px',
                 border: `1px solid ${C.border}`, borderRadius: 6,
                 background: '#fff', fontSize: 13, color: C.fg,
-                outline: 'none', fontFamily: "'DM Sans', sans-serif",
+                fontFamily: "'DM Sans', sans-serif",
                 boxSizing: 'border-box',
               }}
             />
@@ -178,7 +178,7 @@ function PremiereConnexionContent() {
                 width: '100%', height: 42, padding: '0 12px',
                 border: `1px solid ${confirm && confirm === password ? C.success : confirm && confirm !== password ? C.danger : C.border}`,
                 borderRadius: 6, background: '#fff', fontSize: 13, color: C.fg,
-                outline: 'none', fontFamily: "'DM Sans', sans-serif",
+                fontFamily: "'DM Sans', sans-serif",
                 boxSizing: 'border-box',
               }}
             />

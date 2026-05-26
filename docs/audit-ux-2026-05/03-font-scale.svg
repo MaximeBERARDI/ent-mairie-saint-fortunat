@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 560" font-family="DM Sans, Segoe UI, sans-serif">
+  <style>
+    .h1 { font-size: 22px; font-weight: 700; fill: #1f2a31; }
+    .h2 { font-size: 14px; font-weight: 700; fill: #1f2a31; }
+    .lbl { font-size: 12px; fill: #4d5e6c; }
+    .small { font-size: 11px; fill: #4d5e6c; }
+    .bar-fail { fill: #c4393a; }
+    .bar-ok { fill: #2d9c6e; }
+    .bar-warn { fill: #d4860a; }
+    .axis { stroke: #94aab7; stroke-width: 1; }
+  </style>
+
+  <rect width="900" height="560" fill="#f4f6f1"/>
+  <text x="40" y="40" class="h1">Distribution des tailles de texte — l'app code en 9-12 px à 80%</text>
+  <text x="40" y="62" class="lbl">Source : 7 945 occurrences de `fontSize: Npx` dans src/. Recommandation WCAG/RGAA : 16 px corps, 12 px absolu mini.</text>
+
+  <!-- Histogram -->
+  <g transform="translate(80,110)">
+    <!-- axes -->
+    <line x1="0" y1="0" x2="0" y2="300" class="axis"/>
+    <line x1="0" y1="300" x2="700" y2="300" class="axis"/>
+
+    <!-- bars : 9, 10, 11, 12, 13, 14, 16, 18, 20, 22 -->
+    <!-- normalized to max=229 -->
+    <g>
+      <rect x="20" y="223" width="50" height="77" class="bar-fail"/>
+      <text x="45" y="318" text-anchor="middle" class="small">9 px</text>
+      <text x="45" y="213" text-anchor="middle" class="small" fill="#c4393a" font-weight="700">59</text>
+    </g>
+    <g>
+      <rect x="90" y="111" width="50" height="189" class="bar-fail"/>
+      <text x="115" y="318" text-anchor="middle" class="small">10 px</text>
+      <text x="115" y="101" text-anchor="middle" class="small" fill="#c4393a" font-weight="700">145</text>
+    </g>
+    <g>
+      <rect x="160" y="11" width="50" height="289" class="bar-warn"/>
+      <text x="185" y="318" text-anchor="middle" class="small">11 px</text>
+      <text x="185" y="1" text-anchor="middle" class="small" fill="#d4860a" font-weight="700">229</text>
+    </g>
+    <g>
+      <rect x="230" y="22" width="50" height="278" class="bar-warn"/>
+      <text x="255" y="318" text-anchor="middle" class="small">12 px</text>
+      <text x="255" y="12" text-anchor="middle" class="small" fill="#d4860a" font-weight="700">218</text>
+    </g>
+    <g>
+      <rect x="300" y="206" width="50" height="94" class="bar-ok"/>
+      <text x="325" y="318" text-anchor="middle" class="small">13 px</text>
+      <text x="325" y="196" text-anchor="middle" class="small" fill="#2d9c6e" font-weight="700">74</text>
+    </g>
+    <g>
+      <rect x="370" y="252" width="50" height="48" class="bar-ok"/>
+      <text x="395" y="318" text-anchor="middle" class="small">14 px</text>
+      <text x="395" y="242" text-anchor="middle" class="small" fill="#2d9c6e" font-weight="700">37</text>
+    </g>
+    <g>
+      <rect x="440" y="277" width="50" height="23" class="bar-ok"/>
+      <text x="465" y="318" text-anchor="middle" class="small">16 px</text>
+      <text x="465" y="267" text-anchor="middle" class="small" fill="#2d9c6e" font-weight="700">18</text>
+    </g>
+    <g>
+      <rect x="510" y="289" width="50" height="11" class="bar-ok"/>
+      <text x="535" y="318" text-anchor="middle" class="small">18 px</text>
+      <text x="535" y="279" text-anchor="middle" class="small" fill="#2d9c6e" font-weight="700">9</text>
+    </g>
+    <g>
+      <rect x="580" y="290" width="50" height="10" class="bar-ok"/>
+      <text x="605" y="318" text-anchor="middle" class="small">20 px</text>
+      <text x="605" y="280" text-anchor="middle" class="small" fill="#2d9c6e" font-weight="700">8</text>
+    </g>
+    <g>
+      <rect x="650" y="294" width="50" height="6" class="bar-ok"/>
+      <text x="675" y="318" text-anchor="middle" class="small">22 px</text>
+      <text x="675" y="284" text-anchor="middle" class="small" fill="#2d9c6e" font-weight="700">5</text>
+    </g>
+
+    <!-- threshold lines -->
+    <line x1="-5" y1="300" x2="700" y2="300" stroke="#c4393a" stroke-width="0" stroke-dasharray="4,3"/>
+  </g>
+
+  <!-- Legend -->
+  <g transform="translate(80,440)">
+    <rect width="14" height="14" class="bar-fail"/>
+    <text x="22" y="12" class="small">&lt; 12px : sous le seuil de lisibilité confortable (FAIL pour public 60+)</text>
+
+    <rect y="22" width="14" height="14" class="bar-warn"/>
+    <text x="22" y="34" class="small">11–12px : tolérable en UI mais à réserver aux éléments secondaires (légendes, badges)</text>
+
+    <rect y="44" width="14" height="14" class="bar-ok"/>
+    <text x="22" y="56" class="small">≥ 13px : zone confortable. Corps de texte recommandé : 14-16px</text>
+  </g>
+
+  <text x="80" y="525" class="lbl" font-weight="700" fill="#c4393a">→ 56 % des textes sont à 9-11 px : l'app est globalement trop dense pour des élus de 50-70 ans.</text>
+</svg>

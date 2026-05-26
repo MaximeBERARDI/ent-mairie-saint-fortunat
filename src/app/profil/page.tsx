@@ -56,7 +56,7 @@ const inputStyle: React.CSSProperties = {
   width: '100%', height: 36, padding: '0 12px',
   border: `1px solid ${C.border}`, borderRadius: 6,
   background: '#fff', fontSize: 13, color: C.fg,
-  outline: 'none', fontFamily: "'DM Sans', sans-serif",
+  fontFamily: "'DM Sans', sans-serif",
   boxSizing: 'border-box',
 }
 

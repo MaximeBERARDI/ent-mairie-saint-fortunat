@@ -8,12 +8,16 @@ import { Button } from '@/components/ui/Button'
 import { COLORS as C } from '@/lib/theme'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 
-const COMMUNE_PHOTO = 'https://www.saint-fortunat-sur-eyrieux.fr/wp-content/uploads/2018/12/41199_372425_24.jpg'
+// Photo locale (cf. public/images/README.md). Servie depuis /public, aucun
+// hotlink externe : conformité RGPD + résilience (pas de dépendance à
+// saint-fortunat-sur-eyrieux.fr). Fallback SVG si jamais le .jpg est absent.
+const COMMUNE_PHOTO = '/images/saint-fortunat.jpg'
+const COMMUNE_PHOTO_FALLBACK = '/images/saint-fortunat-placeholder.svg'
 
 export default function LoginPage() {
   const router = useRouter()
   const { setCurrentUserId } = useCurrentUser()
-  const [email, setEmail] = useState('berardi.maxime@gmail.com')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
@@ -95,6 +99,7 @@ export default function LoginPage() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={COMMUNE_PHOTO}
+            onError={(e) => { (e.currentTarget as HTMLImageElement).src = COMMUNE_PHOTO_FALLBACK }}
             alt="Saint-Fortunat-sur-Eyrieux — vue de la commune"
             style={{
               width: '100%',
@@ -118,7 +123,7 @@ export default function LoginPage() {
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <div style={{ width: 6, height: 6, borderRadius: '50%', background: C.success }} />
-          <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)' }}>
+          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.78)' }}>
             Connexion sécurisée · Hébergement souverain France
           </span>
         </div>
@@ -153,7 +158,7 @@ export default function LoginPage() {
                 width: '100%', height: 42, padding: '0 12px',
                 border: `1px solid ${C.border}`, borderRadius: 6,
                 background: '#fff', fontSize: 13, color: C.fg,
-                outline: 'none', fontFamily: "'DM Sans', sans-serif",
+                fontFamily: "'DM Sans', sans-serif",
                 boxSizing: 'border-box',
               }}
             />
@@ -174,7 +179,7 @@ export default function LoginPage() {
                 width: '100%', height: 42, padding: '0 12px',
                 border: `1px solid ${C.border}`, borderRadius: 6,
                 background: '#fff', fontSize: 13, color: C.fg,
-                outline: 'none', fontFamily: "'DM Sans', sans-serif",
+                fontFamily: "'DM Sans', sans-serif",
                 boxSizing: 'border-box',
               }}
             />

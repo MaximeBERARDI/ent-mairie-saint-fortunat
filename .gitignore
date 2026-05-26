@@ -10,3 +10,11 @@ tsconfig.tsbuildinfo
 node_modules/.prisma/
 # Local env
 .env
+
+# Scripts utilitaires de session (assistant)
+check-sprint1.bat
+check-sprint1-output.txt
+start-dev.bat
+open-login.bat
+download-photo.bat
+download-photo-output.txt

@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Vue stylisée de Saint-Fortunat-sur-Eyrieux, vallée de l'Eyrieux, Ardèche">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#dde9d9"/>
+      <stop offset="60%" stop-color="#c9d8c0"/>
+      <stop offset="100%" stop-color="#a8c098"/>
+    </linearGradient>
+    <linearGradient id="far" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#7d9270"/>
+      <stop offset="100%" stop-color="#5e7458"/>
+    </linearGradient>
+    <linearGradient id="mid" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#5e7458"/>
+      <stop offset="100%" stop-color="#3d5240"/>
+    </linearGradient>
+    <linearGradient id="near" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3d5240"/>
+      <stop offset="100%" stop-color="#2a3a2d"/>
+    </linearGradient>
+    <linearGradient id="river" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#7a9bab"/>
+      <stop offset="50%" stop-color="#94b6c5"/>
+      <stop offset="100%" stop-color="#7a9bab"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="600" fill="url(#sky)"/>
+
+  <path d="M0,320 L120,260 L210,290 L310,240 L420,280 L520,230 L630,265 L730,235 L800,255 L800,420 L0,420 Z" fill="url(#far)" opacity="0.85"/>
+
+  <path d="M0,380 L100,330 L180,360 L270,310 L360,340 L450,300 L540,335 L640,295 L740,325 L800,310 L800,470 L0,470 Z" fill="url(#mid)"/>
+
+  <ellipse cx="380" cy="455" rx="240" ry="20" fill="url(#river)" opacity="0.7"/>
+
+  <g fill="#c9b89a">
+    <rect x="345" y="425" width="14" height="22"/>
+    <polygon points="343,425 361,425 352,418"/>
+    <rect x="362" y="430" width="12" height="17"/>
+    <polygon points="361,430 375,430 368,424"/>
+    <rect x="377" y="423" width="14" height="24"/>
+    <polygon points="375,423 393,423 384,416"/>
+    <rect x="395" y="428" width="11" height="19"/>
+    <polygon points="394,428 407,428 400,422"/>
+  </g>
+
+  <g fill="#8a5a3a" opacity="0.9">
+    <rect x="349" y="438" width="5" height="9"/>
+    <rect x="380" y="437" width="5" height="10"/>
+  </g>
+
+  <g fill="#c4393a" opacity="0.6">
+    <polygon points="345,425 352,418 361,425 361,418 352,412 343,418"/>
+    <polygon points="362,430 368,424 375,430 375,425 368,420 361,425"/>
+    <polygon points="377,423 384,416 393,423 393,417 384,410 375,417"/>
+  </g>
+
+  <path d="M0,470 L800,470 L800,600 L0,600 Z" fill="url(#near)"/>
+
+  <g fill="#2a3a2d" opacity="0.6">
+    <circle cx="60" cy="465" r="18"/>
+    <circle cx="730" cy="460" r="22"/>
+    <circle cx="120" cy="475" r="14"/>
+  </g>
+</svg>

@@ -1,0 +1,155 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 560" font-family="DM Sans, Segoe UI, sans-serif">
+  <style>
+    .h1 { font-size: 22px; font-weight: 700; fill: #1f2a31; }
+    .h2 { font-size: 14px; font-weight: 700; fill: #1f2a31; }
+    .lbl { font-size: 12px; fill: #4d5e6c; }
+    .small { font-size: 11px; fill: #4d5e6c; }
+    .annot { font-size: 11px; fill: #c4393a; font-style: italic; }
+    .annot-ok { font-size: 11px; fill: #2d9c6e; font-style: italic; }
+  </style>
+
+  <rect width="900" height="560" fill="#f4f6f1"/>
+  <text x="40" y="40" class="h1">Sidebar — icônes décoratives → icônes sémantiques</text>
+  <text x="40" y="62" class="lbl">Aujourd'hui : carrés colorés sans signification. Cible : icônes inline lisibles, focus visible, aria-current.</text>
+
+  <!-- AVANT -->
+  <text x="40" y="105" class="h2">AVANT</text>
+  <g transform="translate(40,120)">
+    <rect width="220" height="380" fill="#2e3b45" rx="6"/>
+
+    <rect x="10" y="14" width="26" height="26" fill="#6ab123" rx="5"/>
+    <text x="22" y="32" text-anchor="middle" fill="#fff" font-size="9" font-weight="700">SFE</text>
+    <text x="44" y="28" fill="#fff" font-size="11" font-weight="600">Saint-Fortunat</text>
+    <text x="44" y="40" fill="rgba(255,255,255,0.45)" font-size="9">Espace de travail</text>
+
+    <!-- nav items with square icons -->
+    <g transform="translate(10,70)">
+      <rect width="200" height="28" fill="rgba(106,177,35,0.2)" rx="6"/>
+      <rect x="12" y="7" width="14" height="14" fill="#6ab123" rx="3"/>
+      <text x="36" y="19" fill="#fff" font-size="12" font-weight="600">Tableau de bord</text>
+    </g>
+    <g transform="translate(10,103)">
+      <rect x="12" y="7" width="14" height="14" fill="rgba(255,255,255,0.18)" rx="3"/>
+      <text x="36" y="19" fill="rgba(255,255,255,0.5)" font-size="12">Tâches</text>
+      <circle cx="195" cy="14" r="8" fill="#c4393a"/>
+      <text x="195" y="17" text-anchor="middle" fill="#fff" font-size="8" font-weight="700">5</text>
+    </g>
+    <g transform="translate(10,136)">
+      <rect x="12" y="7" width="14" height="14" fill="rgba(255,255,255,0.18)" rx="3"/>
+      <text x="36" y="19" fill="rgba(255,255,255,0.5)" font-size="12">Commissions</text>
+    </g>
+    <g transform="translate(10,169)">
+      <rect x="12" y="7" width="14" height="14" fill="rgba(255,255,255,0.18)" rx="3"/>
+      <text x="36" y="19" fill="rgba(255,255,255,0.5)" font-size="12">Comptes rendus</text>
+    </g>
+    <g transform="translate(10,202)">
+      <rect x="12" y="7" width="14" height="14" fill="rgba(255,255,255,0.18)" rx="3"/>
+      <text x="36" y="19" fill="rgba(255,255,255,0.5)" font-size="12">Ressources humaines</text>
+    </g>
+    <g transform="translate(10,235)">
+      <rect x="12" y="7" width="14" height="14" fill="rgba(255,255,255,0.18)" rx="3"/>
+      <text x="36" y="19" fill="rgba(255,255,255,0.5)" font-size="12">Finances</text>
+    </g>
+    <g transform="translate(10,268)">
+      <rect x="12" y="7" width="14" height="14" fill="rgba(255,255,255,0.18)" rx="3"/>
+      <text x="36" y="19" fill="rgba(255,255,255,0.5)" font-size="12">Équipe</text>
+    </g>
+  </g>
+
+  <!-- Annotations AVANT -->
+  <line x1="265" y1="135" x2="285" y2="135" stroke="#c4393a" stroke-width="1"/>
+  <text x="290" y="138" class="annot">Icônes = carrés colorés (rien à voir avec l'item)</text>
+
+  <line x1="265" y1="226" x2="285" y2="226" stroke="#c4393a" stroke-width="1"/>
+  <text x="290" y="229" class="annot">Texte 50% blanc = ratio 2,87:1 (FAIL)</text>
+
+  <line x1="265" y1="190" x2="285" y2="190" stroke="#c4393a" stroke-width="1"/>
+  <text x="290" y="193" class="annot">Badge 16px → cible tactile &lt; 44px</text>
+
+  <text x="290" y="260" class="annot">Active : pas d'aria-current="page"</text>
+  <text x="290" y="280" class="annot">Aucun focus visible au Tab</text>
+  <text x="290" y="300" class="annot">"SFE" = abréviation cryptique</text>
+
+  <!-- APRES -->
+  <text x="520" y="105" class="h2">APRÈS (recommandé)</text>
+  <g transform="translate(520,120)">
+    <rect width="220" height="380" fill="#2e3b45" rx="6"/>
+
+    <rect x="10" y="14" width="34" height="34" fill="#3d7a14" rx="7"/>
+    <text x="27" y="36" text-anchor="middle" fill="#fff" font-size="14" font-weight="700">M</text>
+    <text x="52" y="28" fill="#fff" font-size="12" font-weight="600">Saint-Fortunat</text>
+    <text x="52" y="42" fill="rgba(255,255,255,0.78)" font-size="10">sur-Eyrieux · Mairie</text>
+
+    <!-- nav items with real icons (using simple shapes that READ as icons) -->
+    <g transform="translate(10,80)">
+      <rect width="200" height="36" fill="rgba(106,177,35,0.25)" rx="6" stroke="#6ab123" stroke-width="1"/>
+      <!-- dashboard icon: 4 squares -->
+      <g transform="translate(12,11)" fill="#a8d670">
+        <rect width="6" height="6" rx="1"/>
+        <rect x="8" width="6" height="6" rx="1"/>
+        <rect y="8" width="6" height="6" rx="1"/>
+        <rect x="8" y="8" width="6" height="6" rx="1"/>
+      </g>
+      <text x="40" y="23" fill="#fff" font-size="13" font-weight="600">Tableau de bord</text>
+    </g>
+    <g transform="translate(10,124)">
+      <!-- check icon -->
+      <g transform="translate(12,11)" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="1.8">
+        <polyline points="0,7 5,12 14,2"/>
+      </g>
+      <text x="40" y="23" fill="rgba(255,255,255,0.85)" font-size="13">Tâches</text>
+      <rect x="170" y="6" width="22" height="22" rx="11" fill="#c4393a"/>
+      <text x="181" y="22" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">5</text>
+    </g>
+    <g transform="translate(10,160)">
+      <!-- users circle icon -->
+      <g transform="translate(12,11)" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="1.8">
+        <circle cx="4" cy="4" r="3"/>
+        <circle cx="11" cy="6" r="3"/>
+        <path d="M0,15 Q7,11 14,15"/>
+      </g>
+      <text x="40" y="23" fill="rgba(255,255,255,0.85)" font-size="13">Commissions</text>
+    </g>
+    <g transform="translate(10,196)">
+      <!-- doc icon -->
+      <g transform="translate(13,9)" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="1.8">
+        <path d="M0,0 H10 L13,3 V16 H0 Z"/>
+        <line x1="2" y1="6" x2="11" y2="6"/>
+        <line x1="2" y1="9" x2="11" y2="9"/>
+      </g>
+      <text x="40" y="23" fill="rgba(255,255,255,0.85)" font-size="13">Comptes rendus</text>
+    </g>
+    <g transform="translate(10,232)">
+      <!-- people icon -->
+      <g transform="translate(11,9)" fill="rgba(255,255,255,0.85)">
+        <circle cx="5" cy="4" r="3"/>
+        <circle cx="13" cy="6" r="2"/>
+        <path d="M0,17 C0,12 10,12 10,17 Z"/>
+      </g>
+      <text x="40" y="23" fill="rgba(255,255,255,0.85)" font-size="13">Ressources humaines</text>
+    </g>
+    <g transform="translate(10,268)">
+      <!-- euro icon -->
+      <g transform="translate(13,8)" fill="rgba(255,255,255,0.85)" font-family="DM Sans" font-weight="700">
+        <text font-size="16">€</text>
+      </g>
+      <text x="40" y="23" fill="rgba(255,255,255,0.85)" font-size="13">Finances</text>
+    </g>
+    <g transform="translate(10,304)">
+      <!-- plus circle -->
+      <g transform="translate(12,9)" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="1.8">
+        <circle cx="8" cy="8" r="7"/>
+        <line x1="8" y1="4" x2="8" y2="12"/>
+        <line x1="4" y1="8" x2="12" y2="8"/>
+      </g>
+      <text x="40" y="23" fill="rgba(255,255,255,0.85)" font-size="13">Équipe</text>
+    </g>
+  </g>
+
+  <!-- Annotations APRÈS -->
+  <text x="745" y="155" class="annot-ok">Icônes lisibles + texte 13px</text>
+  <text x="745" y="175" class="annot-ok">Badge 22px = cible tactile OK</text>
+  <text x="745" y="205" class="annot-ok">Contraste 78% blanc = 4,7:1</text>
+  <text x="745" y="225" class="annot-ok">+ aria-current="page" sur actif</text>
+  <text x="745" y="245" class="annot-ok">+ outline focus visible au Tab</text>
+</svg>

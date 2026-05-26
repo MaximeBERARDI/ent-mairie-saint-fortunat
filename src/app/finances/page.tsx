@@ -640,7 +640,7 @@ function FactureDetailPanel({
             value={comment}
             onChange={e => setComment(e.target.value)}
             placeholder="Motif du rejet…"
-            style={{ width: '100%', height: 56, border: `1px solid ${C.border}`, borderRadius: 6, padding: 8, fontSize: 12, resize: 'none', outline: 'none', fontFamily: "'DM Sans', sans-serif", color: C.fg, marginBottom: 10 }}
+            style={{ width: '100%', height: 56, border: `1px solid ${C.border}`, borderRadius: 6, padding: 8, fontSize: 12, resize: 'none', fontFamily: "'DM Sans', sans-serif", color: C.fg, marginBottom: 10 }}
           />
           <div style={{ display: 'flex', gap: 6 }}>
             <Button variant="primary" style={{ flex: 1, justifyContent: 'center' }} onClick={onValidate}>Valider</Button>
@@ -727,7 +727,7 @@ function FournisseursView() {
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Rechercher un fournisseur…"
-          style={{ width: '100%', height: 34, border: `1px solid ${C.border}`, borderRadius: 20, background: '#fff', padding: '0 14px', fontSize: 11, color: C.fg, marginBottom: 8, outline: 'none', fontFamily: "'DM Sans', sans-serif" }}
+          style={{ width: '100%', height: 34, border: `1px solid ${C.border}`, borderRadius: 20, background: '#fff', padding: '0 14px', fontSize: 11, color: C.fg, marginBottom: 8, fontFamily: "'DM Sans', sans-serif" }}
         />
         <Button size="sm" style={{ width: '100%', justifyContent: 'center', marginBottom: 8 }} onClick={() => setShowNewForm(true)}>
           + Nouveau fournisseur
@@ -942,7 +942,6 @@ const inputStyle: React.CSSProperties = {
   fontSize: 12,
   color: C.fg,
   fontFamily: "'DM Sans', sans-serif",
-  outline: 'none',
 }
 
 function statutShortLabel(s: FactureStatut): string {

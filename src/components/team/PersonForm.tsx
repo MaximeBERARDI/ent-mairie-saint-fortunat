@@ -142,7 +142,7 @@ export function PersonForm({ open, onClose, onSubmit, onDelete, initial }: Perso
   const inputStyle: React.CSSProperties = {
     width: '100%', border: `1px solid ${C.border}`, borderRadius: 6,
     padding: '8px 12px', fontSize: 13, color: C.fg,
-    fontFamily: "'DM Sans', sans-serif", outline: 'none', background: '#fff',
+    fontFamily: "'DM Sans', sans-serif", background: '#fff',
     boxSizing: 'border-box',
   }
   const labelStyle: React.CSSProperties = {

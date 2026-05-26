@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 560" font-family="DM Sans, Segoe UI, sans-serif">
+  <style>
+    .h1 { font-size: 22px; font-weight: 700; fill: #1f2a31; }
+    .h2 { font-size: 14px; font-weight: 700; fill: #1f2a31; }
+    .lbl { font-size: 12px; fill: #4d5e6c; }
+    .mono { font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+    .fail { fill: #c4393a; font-weight: 700; }
+    .pass { fill: #2d9c6e; font-weight: 700; }
+    .frame { fill: #ffffff; stroke: #dde4e9; stroke-width: 1; }
+  </style>
+
+  <rect width="900" height="560" fill="#f4f6f1"/>
+  <text x="40" y="40" class="h1">Contrastes WCAG AA — état actuel vs cible</text>
+  <text x="40" y="62" class="lbl">Critères 1.4.3 (texte) et 1.4.11 (composants UI) — palette `theme.ts`</text>
+
+  <!-- AVANT -->
+  <text x="40" y="110" class="h2">AVANT (actuel)</text>
+
+  <!-- Primary CTA -->
+  <rect x="40" y="125" width="180" height="40" fill="#6ab123" rx="6"/>
+  <text x="130" y="150" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="600">Se connecter</text>
+  <text x="40" y="180" class="mono fail">Ratio 2,65:1  FAIL</text>
+  <text x="40" y="195" class="lbl">CTA primaire vert — texte blanc</text>
+
+  <!-- Subtle text -->
+  <rect x="240" y="125" width="180" height="40" class="frame" rx="6"/>
+  <text x="330" y="150" text-anchor="middle" fill="#94aab7" font-size="12">Aide secondaire</text>
+  <text x="240" y="180" class="mono fail">Ratio 2,42:1  FAIL</text>
+  <text x="240" y="195" class="lbl">Texte « subtle » — hints, légendes</text>
+
+  <!-- Badge warning -->
+  <rect x="440" y="135" width="100" height="22" fill="#fef5e4" rx="11"/>
+  <text x="490" y="150" text-anchor="middle" fill="#d4860a" font-size="10" font-weight="600">EN COURS</text>
+  <text x="440" y="180" class="mono fail">Ratio 2,69:1  FAIL</text>
+  <text x="440" y="195" class="lbl">Badge « warning »</text>
+
+  <!-- Sidebar inactive -->
+  <rect x="560" y="125" width="180" height="40" fill="#2e3b45" rx="6"/>
+  <text x="650" y="150" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="12">Comptes rendus</text>
+  <text x="560" y="180" class="mono fail">Ratio 2,87:1  FAIL</text>
+  <text x="560" y="195" class="lbl">Item nav inactif sidebar</text>
+
+  <!-- APRES -->
+  <text x="40" y="280" class="h2">APRÈS (corrigé)</text>
+
+  <!-- Primary CTA corrigé -->
+  <rect x="40" y="295" width="180" height="40" fill="#3d7a14" rx="6"/>
+  <text x="130" y="320" text-anchor="middle" fill="#ffffff" font-size="13" font-weight="600">Se connecter</text>
+  <text x="40" y="350" class="mono pass">Ratio 5,82:1  PASS</text>
+  <text x="40" y="365" class="lbl">#3d7a14 (vert assombri ~30 %)</text>
+
+  <!-- Subtle text corrigé -->
+  <rect x="240" y="295" width="180" height="40" class="frame" rx="6"/>
+  <text x="330" y="320" text-anchor="middle" fill="#5e7480" font-size="12">Aide secondaire</text>
+  <text x="240" y="350" class="mono pass">Ratio 4,71:1  PASS</text>
+  <text x="240" y="365" class="lbl">#5e7480 (au lieu de #94aab7)</text>
+
+  <!-- Badge warning corrigé -->
+  <rect x="440" y="305" width="100" height="22" fill="#fef5e4" rx="11"/>
+  <text x="490" y="320" text-anchor="middle" fill="#8a560a" font-size="10" font-weight="600">EN COURS</text>
+  <text x="440" y="350" class="mono pass">Ratio 5,14:1  PASS</text>
+  <text x="440" y="365" class="lbl">#8a560a (orange assombri)</text>
+
+  <!-- Sidebar inactive corrigée -->
+  <rect x="560" y="295" width="180" height="40" fill="#2e3b45" rx="6"/>
+  <text x="650" y="320" text-anchor="middle" fill="rgba(255,255,255,0.78)" font-size="12">Comptes rendus</text>
+  <text x="560" y="350" class="mono pass">Ratio 4,73:1  PASS</text>
+  <text x="560" y="365" class="lbl">rgba(255,255,255,0.78) au lieu de 0.5</text>
+
+  <!-- Note implementation -->
+  <rect x="40" y="430" width="820" height="100" fill="#eaf1fb" stroke="#2563a8" stroke-width="1" rx="8"/>
+  <text x="60" y="455" class="h2" fill="#2563a8">Impact &amp; mise en œuvre</text>
+  <text x="60" y="478" class="lbl">• 4 badges sur 7 échouent (primary, success, warning, terra) — mêmes 2-3 lignes à changer dans Badge.tsx</text>
+  <text x="60" y="496" class="lbl">• 24 occurrences de `outline: none` à remplacer par un focus-visible global dans globals.css</text>
+  <text x="60" y="514" class="lbl">• L'accent vert #6ab123 reste utilisable pour les bordures, icônes décoratives, fonds — uniquement le TEXTE pose problème</text>
+</svg>
