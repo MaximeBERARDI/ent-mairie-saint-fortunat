@@ -459,7 +459,7 @@ function DetailView({
         )}
         {activeTab === 'cr' && (
           <Card padding={14}>
-            <SectionHeader title="Comptes rendus" actions={<Link href="/comptes-rendus"><Button variant="primary" size="sm">+ Importer</Button></Link>} />
+            <SectionHeader level={3} title="Comptes rendus" actions={<Link href="/comptes-rendus"><Button variant="primary" size="sm">+ Importer</Button></Link>} />
             <Row label="CR — Réunion du 12 avril 2026" sub="Uploadé · 3 tâches extraites" badge="IA" badgeVariant="primary" right="12 avr." />
             <Row label="CR — Réunion du 5 mars 2026" sub="Archivé" badge="Archivé" right="5 mars" last />
           </Card>
@@ -467,6 +467,7 @@ function DetailView({
         {activeTab === 'membres' && (
           <Card padding={14}>
             <SectionHeader
+              level={3}
               title={`Membres (${members.length})`}
               actions={<Link href="/equipe"><Button size="sm">Gérer l&apos;équipe →</Button></Link>}
             />
@@ -501,7 +502,7 @@ function DetailView({
         )}
         {activeTab === 'ged' && (
           <Card padding={14}>
-            <SectionHeader title="Gestion Électronique de Documents" actions={<Button variant="primary" size="sm">+ Ajouter</Button>} />
+            <SectionHeader level={3} title="Gestion Électronique de Documents" actions={<Button variant="primary" size="sm">+ Ajouter</Button>} />
             <p style={{ fontSize: 11, color: C.subtle, padding: '8px 0', fontStyle: 'italic' }}>
               La GED par commission sera connectée au stockage cloud (S3 / OVH) lors de la migration vers la base de données réelle.
             </p>
@@ -541,6 +542,7 @@ function CommissionTasksTab({
     <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap)' }}>
       <Card padding={14}>
         <SectionHeader
+          level={3}
           title={`Tâches en cours (${activeTasks.length})`}
           actions={<Button variant="primary" size="sm" onClick={onCreateTask}>+ Nouvelle tâche</Button>}
         />
@@ -563,7 +565,7 @@ function CommissionTasksTab({
 
       {doneTasks.length > 0 && (
         <Card padding={14}>
-          <SectionHeader title={`Terminées (${doneTasks.length})`} />
+          <SectionHeader level={3} title={`Terminées (${doneTasks.length})`} />
           {doneTasks.slice(0, 5).map((t, i) => (
             <CommissionTaskRow
               key={t.id}

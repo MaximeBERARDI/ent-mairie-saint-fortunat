@@ -68,6 +68,11 @@ function ShellInner({ title, children, notif }: ShellProps) {
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
         <TopBar title={title} notif={notif} />
         <main id="main-content" tabIndex={-1} style={{ flex: 1, overflow: 'auto', padding: 'var(--content-pad)' }}>
+          {/* En mode nav-haut, la TopBar n'affiche pas le titre : on fournit le
+              h1 de page ici pour qu'il existe toujours exactement un h1 (RGAA). */}
+          {isTopNav && (
+            <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-fg)', marginBottom: 'var(--gap)' }}>{title}</h1>
+          )}
           {children}
         </main>
       </div>
