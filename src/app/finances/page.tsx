@@ -74,6 +74,10 @@ export default function FinancesPage() {
               key={v}
               onClick={() => setView(v)}
               style={{
+                minHeight: 36,
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
                 padding: '8px 16px',
                 borderRadius: 8,
                 background: v === view ? '#fff' : 'transparent',

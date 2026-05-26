@@ -149,6 +149,7 @@ export default function CommissionsPage() {
               key={v}
               onClick={() => { setView(v); setSelected(null) }}
               style={{
+                minHeight: 36, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                 padding: '5px 12px', borderRadius: 6,
                 background: v === view ? '#fff' : 'transparent',
                 border: 'none',
@@ -433,6 +434,7 @@ function DetailView({
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 style={{
+                  minHeight: 36, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                   padding: '8px 16px', border: 'none', background: 'none',
                   borderBottom: activeTab === tab ? `2px solid ${commission.color}` : '2px solid transparent',
                   color: activeTab === tab ? commission.color : C.muted,

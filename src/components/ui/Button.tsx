@@ -31,9 +31,12 @@ export function Button({
     flexShrink: 0,
     whiteSpace: 'nowrap',
     opacity: disabled ? 0.5 : 1,
+    // minHeight garantit la cible tactile (WCAG 2.5.5) independamment du
+    // line-height : sm >= 32px, md >= 40px. Un style.height explicite passe
+    // devant (spread apres base).
     ...(size === 'sm'
-      ? { padding: '4px 10px', fontSize: 12 }
-      : { padding: '7px 16px', fontSize: 13 }),
+      ? { minHeight: 32, padding: '5px 12px', fontSize: 12 }
+      : { minHeight: 40, padding: '8px 16px', fontSize: 13 }),
   }
 
   // primary utilise --accent-dark (et non --accent) car le texte est blanc

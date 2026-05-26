@@ -151,11 +151,11 @@ export function Sidebar() {
                 )}
                 {!isIcons && item.badge && (
                   <div style={{
-                    width: 16, height: 16, borderRadius: '50%',
+                    width: 22, height: 22, borderRadius: '50%',
                     background: C.danger,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
-                    <span style={{ fontSize: 8, color: '#fff', fontWeight: 700 }}>{item.badge}</span>
+                    <span style={{ fontSize: 11, color: '#fff', fontWeight: 700 }}>{item.badge}</span>
                   </div>
                 )}
               </div>
