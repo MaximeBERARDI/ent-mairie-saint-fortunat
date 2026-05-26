@@ -136,15 +136,17 @@ export default function CommissionsPage() {
     )
   }
 
+  const COMM_VIEWS: [CommView, string][] = [
+    ['grille', 'Grille'],
+    ['timeline', 'Timeline'],
+    ...(canManageCommissions ? [['admin', '⚙ Administration'] as [CommView, string]] : []),
+  ]
+
   return (
     <Shell title="Commissions">
       <div style={{ display: 'flex', gap: 8, marginBottom: 20, alignItems: 'center' }}>
-        <div style={{ display: 'flex', gap: 4, background: C.ph, borderRadius: 8, padding: 3 }}>
-          {([
-            ['grille', 'Grille'],
-            ['timeline', 'Timeline'],
-            ...(canManageCommissions ? [['admin', '⚙ Administration']] as [CommView, string][] : []),
-          ] as [CommView, string][]).map(([v, label]) => (
+        <div className="tabs-buttons" style={{ display: 'flex', gap: 4, background: C.ph, borderRadius: 8, padding: 3 }}>
+          {COMM_VIEWS.map(([v, label]) => (
             <button
               key={v}
               onClick={() => { setView(v); setSelected(null) }}
@@ -164,6 +166,15 @@ export default function CommissionsPage() {
             </button>
           ))}
         </div>
+        <select
+          className="tabs-select"
+          value={view}
+          onChange={e => { setView(e.target.value as CommView); setSelected(null) }}
+          aria-label="Choisir une vue des commissions"
+          style={{ minHeight: 40, borderRadius: 8, border: `1px solid ${C.border}`, padding: '0 12px', fontSize: 14, color: C.fg, background: '#fff', fontFamily: "'DM Sans', sans-serif" }}
+        >
+          {COMM_VIEWS.map(([v, label]) => <option key={v} value={v}>{label}</option>)}
+        </select>
         <div style={{ flex: 1 }} />
       </div>
 

@@ -24,6 +24,8 @@ import type { Task, TaskStatus } from '@/lib/types'
 type TaskView = 'liste' | 'kanban' | 'calendrier'
 type TaskFilter = 'toutes' | 'mes' | 'en-attente' | 'terminees'
 
+const TASK_VIEWS: [TaskView, string][] = [['liste', 'Liste'], ['kanban', 'Kanban'], ['calendrier', 'Calendrier']]
+
 const STATUS_VARIANTS: Record<TaskStatus, 'warning' | 'info' | 'success' | 'default' | 'terra'> = {
   'À faire': 'default',
   'En cours': 'warning',
@@ -114,12 +116,13 @@ export default function TachesPage() {
   return (
     <Shell title="Mes tâches" notif={5}>
       <div style={{ display: 'flex', gap: 8, marginBottom: 16, alignItems: 'center' }}>
-        <div style={{ display: 'flex', gap: 4, background: C.ph, borderRadius: 8, padding: 3 }}>
-          {([['liste', 'Liste'], ['kanban', 'Kanban'], ['calendrier', 'Calendrier']] as [TaskView, string][]).map(([v, label]) => (
+        <div className="tabs-buttons" style={{ display: 'flex', gap: 4, background: C.ph, borderRadius: 8, padding: 3 }}>
+          {TASK_VIEWS.map(([v, label]) => (
             <button
               key={v}
               onClick={() => setView(v)}
               style={{
+                minHeight: 36, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                 padding: '5px 12px', borderRadius: 6,
                 background: v === view ? '#fff' : 'transparent',
                 border: 'none',
@@ -134,6 +137,15 @@ export default function TachesPage() {
             </button>
           ))}
         </div>
+        <select
+          className="tabs-select"
+          value={view}
+          onChange={e => setView(e.target.value as TaskView)}
+          aria-label="Choisir une vue des tâches"
+          style={{ minHeight: 40, borderRadius: 8, border: `1px solid ${C.border}`, padding: '0 12px', fontSize: 14, color: C.fg, background: '#fff', fontFamily: "'DM Sans', sans-serif" }}
+        >
+          {TASK_VIEWS.map(([v, label]) => <option key={v} value={v}>{label}</option>)}
+        </select>
         <div style={{ flex: 1 }} />
         <Button variant="primary" size="sm" onClick={openCreate}>+ Nouvelle tâche</Button>
       </div>

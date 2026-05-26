@@ -104,6 +104,14 @@ export function BudgetM14View() {
     return <p style={{ padding: 20, fontSize: 12, color: C.subtle }}>Chargement…</p>
   }
 
+  const BUDGET_TABS: [BudgetTab, string][] = [
+    ['plan', '📋 Plan comptable'],
+    ['ecritures', `📒 Écritures (${ecritures.length})`],
+    ['ratios', '📊 Indicateurs'],
+    ['historique', '📈 Historique'],
+    ['projection', '🎯 Projection'],
+  ]
+
   return (
     <div>
       {/* KPI bar globale */}
@@ -126,18 +134,13 @@ export function BudgetM14View() {
 
       {/* Onglets sous-vue */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 18, alignItems: 'center', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', gap: 4, background: C.ph, borderRadius: 10, padding: 4 }}>
-          {([
-            ['plan', '📋 Plan comptable'],
-            ['ecritures', `📒 Écritures (${ecritures.length})`],
-            ['ratios', '📊 Indicateurs'],
-            ['historique', '📈 Historique'],
-            ['projection', '🎯 Projection'],
-          ] as [BudgetTab, string][]).map(([v, label]) => (
+        <div className="tabs-buttons" style={{ display: 'flex', gap: 4, background: C.ph, borderRadius: 10, padding: 4 }}>
+          {BUDGET_TABS.map(([v, label]) => (
             <button
               key={v}
               onClick={() => setTab(v)}
               style={{
+                minHeight: 36, display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                 padding: '7px 16px',
                 borderRadius: 8,
                 background: v === tab ? '#fff' : 'transparent',
@@ -154,6 +157,15 @@ export function BudgetM14View() {
             </button>
           ))}
         </div>
+        <select
+          className="tabs-select"
+          value={tab}
+          onChange={e => setTab(e.target.value as BudgetTab)}
+          aria-label="Choisir une sous-vue Budget"
+          style={{ minHeight: 40, width: '100%', borderRadius: 8, border: `1px solid ${C.border}`, padding: '0 12px', fontSize: 14, color: C.fg, background: '#fff', fontFamily: "'DM Sans', sans-serif" }}
+        >
+          {BUDGET_TABS.map(([v, label]) => <option key={v} value={v}>{label}</option>)}
+        </select>
         <div style={{ flex: 1 }} />
         <Button size="sm" onClick={() => exportPlanComptable(enriched)}>📊 Plan comptable .xlsx</Button>
         <Button size="sm" onClick={() => exportGrandLivre(ecritures)}>📒 Grand livre .xlsx</Button>
