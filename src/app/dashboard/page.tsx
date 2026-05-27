@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import Link from 'next/link'
 import { Shell } from '@/components/layout/Shell'
 import { Card, KpiCard } from '@/components/ui/Card'
@@ -21,13 +21,10 @@ import { useEcritures } from '@/hooks/useEcritures'
 import { useEmployees } from '@/hooks/useEmployees'
 import { useLeaveRequests } from '@/hooks/useLeaveRequests'
 import { useMissions } from '@/hooks/useMissions'
-import { usePointages } from '@/hooks/usePointages'
 import { useTeam } from '@/hooks/useTeam'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
-import { TaskForm } from '@/components/tasks/TaskForm'
-import { LeaveRequestModal } from '@/components/rh/LeaveRequestModal'
+import { AgentQuickActions } from '@/components/dashboard/AgentQuickActions'
 import { PEOPLE, getPerson } from '@/lib/people'
-import { hasPermission } from '@/lib/permissions'
 import { computeRatios } from '@/lib/ratios'
 import { InfoTooltip } from '@/components/ui/InfoTooltip'
 import { CHAPITRES_M14 } from '@/lib/m14-plan'
@@ -119,7 +116,7 @@ export default function DashboardPage() {
     <Shell title="Tableau de bord" notif={3}>
       {view === 'conseiller' && <DashConseiller tasks={tasks} updateTask={updateTask} currentUserId={currentUserId} />}
       {view === 'agent' && <DashAgent tasks={tasks} updateTask={updateTask} createTask={createTask} currentUserId={currentUserId} />}
-      {view === 'maire' && <DashMaire tasks={tasks} currentUserId={currentUserId} />}
+      {view === 'maire' && <DashMaire tasks={tasks} currentUserId={currentUserId} createTask={createTask} />}
     </Shell>
   )
 }
@@ -358,14 +355,9 @@ function DashboardTaskRow({
 function DashAgent({ tasks, updateTask, createTask, currentUserId }: { tasks: Task[]; updateTask: (id: string, p: Partial<Task>) => void; createTask: (data: Omit<Task, 'id' | 'createdAt'>) => Task; currentUserId: string }) {
   const me = getPerson(currentUserId)
   const { records, findByPersonId } = useEmployees()
-  const { leaves, byPerson: leavesByPerson, submitLeave } = useLeaveRequests()
+  const { leaves, byPerson: leavesByPerson } = useLeaveRequests()
   const { byPerson: missionsByPerson } = useMissions()
   const { commissions } = useCommissions()
-  const { badger, byPersonDay, isPresentNow } = usePointages()
-  const [taskOpen, setTaskOpen] = useState(false)
-  const [leaveOpen, setLeaveOpen] = useState(false)
-  // Permissions : on n'affiche les actions rapides que si l'utilisateur a les droits
-  const canSubmitFacture = me?.role !== 'agent' || hasPermission(me.authLevel, 'finance.view-all', me.customPermissions)
 
   // Données RH personnelles (si l'utilisateur est un agent avec une fiche)
   const myRecord = findByPersonId(currentUserId)
@@ -404,19 +396,6 @@ function DashAgent({ tasks, updateTask, createTask, currentUserId }: { tasks: Ta
   })
 
   const allDoneToday = todayTasks.length === 0
-
-  // Pointage : état du jour (dernier badge) → bouton entrée/sortie.
-  const todayIso = new Date().toISOString().slice(0, 10)
-  const todayPts = byPersonDay(currentUserId, todayIso)
-    .slice()
-    .sort((a, b) => a.timestamp.localeCompare(b.timestamp))
-  const lastPt = todayPts[todayPts.length - 1] ?? null
-  const present = isPresentNow(currentUserId)
-  const fmtHM = (iso: string) => new Date(iso).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-  const ptTypeLabel: Record<string, string> = { entree: 'entrée', sortie: 'sortie', 'pause-debut': 'pause', 'pause-fin': 'reprise' }
-  const pointageStatus = lastPt
-    ? `Dernier pointage : ${ptTypeLabel[lastPt.type] ?? lastPt.type} à ${fmtHM(lastPt.timestamp)}`
-    : "Pas encore pointé aujourd'hui"
 
   return (
     <div>
@@ -554,36 +533,9 @@ function DashAgent({ tasks, updateTask, createTask, currentUserId }: { tasks: Ta
             </Card>
           )}
 
-          <Card padding={14}>
-            <SectionHeader title="Actions rapides" />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <Button variant="primary" style={{ width: '100%' }} onClick={() => badger(currentUserId, present ? 'sortie' : 'entree')}>
-                {present ? '⏱ Pointer la sortie' : "⏱ Pointer l'entrée"}
-              </Button>
-              <p style={{ fontSize: 11, color: C.subtle, margin: '-2px 0 4px' }}>{pointageStatus}</p>
-              <Button style={{ width: '100%' }} onClick={() => setTaskOpen(true)}>+ Créer une tâche</Button>
-              <Button style={{ width: '100%' }} onClick={() => setLeaveOpen(true)}>Poser un congé</Button>
-              {canSubmitFacture && (
-                <Link href="/finances"><Button style={{ width: '100%' }}>Soumettre une facture</Button></Link>
-              )}
-            </div>
-          </Card>
+          <AgentQuickActions currentUserId={currentUserId} createTask={createTask} />
         </div>
       </div>
-
-      <TaskForm
-        open={taskOpen}
-        onClose={() => setTaskOpen(false)}
-        onSubmit={(data) => createTask(data)}
-        title="Nouvelle tâche"
-      />
-      <LeaveRequestModal
-        open={leaveOpen}
-        onClose={() => setLeaveOpen(false)}
-        personId={currentUserId}
-        record={myRecord}
-        onSubmit={submitLeave}
-      />
     </div>
   )
 }
@@ -656,8 +608,8 @@ function NotificationsList({ tasks, currentUserId }: { tasks: Task[]; currentUse
 
 // ── Vue Maire / Pilotage ──────────────────────────────────────────────────────
 
-function DashMaire({ tasks, currentUserId }: { tasks: Task[]; currentUserId: string }) {
-  void currentUserId  // disponible pour personalisation future (à toi/équipe)
+function DashMaire({ tasks, currentUserId, createTask }: { tasks: Task[]; currentUserId: string; createTask: (data: Omit<Task, 'id' | 'createdAt'>) => Task }) {
+  const me = getPerson(currentUserId)
   // Sources de données réelles
   const { factures } = useFactures()
   const { commissions } = useCommissions()
@@ -751,6 +703,14 @@ function DashMaire({ tasks, currentUserId }: { tasks: Task[]; currentUserId: str
 
   return (
     <div>
+      {/* Agent signataire/responsable (ex. DGS) : ses actions agent restent
+          accessibles même en vue Pilotage. */}
+      {me?.role === 'agent' && (
+        <div style={{ maxWidth: 320, marginBottom: 12 }}>
+          <AgentQuickActions currentUserId={currentUserId} createTask={createTask} />
+        </div>
+      )}
+
       {/* Bandeau d'alertes globales */}
       {totalLate > 0 && (
         <div style={{ background: C.dangerLight, border: `1px solid ${C.danger}40`, borderRadius: 8, padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
