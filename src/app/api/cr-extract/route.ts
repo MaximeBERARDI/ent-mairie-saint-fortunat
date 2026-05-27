@@ -83,8 +83,7 @@ const TASK_SCHEMA = {
           },
           confidence: {
             type: 'integer',
-            minimum: 0,
-            maximum: 100,
+            description: 'Certitude de 0 à 100 (la plage est rappelée dans le prompt système ; les bornes min/max ne sont pas supportées par le schéma de sortie structurée)',
           },
           sourceQuote: {
             type: 'string',
