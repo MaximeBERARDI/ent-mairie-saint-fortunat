@@ -195,6 +195,21 @@ enum DeliberationStatut {
   reportee
 }
 
+// ─── Scénarios de simulation financière (what-if) ──────────────────
+
+model Scenario {
+  id          String   @id @default(cuid())
+  nom         String
+  description String?
+  horizon     Int      @default(5)
+  croissance  Float    @default(1.5)
+  params      Json     @default("{}")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("scenarios")
+}
+
 // ─── Tâches ────────────────────────────────────────────────────────
 
 enum TaskPriority {

@@ -46,7 +46,7 @@ export function Card({ children, className = '', style, padding, hover, glass, o
 interface KpiCardProps {
   label: string
   value: string | number
-  sub?: string
+  sub?: ReactNode
   color?: string
   style?: React.CSSProperties
 }

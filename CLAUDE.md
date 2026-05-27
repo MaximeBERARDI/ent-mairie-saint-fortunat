@@ -49,6 +49,7 @@ Chaque module suit le **même pattern** :
 | Comptes rendus | `useComptesRendus` | `CompteRendu` | `/api/comptes-rendus` |
 | Commissions | `useCommissions` | `Commission` | `/api/commissions` |
 | Réunions de commission | `useMeetings` | `Meeting` (+ `AgendaItem`) | `/api/meetings` |
+| Délibérations (conseil municipal) | `useDeliberations` | `Deliberation` | `/api/deliberations` |
 | Agents (RH) | `useEmployees` | `EmployeeRecord` | `/api/employees` |
 | Demandes d'absence | `useLeaveRequests` | `LeaveRequest` | `/api/leaves` |
 | Missions | `useMissions` | `Mission` | `/api/missions` |
@@ -57,6 +58,7 @@ Chaque module suit le **même pattern** :
 | Parc immobilier | `useParcImmobilier` | `BienImmobilier`, `Locataire`, `Bail`, `Quittance` | `/api/biens`, `/api/locataires`, `/api/baux`, `/api/quittances` |
 | Projets d'investissement | `useProjets` | `Projet` | `/api/projets` |
 | Subventions | `useSubventions` | `DemandeSubvention` | `/api/subventions` |
+| Scénarios de simulation | `useScenarios` | `Scenario` (+ `ScenarioParams`) | `/api/scenarios` |
 
 **Ce qui reste volontairement en `localStorage`** (préférences locales, pas
 des données métier) :
@@ -93,6 +95,8 @@ Le module Finances implémente la **comptabilité publique M14 développée** :
 - Écritures en double partie (équilibre débit/crédit vérifié)
 - Génération automatique de l'écriture d'engagement à la validation d'une facture
 - Ratios R. 2313-1 + indicateurs DGFiP (CAF, désendettement, taux d'épargne)
+- **Saisie des montants** (budget alloué + consommation initiale *avant app*) dans `src/lib/m14-plan.ts` (`COMPTES_M14`, args des helpers `D(...)`/`R(...)`) puis `npm run seed`. Le seed du plan comptable est **autoritatif** : un re-seed réécrit `budgetAlloue` + `consommationInitiale` depuis ce fichier (⚠️ écrase les éditions faites dans l'UI).
+- **Compte fournisseur persistant** : `Fournisseur.totalEngage` (cumul des factures validées) est stocké et recalculé en transaction à chaque mutation de facture (`src/lib/fournisseur-total.ts`), plutôt que recalculé à la volée.
 
 ## Workflow Git — IMPORTANT
 
@@ -127,13 +131,13 @@ Toujours type-checker avant de commit. Le build inclut le type-check + le lint N
 
 - ✅ **Tâches** — CRUD complet, validation workflow, documents
 - ✅ **Comptes rendus** — extraction IA (Claude API), validation des tâches extraites
-- ✅ **Équipe** — fiches Person, niveaux d'autorisation, signature, délégations
-- ✅ **Finances** — module M14 complet (plan comptable, écritures, ratios, historique pluriannuel, exports Excel multi-feuilles) + Parc immobilier (biens, locataires, baux, quittances PDF, relances mail) + **Projets d'investissement** (projections pluriannuelles : annuités d'emprunt, FCTVA, impact CAF/dette) + **Subventions** (suivi des demandes : dépôt, décision, versement)
+- ✅ **Équipe** — fiches Person, niveaux d'autorisation, signature, délégations. Conseil municipal de **15 élus** (1 maire + 4 adjoints + 10 conseillers) + 7 agents. Organigramme **dérivé** de `role`/`poste` (pas de table dédiée).
+- ✅ **Finances** — module M14 complet (plan comptable, écritures, ratios, historique pluriannuel, exports Excel multi-feuilles) + Parc immobilier (biens, locataires, baux, quittances PDF, relances mail) + **Projets d'investissement** (projections pluriannuelles : annuités d'emprunt, FCTVA, impact CAF/dette) + **Subventions** (suivi des demandes : dépôt, décision, versement) + **Simulation « what-if »** (onglet 🧮 Simulation : leviers pression fiscale / dotations / charges personnel & générales / vente d'un bâtiment / nouvel emprunt / recette exceptionnelle ; moteur pur `src/lib/scenario.ts` qui ajuste la base `RatiosM14` puis projette ; comparaison **référence vs scénario** ; **scénarios nommés enregistrés en DB** via `Scenario`/`useScenarios`)
 - ✅ **RH** — agents/contrats/grades/IFSE, workflow congés avec maj auto compteurs, calendrier mensuel réel, paies M14, missions, pointage des heures + suivi heures supplémentaires (workflow validation des saisies manuelles par maire / responsable Admin & Finances), génération de bulletins de paie format fonction publique territoriale (CSG/CRDS, CNRACL ou IRCANTEC, RAFP, etc.) en PDF imprimable
-- ✅ **Dashboard** — câblé aux vraies données (3 vues Élu/Agent/Maire)
+- ✅ **Dashboard** — câblé aux vraies données (3 vues Élu/Agent/Maire) ; vue Pilotage en glassmorphism (sections repliables) + bouton **« Générer un rapport complet »** → page `/rapport` (document HTML imprimable autonome, design de la présentation, **100 % données réelles** : propos liminaire, finances + ratios R. 2313-1, postes sous tension, projets, subventions, projection N+5, RH/masse salariale, prochaines réunions, délibérations, commissions).
 - ✅ **a11y / UX (audit 2026-05)** — Sprint 1 (P0 : contrastes WCAG AA, focus-visible, self-host fonts/RGPD) + Sprint 2 (P1 : icônes SVG sidebar, échelle typo, cibles tactiles 40-44 px, ARIA/skip-link/landmarks/modales focus-trap, responsive mobile). Cf. `docs/audit-ux-2026-05/`.
 - ✅ **Visibilité des modules par profil** — `Person.hiddenModules` en DB, UI admin dans `PersonForm`, garde de route côté nav.
-- 🟡 **Commissions** — CRUD tâches + admin (renommer/créer/supprimer) ; **membres dynamiques** (`Person.commissions`, gérés depuis l'onglet Membres, gaté `commissions.manage`/`team.edit-roles`) ; **réunions avec ordre du jour structuré** (modèle `Meeting` + `/api/meetings` + `useMeetings`, « prochaine réunion » dérivée) ; onglet Comptes rendus câblé au réel (`CompteRendu.commissionId`). **Reste** : GED par commission (différée, en attente du stockage cloud).
+- ✅ **Commissions** — CRUD tâches + admin (renommer/créer/supprimer) ; **membres dynamiques** (`Person.commissions`, onglet Membres, gaté `commissions.manage`/`team.edit-roles`) ; **réunions avec ordre du jour structuré** (`Meeting` + `/api/meetings` + `useMeetings`) ; onglet Comptes rendus câblé (`CompteRendu.commissionId`). **Espace Conseil Municipal** : encadré dédié en tête de `/commissions` (commission spéciale `id: 'conseil-municipal'`, **exclue de la grille**, membres **dérivés du rôle** — pas via `Person.commissions`) avec un **module Délibérations** (`Deliberation` : numéro, objet, date, vote pour/contre/abstention, statut ; gaté `commissions.manage`). **Reste** : GED par commission (différée, stockage cloud).
 - ✅ **Auth réelle** — NextAuth (Credentials + bcrypt) : login, session JWT, `useCurrentUser()`/`TeamContext` dérivent l'utilisateur courant. Changement de mot de passe via `/api/auth/change-password` (Profil → Sécurité). Réinitialisation par un admin via `POST /api/persons/[id]/reset-password` (mot de passe temporaire affiché une fois, gaté `team.edit-roles`, action dans `PersonForm`). Page « mot de passe oublié » informative (renvoie vers l'admin, pas de SMTP). Plus de store de mots de passe en `localStorage`. Mot de passe par défaut au seed : `saintfortunat2026`.
 
 ## Dette technique connue
@@ -207,4 +211,4 @@ préserve l'interface des hooks, donc les pages n'ont pas bougé.
 
 5 niveaux dans `AuthLevel` : `super-admin`, `admin`, `gestionnaire`, `contributeur`, `lecteur`.
 Permissions agrégées par niveau dans `ROLE_PERMISSIONS` + extensions custom par personne.
-**Toujours** vérifier via `hasPermission()` avant d'afficher une action de validation.
+**Toujours** vérifier via `hasPermission()` avant d'afficher une action de validation. Côté **serveur**, les routes sensibles ré-appliquent le droit via `getAuthContext().can(...)` (`src/lib/authz.ts`) — ex. validation/rejet/suppression de facture → `finance.validate-invoices` ; délibérations → `commissions.manage`. Ne pas se reposer uniquement sur le gating UI.

@@ -225,14 +225,14 @@ ul.checks li span{color:var(--fg-muted);font-size:.95rem}
 <!-- 5 · LES MODULES -->
 <section class="slide">
   <span class="kicker">Vue d'ensemble</span>
-  <h2>Sept modules, un seul outil</h2>
+  <h2>Tous les métiers de la commune, un seul outil</h2>
   <div class="modgrid">
     <div class="mod"><div class="icon" data-i="grid"></div><h4>Tableau de bord</h4><p>Vue de pilotage adaptée à chaque rôle (maire, élu, agent).</p></div>
     <div class="mod"><div class="icon" data-i="check"></div><h4>Tâches</h4><p>Qui fait quoi, échéances, validation, documents.</p></div>
-    <div class="mod"><div class="icon" data-i="users"></div><h4>Commissions</h4><p>Suivi des travaux et décisions par commission.</p></div>
+    <div class="mod"><div class="icon" data-i="users"></div><h4>Commissions & conseil</h4><p>Commissions, conseil municipal & délibérations.</p></div>
     <div class="mod"><div class="icon" data-i="doc"></div><h4>Comptes rendus</h4><p>Import + extraction des tâches par l'IA.</p></div>
     <div class="mod"><div class="icon terra" data-i="briefcase"></div><h4>Ressources humaines</h4><p>Agents, congés, paies, pointage des heures.</p></div>
-    <div class="mod"><div class="icon terra" data-i="euro"></div><h4>Finances M14</h4><p>Budget, écritures, ratios DGFiP, exports.</p></div>
+    <div class="mod"><div class="icon terra" data-i="euro"></div><h4>Finances M14</h4><p>Budget, ratios DGFiP, projets, projection & simulation.</p></div>
     <div class="mod"><div class="icon info" data-i="home"></div><h4>Parc immobilier</h4><p>Baux, quittances, relances de loyers.</p></div>
     <div class="mod"><div class="icon slate" data-i="team"></div><h4>Équipe</h4><p>Annuaire, rôles, droits d'accès par profil.</p></div>
   </div>
@@ -262,6 +262,7 @@ ul.checks li span{color:var(--fg-muted);font-size:.95rem}
         <li>✓<div><b>Tout en un coup d'œil</b> <span>— santé financière, validations en attente, alertes, absences du jour.</span></div></li>
         <li>✓<div><b>Des alertes proactives</b> <span>— retards, contrats à renouveler, dépassements de budget remontent automatiquement.</span></div></li>
         <li>✓<div><b>Adapté au rôle</b> <span>— le maire pilote, l'élu suit ses dossiers, l'agent voit ses tâches du jour.</span></div></li>
+        <li>✓<div><b>Rapport de gestion en 1 clic</b> <span>— un document complet et imprimable (finances, projets, RH, conseil) prêt à présenter.</span></div></li>
       </ul>
     </div>
   </div>
@@ -284,10 +285,37 @@ ul.checks li span{color:var(--fg-muted);font-size:.95rem}
     </div>
     <div>
       <ul class="checks">
-        <li>✓<div><b>Responsabilités claires</b> <span>— chaque tâche a un responsable, une échéance, une commission.</span></div></li>
+        <li>✓<div><b>Responsabilités claires & souples</b> <span>— échéance, et affectation à une ou plusieurs personnes et/ou commissions.</span></div></li>
         <li>✓<div><b>Circuit de validation</b> <span>— une tâche « terminée » est validée par l'élu compétent. Traçabilité complète.</span></div></li>
         <li>✓<div><b>Plus rien ne se perd</b> <span>— priorités et retards sont visibles immédiatement.</span></div></li>
       </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 7b · DEMO : CONSEIL MUNICIPAL & DELIBERATIONS -->
+<section class="slide">
+  <span class="kicker">Démonstration · Conseil municipal</span>
+  <h2>Le conseil municipal, outillé de bout en bout</h2>
+  <div class="demo">
+    <div>
+      <div class="frame">
+        <div class="frame__bar"><i></i><i></i><i></i><span class="url">/commissions · Conseil municipal</span></div>
+        <div class="frame__body">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px"><span class="badge b-slate">Organe délibérant</span><b style="font-size:.92rem">Conseil municipal · 15 élus</b></div>
+          <div class="row"><span class="dot" style="background:var(--green-500)"></span><span class="t">Délib. 2026-014 — Budget primitif 2026<small>Vote : 13 pour · 1 contre · 1 abstention</small></span><span class="badge b-green">Adoptée</span></div>
+          <div class="row"><span class="dot" style="background:var(--warning)"></span><span class="t">Délib. 2026-015 — Subvention association<small>Renvoyée à la prochaine séance</small></span><span class="badge b-warn">Reportée</span></div>
+          <div class="row"><span class="dot" style="background:var(--info)"></span><span class="t">CR du conseil → 2 tâches créées<small>Affectées au conseil et à la commission Voirie</small></span><span class="badge b-info">IA</span></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <ul class="checks">
+        <li>✓<div><b>Un espace dédié au conseil</b> <span>— tâches, réunions, ordre du jour, comptes rendus et délibérations au même endroit.</span></div></li>
+        <li>✓<div><b>Délibérations suivies</b> <span>— numéro, objet et le vote (pour / contre / abstention) consignés et consultables.</span></div></li>
+        <li>✓<div><b>Du compte rendu à l'action</b> <span>— un CR de conseil peut générer des tâches pour le conseil, une personne ou plusieurs commissions.</span></div></li>
+      </ul>
+      <p class="note">Espace géré principalement par le secrétariat de mairie.</p>
     </div>
   </div>
 </section>
@@ -348,6 +376,36 @@ ul.checks li span{color:var(--fg-muted);font-size:.95rem}
         <li>✓<div><b>Ratios DGFiP automatiques</b> <span>— CAF, capacité de désendettement, taux d'épargne calculés en temps réel.</span></div></li>
         <li>✓<div><b>Exports en un clic</b> <span>— plan comptable, grand livre, rapport budgétaire au format Excel.</span></div></li>
       </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 9b · DEMO : PROJECTION & SIMULATION FINANCIERE -->
+<section class="slide">
+  <span class="kicker">Démonstration · Anticiper & décider</span>
+  <h2>Simuler avant de voter : projets, subventions & scénarios</h2>
+  <div class="demo">
+    <div>
+      <div class="frame">
+        <div class="frame__bar"><i></i><i></i><i></i><span class="url">/finances · Simulation « what-if »</span></div>
+        <div class="frame__body">
+          <div style="font-size:.78rem;color:var(--fg-muted);margin-bottom:10px">Scénario : <b style="color:var(--slate-800)">Hausse taxe foncière +3 %</b></div>
+          <div class="cols-3" style="gap:10px;margin-bottom:12px">
+            <div class="kpi" style="padding:12px"><div class="lbl">CAF brute</div><div class="val green" style="font-size:1.15rem">+14 k€</div><div class="sub">vs référence</div></div>
+            <div class="kpi" style="padding:12px"><div class="lbl">Désendett.</div><div class="val" style="font-size:1.15rem">3,6 ans</div><div class="sub">−0,6 an</div></div>
+            <div class="kpi" style="padding:12px"><div class="lbl">Épargne</div><div class="val" style="font-size:1.15rem">15,2 %</div></div>
+          </div>
+          <div style="font-size:.74rem;color:var(--fg-subtle)">Comparaison référence ╌╌ vs scénario ▬ projetée sur 5 ans</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <ul class="checks">
+        <li>✓<div><b>Projets d'investissement</b> <span>— étalement, emprunts, subventions et FCTVA, avec leur impact sur la CAF et la dette projeté sur plusieurs années.</span></div></li>
+        <li>✓<div><b>Simulation « what-if »</b> <span>— « et si on augmentait la fiscalité de 3 % ? si on vendait ce bâtiment ? avec cet emprunt ? » : les ratios se recalculent avant la décision.</span></div></li>
+        <li>✓<div><b>Suivi des subventions</b> <span>— de la demande au versement, par financeur.</span></div></li>
+      </ul>
+      <p class="note">Décider sur des chiffres, pas à l'aveugle — et garder ses scénarios en mémoire.</p>
     </div>
   </div>
 </section>
@@ -581,10 +639,11 @@ ul.checks li span{color:var(--fg-muted);font-size:.95rem}
   <h2>Où nous en sommes, où nous allons</h2>
   <div class="tl">
     <div class="step now"><div class="when">Lot 1 · Livré</div><h4>La fondation</h4><ul>
-      <li>✓ 7 modules opérationnels</li>
-      <li>✓ Données partagées (base commune)</li>
-      <li>✓ Sécurité, droits, accessibilité</li>
-      <li>✓ IA d'extraction des comptes rendus</li>
+      <li>✓ Tous les modules métier opérationnels</li>
+      <li>✓ Conseil municipal & délibérations</li>
+      <li>✓ Finances : projets, projection & simulation</li>
+      <li>✓ IA comptes rendus · rapport de gestion</li>
+      <li>✓ Données partagées, sécurité, accessibilité</li>
     </ul></div>
     <div class="step"><div class="when">Lot 2 · Prochaines étapes</div><h4>Automatiser & connecter</h4><ul>
       <li>○ Automatisations n8n (relances, alertes)</li>
@@ -610,7 +669,7 @@ ul.checks li span{color:var(--fg-muted);font-size:.95rem}
 
 </div>
 
-<div class="counter" id="counter">1 / 22</div>
+<div class="counter" id="counter">1 / 24</div>
 <div class="progress" id="progress" style="width:4.5%"></div>
 <div class="hint">← → ou espace pour naviguer · Ctrl/Cmd+P pour exporter en PDF</div>
 

@@ -695,3 +695,41 @@ export interface ProjectionAnnuelle {
   detteParHab: number             // €/hab
   drfParHab: number               // €/hab
 }
+
+// ─── Simulation financière « what-if » (scénarios) ─────────────────
+
+// Leviers d'un scénario : chaque champ ajuste la base RatiosM14 avant projection.
+export interface ScenarioParams {
+  pressionFiscalePct?: number    // ±% sur les impôts & taxes (chap. 73) — récurrent
+  dotationsPct?: number          // ±% sur les dotations (chap. 74) — récurrent
+  chargesPersonnelPct?: number   // ±% sur les charges de personnel (chap. 012) — récurrent
+  chargesGeneralesPct?: number   // ±% sur les charges générales (chap. 011) — récurrent
+  venteBienId?: string           // BienImmobilier cédé : perte de loyer (récurrent) + cession (an 1)
+  venteBienPrix?: number         // produit de cession en investissement (€)
+  empruntMontant?: number        // nouvel emprunt souscrit en an 1 (€)
+  empruntTauxPct?: number        // taux d'intérêt annuel (%)
+  empruntDureeAnnees?: number    // durée d'amortissement (années)
+  recetteExceptionnelle?: number // recette ponctuelle de fonctionnement (an 1, €)
+}
+
+export interface Scenario {
+  id: string
+  nom: string
+  description?: string
+  horizon: number                // années projetées
+  croissance: number             // % de croissance annuelle RRF/DRF
+  params: ScenarioParams
+  createdAt: string
+  updatedAt?: string
+}
+
+// Une ligne de projection annuelle d'un scénario (trajectoire fonctionnement + dette).
+export interface ScenarioProjection {
+  annee: number
+  rrf: number
+  drf: number
+  cafBrute: number
+  encoursDette: number
+  capaciteDesendettement: number  // années (0 si CAF <= 0)
+  tauxEpargne: number             // %
+}

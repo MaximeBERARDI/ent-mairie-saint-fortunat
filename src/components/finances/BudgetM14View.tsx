@@ -21,6 +21,7 @@ import { exportPlanComptable, exportGrandLivre, exportRapportBudgetaire } from '
 import type { Section, Sens, Ecriture, JournalCode, LigneEcriture } from '@/lib/types'
 import { HistoriqueView } from './HistoriqueView'
 import { ProjectionView } from './ProjectionView'
+import { SimulationView } from './SimulationView'
 import { InfoTooltip } from '@/components/ui/InfoTooltip'
 
 const fmtMontant = (v: number) =>
@@ -52,7 +53,7 @@ const inputStyle: React.CSSProperties = {
   fontFamily: "'DM Sans', sans-serif",
 }
 
-type BudgetTab = 'plan' | 'ecritures' | 'ratios' | 'historique' | 'projection'
+type BudgetTab = 'plan' | 'ecritures' | 'ratios' | 'historique' | 'projection' | 'simulation'
 
 export function BudgetM14View() {
   const { factures } = useFactures()
@@ -110,6 +111,7 @@ export function BudgetM14View() {
     ['ratios', '📊 Indicateurs'],
     ['historique', '📈 Historique'],
     ['projection', '🎯 Projection'],
+    ['simulation', '🧮 Simulation'],
   ]
 
   return (
@@ -226,6 +228,9 @@ export function BudgetM14View() {
 
       {tab === 'projection' && (
         <ProjectionView baseRatios={ratios} />
+      )}
+      {tab === 'simulation' && (
+        <SimulationView baseRatios={ratios} />
       )}
     </div>
   )
