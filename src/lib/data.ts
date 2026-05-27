@@ -10,6 +10,9 @@ import { COMPTES_M14 } from './m14-plan'
 import { COLORS as C } from './theme'
 
 export const COMMISSIONS: Commission[] = [
+  // Conseil Municipal : organe délibérant (tous les élus). Affiché à part dans
+  // l'UI (encadré dédié), pas dans la grille des commissions.
+  { id: 'conseil-municipal', name: 'Conseil Municipal', tasks: 0, members: 16, nextMeeting: '—', docs: 0, color: C.slate },
   { id: 'admin-finance', name: 'Admin Générale & Finance', tasks: 8, members: 5, nextMeeting: '5 mai', docs: 12, color: C.slate },
   { id: 'developpement', name: 'Développement économique', tasks: 5, members: 4, nextMeeting: '12 mai', docs: 7, color: C.green },
   { id: 'enfance', name: 'Enfance & Jeunesse', tasks: 3, members: 4, nextMeeting: '19 mai', docs: 5, color: C.terra },

@@ -145,7 +145,7 @@ function FacturesView() {
   const currentUser = people.find(p => p.id === currentUserId)
   const canValidate = currentUser ? hasPermission(currentUser.authLevel, 'finance.validate-invoices', currentUser.customPermissions) : false
 
-  const [filter, setFilter] = useState<'toutes' | FactureStatut>('toutes')
+  const [filter, setFilter] = useState<'toutes' | FactureStatut>('En attente validation')
   const [selectedId, setSelectedId] = useState<string | null>(factures[0]?.id ?? null)
   const [showSubmitForm, setShowSubmitForm] = useState(false)
 
@@ -707,12 +707,10 @@ function FournisseursView() {
   const stats = useMemo(() => {
     if (!selected) return null
     const ours = factures.filter(f => f.fournisseurId === selected.id)
-    const total = ours.filter(f => f.statut === 'Validée').reduce((acc, f) => acc + f.montantTTC, 0)
     const enAttente = ours.filter(f => f.statut === 'En attente validation').reduce((acc, f) => acc + f.montantTTC, 0)
     const sorted = [...ours].sort((a, b) => b.dateFacture.localeCompare(a.dateFacture))
     return {
       ours: sorted,
-      total,
       enAttente,
       derniere: sorted[0] ?? null,
     }
@@ -818,7 +816,7 @@ function FournisseursView() {
             </div>
 
             <div style={{ display: 'flex', gap: 'var(--gap)' }}>
-              <KpiCard label="Total facturé 2026" value={fmtMontant(stats.total)} />
+              <KpiCard label="Compte engagé (validé)" value={fmtMontant(selected.totalEngage ?? 0)} />
               <KpiCard label="En attente" value={fmtMontant(stats.enAttente)} color={C.warning} />
               <KpiCard label="Dernière facture" value={stats.derniere ? fmtDateShort(stats.derniere.dateFacture) : '—'} color={C.slate} />
             </div>

@@ -18,11 +18,15 @@ import { useCommissions } from '@/hooks/useCommissions'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { useMeetings } from '@/hooks/useMeetings'
 import { useComptesRendus } from '@/hooks/useComptesRendus'
+import { useDeliberations } from '@/hooks/useDeliberations'
 import { TaskForm } from '@/components/tasks/TaskForm'
 import { TaskDetailModal } from '@/components/tasks/TaskDetail'
+import { DeliberationsTab } from '@/components/commissions/DeliberationsTab'
 import { getPerson, ROLE_LABELS, type Person } from '@/lib/people'
 import { formatShortFR, formatLongFR } from '@/lib/dateUtils'
-import type { Commission, Task, TaskStatus, Meeting, AgendaItem, CompteRendu } from '@/lib/types'
+import type { Commission, Task, TaskStatus, Meeting, AgendaItem, CompteRendu, Deliberation } from '@/lib/types'
+
+const CONSEIL_ID = 'conseil-municipal'
 
 type CommView = 'grille' | 'timeline' | 'admin'
 
@@ -45,6 +49,7 @@ export default function CommissionsPage() {
   const { commissions, hydrated: commHydrated, createCommission, updateCommission, deleteCommission } = useCommissions()
   const { meetings, createMeeting, updateMeeting, deleteMeeting } = useMeetings()
   const { crs } = useComptesRendus()
+  const { deliberations, createDeliberation, updateDeliberation, deleteDeliberation } = useDeliberations()
   const { can, currentUserId } = useCurrentUser()
   const canManageCommissions = can('commissions.manage')
   const canManageMembers = canManageCommissions || can('team.edit-roles')
@@ -143,6 +148,24 @@ export default function CommissionsPage() {
     })
   }, [commissions, tasksByCommission, membersByCommission, nextMeetingByCommission])
 
+  // Conseil Municipal : organe délibérant (tous les élus + la secrétaire de
+  // mairie), affiché à part de la grille des commissions. Ses membres sont
+  // dérivés du rôle (la composition se gère dans le module Équipe), pas via
+  // Person.commissions.
+  const conseil = commissionsWithStats.find(c => c.id === CONSEIL_ID) ?? null
+  const regularCommissions = useMemo(
+    () => commissionsWithStats.filter(c => c.id !== CONSEIL_ID),
+    [commissionsWithStats],
+  )
+  const conseilMembers = useMemo(
+    () => people.filter(p => p.active && (p.role !== 'agent' || /secrétaire de mairie|dgs/i.test(p.poste))),
+    [people],
+  )
+  const conseilDeliberations = useMemo(
+    () => deliberations.filter(d => (d.commissionId ?? CONSEIL_ID) === CONSEIL_ID),
+    [deliberations],
+  )
+
   const handleAddMember = (commissionId: string, personId: string) => {
     const p = people.find(x => x.id === personId)
     if (!p) return
@@ -238,12 +261,43 @@ export default function CommissionsPage() {
       </div>
 
       {view === 'grille' && !selected && (
-        <GrilleView
-          commissions={commissionsWithStats}
-          tasks={tasks}
-          responsiblesByCommission={responsiblesByCommission}
-          onSelect={setSelected}
-        />
+        <>
+          {conseil && (
+            <Card
+              padding={18}
+              hover
+              onClick={() => setSelected(conseil)}
+              style={{ cursor: 'pointer', borderLeft: `4px solid ${conseil.color}`, marginBottom: 'var(--gap)', background: 'var(--accent-light)' }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+                <div style={{ flex: 1, minWidth: 220 }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: conseil.color }}>Organe délibérant</span>
+                  <p style={{ fontSize: 18, fontWeight: 700, color: C.fg, margin: '4px 0 2px' }}>Conseil Municipal</p>
+                  <p style={{ fontSize: 12, color: C.subtle }}>Tâches, réunions, délibérations et comptes rendus du conseil — gérés par le secrétariat de mairie.</p>
+                </div>
+                <div style={{ display: 'flex', gap: 20 }}>
+                  {([
+                    [conseilMembers.length, 'Membres'],
+                    [conseilDeliberations.length, 'Délibérations'],
+                    [conseil.tasks, 'Tâches actives'],
+                  ] as [number, string][]).map(([v, l]) => (
+                    <div key={l}>
+                      <p style={{ fontSize: 22, fontWeight: 700, color: conseil.color, lineHeight: 1 }}>{v}</p>
+                      <p style={{ fontSize: 11, color: C.subtle }}>{l}</p>
+                    </div>
+                  ))}
+                </div>
+                <span style={{ fontSize: 13, color: conseil.color, fontWeight: 600 }}>Ouvrir →</span>
+              </div>
+            </Card>
+          )}
+          <GrilleView
+            commissions={regularCommissions}
+            tasks={tasks}
+            responsiblesByCommission={responsiblesByCommission}
+            onSelect={setSelected}
+          />
+        </>
       )}
       {view === 'grille' && selected && (
         <DetailView
@@ -251,11 +305,12 @@ export default function CommissionsPage() {
           allCommissions={commissionsWithStats}
           commissionTasks={tasksByCommission.get(selected.id) ?? []}
           responsibles={responsiblesByCommission.get(selected.id) ?? []}
-          members={membersByCommission.get(selected.id) ?? []}
+          members={selected.id === CONSEIL_ID ? conseilMembers : (membersByCommission.get(selected.id) ?? [])}
           allPeople={people}
           meetings={meetingsByCommission.get(selected.id) ?? []}
           crs={crsByCommission.get(selected.id) ?? []}
-          canManageMembers={canManageMembers}
+          deliberations={selected.id === CONSEIL_ID ? conseilDeliberations : []}
+          canManageMembers={selected.id === CONSEIL_ID ? false : canManageMembers}
           canManageCommissions={canManageCommissions}
           onBack={() => setSelected(null)}
           onSelectOther={setSelected}
@@ -267,6 +322,9 @@ export default function CommissionsPage() {
           onCreateMeeting={createMeeting}
           onUpdateMeeting={updateMeeting}
           onDeleteMeeting={deleteMeeting}
+          onCreateDeliberation={createDeliberation}
+          onUpdateDeliberation={updateDeliberation}
+          onDeleteDeliberation={deleteDeliberation}
         />
       )}
       {view === 'timeline' && (
@@ -426,9 +484,10 @@ function GrilleView({
 
 function DetailView({
   commission, allCommissions, commissionTasks, responsibles, members, allPeople,
-  meetings, crs, canManageMembers, canManageCommissions,
+  meetings, crs, deliberations, canManageMembers, canManageCommissions,
   onBack, onSelectOther, onCreateTask, onEditTask, onUpdateTask,
   onAddMember, onRemoveMember, onCreateMeeting, onUpdateMeeting, onDeleteMeeting,
+  onCreateDeliberation, onUpdateDeliberation, onDeleteDeliberation,
 }: {
   commission: Commission
   allCommissions: Commission[]
@@ -438,6 +497,7 @@ function DetailView({
   allPeople: Person[]
   meetings: Meeting[]
   crs: CompteRendu[]
+  deliberations: Deliberation[]
   canManageMembers: boolean
   canManageCommissions: boolean
   onBack: () => void
@@ -450,8 +510,13 @@ function DetailView({
   onCreateMeeting: (data: Omit<Meeting, 'id' | 'createdAt'>) => void
   onUpdateMeeting: (id: string, patch: Partial<Meeting>) => void
   onDeleteMeeting: (id: string) => void
+  onCreateDeliberation: (data: Omit<Deliberation, 'id' | 'createdAt'>) => void
+  onUpdateDeliberation: (id: string, patch: Partial<Deliberation>) => void
+  onDeleteDeliberation: (id: string) => void
 }) {
-  const [activeTab, setActiveTab] = useState<'taches' | 'reunions' | 'cr' | 'membres' | 'ged'>('taches')
+  const isConseil = commission.id === CONSEIL_ID
+  type DetailTab = 'taches' | 'reunions' | 'deliberations' | 'cr' | 'membres' | 'ged'
+  const [activeTab, setActiveTab] = useState<DetailTab>('taches')
 
   const activeTasks = commissionTasks.filter(t => t.status !== 'Terminé')
   const doneTasks = commissionTasks.filter(t => t.status === 'Terminé')
@@ -529,8 +594,11 @@ function DetailView({
         </div>
 
         <div style={{ display: 'flex', gap: 0, borderBottom: `1px solid ${C.border}`, marginBottom: 16 }}>
-          {(['taches', 'reunions', 'cr', 'membres', 'ged'] as const).map(tab => {
-            const labels = { taches: 'Tâches', reunions: 'Réunions', cr: 'Comptes rendus', membres: 'Membres', ged: 'GED' }
+          {(isConseil
+            ? (['taches', 'reunions', 'deliberations', 'cr', 'membres', 'ged'] as DetailTab[])
+            : (['taches', 'reunions', 'cr', 'membres', 'ged'] as DetailTab[])
+          ).map(tab => {
+            const labels: Record<DetailTab, string> = { taches: 'Tâches', reunions: 'Réunions', deliberations: 'Délibérations', cr: 'Comptes rendus', membres: 'Membres', ged: 'GED' }
             return (
               <button
                 key={tab}
@@ -571,6 +639,17 @@ function DetailView({
             onCreate={onCreateMeeting}
             onUpdate={onUpdateMeeting}
             onDelete={onDeleteMeeting}
+          />
+        )}
+        {activeTab === 'deliberations' && (
+          <DeliberationsTab
+            commissionId={commission.id}
+            color={commission.color}
+            deliberations={deliberations}
+            canManage={canManageCommissions}
+            onCreate={onCreateDeliberation}
+            onUpdate={onUpdateDeliberation}
+            onDelete={onDeleteDeliberation}
           />
         )}
         {activeTab === 'cr' && (

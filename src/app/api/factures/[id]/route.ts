@@ -2,13 +2,18 @@
 // DELETE /api/factures/[id]   → delete
 //
 // Le PATCH gère plusieurs cas selon les champs envoyés :
-// - action: 'validate' / 'reject' / 'reopen' → workflow
+// - action: 'validate' / 'reject' / 'reopen' → workflow, réservé aux personnes
+//   habilitées (permission finance.validate-invoices, vérifiée ICI côté serveur
+//   et pas seulement dans l'UI)
 // - sinon : édition de champs (sauf statut qui passe par action)
+//
+// Toute mutation recalcule le compte fournisseur persistant (totalEngage).
 
 import { NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { getAuthContext } from '@/lib/authz'
 import { factureFromDb } from '@/lib/facture-mapper'
+import { recomputeFournisseurTotal } from '@/lib/fournisseur-total'
 
 interface DocumentInput {
   id?: string
@@ -32,10 +37,8 @@ interface PatchBody {
 }
 
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
-  const session = await auth()
-  if (!session?.user?.personId) {
-    return NextResponse.json({ error: 'Non authentifié.' }, { status: 401 })
-  }
+  const ctx = await getAuthContext()
+  if (!ctx) return NextResponse.json({ error: 'Non authentifié.' }, { status: 401 })
 
   let body: PatchBody
   try {
@@ -44,12 +47,18 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     return NextResponse.json({ error: 'Requête invalide.' }, { status: 400 })
   }
 
+  // Le changement de statut (validation / rejet / réouverture) exige le droit
+  // de valider les factures — appliqué côté serveur.
+  if (body.action && !ctx.can('finance.validate-invoices')) {
+    return NextResponse.json({ error: 'Action non autorisée.' }, { status: 403 })
+  }
+
   const data: Record<string, unknown> = {}
 
   // Workflow d'action
   if (body.action === 'validate') {
     data.statut = 'validee'
-    data.validatedById = session.user.personId
+    data.validatedById = ctx.actor.id
     data.validatedAt = new Date()
     data.rejectedById = null
     data.rejectedAt = null
@@ -59,7 +68,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       return NextResponse.json({ error: 'Motif de rejet requis.' }, { status: 400 })
     }
     data.statut = 'rejetee'
-    data.rejectedById = session.user.personId
+    data.rejectedById = ctx.actor.id
     data.rejectedAt = new Date()
     data.rejectionReason = body.rejectionReason.trim()
     data.validatedById = null
@@ -83,6 +92,14 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   }
   if (body.notes !== undefined) data.notes = body.notes?.trim() || null
 
+  const existing = await db.facture.findUnique({
+    where: { id: params.id },
+    select: { fournisseurId: true },
+  })
+  if (!existing) {
+    return NextResponse.json({ error: 'Facture introuvable.' }, { status: 404 })
+  }
+
   try {
     const updated = await db.$transaction(async (tx) => {
       if (body.documents !== undefined) {
@@ -105,11 +122,17 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
           })
         }
       }
-      return tx.facture.update({
+      const f = await tx.facture.update({
         where: { id: params.id },
         data,
         include: { documents: { orderBy: { uploadedAt: 'asc' } } },
       })
+      // Recalcule le compte de l'ancien et du nouveau fournisseur (si déplacement).
+      const affected = existing.fournisseurId === f.fournisseurId
+        ? [f.fournisseurId]
+        : [existing.fournisseurId, f.fournisseurId]
+      for (const fid of affected) await recomputeFournisseurTotal(tx, fid)
+      return f
     })
     return NextResponse.json(factureFromDb(updated))
   } catch (e) {
@@ -119,11 +142,22 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 }
 
 export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
-  const session = await auth()
-  if (!session?.user) return NextResponse.json({ error: 'Non authentifié.' }, { status: 401 })
+  const ctx = await getAuthContext()
+  if (!ctx) return NextResponse.json({ error: 'Non authentifié.' }, { status: 401 })
+  if (!ctx.can('finance.validate-invoices')) {
+    return NextResponse.json({ error: 'Action non autorisée.' }, { status: 403 })
+  }
+
+  const existing = await db.facture.findUnique({
+    where: { id: params.id },
+    select: { fournisseurId: true },
+  })
 
   try {
-    await db.facture.delete({ where: { id: params.id } })
+    await db.$transaction(async (tx) => {
+      await tx.facture.delete({ where: { id: params.id } })
+      if (existing) await recomputeFournisseurTotal(tx, existing.fournisseurId)
+    })
     return NextResponse.json({ ok: true })
   } catch {
     return NextResponse.json({ error: 'Facture introuvable.' }, { status: 404 })

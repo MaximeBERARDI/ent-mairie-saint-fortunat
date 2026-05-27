@@ -95,13 +95,15 @@ async function main() {
         canSign: p.canSign,
         signatureDomains: p.signatureDomains,
         responsibleCommissions: p.responsibleCommissions,
-        commissions: MEMBERSHIP[p.id] ?? [],
+        commissions: MEMBERSHIP[p.id] ?? p.commissions ?? [],
         active: p.active,
         startDate: p.startDate ? new Date(p.startDate) : null,
       },
       // Renseigne l'appartenance aux commissions sur les bases déjà seedées
-      // (champ ajouté après coup), sans toucher au reste.
-      update: { commissions: MEMBERSHIP[p.id] ?? [] },
+      // (champ ajouté après coup), sans toucher au reste. Pour les personnes
+      // hors MEMBERSHIP (élus ajoutés ensuite), on prend leurs commissions
+      // déclarées dans people.ts.
+      update: { commissions: MEMBERSHIP[p.id] ?? p.commissions ?? [] },
     })
 
     await prisma.user.upsert({
@@ -157,7 +159,16 @@ async function main() {
         budgetAlloue: c.budgetAlloue,
         consommationInitiale: c.consommationInitiale,
       },
-      update: {},
+      // Le plan comptable (src/lib/m14-plan.ts) fait foi : un re-seed applique
+      // les montants saisis (budget alloué + consommation initiale avant app).
+      update: {
+        label: c.label,
+        chapitreCode: c.chapitreCode,
+        section: c.section,
+        sens: c.sens,
+        budgetAlloue: c.budgetAlloue,
+        consommationInitiale: c.consommationInitiale,
+      },
     })
   }
 

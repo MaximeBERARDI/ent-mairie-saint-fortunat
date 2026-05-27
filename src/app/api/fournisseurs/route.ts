@@ -18,6 +18,7 @@ function toApi(f: DbFournisseur) {
     posteParDefaut: f.posteParDefaut ?? undefined,
     delaiPaiement: f.delaiPaiement ?? undefined,
     active: f.active,
+    totalEngage: Number(f.totalEngage),
     createdAt: f.createdAt.toISOString(),
   }
 }

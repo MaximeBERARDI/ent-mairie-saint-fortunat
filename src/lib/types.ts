@@ -46,6 +46,24 @@ export interface Meeting {
   createdAt: string
 }
 
+// ─── Délibérations (conseil municipal) ─────────────────────────────
+
+export type DeliberationStatut = 'À venir' | 'Adoptée' | 'Rejetée' | 'Reportée'
+
+export interface Deliberation {
+  id: string
+  numero: string                 // ex: '2026-014'
+  objet: string
+  date: string                   // ISO date 'YYYY-MM-DD'
+  statut: DeliberationStatut
+  votePour: number
+  voteContre: number
+  voteAbstention: number
+  commissionId?: string          // rattachement (conseil-municipal en pratique)
+  notes?: string
+  createdAt: string
+}
+
 export type TaskPriority = 'Urgent' | 'Normal' | 'Faible'
 export type TaskStatus = 'À faire' | 'En cours' | 'En attente validation' | 'Terminé'
 
@@ -146,6 +164,7 @@ export interface Fournisseur {
   posteParDefaut?: string       // suggestion de poste comptable pour les nouvelles factures
   delaiPaiement?: number        // jours
   active: boolean
+  totalEngage?: number          // compte fournisseur persistant : cumul des factures validées (maj côté serveur)
   createdAt: string
 }
 

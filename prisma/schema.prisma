@@ -169,6 +169,32 @@ model Meeting {
   @@map("meetings")
 }
 
+// ─── Délibérations (conseil municipal) ─────────────────────────────
+
+model Deliberation {
+  id             String             @id @default(cuid())
+  numero         String
+  objet          String
+  date           DateTime
+  statut         DeliberationStatut @default(a_venir)
+  votePour       Int                @default(0)
+  voteContre     Int                @default(0)
+  voteAbstention Int                @default(0)
+  commissionId   String?            // rattachement (conseil-municipal en pratique)
+  notes          String?            @db.Text
+  createdAt      DateTime           @default(now())
+
+  @@index([commissionId])
+  @@map("deliberations")
+}
+
+enum DeliberationStatut {
+  a_venir
+  adoptee
+  rejetee
+  reportee
+}
+
 // ─── Tâches ────────────────────────────────────────────────────────
 
 enum TaskPriority {
@@ -273,6 +299,7 @@ model Fournisseur {
   posteParDefaut  String?
   delaiPaiement   Int?
   active          Boolean   @default(true)
+  totalEngage     Decimal   @default(0) @db.Decimal(12, 2)
   createdAt       DateTime  @default(now())
 
   factures Facture[]

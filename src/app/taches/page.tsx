@@ -58,7 +58,7 @@ export default function TachesPage() {
   const { tasks, hydrated, createTask, updateTask, deleteTask, addComment, deleteComment } = useTasks()
   const { currentUserId } = useCurrentUser()
   const [view, setView] = useState<TaskView>('liste')
-  const [filter, setFilter] = useState<TaskFilter>('toutes')
+  const [filter, setFilter] = useState<TaskFilter>('mes')
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [formOpen, setFormOpen] = useState(false)
   const [editingTask, setEditingTask] = useState<Task | null>(null)

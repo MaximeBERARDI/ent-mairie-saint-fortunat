@@ -706,11 +706,25 @@ function DashMaire({ tasks, currentUserId, createTask }: { tasks: Task[]; curren
       background: `radial-gradient(1100px 460px at 4% -14%, ${C.greenLight}, transparent 72%), radial-gradient(900px 460px at 100% -10%, ${C.warningLight}, transparent 72%), ${C.bg}`,
       borderRadius: 16,
     }}>
-      <div style={{ marginBottom: 'var(--gap)' }}>
-        <h2 style={{ fontSize: 22, color: C.fg, fontWeight: 700, marginBottom: 2 }}>
-          {getGreeting()}, {me?.prenom ?? ''} — {getTodayLabel()}
-        </h2>
-        <p style={{ fontSize: 13, color: C.subtle }}>Voici l&apos;état de pilotage de la commune.</p>
+      <div style={{ marginBottom: 'var(--gap)', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+        <div>
+          <h2 style={{ fontSize: 22, color: C.fg, fontWeight: 700, marginBottom: 2 }}>
+            {getGreeting()}, {me?.prenom ?? ''} — {getTodayLabel()}
+          </h2>
+          <p style={{ fontSize: 13, color: C.subtle }}>Voici l&apos;état de pilotage de la commune.</p>
+        </div>
+        <a
+          href="/rapport"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8, minHeight: 40, padding: '0 16px',
+            background: C.green, color: '#fff', borderRadius: 10, fontSize: 13, fontWeight: 600,
+            textDecoration: 'none', fontFamily: "'DM Sans', sans-serif", boxShadow: '0 2px 8px rgba(106,177,35,0.25)',
+          }}
+        >
+          📄 Générer un rapport complet
+        </a>
       </div>
 
       <AttentionPanel
@@ -796,7 +810,7 @@ function DashMaire({ tasks, currentUserId, createTask }: { tasks: Task[]; curren
 
       <DashSection
         title="Tâches & commissions"
-        defaultOpen
+        defaultOpen={totalLate > 0}
         accent={totalLate > 0 ? C.danger : C.success}
         accentLabel={totalLate > 0 ? 'Retard' : 'OK'}
         summary={`${totalActive} active${totalActive > 1 ? 's' : ''}${totalLate > 0 ? ` · ${totalLate} en retard` : ''}`}
