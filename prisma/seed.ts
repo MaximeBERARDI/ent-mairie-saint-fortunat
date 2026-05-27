@@ -6,7 +6,7 @@
 // Pour chaque Person, crée aussi un User avec mot de passe par défaut
 // "saintfortunat2026" (à changer à la 1ère connexion).
 
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, Prisma } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 import { PEOPLE } from '../src/lib/people'
 import { COMMISSIONS, EMPLOYEE_RECORDS, LEAVE_REQUESTS, MISSIONS, FOURNISSEURS, FACTURES, BIENS_IMMOBILIERS, LOCATAIRES, BAUX, QUITTANCES, DEMANDES_SUBVENTIONS, PROJETS, POINTAGES } from '../src/lib/data'
@@ -14,6 +14,59 @@ import { COMPTES_M14 } from '../src/lib/m14-plan'
 
 const prisma = new PrismaClient()
 const DEFAULT_PASSWORD = 'saintfortunat2026'
+
+// Appartenance aux commissions (membre), par personId. Reprend le
+// référentiel qui vivait en dur dans la page Commissions.
+const MEMBERSHIP: Record<string, string[]> = {
+  'p-jm': ['admin-finance', 'developpement'],
+  'p-rg': ['admin-finance', 'developpement'],
+  'p-md': ['admin-finance', 'enfance', 'travaux'],
+  'p-pr': ['admin-finance'],
+  'p-im': ['admin-finance', 'enfance', 'animation'],
+  'p-lf': ['developpement', 'travaux'],
+  'p-cv': ['developpement', 'animation'],
+  'p-sb': ['enfance', 'animation'],
+  'p-lb': ['enfance'],
+  'p-tg': ['travaux'],
+  'p-mf': ['travaux'],
+  'p-ad': ['travaux'],
+}
+
+// Réunions de départ (ids fixes pour un seed idempotent).
+const MEETINGS = [
+  {
+    id: 'mtg-admin-finance-1', commissionId: 'admin-finance', date: '2026-06-09',
+    heure: '18:00', lieu: 'Salle du conseil', titre: 'Préparation du budget supplémentaire',
+    agenda: [
+      { titre: 'Décision modificative n°1' },
+      { titre: 'Subventions aux associations', rapporteurId: 'p-pr' },
+      { titre: 'Point trésorerie' },
+    ],
+  },
+  {
+    id: 'mtg-travaux-1', commissionId: 'travaux', date: '2026-06-11',
+    heure: '14:00', lieu: 'Mairie', titre: 'Voirie — programme été',
+    agenda: [
+      { titre: 'Réfection route des Combes', rapporteurId: 'p-md' },
+      { titre: 'Éclairage public — devis' },
+    ],
+  },
+  {
+    id: 'mtg-enfance-1', commissionId: 'enfance', date: '2026-06-16',
+    heure: '17:30', lieu: 'École', titre: 'Rentrée scolaire 2026',
+    agenda: [{ titre: 'Effectifs et cantine' }, { titre: 'Activités périscolaires' }],
+  },
+  {
+    id: 'mtg-developpement-1', commissionId: 'developpement', date: '2026-06-18',
+    heure: '18:30', lieu: 'Salle du conseil', titre: 'PLU — secteur nord',
+    agenda: [{ titre: 'Retour enquête publique' }],
+  },
+  {
+    id: 'mtg-animation-1', commissionId: 'animation', date: '2026-06-23',
+    heure: '19:00', lieu: 'Foyer', titre: 'Fête du village',
+    agenda: [{ titre: 'Programme et bénévoles', rapporteurId: 'p-sb' }, { titre: 'Budget animation' }],
+  },
+]
 
 async function main() {
   console.log('🌱 Seeding database...')
@@ -42,10 +95,13 @@ async function main() {
         canSign: p.canSign,
         signatureDomains: p.signatureDomains,
         responsibleCommissions: p.responsibleCommissions,
+        commissions: MEMBERSHIP[p.id] ?? [],
         active: p.active,
         startDate: p.startDate ? new Date(p.startDate) : null,
       },
-      update: {},
+      // Renseigne l'appartenance aux commissions sur les bases déjà seedées
+      // (champ ajouté après coup), sans toucher au reste.
+      update: { commissions: MEMBERSHIP[p.id] ?? [] },
     })
 
     await prisma.user.upsert({
@@ -67,6 +123,23 @@ async function main() {
       where: { id: c.id },
       create: { id: c.id, name: c.name, color: c.color, nextMeeting: c.nextMeeting },
       update: { name: c.name, color: c.color, nextMeeting: c.nextMeeting },
+    })
+  }
+
+  // 2b. Réunions de commission
+  console.log('  → Réunions')
+  for (const m of MEETINGS) {
+    await prisma.meeting.upsert({
+      where: { id: m.id },
+      create: {
+        id: m.id, commissionId: m.commissionId, date: new Date(m.date),
+        heure: m.heure, lieu: m.lieu, titre: m.titre,
+        agenda: m.agenda as unknown as Prisma.InputJsonValue,
+      },
+      update: {
+        date: new Date(m.date), heure: m.heure, lieu: m.lieu, titre: m.titre,
+        agenda: m.agenda as unknown as Prisma.InputJsonValue,
+      },
     })
   }
 

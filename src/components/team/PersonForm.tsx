@@ -151,6 +151,7 @@ export function PersonForm({ open, onClose, onSubmit, onDelete, initial }: Perso
       canSign,
       signatureDomains: Array.from(signatureDomains),
       responsibleCommissions: Array.from(responsibleCommissions),
+      commissions: initial?.commissions ?? [],
       hiddenModules,
       startDate: initial?.startDate,
     })

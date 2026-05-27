@@ -26,6 +26,7 @@ export interface Person {
   signatureDomains: SignatureDomain[]
   // Délégations
   responsibleCommissions: string[]   // IDs de commissions dont la personne est référent(e)
+  commissions?: string[]             // IDs de commissions dont la personne est membre
   hiddenModules?: string[]           // clés de modules de nav masqués pour ce profil (cf. lib/modules)
   // Statut
   active: boolean
@@ -44,6 +45,7 @@ interface PersonInit {
   canSign?: boolean
   signatureDomains?: SignatureDomain[]
   responsibleCommissions?: string[]
+  commissions?: string[]
   phone?: string
   startDate?: string
   email?: string                     // override l'email auto-généré
@@ -64,6 +66,7 @@ const make = (init: PersonInit): Person => ({
   canSign: init.canSign ?? false,
   signatureDomains: init.signatureDomains ?? [],
   responsibleCommissions: init.responsibleCommissions ?? [],
+  commissions: init.commissions ?? [],
   active: true,
   startDate: init.startDate,
 })

@@ -113,7 +113,8 @@ model Person {
   customPermissions        String[]   // tableau de Permission keys
   canSign                  Boolean    @default(false)
   signatureDomains         String[]   // tableau de SignatureDomain keys
-  responsibleCommissions   String[]   // tableau de Commission ids
+  responsibleCommissions   String[]   // tableau de Commission ids (référent·e)
+  commissions              String[]   // tableau de Commission ids (membre)
   hiddenModules            String[]   // clés de modules de nav masqués pour ce profil (cf. lib/modules)
   active                   Boolean    @default(true)
   startDate                DateTime?
@@ -142,13 +143,32 @@ model Person {
 // ─── Commissions ───────────────────────────────────────────────────
 
 model Commission {
-  id          String   @id
+  id          String    @id
   name        String
   color       String
   nextMeeting String
   tasks       Task[]
+  meetings    Meeting[]
 
   @@map("commissions")
+}
+
+// ─── Réunions de commission ────────────────────────────────────────
+
+model Meeting {
+  id           String     @id @default(cuid())
+  commissionId String
+  commission   Commission @relation(fields: [commissionId], references: [id], onDelete: Cascade)
+  date         DateTime
+  heure        String?
+  lieu         String?
+  titre        String?
+  notes        String?
+  agenda       Json?      // [{ titre: string, rapporteurId?: string }] — ordre du jour
+  createdAt    DateTime   @default(now())
+
+  @@index([commissionId])
+  @@map("meetings")
 }
 
 // ─── Tâches ────────────────────────────────────────────────────────

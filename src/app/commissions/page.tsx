@@ -16,11 +16,13 @@ import { useTasks } from '@/hooks/useTasks'
 import { useTeam } from '@/hooks/useTeam'
 import { useCommissions } from '@/hooks/useCommissions'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
+import { useMeetings } from '@/hooks/useMeetings'
+import { useComptesRendus } from '@/hooks/useComptesRendus'
 import { TaskForm } from '@/components/tasks/TaskForm'
 import { TaskDetailModal } from '@/components/tasks/TaskDetail'
-import { getPerson, PEOPLE, ROLE_LABELS, type Person } from '@/lib/people'
-import { formatShortFR } from '@/lib/dateUtils'
-import type { Commission, Task, TaskStatus } from '@/lib/types'
+import { getPerson, ROLE_LABELS, type Person } from '@/lib/people'
+import { formatShortFR, formatLongFR } from '@/lib/dateUtils'
+import type { Commission, Task, TaskStatus, Meeting, AgendaItem, CompteRendu } from '@/lib/types'
 
 type CommView = 'grille' | 'timeline' | 'admin'
 
@@ -37,21 +39,15 @@ const PRIORITY_VARIANTS: Record<string, 'danger' | 'warning' | 'default'> = {
   Faible: 'default',
 }
 
-// Référentiel des membres par commission (provisoire — sera persisté plus tard)
-const COMMISSION_MEMBERS: Record<string, string[]> = {
-  'admin-finance': ['p-jm', 'p-rg', 'p-md', 'p-pr', 'p-im'],
-  'developpement': ['p-jm', 'p-rg', 'p-lf', 'p-cv'],
-  'enfance': ['p-sb', 'p-md', 'p-lb', 'p-im'],
-  'animation': ['p-sb', 'p-im', 'p-cv'],
-  'travaux': ['p-md', 'p-lf', 'p-tg', 'p-mf', 'p-ad'],
-}
-
 export default function CommissionsPage() {
   const { tasks, hydrated, createTask, updateTask, deleteTask, addComment, deleteComment } = useTasks()
-  const { people, hydrated: teamHydrated } = useTeam()
+  const { people, hydrated: teamHydrated, updatePerson } = useTeam()
   const { commissions, hydrated: commHydrated, createCommission, updateCommission, deleteCommission } = useCommissions()
+  const { meetings, createMeeting, updateMeeting, deleteMeeting } = useMeetings()
+  const { crs } = useComptesRendus()
   const { can, currentUserId } = useCurrentUser()
   const canManageCommissions = can('commissions.manage')
+  const canManageMembers = canManageCommissions || can('team.edit-roles')
   const [view, setView] = useState<CommView>('grille')
   const [selected, setSelected] = useState<Commission | null>(null)
   const [formOpen, setFormOpen] = useState(false)
@@ -73,6 +69,20 @@ export default function CommissionsPage() {
     return map
   }, [people])
 
+  // Index : commissionId -> membres (Person.commissions)
+  const membersByCommission = useMemo(() => {
+    const map = new Map<string, Person[]>()
+    people.forEach(p => {
+      if (!p.active) return
+      ;(p.commissions ?? []).forEach(cid => {
+        const arr = map.get(cid) ?? []
+        arr.push(p)
+        map.set(cid, arr)
+      })
+    })
+    return map
+  }, [people])
+
   const tasksByCommission = useMemo(() => {
     const map = new Map<string, Task[]>()
     tasks.forEach(t => {
@@ -84,17 +94,65 @@ export default function CommissionsPage() {
     return map
   }, [tasks])
 
+  // Index : commissionId -> réunions triées par date croissante
+  const meetingsByCommission = useMemo(() => {
+    const map = new Map<string, Meeting[]>()
+    meetings.forEach(m => {
+      const arr = map.get(m.commissionId) ?? []
+      arr.push(m)
+      map.set(m.commissionId, arr)
+    })
+    map.forEach(arr => arr.sort((a, b) => a.date.localeCompare(b.date)))
+    return map
+  }, [meetings])
+
+  // Prochaine réunion à venir par commission (sinon la dernière passée)
+  const today = new Date().toISOString().slice(0, 10)
+  const nextMeetingByCommission = useMemo(() => {
+    const map = new Map<string, Meeting | undefined>()
+    meetingsByCommission.forEach((arr, cid) => {
+      map.set(cid, arr.find(m => m.date >= today) ?? arr[arr.length - 1])
+    })
+    return map
+  }, [meetingsByCommission, today])
+
+  const crsByCommission = useMemo(() => {
+    const map = new Map<string, CompteRendu[]>()
+    crs.forEach(cr => {
+      if (!cr.commissionId) return
+      const arr = map.get(cr.commissionId) ?? []
+      arr.push(cr)
+      map.set(cr.commissionId, arr)
+    })
+    map.forEach(arr => arr.sort((a, b) => (b.meetingDate ?? b.importedAt).localeCompare(a.meetingDate ?? a.importedAt)))
+    return map
+  }, [crs])
+
   // Construire la liste réelle des commissions avec compteurs dynamiques
-  const commissionsWithStats = useMemo(() => {
+  const commissionsWithStats = useMemo<Commission[]>(() => {
     return commissions.map(c => {
-      const ctasks = tasksByCommission.get(c.id) ?? []
+      const nm = nextMeetingByCommission.get(c.id)
       return {
         ...c,
-        tasks: ctasks.filter(t => t.status !== 'Terminé').length,
-        members: COMMISSION_MEMBERS[c.id]?.length ?? c.members,
+        tasks: (tasksByCommission.get(c.id) ?? []).filter(t => t.status !== 'Terminé').length,
+        members: (membersByCommission.get(c.id) ?? []).length,
+        docs: 0,
+        nextMeeting: nm ? `${formatShortFR(nm.date)}${nm.heure ? ` · ${nm.heure}` : ''}` : 'À planifier',
       }
     })
-  }, [tasksByCommission])
+  }, [commissions, tasksByCommission, membersByCommission, nextMeetingByCommission])
+
+  const handleAddMember = (commissionId: string, personId: string) => {
+    const p = people.find(x => x.id === personId)
+    if (!p) return
+    const next = Array.from(new Set([...(p.commissions ?? []), commissionId]))
+    updatePerson(personId, { commissions: next })
+  }
+  const handleRemoveMember = (commissionId: string, personId: string) => {
+    const p = people.find(x => x.id === personId)
+    if (!p) return
+    updatePerson(personId, { commissions: (p.commissions ?? []).filter(cid => cid !== commissionId) })
+  }
 
   const handleOpenCreateFor = (commissionId: string) => {
     setEditingTask(null)
@@ -192,15 +250,31 @@ export default function CommissionsPage() {
           allCommissions={commissionsWithStats}
           commissionTasks={tasksByCommission.get(selected.id) ?? []}
           responsibles={responsiblesByCommission.get(selected.id) ?? []}
+          members={membersByCommission.get(selected.id) ?? []}
+          allPeople={people}
+          meetings={meetingsByCommission.get(selected.id) ?? []}
+          crs={crsByCommission.get(selected.id) ?? []}
+          canManageMembers={canManageMembers}
+          canManageCommissions={canManageCommissions}
           onBack={() => setSelected(null)}
           onSelectOther={setSelected}
           onCreateTask={() => handleOpenCreateFor(selected.id)}
           onEditTask={handleEdit}
           onUpdateTask={updateTask}
+          onAddMember={(pid) => handleAddMember(selected.id, pid)}
+          onRemoveMember={(pid) => handleRemoveMember(selected.id, pid)}
+          onCreateMeeting={createMeeting}
+          onUpdateMeeting={updateMeeting}
+          onDeleteMeeting={deleteMeeting}
         />
       )}
       {view === 'timeline' && (
-        <TimelineView commissions={commissionsWithStats} tasks={tasks} />
+        <TimelineView
+          commissions={commissionsWithStats}
+          tasks={tasks}
+          meetings={meetings}
+          membersByCommission={membersByCommission}
+        />
       )}
       {view === 'admin' && canManageCommissions && (
         <CommissionsAdminView
@@ -303,10 +377,6 @@ function GrilleView({
                   <p style={{ fontSize: 20, color: com.color, fontWeight: 700, lineHeight: 1 }}>{com.members}</p>
                   <p style={{ fontSize: 11, color: C.subtle }}>Membres</p>
                 </div>
-                <div>
-                  <p style={{ fontSize: 20, color: com.color, fontWeight: 700, lineHeight: 1 }}>{com.docs}</p>
-                  <p style={{ fontSize: 11, color: C.subtle }}>Documents</p>
-                </div>
               </div>
               <Separator my={10} />
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -351,25 +421,38 @@ function GrilleView({
 // ── Vue Détail ────────────────────────────────────────────────────────────────
 
 function DetailView({
-  commission, allCommissions, commissionTasks, responsibles,
+  commission, allCommissions, commissionTasks, responsibles, members, allPeople,
+  meetings, crs, canManageMembers, canManageCommissions,
   onBack, onSelectOther, onCreateTask, onEditTask, onUpdateTask,
+  onAddMember, onRemoveMember, onCreateMeeting, onUpdateMeeting, onDeleteMeeting,
 }: {
   commission: Commission
   allCommissions: Commission[]
   commissionTasks: Task[]
   responsibles: Person[]
+  members: Person[]
+  allPeople: Person[]
+  meetings: Meeting[]
+  crs: CompteRendu[]
+  canManageMembers: boolean
+  canManageCommissions: boolean
   onBack: () => void
   onSelectOther: (c: Commission) => void
   onCreateTask: () => void
   onEditTask: (t: Task) => void
   onUpdateTask: (id: string, patch: Partial<Task>) => void
+  onAddMember: (personId: string) => void
+  onRemoveMember: (personId: string) => void
+  onCreateMeeting: (data: Omit<Meeting, 'id' | 'createdAt'>) => void
+  onUpdateMeeting: (id: string, patch: Partial<Meeting>) => void
+  onDeleteMeeting: (id: string) => void
 }) {
-  const [activeTab, setActiveTab] = useState<'taches' | 'cr' | 'membres' | 'ged'>('taches')
+  const [activeTab, setActiveTab] = useState<'taches' | 'reunions' | 'cr' | 'membres' | 'ged'>('taches')
 
   const activeTasks = commissionTasks.filter(t => t.status !== 'Terminé')
   const doneTasks = commissionTasks.filter(t => t.status === 'Terminé')
-  const memberIds = COMMISSION_MEMBERS[commission.id] ?? []
-  const members = memberIds.map(id => getPerson(id)).filter(Boolean)
+  const today = new Date().toISOString().slice(0, 10)
+  const nextMeeting = meetings.find(m => m.date >= today) ?? meetings[meetings.length - 1]
 
   return (
     <div style={{ display: 'flex', gap: 'var(--gap)', height: '100%' }}>
@@ -401,7 +484,11 @@ function DetailView({
               <h2 style={{ fontSize: 20, color: C.fg, fontWeight: 700 }}>{commission.name}</h2>
               <Badge label={`${activeTasks.length} tâches actives`} variant={activeTasks.length > 8 ? 'danger' : 'default'} />
             </div>
-            <p style={{ fontSize: 12, color: C.subtle }}>Prochaine réunion : {commission.nextMeeting} · 14h00</p>
+            <p style={{ fontSize: 12, color: C.subtle }}>
+              Prochaine réunion : {nextMeeting
+                ? `${formatLongFR(nextMeeting.date)}${nextMeeting.heure ? ` à ${nextMeeting.heure}` : ''}${nextMeeting.lieu ? ` · ${nextMeeting.lieu}` : ''}`
+                : 'à planifier'}
+            </p>
             {responsibles.length > 0 && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
                 <span style={{ fontSize: 12, color: C.subtle, fontWeight: 600 }}>
@@ -433,13 +520,13 @@ function DetailView({
         <div style={{ display: 'flex', gap: 'var(--gap)', marginBottom: 16 }}>
           <KpiCard label="Tâches actives" value={activeTasks.length} color={commission.color} />
           <KpiCard label="Terminées" value={doneTasks.length} color={C.success} />
-          <KpiCard label="Documents" value={commission.docs} color={C.slate} />
+          <KpiCard label="Réunions" value={meetings.length} color={C.slate} />
           <KpiCard label="Membres" value={members.length} color={C.green} />
         </div>
 
         <div style={{ display: 'flex', gap: 0, borderBottom: `1px solid ${C.border}`, marginBottom: 16 }}>
-          {(['taches', 'cr', 'membres', 'ged'] as const).map(tab => {
-            const labels = { taches: 'Tâches', cr: 'Comptes rendus', membres: 'Membres', ged: 'GED' }
+          {(['taches', 'reunions', 'cr', 'membres', 'ged'] as const).map(tab => {
+            const labels = { taches: 'Tâches', reunions: 'Réunions', cr: 'Comptes rendus', membres: 'Membres', ged: 'GED' }
             return (
               <button
                 key={tab}
@@ -470,73 +557,332 @@ function DetailView({
             onUpdateTask={onUpdateTask}
           />
         )}
+        {activeTab === 'reunions' && (
+          <MeetingsTab
+            commissionId={commission.id}
+            color={commission.color}
+            meetings={meetings}
+            people={allPeople}
+            canManage={canManageCommissions}
+            onCreate={onCreateMeeting}
+            onUpdate={onUpdateMeeting}
+            onDelete={onDeleteMeeting}
+          />
+        )}
         {activeTab === 'cr' && (
           <Card padding={14}>
             <SectionHeader level={3} title="Comptes rendus" actions={<Link href="/comptes-rendus"><Button variant="primary" size="sm">+ Importer</Button></Link>} />
-            <Row label="CR — Réunion du 12 avril 2026" sub="Uploadé · 3 tâches extraites" badge="IA" badgeVariant="primary" right="12 avr." />
-            <Row label="CR — Réunion du 5 mars 2026" sub="Archivé" badge="Archivé" right="5 mars" last />
-          </Card>
-        )}
-        {activeTab === 'membres' && (
-          <Card padding={14}>
-            <SectionHeader
-              level={3}
-              title={`Membres (${members.length})`}
-              actions={<Link href="/equipe"><Button size="sm">Gérer l&apos;équipe →</Button></Link>}
-            />
-            {members.length === 0 ? (
-              <p style={{ fontSize: 12, color: C.subtle, padding: '10px 0' }}>Aucun membre défini.</p>
-            ) : members.map((p, i) => {
-              const isResponsible = responsibles.some(r => r.id === p!.id)
-              return (
-                <Link
-                  key={p!.id}
-                  href="/equipe"
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 10,
-                    padding: '10px 0', textDecoration: 'none',
-                    borderBottom: i < members.length - 1 ? `1px solid ${C.border}` : 'none',
-                  }}
-                >
-                  <Avatar initials={p!.initials} size={32} color={p!.color} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-                      <p style={{ fontSize: 12, color: C.fg, fontWeight: 600 }}>{p!.fullName}</p>
-                      {isResponsible && <Badge label="Référent(e)" variant="primary" />}
-                      {p!.canSign && <Badge label="✍ Signataire" variant="terra" />}
-                    </div>
-                    <p style={{ fontSize: 12, color: C.subtle }}>{p!.poste}</p>
-                  </div>
-                  <Badge label={ROLE_LABELS[p!.role]} variant={p!.role === 'agent' ? 'default' : 'primary'} />
-                </Link>
-              )
-            })}
-          </Card>
-        )}
-        {activeTab === 'ged' && (
-          <Card padding={14}>
-            <SectionHeader level={3} title="Gestion Électronique de Documents" actions={<Button variant="primary" size="sm">+ Ajouter</Button>} />
-            <p style={{ fontSize: 12, color: C.subtle, padding: '8px 0', fontStyle: 'italic' }}>
-              La GED par commission sera connectée au stockage cloud (S3 / OVH) lors de la migration vers la base de données réelle.
-            </p>
-            {[
-              { name: 'CR Réunion 12 avril 2026.pdf', size: '245 Ko', date: '12 avr.', type: 'CR' },
-              { name: 'PLU Secteur Nord — Dossier.pdf', size: '1.2 Mo', date: '5 avr.', type: 'Dossier' },
-              { name: 'Délibération 2026-015.pdf', size: '89 Ko', date: '1 avr.', type: 'Délib.' },
-            ].map((doc, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: i < 2 ? `1px solid ${C.border}` : 'none', opacity: 0.7 }}>
-                <div style={{ width: 32, height: 32, background: C.infoLight, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <span style={{ fontSize: 12, color: C.info, fontWeight: 700 }}>PDF</span>
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ fontSize: 12, color: C.fg, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{doc.name}</p>
-                  <p style={{ fontSize: 12, color: C.subtle }}>{doc.size} · {doc.date} (placeholder)</p>
-                </div>
-                <Badge label={doc.type} variant="info" />
-              </div>
+            {crs.length === 0 ? (
+              <p style={{ fontSize: 12, color: C.subtle, padding: '10px 0' }}>
+                Aucun compte rendu pour cette commission. Importez-en un depuis le module Comptes rendus.
+              </p>
+            ) : crs.map((cr, i) => (
+              <Row
+                key={cr.id}
+                label={cr.filename}
+                sub={cr.taskIds.length > 0 ? `${cr.taskIds.length} tâche${cr.taskIds.length > 1 ? 's' : ''} extraite${cr.taskIds.length > 1 ? 's' : ''}` : 'Importé'}
+                badge={cr.taskIds.length > 0 ? 'IA' : undefined}
+                badgeVariant="primary"
+                right={formatShortFR(cr.meetingDate ?? cr.importedAt)}
+                last={i === crs.length - 1}
+              />
             ))}
           </Card>
         )}
+        {activeTab === 'membres' && (
+          <MemberManager
+            members={members}
+            allPeople={allPeople}
+            responsibles={responsibles}
+            canManage={canManageMembers}
+            onAdd={onAddMember}
+            onRemove={onRemoveMember}
+          />
+        )}
+        {activeTab === 'ged' && (
+          <Card padding={14}>
+            <SectionHeader level={3} title="Gestion Électronique de Documents" />
+            <p style={{ fontSize: 13, color: C.subtle, padding: '8px 0', lineHeight: 1.6 }}>
+              La GED par commission (dépôt et partage de fichiers volumineux) sera disponible
+              avec le stockage cloud (Supabase Storage / OVH). En attendant, les comptes rendus
+              se gèrent dans l&apos;onglet « Comptes rendus », et les pièces jointes restent
+              attachées à chaque tâche.
+            </p>
+          </Card>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ── Onglet Membres ──────────────────────────────────────────────────────────
+
+function MemberManager({
+  members, allPeople, responsibles, canManage, onAdd, onRemove,
+}: {
+  members: Person[]
+  allPeople: Person[]
+  responsibles: Person[]
+  canManage: boolean
+  onAdd: (personId: string) => void
+  onRemove: (personId: string) => void
+}) {
+  const [picker, setPicker] = useState('')
+  const memberIds = new Set(members.map(m => m.id))
+  const candidates = allPeople
+    .filter(p => p.active && !memberIds.has(p.id))
+    .sort((a, b) => a.fullName.localeCompare(b.fullName))
+
+  return (
+    <Card padding={14}>
+      <SectionHeader level={3} title={`Membres (${members.length})`} />
+      {canManage && (
+        <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+          <select
+            value={picker}
+            onChange={e => setPicker(e.target.value)}
+            aria-label="Choisir une personne à ajouter"
+            style={{ flex: 1, height: 36, borderRadius: 6, border: `1px solid ${C.border}`, padding: '0 10px', fontSize: 13, color: C.fg, background: '#fff', fontFamily: "'DM Sans', sans-serif" }}
+          >
+            <option value="">+ Ajouter un membre…</option>
+            {candidates.map(p => (
+              <option key={p.id} value={p.id}>{p.fullName} — {p.poste}</option>
+            ))}
+          </select>
+          <Button variant="primary" size="sm" disabled={!picker} onClick={() => { if (picker) { onAdd(picker); setPicker('') } }}>
+            Ajouter
+          </Button>
+        </div>
+      )}
+      {members.length === 0 ? (
+        <p style={{ fontSize: 12, color: C.subtle, padding: '10px 0' }}>Aucun membre défini.</p>
+      ) : members.map((p, i) => {
+        const isResponsible = responsibles.some(r => r.id === p.id)
+        return (
+          <div
+            key={p.id}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0',
+              borderBottom: i < members.length - 1 ? `1px solid ${C.border}` : 'none',
+            }}
+          >
+            <Avatar initials={p.initials} size={32} color={p.color} />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                <p style={{ fontSize: 12, color: C.fg, fontWeight: 600 }}>{p.fullName}</p>
+                {isResponsible && <Badge label="Référent(e)" variant="primary" />}
+                {p.canSign && <Badge label="✍ Signataire" variant="terra" />}
+              </div>
+              <p style={{ fontSize: 12, color: C.subtle }}>{p.poste}</p>
+            </div>
+            <Badge label={ROLE_LABELS[p.role]} variant={p.role === 'agent' ? 'default' : 'primary'} />
+            {canManage && (
+              <button
+                onClick={() => onRemove(p.id)}
+                title="Retirer de la commission"
+                style={{ padding: '3px 10px', borderRadius: 4, border: `1px solid ${C.border}`, background: '#fff', color: C.subtle, cursor: 'pointer', fontSize: 12, flexShrink: 0 }}
+              >
+                Retirer
+              </button>
+            )}
+          </div>
+        )
+      })}
+    </Card>
+  )
+}
+
+// ── Onglet Réunions ───────────────────────────────────────────────────────────
+
+function MeetingsTab({
+  commissionId, color, meetings, people, canManage, onCreate, onUpdate, onDelete,
+}: {
+  commissionId: string
+  color: string
+  meetings: Meeting[]
+  people: Person[]
+  canManage: boolean
+  onCreate: (data: Omit<Meeting, 'id' | 'createdAt'>) => void
+  onUpdate: (id: string, patch: Partial<Meeting>) => void
+  onDelete: (id: string) => void
+}) {
+  const [formOpen, setFormOpen] = useState(false)
+  const [editing, setEditing] = useState<Meeting | null>(null)
+  const today = new Date().toISOString().slice(0, 10)
+  const upcoming = meetings.filter(m => m.date >= today)
+  const past = meetings.filter(m => m.date < today).reverse()
+
+  const openCreate = () => { setEditing(null); setFormOpen(true) }
+  const openEdit = (m: Meeting) => { setEditing(m); setFormOpen(true) }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--gap)' }}>
+      <Card padding={14}>
+        <SectionHeader
+          level={3}
+          title={`Réunions à venir (${upcoming.length})`}
+          actions={canManage ? <Button variant="primary" size="sm" onClick={openCreate}>+ Nouvelle réunion</Button> : undefined}
+        />
+        {upcoming.length === 0 ? (
+          <p style={{ fontSize: 12, color: C.subtle, padding: '10px 0' }}>Aucune réunion planifiée.</p>
+        ) : upcoming.map((m, i) => (
+          <MeetingRow key={m.id} meeting={m} people={people} color={color} canManage={canManage} onEdit={() => openEdit(m)} onDelete={() => onDelete(m.id)} last={i === upcoming.length - 1} />
+        ))}
+      </Card>
+
+      {past.length > 0 && (
+        <Card padding={14}>
+          <SectionHeader level={3} title={`Réunions passées (${past.length})`} />
+          {past.slice(0, 8).map((m, i) => (
+            <MeetingRow key={m.id} meeting={m} people={people} color={color} canManage={canManage} onEdit={() => openEdit(m)} onDelete={() => onDelete(m.id)} last={i === Math.min(past.length, 8) - 1} past />
+          ))}
+        </Card>
+      )}
+
+      {formOpen && (
+        <MeetingForm
+          commissionId={commissionId}
+          people={people}
+          initial={editing}
+          onClose={() => { setFormOpen(false); setEditing(null) }}
+          onCreate={onCreate}
+          onUpdate={onUpdate}
+        />
+      )}
+    </div>
+  )
+}
+
+function MeetingRow({
+  meeting, people, color, canManage, onEdit, onDelete, last, past,
+}: {
+  meeting: Meeting
+  people: Person[]
+  color: string
+  canManage: boolean
+  onEdit: () => void
+  onDelete: () => void
+  last: boolean
+  past?: boolean
+}) {
+  const nameOf = (id?: string) => people.find(p => p.id === id)?.fullName
+  return (
+    <div style={{ padding: '10px 0', borderBottom: last ? 'none' : `1px solid ${C.border}`, opacity: past ? 0.7 : 1 }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+        <div style={{ width: 4, alignSelf: 'stretch', borderRadius: 2, background: color, flexShrink: 0 }} />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <p style={{ fontSize: 13, color: C.fg, fontWeight: 600 }}>{meeting.titre || 'Réunion'}</p>
+            <span style={{ fontSize: 12, color: C.subtle }}>
+              {formatLongFR(meeting.date)}{meeting.heure ? ` · ${meeting.heure}` : ''}{meeting.lieu ? ` · ${meeting.lieu}` : ''}
+            </span>
+          </div>
+          {meeting.agenda.length > 0 && (
+            <ol style={{ margin: '6px 0 0', paddingLeft: 18 }}>
+              {meeting.agenda.map((item, idx) => (
+                <li key={idx} style={{ fontSize: 12, color: C.muted, marginBottom: 2 }}>
+                  {item.titre}
+                  {nameOf(item.rapporteurId) && <span style={{ color: C.subtle }}> — {nameOf(item.rapporteurId)}</span>}
+                </li>
+              ))}
+            </ol>
+          )}
+          {meeting.notes && <p style={{ fontSize: 12, color: C.subtle, marginTop: 4, fontStyle: 'italic' }}>{meeting.notes}</p>}
+        </div>
+        {canManage && (
+          <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+            <button onClick={onEdit} title="Modifier" style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.border}`, background: '#fff', cursor: 'pointer', fontSize: 12 }}>✎</button>
+            <button onClick={() => { if (confirm('Supprimer cette réunion ?')) onDelete() }} title="Supprimer" style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.danger}`, background: C.dangerLight, color: C.danger, cursor: 'pointer', fontSize: 12 }}>×</button>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function MeetingForm({
+  commissionId, people, initial, onClose, onCreate, onUpdate,
+}: {
+  commissionId: string
+  people: Person[]
+  initial: Meeting | null
+  onClose: () => void
+  onCreate: (data: Omit<Meeting, 'id' | 'createdAt'>) => void
+  onUpdate: (id: string, patch: Partial<Meeting>) => void
+}) {
+  const [date, setDate] = useState(initial?.date ?? '')
+  const [heure, setHeure] = useState(initial?.heure ?? '')
+  const [lieu, setLieu] = useState(initial?.lieu ?? '')
+  const [titre, setTitre] = useState(initial?.titre ?? '')
+  const [notes, setNotes] = useState(initial?.notes ?? '')
+  const [agenda, setAgenda] = useState<AgendaItem[]>(initial?.agenda ?? [])
+
+  const addItem = () => setAgenda(prev => [...prev, { titre: '' }])
+  const updateItem = (i: number, patch: Partial<AgendaItem>) => setAgenda(prev => prev.map((it, idx) => idx === i ? { ...it, ...patch } : it))
+  const removeItem = (i: number) => setAgenda(prev => prev.filter((_, idx) => idx !== i))
+
+  const submit = () => {
+    if (!date) { alert('La date est requise.'); return }
+    const cleanAgenda = agenda
+      .map(it => ({ titre: it.titre.trim(), rapporteurId: it.rapporteurId || undefined }))
+      .filter(it => it.titre)
+    const payload = {
+      commissionId, date,
+      heure: heure.trim() || undefined,
+      lieu: lieu.trim() || undefined,
+      titre: titre.trim() || undefined,
+      notes: notes.trim() || undefined,
+      agenda: cleanAgenda,
+    }
+    if (initial) onUpdate(initial.id, payload)
+    else onCreate(payload)
+    onClose()
+  }
+
+  const field: React.CSSProperties = { width: '100%', height: 36, border: `1px solid ${C.border}`, borderRadius: 6, padding: '0 10px', fontSize: 13, color: C.fg, background: '#fff', fontFamily: "'DM Sans', sans-serif", boxSizing: 'border-box' }
+  const lbl: React.CSSProperties = { fontSize: 11, color: C.muted, fontWeight: 600, display: 'block', marginBottom: 4 }
+
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(20,28,22,0.45)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20 }}>
+      <div onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-label={initial ? 'Modifier la réunion' : 'Nouvelle réunion'} style={{ width: '100%', maxWidth: 560, background: '#fff', borderRadius: 12, boxShadow: '0 24px 64px rgba(0,0,0,0.25)', display: 'flex', flexDirection: 'column', maxHeight: 'calc(100vh - 40px)' }}>
+        <div style={{ padding: '16px 20px', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center' }}>
+          <h2 style={{ fontSize: 16, fontWeight: 700, color: C.fg, margin: 0, flex: 1 }}>{initial ? 'Modifier la réunion' : 'Nouvelle réunion'}</h2>
+          <button type="button" onClick={onClose} aria-label="Fermer" style={{ width: 28, height: 28, border: 'none', background: 'transparent', borderRadius: 6, cursor: 'pointer', fontSize: 20, color: C.subtle }}>×</button>
+        </div>
+        <div style={{ padding: 20, overflow: 'auto', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div><label style={lbl}>Date *</label><input type="date" value={date} onChange={e => setDate(e.target.value)} style={field} /></div>
+            <div><label style={lbl}>Heure</label><input type="time" value={heure} onChange={e => setHeure(e.target.value)} style={field} /></div>
+          </div>
+          <div><label style={lbl}>Titre</label><input type="text" value={titre} onChange={e => setTitre(e.target.value)} placeholder="ex: Préparation du budget" style={field} /></div>
+          <div><label style={lbl}>Lieu</label><input type="text" value={lieu} onChange={e => setLieu(e.target.value)} placeholder="ex: Salle du conseil" style={field} /></div>
+
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+              <label style={lbl}>Ordre du jour</label>
+              <button type="button" onClick={addItem} style={{ fontSize: 12, color: C.green, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>+ Ajouter un point</button>
+            </div>
+            {agenda.length === 0 ? (
+              <p style={{ fontSize: 12, color: C.subtle }}>Aucun point. Cliquez sur « + Ajouter un point ».</p>
+            ) : agenda.map((it, i) => (
+              <div key={i} style={{ display: 'flex', gap: 6, marginBottom: 6, alignItems: 'center' }}>
+                <span style={{ fontSize: 12, color: C.subtle, width: 16, flexShrink: 0 }}>{i + 1}.</span>
+                <input type="text" value={it.titre} onChange={e => updateItem(i, { titre: e.target.value })} placeholder="Intitulé du point" style={{ ...field, flex: 1 }} />
+                <select value={it.rapporteurId ?? ''} onChange={e => updateItem(i, { rapporteurId: e.target.value || undefined })} aria-label="Rapporteur" style={{ ...field, width: 150, flexShrink: 0 }}>
+                  <option value="">Rapporteur…</option>
+                  {people.filter(p => p.active).map(p => <option key={p.id} value={p.id}>{p.prenom} {p.nom}</option>)}
+                </select>
+                <button type="button" onClick={() => removeItem(i)} aria-label="Retirer le point" style={{ padding: '3px 8px', borderRadius: 4, border: `1px solid ${C.border}`, background: '#fff', color: C.subtle, cursor: 'pointer', fontSize: 12, flexShrink: 0 }}>×</button>
+              </div>
+            ))}
+          </div>
+
+          <div><label style={lbl}>Notes</label><textarea value={notes} onChange={e => setNotes(e.target.value)} rows={2} style={{ ...field, height: 'auto', padding: 8, resize: 'vertical' as const }} /></div>
+        </div>
+        <div style={{ padding: '14px 20px', borderTop: `1px solid ${C.border}`, display: 'flex', justifyContent: 'flex-end', gap: 8, background: C.bg }}>
+          <Button onClick={onClose}>Annuler</Button>
+          <Button variant="primary" onClick={submit} disabled={!date}>{initial ? 'Enregistrer' : 'Créer la réunion'}</Button>
+        </div>
       </div>
     </div>
   )
@@ -646,10 +992,12 @@ function CommissionTaskRow({
 
 // ── Timeline (vue rapport global) ────────────────────────────────────────────
 
-function TimelineView({ commissions, tasks }: { commissions: Commission[]; tasks: Task[] }) {
-  const upcomingMeetings = commissions
-    .map(c => ({ ...c, dateLabel: c.nextMeeting }))
-    .sort((a, b) => parseDay(a.nextMeeting) - parseDay(b.nextMeeting))
+function TimelineView({ commissions, tasks, meetings, membersByCommission }: { commissions: Commission[]; tasks: Task[]; meetings: Meeting[]; membersByCommission: Map<string, Person[]> }) {
+  const today = new Date().toISOString().slice(0, 10)
+  const upcomingMeetings = meetings
+    .filter(m => m.date >= today)
+    .sort((a, b) => a.date.localeCompare(b.date))
+  const commById = new Map(commissions.map(c => [c.id, c]))
 
   const upcomingDeadlines = tasks
     .filter(t => t.status !== 'Terminé' && t.dueDate)
@@ -682,7 +1030,7 @@ function TimelineView({ commissions, tasks }: { commissions: Commission[]; tasks
             <div key={com.id} style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 10 }}>
               <div style={{ width: 180, flexShrink: 0, paddingRight: 12 }}>
                 <p style={{ fontSize: 12, color: C.fg, fontWeight: 600 }}>{com.name.split(' ').slice(0, 2).join(' ')}</p>
-                <p style={{ fontSize: 11, color: C.subtle }}>{ctasks.length} tâches · {COMMISSION_MEMBERS[com.id]?.length ?? 0} membres</p>
+                <p style={{ fontSize: 11, color: C.subtle }}>{ctasks.length} tâches · {membersByCommission.get(com.id)?.length ?? 0} membres</p>
               </div>
               <div style={{ flex: 1, height: 28, background: `${com.color}12`, borderRadius: 6, position: 'relative', border: `1px solid ${com.color}25` }}>
                 {ctasks.slice(0, 5).map((t, ti) => {
@@ -711,15 +1059,20 @@ function TimelineView({ commissions, tasks }: { commissions: Commission[]; tasks
       <div style={{ display: 'flex', gap: 'var(--gap)' }}>
         <Card padding={14} style={{ flex: 1 }}>
           <SectionHeader title="Prochaines réunions" />
-          {upcomingMeetings.slice(0, 5).map((m, i) => (
-            <Row
-              key={m.id}
-              label={`${m.nextMeeting} — ${m.name}`}
-              sub="14h00"
-              dot={m.color}
-              last={i === Math.min(upcomingMeetings.length, 5) - 1}
-            />
-          ))}
+          {upcomingMeetings.length === 0 ? (
+            <p style={{ fontSize: 12, color: C.subtle, padding: '8px 0' }}>Aucune réunion planifiée.</p>
+          ) : upcomingMeetings.slice(0, 5).map((m, i) => {
+            const c = commById.get(m.commissionId)
+            return (
+              <Row
+                key={m.id}
+                label={`${formatLongFR(m.date)} — ${c?.name ?? 'Commission'}`}
+                sub={`${m.heure ? m.heure + ' · ' : ''}${m.titre ?? 'Réunion'}`}
+                dot={c?.color ?? C.subtle}
+                last={i === Math.min(upcomingMeetings.length, 5) - 1}
+              />
+            )
+          })}
         </Card>
         <Card padding={14} style={{ flex: 1 }}>
           <SectionHeader title="Échéances proches" />
@@ -745,11 +1098,6 @@ function TimelineView({ commissions, tasks }: { commissions: Commission[]; tasks
       </div>
     </div>
   )
-}
-
-function parseDay(label: string): number {
-  const m = label.match(/^(\d+)/)
-  return m ? Number(m[1]) : 99
 }
 
 // ── Vue Administration : CRUD commissions ────────────────────────────────────

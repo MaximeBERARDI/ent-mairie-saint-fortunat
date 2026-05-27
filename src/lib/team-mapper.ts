@@ -52,6 +52,7 @@ export function personFromDb(p: DbPerson): Person {
     canSign: p.canSign,
     signatureDomains: p.signatureDomains as SignatureDomain[],
     responsibleCommissions: p.responsibleCommissions,
+    commissions: p.commissions,
     hiddenModules: p.hiddenModules,
     active: p.active,
     startDate: p.startDate ? p.startDate.toISOString().slice(0, 10) : undefined,

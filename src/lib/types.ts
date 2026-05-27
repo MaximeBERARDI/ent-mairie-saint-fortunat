@@ -27,6 +27,25 @@ export interface Commission {
   color: string
 }
 
+// ─── Réunions de commission ────────────────────────────────────────
+
+export interface AgendaItem {
+  titre: string
+  rapporteurId?: string   // Person.id (référence souple, résolue côté UI)
+}
+
+export interface Meeting {
+  id: string
+  commissionId: string
+  date: string            // ISO date 'YYYY-MM-DD'
+  heure?: string          // 'HH:mm'
+  lieu?: string
+  titre?: string
+  notes?: string
+  agenda: AgendaItem[]
+  createdAt: string
+}
+
 export type TaskPriority = 'Urgent' | 'Normal' | 'Faible'
 export type TaskStatus = 'À faire' | 'En cours' | 'En attente validation' | 'Terminé'
 

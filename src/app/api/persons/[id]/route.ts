@@ -24,6 +24,7 @@ interface PatchBody {
   canSign?: boolean
   signatureDomains?: SignatureDomain[]
   responsibleCommissions?: string[]
+  commissions?: string[]
   hiddenModules?: string[]
   active?: boolean
   startDate?: string | null
@@ -35,7 +36,8 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 
   const isSelf = ctx.actor.id === params.id
   const canEditRoles = ctx.can('team.edit-roles')
-  if (!isSelf && !canEditRoles) {
+  const canManageCommissions = ctx.can('commissions.manage')
+  if (!isSelf && !canEditRoles && !canManageCommissions) {
     return NextResponse.json({ error: 'Action non autorisée.' }, { status: 403 })
   }
 
@@ -49,20 +51,27 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   const data: Record<string, unknown> = {}
 
   // Champs non sensibles : éditables par soi-même ou par un admin.
-  if (body.prenom !== undefined) data.prenom = body.prenom
-  if (body.nom !== undefined) data.nom = body.nom
-  if (body.poste !== undefined) data.poste = body.poste
-  if (body.email !== undefined) data.email = body.email
-  if (body.phone !== undefined) data.phone = body.phone
-  if (body.color !== undefined) data.color = body.color
-  if (body.startDate !== undefined) {
-    data.startDate = body.startDate ? new Date(body.startDate) : null
+  if (isSelf || canEditRoles) {
+    if (body.prenom !== undefined) data.prenom = body.prenom
+    if (body.nom !== undefined) data.nom = body.nom
+    if (body.poste !== undefined) data.poste = body.poste
+    if (body.email !== undefined) data.email = body.email
+    if (body.phone !== undefined) data.phone = body.phone
+    if (body.color !== undefined) data.color = body.color
+    if (body.startDate !== undefined) {
+      data.startDate = body.startDate ? new Date(body.startDate) : null
+    }
+    if (body.prenom !== undefined || body.nom !== undefined) {
+      const prenom = body.prenom ?? ctx.actor.prenom
+      const nom = body.nom ?? ctx.actor.nom
+      data.fullName = `${prenom} ${nom}`
+      data.initials = deriveInitials(prenom, nom)
+    }
   }
-  if (body.prenom !== undefined || body.nom !== undefined) {
-    const prenom = body.prenom ?? ctx.actor.prenom
-    const nom = body.nom ?? ctx.actor.nom
-    data.fullName = `${prenom} ${nom}`
-    data.initials = deriveInitials(prenom, nom)
+
+  // Appartenance aux commissions : admin équipe ou gestionnaire de commissions.
+  if (body.commissions !== undefined && (canEditRoles || canManageCommissions)) {
+    data.commissions = body.commissions
   }
 
   // Champs sensibles (rôle, droits, signature, statut) : admin uniquement.

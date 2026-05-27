@@ -48,6 +48,7 @@ Chaque module suit le **même pattern** :
 | Historique pluriannuel | `useHistorique` | `ExerciceHistorique` | `/api/historique` |
 | Comptes rendus | `useComptesRendus` | `CompteRendu` | `/api/comptes-rendus` |
 | Commissions | `useCommissions` | `Commission` | `/api/commissions` |
+| Réunions de commission | `useMeetings` | `Meeting` (+ `AgendaItem`) | `/api/meetings` |
 | Agents (RH) | `useEmployees` | `EmployeeRecord` | `/api/employees` |
 | Demandes d'absence | `useLeaveRequests` | `LeaveRequest` | `/api/leaves` |
 | Missions | `useMissions` | `Mission` | `/api/missions` |
@@ -132,7 +133,7 @@ Toujours type-checker avant de commit. Le build inclut le type-check + le lint N
 - ✅ **Dashboard** — câblé aux vraies données (3 vues Élu/Agent/Maire)
 - ✅ **a11y / UX (audit 2026-05)** — Sprint 1 (P0 : contrastes WCAG AA, focus-visible, self-host fonts/RGPD) + Sprint 2 (P1 : icônes SVG sidebar, échelle typo, cibles tactiles 40-44 px, ARIA/skip-link/landmarks/modales focus-trap, responsive mobile). Cf. `docs/audit-ux-2026-05/`.
 - ✅ **Visibilité des modules par profil** — `Person.hiddenModules` en DB, UI admin dans `PersonForm`, garde de route côté nav.
-- 🟡 **Commissions** — CRUD tâches OK + onglet admin pour renommer/créer/supprimer les commissions ; membres statiques, pas de planning réunions, GED encore mock (cf. `(placeholder)` dans `commissions/page.tsx`).
+- 🟡 **Commissions** — CRUD tâches + admin (renommer/créer/supprimer) ; **membres dynamiques** (`Person.commissions`, gérés depuis l'onglet Membres, gaté `commissions.manage`/`team.edit-roles`) ; **réunions avec ordre du jour structuré** (modèle `Meeting` + `/api/meetings` + `useMeetings`, « prochaine réunion » dérivée) ; onglet Comptes rendus câblé au réel (`CompteRendu.commissionId`). **Reste** : GED par commission (différée, en attente du stockage cloud).
 - ✅ **Auth réelle** — NextAuth (Credentials + bcrypt) : login, session JWT, `useCurrentUser()`/`TeamContext` dérivent l'utilisateur courant. Changement de mot de passe via `/api/auth/change-password` (Profil → Sécurité). Réinitialisation par un admin via `POST /api/persons/[id]/reset-password` (mot de passe temporaire affiché une fois, gaté `team.edit-roles`, action dans `PersonForm`). Page « mot de passe oublié » informative (renvoie vers l'admin, pas de SMTP). Plus de store de mots de passe en `localStorage`. Mot de passe par défaut au seed : `saintfortunat2026`.
 
 ## Dette technique connue
@@ -143,7 +144,9 @@ Toujours type-checker avant de commit. Le build inclut le type-check + le lint N
 - **Auth, choix MVP assumés** : pas de changement de mot de passe forcé à la
   1ère connexion (tous partent du défaut au seed), pas de reset self-service
   par email (pas de SMTP) → le reset passe par un admin.
-- **GED des commissions** encore mock (documents `(placeholder)`).
+- **GED des commissions** différée : l'onglet GED affiche un message honnête
+  (« à venir »), en attente du stockage cloud (Supabase Storage / OVH) pour les
+  fichiers volumineux. Les comptes rendus et pièces de tâches existent déjà.
 
 ## Back-end (Supabase + Prisma + NextAuth)
 
