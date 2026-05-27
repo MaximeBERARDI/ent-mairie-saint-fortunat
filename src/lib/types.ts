@@ -69,8 +69,8 @@ export interface Task {
   id: string
   label: string
   description?: string
-  commissionId?: string  // référence Commission.id
-  assigneeId: string     // référence Person.id
+  commissionIds: string[]  // références Commission.id — une tâche peut relever de plusieurs commissions
+  assigneeIds: string[]    // références Person.id — vide = tâche non assignée
   validatorId?: string   // référence Person.id (pour les tâches "En attente validation")
   dueDate?: string       // ISO date (YYYY-MM-DD) — optionnelle
   priority: TaskPriority

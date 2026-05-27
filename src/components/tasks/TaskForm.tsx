@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { COLORS as C } from '@/lib/theme'
-import { PEOPLE, ROLE_LABELS, getPerson } from '@/lib/people'
+import { PEOPLE, getPerson } from '@/lib/people'
 import { Button } from '@/components/ui/Button'
 import { Avatar } from '@/components/ui/Avatar'
 import { useCommissions } from '@/hooks/useCommissions'
@@ -45,9 +45,9 @@ export function TaskForm({ open, onClose, onSubmit, onDelete, initial, title }: 
   const { commissions } = useCommissions()
   const [label, setLabel] = useState('')
   const [description, setDescription] = useState('')
-  const [commissionId, setCommissionId] = useState<string>('')
-  // Par défaut, l'utilisateur courant s'assigne à lui-même (au lieu du maire en dur)
-  const [assigneeId, setAssigneeId] = useState<string>(currentUserId)
+  const [commissionIds, setCommissionIds] = useState<string[]>([])
+  // Par défaut, l'utilisateur courant s'assigne à lui-même (modifiable, peut être vidé)
+  const [assigneeIds, setAssigneeIds] = useState<string[]>([currentUserId])
   const [validatorId, setValidatorId] = useState<string>('')
   const [dueDate, setDueDate] = useState<string>('')
   const [priority, setPriority] = useState<TaskPriority>('Normal')
@@ -61,8 +61,8 @@ export function TaskForm({ open, onClose, onSubmit, onDelete, initial, title }: 
     if (!open) return
     setLabel(initial?.label ?? '')
     setDescription(initial?.description ?? '')
-    setCommissionId(initial?.commissionId ?? '')
-    setAssigneeId(initial?.assigneeId ?? currentUserId)
+    setCommissionIds(initial?.commissionIds ?? [])
+    setAssigneeIds(initial?.assigneeIds ?? [currentUserId])
     setValidatorId(initial?.validatorId ?? '')
     setDueDate(initial?.dueDate ?? '')
     setPriority(initial?.priority ?? 'Normal')
@@ -77,11 +77,11 @@ export function TaskForm({ open, onClose, onSubmit, onDelete, initial, title }: 
   // Si on passe en "En attente validation" sans validateur → pré-sélectionne
   useEffect(() => {
     if (status === 'En attente validation' && !validatorId) {
-      // Par défaut: maire si l'assigné n'est pas le maire, sinon adjoint finances
-      const fallback = assigneeId === 'p-jm' ? 'p-rg' : 'p-jm'
+      // Par défaut: maire si le maire n'est pas déjà assigné, sinon adjoint finances
+      const fallback = assigneeIds.includes('p-jm') ? 'p-rg' : 'p-jm'
       setValidatorId(fallback)
     }
-  }, [status, assigneeId, validatorId])
+  }, [status, assigneeIds, validatorId])
 
   if (!open) return null
 
@@ -128,15 +128,14 @@ export function TaskForm({ open, onClose, onSubmit, onDelete, initial, title }: 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!label.trim()) return setError('Le titre de la tâche est obligatoire.')
-    if (!assigneeId) return setError("L'assignation est obligatoire.")
     if (status === 'En attente validation' && !validatorId) {
       return setError('Indiquez la personne qui doit valider cette tâche.')
     }
     onSubmit({
       label: label.trim(),
       description: description.trim() || undefined,
-      commissionId: commissionId || undefined,
-      assigneeId,
+      commissionIds,
+      assigneeIds,
       validatorId: status === 'En attente validation' ? validatorId : (validatorId || undefined),
       dueDate: dueDate || undefined,
       priority,
@@ -166,6 +165,20 @@ export function TaskForm({ open, onClose, onSubmit, onDelete, initial, title }: 
     textTransform: 'uppercase',
     letterSpacing: '0.04em',
   }
+  const groupLabelStyle: React.CSSProperties = {
+    fontSize: 10, fontWeight: 600, color: C.subtle, marginBottom: 4,
+    textTransform: 'uppercase', letterSpacing: '0.04em',
+  }
+  const chipStyle = (on: boolean): React.CSSProperties => ({
+    display: 'inline-flex', alignItems: 'center', gap: 6,
+    padding: '4px 12px 4px 6px', borderRadius: 20, cursor: 'pointer',
+    border: `1px solid ${on ? C.green : C.border}`,
+    background: on ? C.green : '#fff',
+    color: on ? '#fff' : C.muted,
+    fontSize: 12, fontWeight: on ? 600 : 400, fontFamily: "'DM Sans', sans-serif",
+  })
+  const toggleId = (arr: string[], id: string) =>
+    arr.includes(id) ? arr.filter(x => x !== id) : [...arr, id]
 
   // Groupes pour l'affichage des personnes
   const elus = PEOPLE.filter(p => p.role !== 'agent')
@@ -192,7 +205,6 @@ export function TaskForm({ open, onClose, onSubmit, onDelete, initial, title }: 
     </select>
   )
 
-  const assignee = getPerson(assigneeId)
   const validator = getPerson(validatorId)
 
   return (
@@ -271,23 +283,56 @@ export function TaskForm({ open, onClose, onSubmit, onDelete, initial, title }: 
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <div>
-              <label style={labelStyle}>Commission (optionnel)</label>
-              <select value={commissionId} onChange={e => setCommissionId(e.target.value)} style={inputStyle}>
-                <option value="">— Sans commission —</option>
-                {commissions.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-            </div>
-            <div>
-              <label style={labelStyle}>Assigné à <span style={{ color: C.danger }}>*</span></label>
-              {renderPersonSelect(assigneeId, setAssigneeId)}
-              {assignee && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6, fontSize: 11, color: C.subtle }}>
-                  <Avatar initials={assignee.initials} size={20} color={assignee.color} />
-                  <span>{ROLE_LABELS[assignee.role]} · {assignee.poste}</span>
-                </div>
+          <div>
+            <label style={labelStyle}>Commissions (optionnel)</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {commissions.length === 0 && (
+                <span style={{ fontSize: 11, color: C.subtle }}>Aucune commission.</span>
               )}
+              {commissions.map(c => {
+                const on = commissionIds.includes(c.id)
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setCommissionIds(prev => toggleId(prev, c.id))}
+                    style={chipStyle(on)}
+                  >
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: on ? '#fff' : c.color }} />
+                    {c.name}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          <div>
+            <label style={labelStyle}>Assigné(s) — optionnel</label>
+            <p style={{ fontSize: 11, color: C.subtle, margin: '0 0 8px' }}>
+              Laisser vide = tâche non assignée (elle reste visible dans la/les commission(s)).
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {[{ title: 'Élus', list: elus }, { title: 'Agents', list: agents }].map(grp => (
+                <div key={grp.title}>
+                  <div style={groupLabelStyle}>{grp.title}</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                    {grp.list.map(p => {
+                      const on = assigneeIds.includes(p.id)
+                      return (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => setAssigneeIds(prev => toggleId(prev, p.id))}
+                          style={chipStyle(on)}
+                        >
+                          <Avatar initials={p.initials} size={18} color={p.color} />
+                          {p.fullName}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 

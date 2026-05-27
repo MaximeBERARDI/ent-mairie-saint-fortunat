@@ -337,7 +337,7 @@ function PersonDetail({ person, tasks, canEdit, canDeactivate, currentUserId, on
   const allEffective = new Set<Permission>([...Array.from(fromRole), ...Array.from(custom)])
 
   // Activité de cette personne
-  const myTasks = tasks.filter(t => t.assigneeId === person.id && t.status !== 'Terminé')
+  const myTasks = tasks.filter(t => t.assigneeIds.includes(person.id) && t.status !== 'Terminé')
   const myValidations = tasks.filter(t => t.validatorId === person.id && t.status === 'En attente validation')
 
   // Commissions où la personne est référente

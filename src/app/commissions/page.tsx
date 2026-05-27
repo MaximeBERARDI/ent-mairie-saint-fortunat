@@ -86,10 +86,11 @@ export default function CommissionsPage() {
   const tasksByCommission = useMemo(() => {
     const map = new Map<string, Task[]>()
     tasks.forEach(t => {
-      if (!t.commissionId) return
-      const arr = map.get(t.commissionId) ?? []
-      arr.push(t)
-      map.set(t.commissionId, arr)
+      t.commissionIds.forEach(cid => {
+        const arr = map.get(cid) ?? []
+        arr.push(t)
+        map.set(cid, arr)
+      })
     })
     return map
   }, [tasks])
@@ -184,7 +185,7 @@ export default function CommissionsPage() {
     setFormOpen(false)
   }
 
-  const initialFormData = editingTask ?? (prefillCommissionId ? { commissionId: prefillCommissionId } as Partial<Task> : undefined)
+  const initialFormData = editingTask ?? (prefillCommissionId ? { commissionIds: [prefillCommissionId] } as Partial<Task> : undefined)
 
   if (!hydrated || !teamHydrated) {
     return (
@@ -331,7 +332,7 @@ function GrilleView({
 }) {
   // Activité récente : tâches les plus récemment créées avec une commission
   const recent = tasks
-    .filter(t => t.commissionId)
+    .filter(t => t.commissionIds.length > 0)
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     .slice(0, 4)
 
@@ -397,13 +398,16 @@ function GrilleView({
           <p style={{ fontSize: 12, color: C.subtle, padding: '8px 0' }}>Aucune activité récente.</p>
         ) : (
           recent.map((t, i) => {
-            const c = commissions.find(c => c.id === t.commissionId)
-            const assignee = getPerson(t.assigneeId)
+            const c = commissions.find(c => c.id === t.commissionIds[0])
+            const assignees = t.assigneeIds.map(id => getPerson(id)).filter(Boolean)
+            const assigneeLabel = assignees.length === 0
+              ? 'Non assignée'
+              : assignees.length === 1 ? assignees[0]!.fullName : `${assignees.length} personnes`
             return (
               <Row
                 key={t.id}
                 label={t.label}
-                sub={`${c?.name ?? 'Commission'} · ${assignee?.fullName ?? '—'}`}
+                sub={`${c?.name ?? 'Commission'} · ${assigneeLabel}`}
                 badge={t.status}
                 badgeVariant={STATUS_VARIANTS[t.status]}
                 right={formatShortFR(t.dueDate)}
@@ -950,7 +954,9 @@ function CommissionTaskRow({
   onComplete: () => void
   completeLabel?: string
 }) {
-  const assignee = getPerson(task.assigneeId)
+  const assignees = task.assigneeIds
+    .map(id => getPerson(id))
+    .filter((p): p is NonNullable<typeof p> => Boolean(p))
   return (
     <div
       onClick={onClick}
@@ -967,11 +973,21 @@ function CommissionTaskRow({
           {task.label}
         </p>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          {assignee && (
+          {assignees.length > 0 ? (
             <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <Avatar initials={assignee.initials} size={16} color={assignee.color} />
-              <span style={{ fontSize: 12, color: C.subtle }}>{assignee.fullName}</span>
+              <span style={{ display: 'flex' }}>
+                {assignees.slice(0, 3).map((a, idx) => (
+                  <span key={a.id} style={{ marginLeft: idx === 0 ? 0 : -5 }}>
+                    <Avatar initials={a.initials} size={16} color={a.color} />
+                  </span>
+                ))}
+              </span>
+              <span style={{ fontSize: 12, color: C.subtle }}>
+                {assignees.length === 1 ? assignees[0].fullName : `${assignees.length} personnes`}
+              </span>
             </span>
+          ) : (
+            <span style={{ fontSize: 12, color: C.subtle, fontStyle: 'italic' }}>Non assignée</span>
           )}
           {task.dueDate && <span style={{ fontSize: 12, color: C.subtle }}>· {formatShortFR(task.dueDate)}</span>}
           {(task.documents?.length ?? 0) > 0 && (
@@ -1025,7 +1041,7 @@ function TimelineView({ commissions, tasks, meetings, membersByCommission }: { c
           ))}
         </div>
         {commissions.map(com => {
-          const ctasks = tasks.filter(t => t.commissionId === com.id && t.status !== 'Terminé')
+          const ctasks = tasks.filter(t => t.commissionIds.includes(com.id) && t.status !== 'Terminé')
           return (
             <div key={com.id} style={{ display: 'flex', alignItems: 'center', gap: 0, marginBottom: 10 }}>
               <div style={{ width: 180, flexShrink: 0, paddingRight: 12 }}>
@@ -1080,7 +1096,7 @@ function TimelineView({ commissions, tasks, meetings, membersByCommission }: { c
             <p style={{ fontSize: 12, color: C.subtle, padding: '8px 0' }}>Pas d&apos;échéance imminente.</p>
           ) : (
             upcomingDeadlines.map((t, i) => {
-              const c = commissions.find(c => c.id === t.commissionId)
+              const c = commissions.find(c => c.id === t.commissionIds[0])
               return (
                 <Row
                   key={t.id}
@@ -1146,7 +1162,7 @@ function CommissionsAdminView({
   }
 
   const handleDelete = (c: Commission) => {
-    const linked = tasks.filter(t => t.commissionId === c.id)
+    const linked = tasks.filter(t => t.commissionIds.includes(c.id))
     if (linked.length > 0) {
       alert(`Impossible : ${linked.length} tâche${linked.length > 1 ? 's' : ''} sont rattachées à cette commission. Détachez-les ou supprimez-les d'abord.`)
       return
@@ -1210,7 +1226,7 @@ function CommissionsAdminView({
           ))}
         </div>
         {commissions.map((c, i) => {
-          const linkedTasks = tasks.filter(t => t.commissionId === c.id)
+          const linkedTasks = tasks.filter(t => t.commissionIds.includes(c.id))
           const isEditing = editingId === c.id
           return (
             <div key={c.id} style={{ display: 'grid', gridTemplateColumns: '40px 2fr 1.4fr 1fr 80px 130px', gap: 10, padding: '10px 14px', alignItems: 'center', borderBottom: i < commissions.length - 1 ? `1px solid ${C.border}` : 'none', background: isEditing ? `${C.green}06` : '#fff', fontSize: 12 }}>

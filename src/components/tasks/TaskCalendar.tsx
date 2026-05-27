@@ -262,9 +262,13 @@ function formatDayHeading(iso: string): string {
 
 function TaskMiniCard({ task, onClick }: { task: Task; onClick: () => void }) {
   const { commissions } = useCommissions()
-  const assignee = getPerson(task.assigneeId)
-  const commName = commissions.find(c => c.id === task.commissionId)?.name?.split(' ')[0]
-  const commColor = commissions.find(c => c.id === task.commissionId)?.color ?? C.slate
+  const assignees = task.assigneeIds
+    .map(id => getPerson(id))
+    .filter((p): p is NonNullable<typeof p> => Boolean(p))
+  const firstAssignee = assignees[0]
+  const firstComm = commissions.find(c => task.commissionIds.includes(c.id))
+  const commName = firstComm?.name?.split(' ')[0]
+  const commColor = firstComm?.color ?? C.slate
   const statusColor = STATUS_COLORS[task.status]
 
   return (
@@ -289,11 +293,15 @@ function TaskMiniCard({ task, onClick }: { task: Task; onClick: () => void }) {
         {task.label}
       </p>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-        {assignee && (
+        {firstAssignee ? (
           <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <Avatar initials={assignee.initials} size={16} color={assignee.color} />
-            <span style={{ fontSize: 10, color: C.muted }}>{assignee.fullName}</span>
+            <Avatar initials={firstAssignee.initials} size={16} color={firstAssignee.color} />
+            <span style={{ fontSize: 10, color: C.muted }}>
+              {firstAssignee.fullName}{assignees.length > 1 ? ` +${assignees.length - 1}` : ''}
+            </span>
           </span>
+        ) : (
+          <span style={{ fontSize: 10, color: C.subtle, fontStyle: 'italic' }}>Non assignée</span>
         )}
         {commName && <Tag label={commName} color={commColor} />}
         <Badge

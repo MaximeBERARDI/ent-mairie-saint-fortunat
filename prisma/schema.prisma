@@ -120,7 +120,6 @@ model Person {
   startDate                DateTime?
 
   user           User?
-  tasksAssigned  Task[]            @relation("TaskAssignee")
   tasksValidated Task[]            @relation("TaskValidator")
   tasksCreated   Task[]            @relation("TaskCreator")
   taskComments   TaskComment[]
@@ -147,7 +146,6 @@ model Commission {
   name        String
   color       String
   nextMeeting String
-  tasks       Task[]
   meetings    Meeting[]
 
   @@map("commissions")
@@ -187,13 +185,11 @@ enum TaskStatus {
 }
 
 model Task {
-  id           String        @id @default(cuid())
-  label        String
-  description  String?
-  commissionId String?
-  commission   Commission?   @relation(fields: [commissionId], references: [id], onDelete: SetNull)
-  assigneeId   String
-  assignee     Person        @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: Restrict)
+  id            String       @id @default(cuid())
+  label         String
+  description   String?
+  commissionIds String[]     @default([]) // références Commission.id (multi)
+  assigneeIds   String[]     @default([]) // références Person.id — vide = non assignée
   validatorId  String?
   validator    Person?       @relation("TaskValidator", fields: [validatorId], references: [id], onDelete: SetNull)
   createdById  String?

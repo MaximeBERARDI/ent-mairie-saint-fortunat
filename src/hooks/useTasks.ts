@@ -54,8 +54,8 @@ export function useTasks() {
       body: JSON.stringify({
         label: data.label,
         description: data.description,
-        commissionId: data.commissionId,
-        assigneeId: data.assigneeId,
+        commissionIds: data.commissionIds,
+        assigneeIds: data.assigneeIds,
         validatorId: data.validatorId,
         dueDate: data.dueDate,
         priority: data.priority,
@@ -90,8 +90,8 @@ export function useTasks() {
       body: JSON.stringify({
         label: patch.label,
         description: patch.description,
-        commissionId: patch.commissionId,
-        assigneeId: patch.assigneeId,
+        commissionIds: patch.commissionIds,
+        assigneeIds: patch.assigneeIds,
         validatorId: patch.validatorId,
         dueDate: patch.dueDate,
         priority: patch.priority,

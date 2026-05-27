@@ -68,7 +68,7 @@ export function NotificationsBell() {
 
     // 2. Mes tâches en retard
     const myOverdue = tasks.filter(t => {
-      if (t.assigneeId !== currentUserId || t.status === 'Terminé') return false
+      if (!t.assigneeIds.includes(currentUserId) || t.status === 'Terminé') return false
       if (!t.dueDate) return false
       return t.dueDate < today
     })

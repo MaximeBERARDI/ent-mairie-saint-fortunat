@@ -561,10 +561,11 @@ function ValidationStep({
     })
   }
 
-  const acceptedCount = wizard.extractedTasks.reduce((acc, _, i) => {
-    const t = effective(i)
-    return acc + (!wizard.rejected[i] && t.assigneeId ? 1 : 0)
-  }, 0)
+  // Toutes les tâches non rejetées sont créées (les non assignées tombent
+  // dans la commission, non assignées).
+  const acceptedCount = wizard.extractedTasks.reduce(
+    (acc, _, i) => (wizard.rejected[i] ? acc : acc + 1), 0,
+  )
   const unassignedCount = wizard.extractedTasks.reduce((acc, _, i) => {
     const t = effective(i)
     return acc + (!wizard.rejected[i] && !t.assigneeId ? 1 : 0)
@@ -706,7 +707,7 @@ function ValidationStep({
             ['Tâches extraites', String(wizard.extractedTasks.length)],
             ['À créer', `${acceptedCount}`],
             ['Rejetées', `${Object.values(wizard.rejected).filter(Boolean).length}`],
-            ['Sans responsable', `${unassignedCount}`],
+            ['Dont non assignées', `${unassignedCount}`],
           ].map(([k, v], i) => (
             <div key={i} style={{ display: 'flex', gap: 6, padding: '4px 0', borderBottom: i < 5 ? `1px solid ${C.border}` : 'none' }}>
               <p style={{ fontSize: 12, color: C.subtle, width: 110, flexShrink: 0 }}>{k}</p>
@@ -717,7 +718,7 @@ function ValidationStep({
         <Card padding={14}>
           <p style={{ fontSize: 12, color: C.fg, fontWeight: 600, marginBottom: 8 }}>Personnes à notifier</p>
           {notifyCounts.size === 0 && (
-            <p style={{ fontSize: 12, color: C.subtle }}>Aucune personne — assignez les tâches à gauche.</p>
+            <p style={{ fontSize: 12, color: C.subtle }}>Aucune personne à notifier — les tâches non assignées tomberont dans la commission.</p>
           )}
           {Array.from(notifyCounts.entries()).map(([personId, count], i, arr) => {
             const p = PEOPLE.find(x => x.id === personId)
@@ -761,12 +762,11 @@ function NotificationStep({
     wizard.extractedTasks.forEach((_, i) => {
       if (wizard.rejected[i]) return
       const t = { ...wizard.extractedTasks[i], ...wizard.edits[i] }
-      if (!t.assigneeId) return  // skip sans responsable
 
       const newTask = createTask({
         label: t.label,
-        assigneeId: t.assigneeId,
-        commissionId: wizard.commissionId || undefined,
+        assigneeIds: t.assigneeId ? [t.assigneeId] : [],
+        commissionIds: wizard.commissionId ? [wizard.commissionId] : [],
         dueDate: t.dueDate ?? undefined,
         priority: t.priority,
         status: 'À faire',
@@ -787,11 +787,9 @@ function NotificationStep({
   }, [wizard, createTask, createCR])
 
   // Compté à partir de l'état wizard (disponible au 1er render, contrairement à `created`)
-  const taskCount = wizard.extractedTasks.reduce((acc, _, i) => {
-    if (wizard.rejected[i]) return acc
-    const t = { ...wizard.extractedTasks[i], ...wizard.edits[i] }
-    return acc + (t.assigneeId ? 1 : 0)
-  }, 0)
+  const taskCount = wizard.extractedTasks.reduce(
+    (acc, _, i) => (wizard.rejected[i] ? acc : acc + 1), 0,
+  )
   const personCount = new Set(
     wizard.extractedTasks
       .filter((_, i) => !wizard.rejected[i])

@@ -31,8 +31,8 @@ interface DocumentInput {
 interface CreateTaskBody {
   label?: string
   description?: string
-  commissionId?: string | null
-  assigneeId?: string
+  commissionIds?: string[]
+  assigneeIds?: string[]
   validatorId?: string | null
   dueDate?: string | null
   priority?: TaskPriority
@@ -51,7 +51,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Requête invalide.' }, { status: 400 })
   }
 
-  if (!body.label?.trim() || !body.assigneeId || !body.priority || !body.status) {
+  if (!body.label?.trim() || !body.priority || !body.status) {
     return NextResponse.json({ error: 'Champs requis manquants.' }, { status: 400 })
   }
 
@@ -59,8 +59,8 @@ export async function POST(req: Request) {
     data: {
       label: body.label.trim(),
       description: body.description?.trim() || null,
-      commissionId: body.commissionId || null,
-      assigneeId: body.assigneeId,
+      commissionIds: body.commissionIds ?? [],
+      assigneeIds: body.assigneeIds ?? [],
       validatorId: body.validatorId || null,
       createdById: session.user.personId ?? null,
       dueDate: body.dueDate ? new Date(body.dueDate) : null,

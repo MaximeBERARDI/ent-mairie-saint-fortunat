@@ -8,12 +8,13 @@ import { COLORS as C } from '@/lib/theme'
 import { ROLE_LABELS } from '@/lib/people'
 import { moduleKeyForHref } from '@/lib/modules'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
+import { useTasks } from '@/hooks/useTasks'
 
 type IconName = 'dashboard' | 'check' | 'users' | 'doc' | 'briefcase' | 'euro' | 'team'
 
-const NAV_ITEMS: { label: string; href: string; icon: IconName; badge?: number }[] = [
+const NAV_ITEMS: { label: string; href: string; icon: IconName }[] = [
   { label: 'Tableau de bord', href: '/dashboard', icon: 'dashboard' },
-  { label: 'Tâches', href: '/taches', icon: 'check', badge: 5 },
+  { label: 'Tâches', href: '/taches', icon: 'check' },
   { label: 'Commissions', href: '/commissions', icon: 'users' },
   { label: 'Comptes rendus', href: '/comptes-rendus', icon: 'doc' },
   { label: 'Ressources humaines', href: '/rh', icon: 'briefcase' },
@@ -57,8 +58,14 @@ export function Sidebar() {
   const pathname = usePathname()
   const { nav } = useSettings()
   const { currentUser: me, can } = useCurrentUser()
+  const { tasks } = useTasks()
   const isIcons = nav === 'icons'
   const w = isIcons ? 54 : 212
+
+  // Badge "Tâches" : mes tâches non terminées (assignées à moi).
+  const myOpenTaskCount = me
+    ? tasks.filter(t => t.assigneeIds.includes(me.id) && t.status !== 'Terminé').length
+    : 0
 
   // Filtrage par profil (config admin, persistée en DB sur Person.hiddenModules).
   // Équipe reste visible pour qui peut gérer les accès (anti-verrouillage).
@@ -109,6 +116,7 @@ export function Sidebar() {
       <nav aria-label="Navigation principale" style={{ flex: 1, padding: 8, display: 'flex', flexDirection: 'column', gap: 1, overflowY: 'auto' }}>
         {visibleNav.map(item => {
           const active = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href))
+          const badge = item.href === '/taches' ? myOpenTaskCount : 0
           return (
             <Link
               key={item.href}
@@ -148,13 +156,13 @@ export function Sidebar() {
                     {item.label}
                   </span>
                 )}
-                {!isIcons && item.badge && (
+                {!isIcons && badge > 0 && (
                   <div style={{
-                    width: 22, height: 22, borderRadius: '50%',
+                    minWidth: 22, height: 22, padding: '0 6px', borderRadius: 11,
                     background: C.danger,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
-                    <span style={{ fontSize: 11, color: '#fff', fontWeight: 700 }}>{item.badge}</span>
+                    <span style={{ fontSize: 11, color: '#fff', fontWeight: 700 }}>{badge}</span>
                   </div>
                 )}
               </div>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { Shell } from '@/components/layout/Shell'
 import { Card, KpiCard } from '@/components/ui/Card'
@@ -21,8 +21,11 @@ import { useEcritures } from '@/hooks/useEcritures'
 import { useEmployees } from '@/hooks/useEmployees'
 import { useLeaveRequests } from '@/hooks/useLeaveRequests'
 import { useMissions } from '@/hooks/useMissions'
+import { usePointages } from '@/hooks/usePointages'
 import { useTeam } from '@/hooks/useTeam'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
+import { TaskForm } from '@/components/tasks/TaskForm'
+import { LeaveRequestModal } from '@/components/rh/LeaveRequestModal'
 import { PEOPLE, getPerson } from '@/lib/people'
 import { hasPermission } from '@/lib/permissions'
 import { computeRatios } from '@/lib/ratios'
@@ -83,7 +86,7 @@ function getUpcomingMeetings(commissions: Commission[]) {
 }
 
 export default function DashboardPage() {
-  const { tasks, hydrated, updateTask } = useTasks()
+  const { tasks, hydrated, updateTask, createTask } = useTasks()
   const { currentUser, currentUserId, can } = useCurrentUser()
 
   // Rôle de pilotage / signature / validation (maire, adjoint, signataire…).
@@ -115,7 +118,7 @@ export default function DashboardPage() {
   return (
     <Shell title="Tableau de bord" notif={3}>
       {view === 'conseiller' && <DashConseiller tasks={tasks} updateTask={updateTask} currentUserId={currentUserId} />}
-      {view === 'agent' && <DashAgent tasks={tasks} updateTask={updateTask} currentUserId={currentUserId} />}
+      {view === 'agent' && <DashAgent tasks={tasks} updateTask={updateTask} createTask={createTask} currentUserId={currentUserId} />}
       {view === 'maire' && <DashMaire tasks={tasks} currentUserId={currentUserId} />}
     </Shell>
   )
@@ -132,7 +135,7 @@ function DashConseiller({ tasks, updateTask, currentUserId }: { tasks: Task[]; u
 
   // Mes tâches actives
   const myTasks = useMemo(
-    () => tasks.filter(t => t.assigneeId === currentUserId && t.status !== 'Terminé'),
+    () => tasks.filter(t => t.assigneeIds.includes(currentUserId) && t.status !== 'Terminé'),
     [tasks, currentUserId],
   )
   const myUrgent = myTasks.filter(t => t.priority === 'Urgent').length
@@ -171,7 +174,7 @@ function DashConseiller({ tasks, updateTask, currentUserId }: { tasks: Task[]; u
   const recent = useMemo<ActivityItem[]>(() => {
     const items: ActivityItem[] = []
     tasks.forEach(t => {
-      const a = getPerson(t.assigneeId)
+      const a = getPerson(t.assigneeIds[0])
       items.push({ date: t.createdAt, type: 'task', label: t.label, sub: a?.fullName ?? '—', badge: t.status, badgeVariant: STATUS_VARIANTS[t.status] })
     })
     factures.forEach(f => {
@@ -259,7 +262,7 @@ function DashConseiller({ tasks, updateTask, currentUserId }: { tasks: Task[]; u
             </p>
           ) : (
             topTasks.map((t, i) => {
-              const c = commissions.find(x => x.id === t.commissionId)
+              const c = commissions.find(x => x.id === t.commissionIds[0])
               const days = daysUntil(t.dueDate)
               const dot = t.priority === 'Urgent' ? C.danger : days !== null && days < 3 ? C.warning : C.subtle
               return (
@@ -352,15 +355,17 @@ function DashboardTaskRow({
 
 // ── Vue Agent (focus "Aujourd'hui") ───────────────────────────────────────────
 
-function DashAgent({ tasks, updateTask, currentUserId }: { tasks: Task[]; updateTask: (id: string, p: Partial<Task>) => void; currentUserId: string }) {
+function DashAgent({ tasks, updateTask, createTask, currentUserId }: { tasks: Task[]; updateTask: (id: string, p: Partial<Task>) => void; createTask: (data: Omit<Task, 'id' | 'createdAt'>) => Task; currentUserId: string }) {
   const me = getPerson(currentUserId)
   const { records, findByPersonId } = useEmployees()
-  const { leaves, byPerson: leavesByPerson } = useLeaveRequests()
+  const { leaves, byPerson: leavesByPerson, submitLeave } = useLeaveRequests()
   const { byPerson: missionsByPerson } = useMissions()
   const { commissions } = useCommissions()
+  const { badger, byPersonDay, isPresentNow } = usePointages()
+  const [taskOpen, setTaskOpen] = useState(false)
+  const [leaveOpen, setLeaveOpen] = useState(false)
   // Permissions : on n'affiche les actions rapides que si l'utilisateur a les droits
   const canSubmitFacture = me?.role !== 'agent' || hasPermission(me.authLevel, 'finance.view-all', me.customPermissions)
-  const canUploadCR = me ? hasPermission(me.authLevel, 'cr.upload', me.customPermissions) : false
 
   // Données RH personnelles (si l'utilisateur est un agent avec une fiche)
   const myRecord = findByPersonId(currentUserId)
@@ -372,7 +377,7 @@ function DashAgent({ tasks, updateTask, currentUserId }: { tasks: Task[]; update
   // Tâches "à faire aujourd'hui" : assignées à moi, échéance ≤ aujourd'hui + 1, non terminées
   const todayTasks = useMemo(() => {
     return tasks.filter(t => {
-      if (t.assigneeId !== currentUserId) return false
+      if (!t.assigneeIds.includes(currentUserId)) return false
       if (t.status === 'Terminé') return false
       const days = daysUntil(t.dueDate)
       // Si pas de date : considérer comme "à faire" si urgent
@@ -384,7 +389,7 @@ function DashAgent({ tasks, updateTask, currentUserId }: { tasks: Task[]; update
   // Tâches "cette semaine" : assignées à moi, ≤ 7 jours
   const weekTasks = useMemo(() => {
     return tasks.filter(t => {
-      if (t.assigneeId !== currentUserId) return false
+      if (!t.assigneeIds.includes(currentUserId)) return false
       if (t.status === 'Terminé') return false
       const days = daysUntil(t.dueDate)
       if (days === null) return false
@@ -399,6 +404,19 @@ function DashAgent({ tasks, updateTask, currentUserId }: { tasks: Task[]; update
   })
 
   const allDoneToday = todayTasks.length === 0
+
+  // Pointage : état du jour (dernier badge) → bouton entrée/sortie.
+  const todayIso = new Date().toISOString().slice(0, 10)
+  const todayPts = byPersonDay(currentUserId, todayIso)
+    .slice()
+    .sort((a, b) => a.timestamp.localeCompare(b.timestamp))
+  const lastPt = todayPts[todayPts.length - 1] ?? null
+  const present = isPresentNow(currentUserId)
+  const fmtHM = (iso: string) => new Date(iso).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+  const ptTypeLabel: Record<string, string> = { entree: 'entrée', sortie: 'sortie', 'pause-debut': 'pause', 'pause-fin': 'reprise' }
+  const pointageStatus = lastPt
+    ? `Dernier pointage : ${ptTypeLabel[lastPt.type] ?? lastPt.type} à ${fmtHM(lastPt.timestamp)}`
+    : "Pas encore pointé aujourd'hui"
 
   return (
     <div>
@@ -426,7 +444,7 @@ function DashAgent({ tasks, updateTask, currentUserId }: { tasks: Task[]; update
               </p>
             ) : (
               todayTasks.map((t, i) => {
-                const c = commissions.find(x => x.id === t.commissionId)
+                const c = commissions.find(x => x.id === t.commissionIds[0])
                 return (
                   <div key={t.id} style={{
                     display: 'flex', alignItems: 'center', gap: 10,
@@ -472,7 +490,7 @@ function DashAgent({ tasks, updateTask, currentUserId }: { tasks: Task[]; update
               <p style={{ fontSize: 12, color: C.subtle, padding: '12px 0' }}>Rien de prévu cette semaine.</p>
             )}
             {weekTasks.map((t, i) => {
-              const c = commissions.find(x => x.id === t.commissionId)
+              const c = commissions.find(x => x.id === t.commissionIds[0])
               return (
                 <Row
                   key={t.id}
@@ -539,11 +557,12 @@ function DashAgent({ tasks, updateTask, currentUserId }: { tasks: Task[]; update
           <Card padding={14}>
             <SectionHeader title="Actions rapides" />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <Link href="/taches"><Button style={{ width: '100%' }}>+ Créer une tâche</Button></Link>
-              <Link href="/rh"><Button style={{ width: '100%' }}>Poser un congé</Button></Link>
-              {canUploadCR && (
-                <Link href="/comptes-rendus"><Button style={{ width: '100%' }}>Uploader un compte rendu</Button></Link>
-              )}
+              <Button variant="primary" style={{ width: '100%' }} onClick={() => badger(currentUserId, present ? 'sortie' : 'entree')}>
+                {present ? '⏱ Pointer la sortie' : "⏱ Pointer l'entrée"}
+              </Button>
+              <p style={{ fontSize: 11, color: C.subtle, margin: '-2px 0 4px' }}>{pointageStatus}</p>
+              <Button style={{ width: '100%' }} onClick={() => setTaskOpen(true)}>+ Créer une tâche</Button>
+              <Button style={{ width: '100%' }} onClick={() => setLeaveOpen(true)}>Poser un congé</Button>
               {canSubmitFacture && (
                 <Link href="/finances"><Button style={{ width: '100%' }}>Soumettre une facture</Button></Link>
               )}
@@ -551,6 +570,20 @@ function DashAgent({ tasks, updateTask, currentUserId }: { tasks: Task[]; update
           </Card>
         </div>
       </div>
+
+      <TaskForm
+        open={taskOpen}
+        onClose={() => setTaskOpen(false)}
+        onSubmit={(data) => createTask(data)}
+        title="Nouvelle tâche"
+      />
+      <LeaveRequestModal
+        open={leaveOpen}
+        onClose={() => setLeaveOpen(false)}
+        personId={currentUserId}
+        record={myRecord}
+        onSubmit={submitLeave}
+      />
     </div>
   )
 }
@@ -562,12 +595,12 @@ function NotificationsList({ tasks, currentUserId }: { tasks: Task[]; currentUse
   // - tâches récemment créées par d'autres
   const toValidate = tasks.filter(t => t.validatorId === currentUserId && t.status === 'En attente validation')
   const overdue = tasks.filter(t => {
-    if (t.assigneeId !== currentUserId || t.status === 'Terminé') return false
+    if (!t.assigneeIds.includes(currentUserId) || t.status === 'Terminé') return false
     const d = daysUntil(t.dueDate)
     return d !== null && d < 0
   })
   const recentByOthers = [...tasks]
-    .filter(t => t.assigneeId === currentUserId)
+    .filter(t => t.assigneeIds.includes(currentUserId))
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
     .slice(0, 1)
 
@@ -588,7 +621,7 @@ function NotificationsList({ tasks, currentUserId }: { tasks: Task[]; currentUse
   }
   if (recentByOthers.length > 0) {
     const t = recentByOthers[0]
-    const author = getPerson(t.assigneeId)
+    const author = getPerson(t.assigneeIds[0])
     notifs.push({
       text: `Tâche : ${t.label}`,
       sub: `Assignée à ${author?.fullName ?? '—'}`,
@@ -638,7 +671,7 @@ function DashMaire({ tasks, currentUserId }: { tasks: Task[]; currentUserId: str
   // ─── Stats tâches ───
   const commissionStats = useMemo(() => {
     return commissions.map(c => {
-      const ctasks = tasks.filter(t => t.commissionId === c.id)
+      const ctasks = tasks.filter(t => t.commissionIds.includes(c.id))
       const active = ctasks.filter(t => t.status !== 'Terminé').length
       const late = ctasks.filter(t => {
         if (t.status === 'Terminé') return false
@@ -652,7 +685,7 @@ function DashMaire({ tasks, currentUserId }: { tasks: Task[]; currentUserId: str
   const chargeByPerson = useMemo(() => {
     const counts = new Map<string, number>()
     tasks.filter(t => t.status !== 'Terminé').forEach(t => {
-      counts.set(t.assigneeId, (counts.get(t.assigneeId) ?? 0) + 1)
+      t.assigneeIds.forEach(id => counts.set(id, (counts.get(id) ?? 0) + 1))
     })
     return Array.from(counts.entries())
       .map(([id, count]) => {

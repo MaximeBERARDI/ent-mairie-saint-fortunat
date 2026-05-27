@@ -66,14 +66,14 @@ export default function TachesPage() {
 
   const counts = useMemo(() => ({
     toutes: tasks.length,
-    mes: tasks.filter(t => t.assigneeId === currentUserId || t.validatorId === currentUserId).length,
+    mes: tasks.filter(t => t.assigneeIds.includes(currentUserId) || t.validatorId === currentUserId).length,
     enAttente: tasks.filter(t => t.status === 'En attente validation').length,
     terminees: tasks.filter(t => t.status === 'Terminé').length,
   }), [tasks, currentUserId])
 
   const filteredTasks = useMemo(() => {
     return tasks.filter(t => {
-      if (filter === 'mes') return t.assigneeId === currentUserId || t.validatorId === currentUserId
+      if (filter === 'mes') return t.assigneeIds.includes(currentUserId) || t.validatorId === currentUserId
       if (filter === 'en-attente') return t.status === 'En attente validation'
       if (filter === 'terminees') return t.status === 'Terminé'
       return true
@@ -271,9 +271,12 @@ function ListeView({
             </div>
           ) : (
             tasks.map((t, i) => {
-              const assignee = getPerson(t.assigneeId)
-              const commName = getCommissionShortName(commissions, t.commissionId)
-              const commColor = getCommissionColor(commissions, t.commissionId)
+              const assignees = t.assigneeIds
+                .map(id => getPerson(id))
+                .filter((p): p is NonNullable<typeof p> => Boolean(p))
+              const commName = getCommissionShortName(commissions, t.commissionIds[0])
+              const commColor = getCommissionColor(commissions, t.commissionIds[0])
+              const extraComms = Math.max(0, t.commissionIds.length - 1)
               return (
                 <div
                   key={t.id}
@@ -292,12 +295,29 @@ function ListeView({
                       <p style={{ fontSize: 12, color: C.subtle, marginTop: 2 }}>📎 {t.documents!.length} pièce{t.documents!.length > 1 ? 's' : ''} jointe{t.documents!.length > 1 ? 's' : ''}</p>
                     )}
                   </div>
-                  <div style={{ flex: 1.5 }}>
-                    {commName ? <Tag label={commName} color={commColor} /> : <span style={{ fontSize: 12, color: C.subtle }}>—</span>}
+                  <div style={{ flex: 1.5, display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
+                    {commName ? (
+                      <>
+                        <Tag label={commName} color={commColor} />
+                        {extraComms > 0 && <span style={{ fontSize: 11, color: C.subtle }}>+{extraComms}</span>}
+                      </>
+                    ) : <span style={{ fontSize: 12, color: C.subtle }}>—</span>}
                   </div>
                   <div style={{ flex: 1.6, display: 'flex', alignItems: 'center', gap: 6 }}>
-                    {assignee && <Avatar initials={assignee.initials} size={20} color={assignee.color} />}
-                    <p style={{ fontSize: 12, color: C.muted }}>{assignee ? assignee.fullName : '—'}</p>
+                    {assignees.length > 0 ? (
+                      <>
+                        <span style={{ display: 'flex' }}>
+                          {assignees.slice(0, 3).map((a, idx) => (
+                            <span key={a.id} style={{ marginLeft: idx === 0 ? 0 : -6 }}>
+                              <Avatar initials={a.initials} size={20} color={a.color} />
+                            </span>
+                          ))}
+                        </span>
+                        <p style={{ fontSize: 12, color: C.muted }}>
+                          {assignees.length === 1 ? assignees[0].fullName : `${assignees.length} personnes`}
+                        </p>
+                      </>
+                    ) : <p style={{ fontSize: 12, color: C.subtle, fontStyle: 'italic' }}>Non assignée</p>}
                   </div>
                   <div style={{ flex: 1.2 }}><p style={{ fontSize: 12, color: C.muted }}>{formatShortFR(t.dueDate)}</p></div>
                   <div style={{ flex: 1 }}><Badge label={t.priority} variant={PRIORITY_VARIANTS[t.priority]} /></div>
@@ -374,9 +394,12 @@ function KanbanView({
                 <p style={{ fontSize: 12, color: C.subtle, textAlign: 'center', padding: '12px 0' }}>—</p>
               )}
               {columnTasks.map(card => {
-                const assignee = getPerson(card.assigneeId)
-                const commName = getCommissionShortName(commissions, card.commissionId)
-                const commColor = getCommissionColor(commissions, card.commissionId)
+                const assignees = card.assigneeIds
+                  .map(id => getPerson(id))
+                  .filter((p): p is NonNullable<typeof p> => Boolean(p))
+                const commName = getCommissionShortName(commissions, card.commissionIds[0])
+                const commColor = getCommissionColor(commissions, card.commissionIds[0])
+                const extraComms = Math.max(0, card.commissionIds.length - 1)
                 return (
                   <Card
                     key={card.id}
@@ -389,14 +412,27 @@ function KanbanView({
                     <div onClick={() => onEdit(card)}>
                       <p style={{ fontSize: 12, color: C.fg, fontWeight: 500, marginBottom: 6 }}>{card.label}</p>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-                        {assignee && <Avatar initials={assignee.initials} size={18} color={assignee.color} />}
-                        <p style={{ flex: 1, fontSize: 12, color: C.subtle }}>
-                          {assignee ? assignee.fullName : '—'}
-                        </p>
+                        {assignees.length > 0 ? (
+                          <>
+                            <span style={{ display: 'flex' }}>
+                              {assignees.slice(0, 3).map((a, idx) => (
+                                <span key={a.id} style={{ marginLeft: idx === 0 ? 0 : -6 }}>
+                                  <Avatar initials={a.initials} size={18} color={a.color} />
+                                </span>
+                              ))}
+                            </span>
+                            <p style={{ flex: 1, fontSize: 12, color: C.subtle }}>
+                              {assignees.length === 1 ? assignees[0].fullName : `${assignees.length} personnes`}
+                            </p>
+                          </>
+                        ) : (
+                          <p style={{ flex: 1, fontSize: 12, color: C.subtle, fontStyle: 'italic' }}>Non assignée</p>
+                        )}
                         {card.dueDate && <span style={{ fontSize: 12, color: C.subtle }}>{formatShortFR(card.dueDate)}</span>}
                       </div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                         {commName && <Tag label={commName} color={commColor} />}
+                        {extraComms > 0 && <span style={{ fontSize: 11, color: C.subtle }}>+{extraComms}</span>}
                         <Badge label={card.priority} variant={PRIORITY_VARIANTS[card.priority]} />
                         {(card.documents?.length ?? 0) > 0 && (
                           <span style={{ fontSize: 12, color: C.subtle }}>📎 {card.documents!.length}</span>

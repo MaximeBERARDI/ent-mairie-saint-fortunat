@@ -266,12 +266,12 @@ async function main() {
   for (const t of TASKS) {
     const id = t.id.startsWith('task-') ? t.id : `task-seed-${t.id}`
     lines.push(
-      `INSERT INTO tasks (id, label, description, "commissionId", "assigneeId", "validatorId", "createdById", "dueDate", priority, status, "createdAt", "updatedAt") VALUES (`,
+      `INSERT INTO tasks (id, label, description, "commissionIds", "assigneeIds", "validatorId", "createdById", "dueDate", priority, status, "createdAt", "updatedAt") VALUES (`,
       `  ${sqlString(id)},`,
       `  ${sqlString(t.label)},`,
       `  ${sqlString(t.description)},`,
-      `  ${sqlString(t.commissionId)},`,
-      `  ${sqlString(t.assigneeId)},`,
+      `  ${t.commissionIds.length ? `ARRAY[${t.commissionIds.map(c => sqlString(c)).join(', ')}]::text[]` : `'{}'`},`,
+      `  ${t.assigneeIds.length ? `ARRAY[${t.assigneeIds.map(a => sqlString(a)).join(', ')}]::text[]` : `'{}'`},`,
       `  ${sqlString(t.validatorId)},`,
       `  ${sqlString(t.createdById)},`,
       `  ${t.dueDate ? `'${t.dueDate}'::date` : 'NULL'},`,

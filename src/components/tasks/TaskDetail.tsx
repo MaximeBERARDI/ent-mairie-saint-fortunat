@@ -61,10 +61,14 @@ export function TaskDetailContent({
   onAddComment, onDeleteComment, compact = false,
 }: TaskDetailContentProps) {
   const { commissions } = useCommissions()
-  const assignee = getPerson(task.assigneeId)
+  const assignees = task.assigneeIds
+    .map(id => getPerson(id))
+    .filter((p): p is NonNullable<typeof p> => Boolean(p))
   const validator = task.validatorId ? getPerson(task.validatorId) : null
   const author = task.createdById ? getPerson(task.createdById) : null
-  const commission = commissions.find(c => c.id === task.commissionId) ?? null
+  const taskCommissions = task.commissionIds
+    .map(id => commissions.find(c => c.id === id))
+    .filter((c): c is NonNullable<typeof c> => Boolean(c))
 
   const [draft, setDraft] = useState('')
   const handleAdd = () => {
@@ -96,8 +100,8 @@ export function TaskDetailContent({
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
         <Badge label={task.status} variant={STATUS_VARIANTS[task.status]} />
         <Badge label={task.priority} variant={PRIORITY_VARIANTS[task.priority]} />
-        {commission && (
-          <span style={{
+        {taskCommissions.map(commission => (
+          <span key={commission.id} style={{
             display: 'inline-flex', alignItems: 'center', gap: 4,
             padding: '2px 8px', borderRadius: 12,
             background: `${commission.color}20`, color: commission.color,
@@ -106,7 +110,7 @@ export function TaskDetailContent({
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: commission.color }} />
             {commission.name}
           </span>
-        )}
+        ))}
       </div>
 
       <Separator my={10} />
@@ -114,13 +118,17 @@ export function TaskDetailContent({
       {/* Métadonnées */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
         <DetailRow
-          label="Assigné à"
-          value={assignee ? (
-            <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Avatar initials={assignee.initials} size={20} color={assignee.color} />
-              {assignee.fullName} <span style={{ color: C.subtle, fontWeight: 400 }}>· {assignee.poste}</span>
+          label={assignees.length > 1 ? 'Assigné·es' : 'Assigné à'}
+          value={assignees.length > 0 ? (
+            <span style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              {assignees.map(a => (
+                <span key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Avatar initials={a.initials} size={20} color={a.color} />
+                  {a.fullName}
+                </span>
+              ))}
             </span>
-          ) : '—'}
+          ) : <span style={{ color: C.subtle, fontWeight: 400, fontStyle: 'italic' }}>Non assignée</span>}
         />
         {validator && (
           <DetailRow

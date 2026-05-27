@@ -18,8 +18,8 @@ interface DocumentInput {
 interface PatchBody {
   label?: string
   description?: string | null
-  commissionId?: string | null
-  assigneeId?: string
+  commissionIds?: string[]
+  assigneeIds?: string[]
   validatorId?: string | null
   dueDate?: string | null
   priority?: TaskPriority
@@ -41,8 +41,8 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   const data: Record<string, unknown> = {}
   if (body.label !== undefined) data.label = body.label.trim()
   if (body.description !== undefined) data.description = body.description?.trim() || null
-  if (body.commissionId !== undefined) data.commissionId = body.commissionId || null
-  if (body.assigneeId !== undefined) data.assigneeId = body.assigneeId
+  if (body.commissionIds !== undefined) data.commissionIds = body.commissionIds
+  if (body.assigneeIds !== undefined) data.assigneeIds = body.assigneeIds
   if (body.validatorId !== undefined) data.validatorId = body.validatorId || null
   if (body.dueDate !== undefined) data.dueDate = body.dueDate ? new Date(body.dueDate) : null
   if (body.priority !== undefined) data.priority = priorityToDb(body.priority)
