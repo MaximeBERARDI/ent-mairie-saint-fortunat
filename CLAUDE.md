@@ -170,6 +170,7 @@ Variables d'env (cf. `.env.example`) :
 1. `DATABASE_URL` — chaîne **Connection pooling** Supabase (port 6543)
 2. `DIRECT_URL` — chaîne **Direct connection** (port 5432), pour Prisma
 3. `AUTH_SECRET` — `openssl rand -base64 32`
+4. `ANTHROPIC_API_KEY` — clé « sk-ant-… » (console.anthropic.com), **requise par l'extraction IA des comptes rendus** (`/api/cr-extract`). Une valeur placeholder désactive l'extraction (la route renvoie une erreur explicite). Le référentiel Personnes/Commissions injecté dans le prompt est chargé depuis la DB.
 
 ### Migrations Prisma (versionnées)
 

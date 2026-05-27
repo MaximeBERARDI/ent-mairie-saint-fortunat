@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
-import { PEOPLE } from '@/lib/people'
-import { COMMISSIONS } from '@/lib/data'
+import { db } from '@/lib/db'
 import type { ExtractedTask } from '@/lib/types'
 
 export const runtime = 'nodejs'
@@ -24,26 +23,20 @@ interface ExtractResponse {
   }
 }
 
-// Liste compacte des personnes injectée dans le prompt — sert de référentiel
-// pour que Claude mappe directement « M. Durand » → "p-md"
-const PEOPLE_DIRECTORY = PEOPLE
-  .filter(p => p.active)
-  .map(p => `- ${p.id} : ${p.fullName} (${p.poste})`)
-  .join('\n')
-
-const COMMISSIONS_DIRECTORY = COMMISSIONS
-  .map(c => `- ${c.id} : ${c.name}`)
-  .join('\n')
-
-const SYSTEM_PROMPT = `Tu es un assistant spécialisé dans l'analyse de comptes rendus de réunions municipales françaises.
+// Construit le prompt système à partir des référentiels (Personnes +
+// Commissions) chargés depuis la base à chaque requête, pour que Claude
+// reconnaisse aussi les profils/commissions créés après le seed. Le tri DB
+// est stable → le texte reste déterministe et le prompt cache fait mouche.
+function buildSystemPrompt(peopleDirectory: string, commissionsDirectory: string): string {
+  return `Tu es un assistant spécialisé dans l'analyse de comptes rendus de réunions municipales françaises.
 
 Ton rôle : extraire de manière exhaustive toutes les actions, décisions et tâches assignées à des personnes identifiées dans le document.
 
 RÉFÉRENTIEL DES PERSONNES DE LA MAIRIE (utilise leur ID quand tu reconnais une personne — sinon laisse assigneeId à null) :
-${PEOPLE_DIRECTORY}
+${peopleDirectory}
 
 COMMISSIONS :
-${COMMISSIONS_DIRECTORY}
+${commissionsDirectory}
 
 RÈGLES D'EXTRACTION :
 1. N'extrais que des tâches concrètes et actionnables (verbes d'action : préparer, finaliser, commander, vérifier, transmettre…). Ignore les simples constats ou échanges.
@@ -54,6 +47,7 @@ RÈGLES D'EXTRACTION :
 6. sourceQuote : reproduis textuellement la phrase du CR qui justifie la tâche (max 200 caractères).
 
 Sois exhaustif mais précis : mieux vaut 3 tâches solides à 90% que 10 tâches floues à 50%.`
+}
 
 const TASK_SCHEMA = {
   type: 'object',
@@ -117,9 +111,12 @@ const TASK_SCHEMA = {
 
 export async function POST(req: NextRequest) {
   const apiKey = process.env.ANTHROPIC_API_KEY
-  if (!apiKey) {
+  // Une vraie clé Anthropic commence par « sk-ant- ». On rejette aussi les
+  // placeholders (ex: « A_RENSEIGNER ») pour afficher un message clair plutôt
+  // qu'un 401 cryptique côté Claude.
+  if (!apiKey || !apiKey.startsWith('sk-ant-')) {
     return NextResponse.json(
-      { error: 'ANTHROPIC_API_KEY non configurée côté serveur. Ajoutez-la dans .env.local (dev) ou dans les variables d\'environnement Vercel (prod).' },
+      { error: 'ANTHROPIC_API_KEY non configurée côté serveur (clé absente ou valeur placeholder). Renseignez une clé « sk-ant-… » dans .env.local (dev) ou les variables d\'environnement Vercel (prod).' },
       { status: 500 },
     )
   }
@@ -144,10 +141,20 @@ export async function POST(req: NextRequest) {
 
   const client = new Anthropic({ apiKey })
 
+  // Référentiels chargés depuis la base (et non plus en dur) : Claude
+  // reconnaît ainsi les profils et commissions créés après le seed.
+  const [people, commissionsList] = await Promise.all([
+    db.person.findMany({ where: { active: true }, orderBy: [{ nom: 'asc' }] }),
+    db.commission.findMany({ orderBy: { name: 'asc' } }),
+  ])
+  const peopleDirectory = people.map(p => `- ${p.id} : ${p.fullName} (${p.poste})`).join('\n')
+  const commissionsDirectory = commissionsList.map(c => `- ${c.id} : ${c.name}`).join('\n')
+  const systemPrompt = buildSystemPrompt(peopleDirectory, commissionsDirectory)
+
   // Contexte additionnel utilisateur (commission présélectionnée, date connue)
   const contextLines: string[] = []
   if (body.commissionId) {
-    const c = COMMISSIONS.find(x => x.id === body.commissionId)
+    const c = commissionsList.find(x => x.id === body.commissionId)
     if (c) contextLines.push(`Commission : ${c.name} (${c.id})`)
   }
   if (body.meetingDate) {
@@ -165,7 +172,7 @@ export async function POST(req: NextRequest) {
       // cache_control auto-place sur le dernier bloc cachable : ici le system prompt
       // (PEOPLE + COMMISSIONS sont stables d'un CR à l'autre → ~90% de hit après le 1er)
       cache_control: { type: 'ephemeral' },
-      system: [{ type: 'text', text: SYSTEM_PROMPT }],
+      system: [{ type: 'text', text: systemPrompt }],
       output_config: {
         format: {
           type: 'json_schema',
