@@ -6,21 +6,34 @@ interface CardProps {
   style?: React.CSSProperties
   padding?: number | string
   hover?: boolean
+  glass?: boolean
   onClick?: () => void
 }
 
-export function Card({ children, className = '', style, padding, hover, onClick }: CardProps) {
+export function Card({ children, className = '', style, padding, hover, glass, onClick }: CardProps) {
   const p = padding !== undefined ? padding : 'var(--card-pad)'
+  const surface: React.CSSProperties = glass
+    ? {
+        background: 'rgba(255,255,255,0.6)',
+        backdropFilter: 'blur(14px)',
+        WebkitBackdropFilter: 'blur(14px)',
+        border: '1px solid rgba(255,255,255,0.7)',
+        borderRadius: 14,
+        boxShadow: '0 8px 30px rgba(20,28,22,0.07)',
+      }
+    : {
+        background: 'var(--surface)',
+        border: '1px solid var(--card-border)',
+        borderRadius: 8,
+        boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+      }
   return (
     <div
       className={className}
       onClick={onClick}
       style={{
-        background: 'var(--surface)',
-        border: '1px solid var(--card-border)',
-        borderRadius: 8,
+        ...surface,
         padding: p,
-        boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
         transition: hover ? 'box-shadow 0.15s' : undefined,
         ...style,
       }}

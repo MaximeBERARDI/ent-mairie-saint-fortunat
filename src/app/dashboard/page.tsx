@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { Shell } from '@/components/layout/Shell'
 import { Card, KpiCard } from '@/components/ui/Card'
@@ -632,7 +632,7 @@ function DashMaire({ tasks, currentUserId, createTask }: { tasks: Task[]; curren
       }).length
       return { ...c, activeCount: active, lateCount: late }
     })
-  }, [tasks])
+  }, [commissions, tasks])
 
   const chargeByPerson = useMemo(() => {
     const counts = new Map<string, number>()
@@ -702,102 +702,45 @@ function DashMaire({ tasks, currentUserId, createTask }: { tasks: Task[]; curren
   const missionsEnCours = missions.filter(m => !m.dateFin || m.dateFin >= today)
 
   return (
-    <div>
+    <div style={{
+      background: `radial-gradient(1100px 460px at 4% -14%, ${C.greenLight}, transparent 72%), radial-gradient(900px 460px at 100% -10%, ${C.warningLight}, transparent 72%), ${C.bg}`,
+      borderRadius: 16,
+    }}>
+      <div style={{ marginBottom: 'var(--gap)' }}>
+        <h2 style={{ fontSize: 22, color: C.fg, fontWeight: 700, marginBottom: 2 }}>
+          {getGreeting()}, {me?.prenom ?? ''} — {getTodayLabel()}
+        </h2>
+        <p style={{ fontSize: 13, color: C.subtle }}>Voici l&apos;état de pilotage de la commune.</p>
+      </div>
+
+      <AttentionPanel
+        late={totalLate}
+        toValidate={pendingValidation}
+        factures={facturesEnAttente.length}
+        facturesMontant={facturesEnAttenteMontant}
+        conges={leavesPending.length}
+        postesAlerte={postesEnAlerte.length}
+        contrats={contratsAReno.length}
+      />
+
       {/* Agent signataire/responsable (ex. DGS) : ses actions agent restent
           accessibles même en vue Pilotage. */}
       {me?.role === 'agent' && (
-        <div style={{ maxWidth: 320, marginBottom: 12 }}>
+        <div style={{ maxWidth: 320, marginBottom: 'var(--gap)' }}>
           <AgentQuickActions currentUserId={currentUserId} createTask={createTask} />
         </div>
       )}
 
-      {/* Bandeau d'alertes globales */}
-      {totalLate > 0 && (
-        <div style={{ background: C.dangerLight, border: `1px solid ${C.danger}40`, borderRadius: 8, padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-          <div style={{ width: 8, height: 8, borderRadius: '50%', background: C.danger, flexShrink: 0 }} />
-          <p style={{ fontSize: 14, color: C.danger, fontWeight: 600, flex: 1 }}>
-            {totalLate} tâche{totalLate > 1 ? 's' : ''} en retard sur l&apos;ensemble de l&apos;équipe
-          </p>
-          <Link href="/taches"><Button size="sm" style={{ borderColor: C.danger, color: C.danger }}>Voir</Button></Link>
-        </div>
-      )}
-
-      {pendingValidation + facturesEnAttente.length + leavesPending.length > 0 && (
-        <div style={{ background: C.warningLight, border: `1px solid ${C.warning}40`, borderRadius: 8, padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
-          <div style={{ width: 8, height: 8, borderRadius: '50%', background: C.warning, flexShrink: 0 }} />
-          <p style={{ fontSize: 14, color: C.warning, fontWeight: 600, flex: 1 }}>
-            À valider :
-            {pendingValidation > 0 && ` ${pendingValidation} tâche${pendingValidation > 1 ? 's' : ''}`}
-            {pendingValidation > 0 && (facturesEnAttente.length > 0 || leavesPending.length > 0) && ' ·'}
-            {facturesEnAttente.length > 0 && ` ${facturesEnAttente.length} facture${facturesEnAttente.length > 1 ? 's' : ''} (${fmtMontant(facturesEnAttenteMontant)})`}
-            {facturesEnAttente.length > 0 && leavesPending.length > 0 && ' ·'}
-            {leavesPending.length > 0 && ` ${leavesPending.length} demande${leavesPending.length > 1 ? 's' : ''} d'absence`}
-          </p>
-          <div style={{ display: 'flex', gap: 6 }}>
-            {pendingValidation > 0 && <Link href="/taches"><Button size="sm" style={{ borderColor: C.warning, color: C.warning }}>Tâches</Button></Link>}
-            {facturesEnAttente.length > 0 && <Link href="/finances"><Button size="sm" style={{ borderColor: C.warning, color: C.warning }}>Factures</Button></Link>}
-            {leavesPending.length > 0 && <Link href="/rh"><Button size="sm" style={{ borderColor: C.warning, color: C.warning }}>Congés</Button></Link>}
-          </div>
-        </div>
-      )}
-
-      {contratsAReno.length > 0 && (
-        <div style={{ background: C.dangerLight, border: `1px solid ${C.danger}40`, borderRadius: 8, padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-          <div style={{ width: 8, height: 8, borderRadius: '50%', background: C.danger, flexShrink: 0 }} />
-          <p style={{ fontSize: 14, color: C.danger, fontWeight: 600, flex: 1 }}>
-            {contratsAReno.length} contrat{contratsAReno.length > 1 ? 's à renouveler' : ' à renouveler'} dans les 90 jours
-          </p>
-          <Link href="/rh"><Button size="sm" style={{ borderColor: C.danger, color: C.danger }}>Voir RH</Button></Link>
-        </div>
-      )}
-
-      {/* Vue d'ensemble Finances — synthèse en tête, avant le détail budgétaire */}
-      <Card padding={16} style={{ marginBottom: 'var(--gap)' }}>
-        <SectionHeader title="Vue d'ensemble Finances" actions={<Link href="/finances"><Button size="sm">Module Finances</Button></Link>} />
+      <DashSection
+        title="Finances"
+        defaultOpen={postesEnAlerte.length > 0}
+        accent={postesEnAlerte.length > 0 ? C.warning : C.success}
+        accentLabel={postesEnAlerte.length > 0 ? 'À surveiller' : 'OK'}
+        summary={`CAF ${fmtMontant(ratios.cafBrute)} · désend. ${ratios.cafBrute <= 0 ? '∞' : `${ratios.capaciteDesendettement} ans`}${postesEnAlerte.length > 0 ? ` · ${postesEnAlerte.length} en alerte` : ''}`}
+      >
         <div style={{ display: 'flex', gap: 'var(--gap)', flexWrap: 'wrap' }}>
-          <div style={{ flex: '1 1 150px', minWidth: 130 }}>
-            <p style={{ fontSize: 11, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>CAF brute</p>
-            <p style={{ fontSize: 22, color: ratios.cafBrute >= 0 ? C.success : C.danger, fontWeight: 700, lineHeight: 1.1 }}>{fmtMontant(ratios.cafBrute)}</p>
-          </div>
-          <div style={{ flex: '1 1 150px', minWidth: 130 }}>
-            <p style={{ fontSize: 11, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>Taux d&apos;épargne brute</p>
-            <p style={{ fontSize: 22, color: C.fg, fontWeight: 700, lineHeight: 1.1 }}>{ratios.tauxEpargneBrute}%</p>
-          </div>
-          <div style={{ flex: '1 1 150px', minWidth: 130 }}>
-            <p style={{ fontSize: 11, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>Capacité désendettement</p>
-            <p style={{ fontSize: 22, color: ratios.cafBrute <= 0 ? C.danger : ratios.capaciteDesendettement < 8 ? C.success : ratios.capaciteDesendettement <= 12 ? C.warning : C.danger, fontWeight: 700, lineHeight: 1.1 }}>{ratios.cafBrute <= 0 ? '∞' : `${ratios.capaciteDesendettement} ans`}</p>
-          </div>
-          <div style={{ flex: '1 1 150px', minWidth: 130 }}>
-            <p style={{ fontSize: 11, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 4 }}>Factures à valider</p>
-            <p style={{ fontSize: 22, color: facturesEnAttente.length > 0 ? C.warning : C.success, fontWeight: 700, lineHeight: 1.1 }}>{facturesEnAttente.length}</p>
-            {facturesEnAttente.length > 0 && <p style={{ fontSize: 12, color: C.subtle }}>{fmtMontant(facturesEnAttenteMontant)}</p>}
-          </div>
-        </div>
-      </Card>
-
-      {/* KPI bar — pilotage global */}
-      <div style={{ display: 'flex', gap: 'var(--gap)', marginBottom: 'var(--gap)' }}>
-        <KpiCard label="CAF brute (auto-financement)" value={fmtMontant(ratios.cafBrute)} sub={`Taux d'épargne ${ratios.tauxEpargneBrute}%`} color={ratios.cafBrute >= 0 ? C.success : C.danger} />
-        <KpiCard
-          label="Capacité désendettement"
-          value={ratios.cafBrute <= 0 ? '∞' : `${ratios.capaciteDesendettement} ans`}
-          sub={ratios.capaciteDesendettement < 8 ? 'sain (< 8 ans)' : ratios.capaciteDesendettement <= 12 ? 'à surveiller' : 'critique'}
-          color={ratios.capaciteDesendettement < 8 ? C.success : ratios.capaciteDesendettement <= 12 ? C.warning : C.danger}
-        />
-        <KpiCard label="Masse salariale chargée" value={fmtMontant(masseSalChargee)} sub={`${records.length} agents · brut + ~50%`} color={C.slate} />
-        <KpiCard label="Présents aujourd'hui" value={`${records.length - absentToday.length} / ${records.length}`} sub={absentToday.length === 0 ? 'tous présents' : `${absentToday.length} en absence`} color={absentToday.length === 0 ? C.success : C.warning} />
-      </div>
-
-      <div style={{ display: 'flex', gap: 'var(--gap)', marginBottom: 'var(--gap)' }}>
-        <KpiCard label="Tâches actives (équipe)" value={totalActive} sub={totalLate > 0 ? `⚠ ${totalLate} en retard` : 'aucune en retard'} color={totalLate > 0 ? C.danger : C.subtle} />
-        <KpiCard label="Validations en attente" value={pendingValidation + facturesEnAttente.length + leavesPending.length} sub={`${pendingValidation} tâches · ${facturesEnAttente.length} factures · ${leavesPending.length} congés`} color={(pendingValidation + facturesEnAttente.length + leavesPending.length) > 0 ? C.warning : C.success} />
-        <KpiCard label="Postes budget en alerte" value={postesEnAlerte.length} sub="> 80% consommés" color={postesEnAlerte.length > 0 ? C.warning : C.success} />
-        <KpiCard label="Missions en cours" value={missionsEnCours.length} sub={`sur ${missions.length} affectations`} color={C.terra} />
-      </div>
-
-      <div style={{ display: 'flex', gap: 'var(--gap)', marginBottom: 'var(--gap)' }}>
         {/* Suivi budgétaire réel par chapitre M14 */}
-        <Card style={{ flex: 3 }} padding={16}>
+        <Card glass style={{ flex: 3, minWidth: 280 }} padding={16}>
           <SectionHeader title="Suivi budgétaire — top chapitres M14" actions={<Link href="/finances"><Button size="sm">Plan comptable complet</Button></Link>} />
           {topChapitres.length === 0 ? (
             <p style={{ fontSize: 12, color: C.subtle, padding: '12px 0' }}>Aucun budget alloué.</p>
@@ -817,8 +760,15 @@ function DashMaire({ tasks, currentUserId, createTask }: { tasks: Task[]; curren
         </Card>
 
         {/* Postes en alerte + ratios */}
-        <Card style={{ flex: 2 }} padding={14}>
-          <SectionHeader title="Indicateurs financiers (R. 2313-1)" actions={<Link href="/finances"><Button size="sm">Détail</Button></Link>} />
+        <Card glass style={{ flex: 2 }} padding={14}>
+          <SectionHeader title="Indicateurs financiers" actions={<Link href="/finances"><Button size="sm">Détail</Button></Link>} />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
+            <RatioMini label="CAF brute" value={fmtMontant(ratios.cafBrute)} valueColor={ratios.cafBrute >= 0 ? C.success : C.danger} />
+            <RatioMini label="Désendettement" value={ratios.cafBrute <= 0 ? '∞' : `${ratios.capaciteDesendettement} ans`} valueColor={ratios.capaciteDesendettement < 8 ? C.success : ratios.capaciteDesendettement <= 12 ? C.warning : C.danger} />
+            <RatioMini label="Masse salariale chargée" value={fmtMontant(masseSalChargee)} />
+            <RatioMini label="Taux d'épargne brute" value={`${ratios.tauxEpargneBrute}%`} />
+          </div>
+          <p style={{ fontSize: 11, color: C.subtle, fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Ratios réglementaires (R. 2313-1)</p>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 12 }}>
             <RatioMini helpKey="ratio1_drfParHab" label="DRF / habitant" value={`${ratios.ratio1_drfParHab} €`} />
             <RatioMini helpKey="ratio3_rrfParHab" label="RRF / habitant" value={`${ratios.ratio3_rrfParHab} €`} />
@@ -827,7 +777,7 @@ function DashMaire({ tasks, currentUserId, createTask }: { tasks: Task[]; curren
           </div>
           <p style={{ fontSize: 12, color: C.subtle, fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Postes en alerte</p>
           {postesEnAlerte.length === 0 ? (
-            <p style={{ fontSize: 12, color: C.subtle, fontStyle: 'italic' }}>Aucun poste en alerte 👌</p>
+            <p style={{ fontSize: 12, color: C.subtle, fontStyle: 'italic' }}>Aucun poste en alerte.</p>
           ) : (
             postesEnAlerte.map(p => (
               <div key={p.code} style={{ marginBottom: 8 }}>
@@ -841,16 +791,25 @@ function DashMaire({ tasks, currentUserId, createTask }: { tasks: Task[]; curren
             ))
           )}
         </Card>
-      </div>
+        </div>
+      </DashSection>
 
-      <div style={{ display: 'flex', gap: 'var(--gap)' }}>
-        <Card style={{ flex: 2 }} padding={14}>
+      <DashSection
+        title="Tâches & commissions"
+        defaultOpen
+        accent={totalLate > 0 ? C.danger : C.success}
+        accentLabel={totalLate > 0 ? 'Retard' : 'OK'}
+        summary={`${totalActive} active${totalActive > 1 ? 's' : ''}${totalLate > 0 ? ` · ${totalLate} en retard` : ''}`}
+      >
+        <div style={{ display: 'flex', gap: 'var(--gap)', flexWrap: 'wrap' }}>
+        <Card glass style={{ flex: 2, minWidth: 280 }} padding={14}>
           <SectionHeader title="État des commissions" />
           {commissionStats.map((c, i) => (
             <Link key={c.id} href="/commissions" style={{ textDecoration: 'none' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0', borderBottom: i < commissionStats.length - 1 ? `1px solid ${C.border}` : 'none', cursor: 'pointer' }}>
                 <div style={{ width: 8, height: 8, borderRadius: '50%', background: c.lateCount > 0 ? C.danger : c.activeCount > 8 ? C.warning : C.success, flexShrink: 0 }} />
                 <p style={{ fontSize: 12, color: C.fg, flex: 1 }}>{c.name}</p>
+                <span style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: c.lateCount > 0 ? C.danger : c.activeCount > 8 ? C.warning : C.success }}>{c.lateCount > 0 ? 'Retard' : c.activeCount > 8 ? 'Chargée' : 'OK'}</span>
                 <p style={{ fontSize: 12, color: C.subtle }}>{c.activeCount} tâches{c.lateCount > 0 ? ` · ${c.lateCount} retard` : ''}</p>
                 <Badge label={c.nextMeeting} variant={c.lateCount > 0 ? 'danger' : c.activeCount > 8 ? 'warning' : 'default'} />
               </div>
@@ -858,7 +817,7 @@ function DashMaire({ tasks, currentUserId, createTask }: { tasks: Task[]; curren
           ))}
         </Card>
 
-        <Card style={{ flex: 1.5 }} padding={14}>
+        <Card glass style={{ flex: 1.5 }} padding={14}>
           <SectionHeader title="Charge équipe" actions={<Link href="/equipe"><Button size="sm">Voir</Button></Link>} />
           {chargeByPerson.length === 0 ? (
             <p style={{ fontSize: 12, color: C.subtle, padding: '8px 0' }}>Aucune tâche active.</p>
@@ -872,12 +831,22 @@ function DashMaire({ tasks, currentUserId, createTask }: { tasks: Task[]; curren
             ))
           )}
         </Card>
+        </div>
+      </DashSection>
 
+      <DashSection
+        title="Ressources humaines"
+        defaultOpen={absentToday.length > 0}
+        accent={absentToday.length > 0 ? C.warning : C.success}
+        accentLabel={absentToday.length > 0 ? `${absentToday.length} absent${absentToday.length > 1 ? 's' : ''}` : 'Tous présents'}
+        summary={`${records.length - absentToday.length}/${records.length} présents · ${missionsEnCours.length} mission${missionsEnCours.length > 1 ? 's' : ''} en cours`}
+      >
+        <div style={{ display: 'flex', gap: 'var(--gap)', flexWrap: 'wrap' }}>
         {/* RH : qui est absent aujourd'hui */}
-        <Card style={{ flex: 1.5 }} padding={14}>
+        <Card glass style={{ flex: 1, minWidth: 280 }} padding={14}>
           <SectionHeader title="Absences du jour" actions={<Link href="/rh"><Button size="sm">RH</Button></Link>} />
           {absentToday.length === 0 ? (
-            <p style={{ fontSize: 12, color: C.subtle, fontStyle: 'italic', padding: '8px 0' }}>Tous les agents sont présents 👌</p>
+            <p style={{ fontSize: 12, color: C.subtle, fontStyle: 'italic', padding: '8px 0' }}>Tous les agents sont présents.</p>
           ) : (
             absentToday.map(l => {
               const p = people.find(x => x.id === l.personId)
@@ -894,19 +863,84 @@ function DashMaire({ tasks, currentUserId, createTask }: { tasks: Task[]; curren
             })
           )}
         </Card>
-      </div>
+        </div>
+      </DashSection>
     </div>
   )
 }
 
-function RatioMini({ label, value, helpKey }: { label: string; value: string; helpKey?: string }) {
+// Zone "Ce qui demande votre attention" : alertes consolidées et actionnables.
+function AttentionPanel({ late, toValidate, factures, facturesMontant, conges, postesAlerte, contrats }: {
+  late: number; toValidate: number; factures: number; facturesMontant: number; conges: number; postesAlerte: number; contrats: number
+}) {
+  const items: { key: string; accent: string; statut: string; label: string; detail: string; href: string }[] = []
+  if (late > 0) items.push({ key: 'late', accent: C.danger, statut: 'Retard', label: 'Tâches en retard', detail: `${late} sur l'ensemble de l'équipe`, href: '/taches' })
+  if (contrats > 0) items.push({ key: 'contrat', accent: C.danger, statut: 'Échéance', label: 'Contrats à renouveler', detail: `${contrats} dans les 90 jours`, href: '/rh' })
+  if (toValidate > 0) items.push({ key: 'val', accent: C.warning, statut: 'À valider', label: 'Tâches à valider', detail: `${toValidate} en attente`, href: '/taches' })
+  if (factures > 0) items.push({ key: 'fact', accent: C.warning, statut: 'À valider', label: 'Factures à valider', detail: `${factures} · ${fmtMontant(facturesMontant)}`, href: '/finances' })
+  if (conges > 0) items.push({ key: 'leave', accent: C.warning, statut: 'À valider', label: 'Congés à valider', detail: `${conges} demande${conges > 1 ? 's' : ''}`, href: '/rh' })
+  if (postesAlerte > 0) items.push({ key: 'budget', accent: C.warning, statut: 'Alerte', label: 'Postes budget en alerte', detail: `${postesAlerte} poste${postesAlerte > 1 ? 's' : ''} > 80% consommé${postesAlerte > 1 ? 's' : ''}`, href: '/finances' })
+
   return (
-    <div style={{ padding: 8, background: C.bg, borderRadius: 6 }}>
+    <Card glass padding={14} style={{ marginBottom: 'var(--gap)' }}>
+      <SectionHeader title="Ce qui demande votre attention" />
+      {items.length === 0 ? (
+        <p style={{ fontSize: 13, color: C.subtle, padding: '6px 0' }}>Rien d&apos;urgent pour le moment.</p>
+      ) : (
+        items.map((it, i) => (
+          <div key={it.key} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 0', borderBottom: i < items.length - 1 ? `1px solid ${C.border}` : 'none' }}>
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: it.accent, flexShrink: 0 }} />
+            <span style={{ fontSize: 11, fontWeight: 700, color: it.accent, textTransform: 'uppercase', letterSpacing: '0.04em', minWidth: 70 }}>{it.statut}</span>
+            <p style={{ fontSize: 13, color: C.fg, fontWeight: 500, flex: 1 }}>{it.label} <span style={{ color: C.subtle, fontWeight: 400 }}>— {it.detail}</span></p>
+            <Link href={it.href}><Button size="sm">Voir</Button></Link>
+          </div>
+        ))
+      )}
+    </Card>
+  )
+}
+
+// Section de détail repliable : en-tête cliquable (pastille + libellé de statut
+// + résumé visible même replié), contenu masquable.
+function DashSection({ title, summary, accent, accentLabel, defaultOpen = false, children }: {
+  title: string; summary?: string; accent?: string; accentLabel?: string; defaultOpen?: boolean; children: React.ReactNode
+}) {
+  const [open, setOpen] = useState(defaultOpen)
+  return (
+    <div style={{ marginBottom: 'var(--gap)' }}>
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        aria-expanded={open}
+        style={{
+          width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+          padding: '11px 14px',
+          background: 'rgba(255,255,255,0.55)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          border: '1px solid rgba(255,255,255,0.6)',
+          borderRadius: 12, cursor: 'pointer', textAlign: 'left', fontFamily: "'DM Sans', sans-serif",
+        }}
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.subtle} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ transform: open ? 'rotate(90deg)' : 'none', transition: 'transform 200ms ease', flexShrink: 0 }}><polyline points="9 6 15 12 9 18" /></svg>
+        {accent && <span style={{ width: 8, height: 8, borderRadius: '50%', background: accent, flexShrink: 0 }} />}
+        {accent && accentLabel && <span style={{ fontSize: 10, fontWeight: 700, color: accent, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{accentLabel}</span>}
+        <span style={{ fontSize: 14, fontWeight: 700, color: C.fg }}>{title}</span>
+        {summary && <span style={{ fontSize: 12, color: C.subtle, marginLeft: 'auto' }}>{summary}</span>}
+      </button>
+      {open && <div style={{ marginTop: 'var(--gap)' }}>{children}</div>}
+    </div>
+  )
+}
+
+function RatioMini({ label, value, helpKey, valueColor }: { label: string; value: string; helpKey?: string; valueColor?: string }) {
+  return (
+    <div style={{ padding: 8, background: 'rgba(255,255,255,0.45)', borderRadius: 6 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
         <p style={{ fontSize: 11, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</p>
         {helpKey && <InfoTooltip indicatorKey={helpKey} size={12} />}
       </div>
-      <p style={{ fontSize: 14, color: C.fg, fontWeight: 700 }}>{value}</p>
+      <p style={{ fontSize: 14, color: valueColor ?? C.fg, fontWeight: 700 }}>{value}</p>
     </div>
   )
 }
