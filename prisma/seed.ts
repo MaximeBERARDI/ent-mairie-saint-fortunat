@@ -215,10 +215,10 @@ async function main() {
 
   console.log('✓ Seed terminé')
   console.log(`\n📋 Comptes créés : ${PEOPLE.length} utilisateurs avec le mot de passe par défaut "${DEFAULT_PASSWORD}"`)
-  console.log('⚠ Les utilisateurs devront le changer à leur 1ʳᵉ connexion.\n')
-  console.log('Note : ce seed couvre Persons/Users/Commissions/Plan M14/Fournisseurs/EmployeeRecords.')
-  console.log('Pour les autres modèles (Tâches, Factures, Quittances, etc.), la migration des hooks')
-  console.log("se fera lors d'une session ultérieure (Phase C du Lot 8a).")
+  console.log('⚠ À personnaliser via Profil → Sécurité après la 1ʳᵉ connexion.\n')
+  console.log('Note : ce seed couvre les référentiels (Persons/Users/Commissions/Réunions/')
+  console.log('Plan M14/Fournisseurs/EmployeeRecords). Les données transactionnelles')
+  console.log("(Tâches, Factures, Quittances, etc.) se créent dans l'application.")
 }
 
 main()

@@ -138,9 +138,6 @@ Toujours type-checker avant de commit. Le build inclut le type-check + le lint N
 
 ## Dette technique connue
 
-- **Pas de migrations Prisma versionnées** : `prisma/migrations/` est absent,
-  le schéma est synchronisé via `prisma db push` (workflow MVP, sans
-  historique de migration). À formaliser avant la mise en prod « sérieuse ».
 - **Auth, choix MVP assumés** : pas de changement de mot de passe forcé à la
   1ère connexion (tous partent du défaut au seed), pas de reset self-service
   par email (pas de SMTP) → le reset passe par un admin.
@@ -166,8 +163,7 @@ Stack back-end : **Supabase (PostgreSQL) + Prisma + NextAuth (Auth.js v5)**.
 
 ⚠️ **Conséquence importante** : les hooks lisent maintenant `/api` **sans
 fallback localStorage**. L'app ne tourne donc plus en mode démo offline — une
-DB joignable est requise (en dev comme en prod). Le schéma est poussé via
-`prisma db push` (pas de dossier `prisma/migrations/`, cf. dette technique).
+DB joignable est requise (en dev comme en prod).
 
 Variables d'env (cf. `.env.example`) :
 
@@ -175,14 +171,29 @@ Variables d'env (cf. `.env.example`) :
 2. `DIRECT_URL` — chaîne **Direct connection** (port 5432), pour Prisma
 3. `AUTH_SECRET` — `openssl rand -base64 32`
 
+### Migrations Prisma (versionnées)
+
+L'historique de migration vit dans `prisma/migrations/`. La base existante
+(créée à l'origine via `db push`) a été **baselinée** : la migration
+`0_init` reconstitue tout le schéma et a été marquée comme déjà appliquée
+(`prisma migrate resolve --applied 0_init`).
+
+Workflow désormais :
+
+- **Changement de schéma** : éditer `schema.prisma` puis
+  `npx prisma migrate dev --name <description>` (crée la migration + applique
+  en local + régénère le client). Ne plus utiliser `db push`.
+- **Déploiement** : `npx prisma migrate deploy` (applique les migrations en
+  attente). À câbler idéalement dans le build/déploiement Vercel.
+- `npx prisma migrate status` pour vérifier l'état.
+
 ### Phase C — migration des hooks : faite
 
 Tous les hooks métier appellent désormais les route handlers `/api`
 (cf. table « Modules métier » ci-dessus). Le pattern optimistic-update
 préserve l'interface des hooks, donc les pages n'ont pas bougé.
 
-**Reliquats** (cf. dette technique) : formalisation des migrations Prisma,
-GED des commissions.
+**Reliquats** (cf. dette technique) : GED des commissions.
 
 ## Contraintes de persistance
 
