@@ -11,6 +11,7 @@ import { SectionHeader } from '@/components/ui/SectionHeader'
 import { Separator } from '@/components/ui/Separator'
 import { Avatar } from '@/components/ui/Avatar'
 import { Progress } from '@/components/ui/Progress'
+import { SkeletonKpis, SkeletonList } from '@/components/ui/Skeleton'
 import { COLORS as C } from '@/lib/theme'
 import { useFactures } from '@/hooks/useFactures'
 import { useFournisseurs } from '@/hooks/useFournisseurs'
@@ -195,7 +196,14 @@ function FacturesView() {
   }
 
   if (!hydrated) {
-    return <p style={{ padding: 20, fontSize: 12, color: C.subtle }}>Chargement…</p>
+    return (
+      <div>
+        <SkeletonKpis count={4} />
+        <Card padding={14}>
+          <SkeletonList rows={6} />
+        </Card>
+      </div>
+    )
   }
 
   return (
@@ -815,7 +823,11 @@ function FournisseursView() {
   }, [factures])
 
   if (!hydrated) {
-    return <p style={{ padding: 20, fontSize: 12, color: C.subtle }}>Chargement…</p>
+    return (
+      <Card padding={14}>
+        <SkeletonList rows={6} withAvatar />
+      </Card>
+    )
   }
 
   return (

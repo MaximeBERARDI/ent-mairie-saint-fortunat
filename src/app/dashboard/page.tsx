@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { Shell } from '@/components/layout/Shell'
 import { Card, KpiCard } from '@/components/ui/Card'
+import { SkeletonKpis, SkeletonList } from '@/components/ui/Skeleton'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Row } from '@/components/ui/Row'
@@ -107,7 +108,10 @@ export default function DashboardPage() {
   if (!hydrated) {
     return (
       <Shell title="Tableau de bord" notif={3}>
-        <div style={{ padding: 40, textAlign: 'center', color: C.subtle, fontSize: 14 }}>Chargement…</div>
+        <SkeletonKpis count={4} />
+        <Card padding={14}>
+          <SkeletonList rows={8} withAvatar />
+        </Card>
       </Shell>
     )
   }

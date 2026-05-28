@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import { Shell } from '@/components/layout/Shell'
 import { Card } from '@/components/ui/Card'
+import { SkeletonList } from '@/components/ui/Skeleton'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Avatar } from '@/components/ui/Avatar'
@@ -98,7 +99,9 @@ export default function EquipePage() {
   if (!hydrated) {
     return (
       <Shell title="Équipe">
-        <div style={{ padding: 40, textAlign: 'center', color: C.subtle, fontSize: 14 }}>Chargement…</div>
+        <Card padding={14}>
+          <SkeletonList rows={10} withAvatar />
+        </Card>
       </Shell>
     )
   }

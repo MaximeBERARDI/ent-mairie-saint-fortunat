@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { Shell } from '@/components/layout/Shell'
 import { Card, KpiCard } from '@/components/ui/Card'
+import { SkeletonList } from '@/components/ui/Skeleton'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Row } from '@/components/ui/Row'
@@ -213,7 +214,9 @@ export default function CommissionsPage() {
   if (!hydrated || !teamHydrated) {
     return (
       <Shell title="Commissions">
-        <div style={{ padding: 40, textAlign: 'center', color: C.subtle, fontSize: 14 }}>Chargement…</div>
+        <Card padding={14}>
+          <SkeletonList rows={6} />
+        </Card>
       </Shell>
     )
   }

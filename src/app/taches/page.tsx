@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import { Shell } from '@/components/layout/Shell'
 import { Card } from '@/components/ui/Card'
+import { SkeletonKpis, SkeletonList } from '@/components/ui/Skeleton'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Tag } from '@/components/ui/Tag'
@@ -108,7 +109,10 @@ export default function TachesPage() {
   if (!hydrated) {
     return (
       <Shell title="Mes tâches" notif={5}>
-        <div style={{ padding: 40, textAlign: 'center', color: C.subtle, fontSize: 14 }}>Chargement…</div>
+        <SkeletonKpis count={4} />
+        <Card padding={14}>
+          <SkeletonList rows={8} withAvatar />
+        </Card>
       </Shell>
     )
   }
