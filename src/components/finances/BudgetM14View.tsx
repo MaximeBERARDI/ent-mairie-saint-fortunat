@@ -19,10 +19,23 @@ import { CHAPITRES_M14, COMPTE_LABEL, COMPTES_TIERS } from '@/lib/m14-plan'
 import { computeRatios, ratioStatus } from '@/lib/ratios'
 import { exportPlanComptable, exportGrandLivre, exportRapportBudgetaire } from '@/lib/excel-export'
 import type { Section, Sens, Ecriture, JournalCode, LigneEcriture } from '@/lib/types'
-import { HistoriqueView } from './HistoriqueView'
-import { ProjectionView } from './ProjectionView'
-import { SimulationView } from './SimulationView'
+import dynamic from 'next/dynamic'
 import { InfoTooltip } from '@/components/ui/InfoTooltip'
+
+// Vues recharts chargées dynamiquement (~160 KB de recharts ne sont
+// téléchargés qu'au clic sur l'onglet correspondant).
+const HistoriqueView = dynamic(() => import('./HistoriqueView').then((m) => ({ default: m.HistoriqueView })), {
+  loading: () => <p style={{ padding: 20, fontSize: 12, color: C.subtle }}>Chargement de l&apos;historique…</p>,
+  ssr: false,
+})
+const ProjectionView = dynamic(() => import('./ProjectionView').then((m) => ({ default: m.ProjectionView })), {
+  loading: () => <p style={{ padding: 20, fontSize: 12, color: C.subtle }}>Chargement de la projection…</p>,
+  ssr: false,
+})
+const SimulationView = dynamic(() => import('./SimulationView').then((m) => ({ default: m.SimulationView })), {
+  loading: () => <p style={{ padding: 20, fontSize: 12, color: C.subtle }}>Chargement de la simulation…</p>,
+  ssr: false,
+})
 
 const fmtMontant = (v: number) =>
   new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v)
