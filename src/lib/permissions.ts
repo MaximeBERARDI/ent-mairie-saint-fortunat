@@ -33,6 +33,7 @@ export type Permission =
   | 'finance.validate-invoices'
   | 'finance.pay-invoices'
   | 'finance.manage-budget'
+  | 'parc.manage-relances'
   // Documents (GED legacy — non utilisé pour la bibliothèque)
   | 'documents.view-all'
   | 'documents.upload'
@@ -94,6 +95,7 @@ export const PERMISSION_LABELS: Record<Permission, string> = {
   'finance.validate-invoices': 'Valider les factures',
   'finance.pay-invoices': 'Marquer les factures comme payées (mandatement)',
   'finance.manage-budget': 'Gérer le budget',
+  'parc.manage-relances': 'Gérer les relances de loyers impayés',
   'documents.view-all': 'Voir tous les documents (GED)',
   'documents.upload': 'Téléverser des documents',
   'documents.delete': 'Supprimer des documents',
@@ -131,6 +133,7 @@ export const ROLE_PERMISSIONS: Record<AuthLevel, Permission[]> = {
     'cr.upload', 'cr.validate', 'cr.publish',
     'hr.view-all', 'hr.manage', 'hr.validate-leaves',
     'finance.view-all', 'finance.validate-invoices', 'finance.pay-invoices',
+    'parc.manage-relances',
     'documents.view-all', 'documents.upload', 'documents.delete',
     'library.read', 'library.write', 'library.admin',
     'team.view', 'team.invite',
@@ -141,6 +144,7 @@ export const ROLE_PERMISSIONS: Record<AuthLevel, Permission[]> = {
     'cr.upload', 'cr.publish',
     'hr.view-all',
     'finance.view-all',
+    'parc.manage-relances',
     'documents.view-all', 'documents.upload',
     'library.read', 'library.write',
     'team.view',

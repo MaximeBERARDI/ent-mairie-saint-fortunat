@@ -22,6 +22,9 @@ interface PatchBody {
   dateFin?: string | null
   loyerMensuel?: number
   chargesMensuelles?: number
+  chargesOrduresMensuelles?: number
+  chargesGazMensuelles?: number
+  chargesAutresMensuelles?: number
   depotGarantie?: number
   statut?: StatutBail
   notes?: string | null
@@ -42,6 +45,9 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   if (body.dateFin !== undefined) data.dateFin = body.dateFin ? new Date(body.dateFin) : null
   if (body.loyerMensuel !== undefined) data.loyerMensuel = body.loyerMensuel
   if (body.chargesMensuelles !== undefined) data.chargesMensuelles = body.chargesMensuelles
+  if (body.chargesOrduresMensuelles !== undefined) data.chargesOrduresMensuelles = body.chargesOrduresMensuelles
+  if (body.chargesGazMensuelles !== undefined) data.chargesGazMensuelles = body.chargesGazMensuelles
+  if (body.chargesAutresMensuelles !== undefined) data.chargesAutresMensuelles = body.chargesAutresMensuelles
   if (body.depotGarantie !== undefined) data.depotGarantie = body.depotGarantie
   if (body.statut !== undefined) data.statut = bailStatutToDb(body.statut)
   if (body.notes !== undefined) data.notes = body.notes?.trim() || null

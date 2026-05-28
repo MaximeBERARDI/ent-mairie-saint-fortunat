@@ -471,7 +471,11 @@ export interface Bail {
   dateDebut: string             // ISO YYYY-MM-DD
   dateFin?: string              // ISO YYYY-MM-DD (vide = bail à durée indéterminée)
   loyerMensuel: number          // € HC — peut différer du loyer du bien (négocié)
-  chargesMensuelles: number     // €
+  chargesMensuelles: number     // € — total (= ordures + gaz + autres)
+  // Ventilation des charges (présents depuis la migration 20260528, défaut 0)
+  chargesOrduresMensuelles?: number   // € — pré-remplissage quittances (TEOM)
+  chargesGazMensuelles?: number       // € — pré-remplissage quittances (chauffage gaz)
+  chargesAutresMensuelles?: number    // € — toutes autres charges récupérables
   depotGarantie: number         // € (versé à l'entrée)
   statut: StatutBail
   notes?: string
@@ -489,7 +493,11 @@ export interface Quittance {
   mois: string                  // 'YYYY-MM'
   numero: string                // ex: 'Q-2026-05-001'
   loyerHC: number               // hors charges
-  charges: number
+  charges: number               // total des charges (= ordures + gaz + autres)
+  // Ventilation des charges (présents depuis la migration 20260528, défaut 0)
+  chargesOrdures?: number       // € — taxe d'ordures ménagères récupérée
+  chargesGaz?: number           // € — quote-part gaz/chauffage
+  chargesAutres?: number        // € — eau, ascenseur, entretien parties communes…
   total: number                 // loyerHC + charges
   statut: StatutQuittance
   emiseAt?: string              // ISO timestamp de génération
@@ -497,6 +505,28 @@ export interface Quittance {
   modeReglement?: ModeReglement
   notes?: string
   createdAt: string
+}
+
+// ─── Relance d'impayé locatif ──────────────────────────────────────
+
+export type CanalRelance = 'Courrier' | 'Email' | 'SMS' | 'Téléphone' | 'En personne' | 'Autre'
+
+export type ResultatRelance =
+  | 'Sans réponse'
+  | 'Engagement de paiement'
+  | 'Payée'
+  | 'Refus'
+  | 'Autre'
+
+export interface Relance {
+  id: string
+  quittanceId: string           // ref Quittance.id
+  date: string                  // ISO YYYY-MM-DD
+  canal: CanalRelance
+  contenu?: string              // texte de la relance / résumé
+  resultat?: ResultatRelance    // saisi a posteriori
+  createdById: string           // ref Person.id (auteur)
+  createdAt: string             // ISO timestamp
 }
 
 // ─── Pointage des agents (heures travaillées + heures sup.) ────────

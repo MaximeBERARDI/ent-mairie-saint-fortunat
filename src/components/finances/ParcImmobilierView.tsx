@@ -718,6 +718,11 @@ function BailForm({ biens, locataires, initial, onSubmit, onCancel }: {
             dateFin: dateFin || undefined,
             loyerMensuel: num(loyerMensuel),
             chargesMensuelles: num(chargesMensuelles),
+            // Pré-ventilation par défaut : tout dans 'autres' (ventilation
+            // fine via le formulaire à venir au commit 2).
+            chargesOrduresMensuelles: 0,
+            chargesGazMensuelles: 0,
+            chargesAutresMensuelles: num(chargesMensuelles),
             depotGarantie: num(depotGarantie),
             statut,
             notes: notes.trim() || undefined,

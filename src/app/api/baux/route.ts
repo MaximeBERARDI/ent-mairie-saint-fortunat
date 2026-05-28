@@ -31,6 +31,9 @@ interface CreateBody {
   dateFin?: string | null
   loyerMensuel?: number
   chargesMensuelles?: number
+  chargesOrduresMensuelles?: number
+  chargesGazMensuelles?: number
+  chargesAutresMensuelles?: number
   depotGarantie?: number
   statut?: StatutBail
   notes?: string
@@ -56,6 +59,9 @@ export async function POST(req: Request) {
       dateFin: body.dateFin ? new Date(body.dateFin) : null,
       loyerMensuel: body.loyerMensuel,
       chargesMensuelles: body.chargesMensuelles,
+      chargesOrduresMensuelles: body.chargesOrduresMensuelles ?? 0,
+      chargesGazMensuelles: body.chargesGazMensuelles ?? 0,
+      chargesAutresMensuelles: body.chargesAutresMensuelles ?? body.chargesMensuelles,
       depotGarantie: body.depotGarantie,
       statut: bailStatutToDb(body.statut),
       notes: body.notes?.trim() || null,

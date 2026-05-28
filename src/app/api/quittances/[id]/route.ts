@@ -13,6 +13,9 @@ interface PatchBody {
   // Édition générale
   loyerHC?: number
   charges?: number
+  chargesOrdures?: number
+  chargesGaz?: number
+  chargesAutres?: number
   total?: number
   statut?: StatutQuittance
   emiseAt?: string
@@ -45,6 +48,9 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   // Édition générale
   if (body.loyerHC !== undefined) data.loyerHC = body.loyerHC
   if (body.charges !== undefined) data.charges = body.charges
+  if (body.chargesOrdures !== undefined) data.chargesOrdures = body.chargesOrdures
+  if (body.chargesGaz !== undefined) data.chargesGaz = body.chargesGaz
+  if (body.chargesAutres !== undefined) data.chargesAutres = body.chargesAutres
   if (body.total !== undefined) data.total = body.total
   if (body.statut !== undefined && body.action === undefined) data.statut = quittStatutToDb(body.statut)
   if (body.emiseAt !== undefined) data.emiseAt = body.emiseAt ? new Date(body.emiseAt) : null

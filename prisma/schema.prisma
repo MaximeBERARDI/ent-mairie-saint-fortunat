@@ -138,6 +138,7 @@ model Person {
   comptesRendus  CompteRendu[]     @relation("CompteRenduUploader")
   libraryFoldersCreated LibraryFolder[]
   libraryDocumentsUploaded LibraryDocument[]
+  relancesEnvoyees    Relance[]         @relation("RelanceCreator")
 
   @@map("persons")
 }
@@ -616,21 +617,24 @@ enum StatutBail {
 }
 
 model Bail {
-  id                  String         @id @default(cuid())
-  bienId              String
-  bien                BienImmobilier @relation(fields: [bienId], references: [id], onDelete: Restrict)
-  locataireId         String
-  locataire           Locataire      @relation(fields: [locataireId], references: [id], onDelete: Restrict)
-  dateDebut           DateTime
-  dateFin             DateTime?
-  loyerMensuel        Decimal        @db.Decimal(10, 2)
-  chargesMensuelles   Decimal        @db.Decimal(10, 2)
-  depotGarantie       Decimal        @db.Decimal(10, 2)
-  statut              StatutBail
-  notes               String?        @db.Text
-  documents           Document[]
-  quittances          Quittance[]
-  createdAt           DateTime       @default(now())
+  id                       String         @id @default(cuid())
+  bienId                   String
+  bien                     BienImmobilier @relation(fields: [bienId], references: [id], onDelete: Restrict)
+  locataireId              String
+  locataire                Locataire      @relation(fields: [locataireId], references: [id], onDelete: Restrict)
+  dateDebut                DateTime
+  dateFin                  DateTime?
+  loyerMensuel             Decimal        @db.Decimal(10, 2)
+  chargesMensuelles        Decimal        @db.Decimal(10, 2)
+  chargesOrduresMensuelles Decimal        @db.Decimal(10, 2) @default(0)
+  chargesGazMensuelles     Decimal        @db.Decimal(10, 2) @default(0)
+  chargesAutresMensuelles  Decimal        @db.Decimal(10, 2) @default(0)
+  depotGarantie            Decimal        @db.Decimal(10, 2)
+  statut                   StatutBail
+  notes                    String?        @db.Text
+  documents                Document[]
+  quittances               Quittance[]
+  createdAt                DateTime       @default(now())
 
   @@map("baux")
 }
@@ -651,6 +655,9 @@ model Quittance {
   numero          String          @unique
   loyerHC         Decimal         @db.Decimal(10, 2)
   charges         Decimal         @db.Decimal(10, 2)
+  chargesOrdures  Decimal         @db.Decimal(10, 2) @default(0)
+  chargesGaz      Decimal         @db.Decimal(10, 2) @default(0)
+  chargesAutres   Decimal         @db.Decimal(10, 2) @default(0)
   total           Decimal         @db.Decimal(10, 2)
   statut          StatutQuittance
   emiseAt         DateTime?
@@ -658,9 +665,28 @@ model Quittance {
   modeReglement   String?
   notes           String?         @db.Text
   ecritures       Ecriture[]
+  relances        Relance[]
   createdAt       DateTime        @default(now())
 
   @@map("quittances")
+}
+
+// Historique des relances de paiement sur une quittance impayée.
+// Une quittance peut avoir N relances. Le résultat (paiement, refus, etc.)
+// est saisi a posteriori pour traçabilité administrative.
+model Relance {
+  id          String    @id @default(cuid())
+  quittanceId String
+  quittance   Quittance @relation(fields: [quittanceId], references: [id], onDelete: Cascade)
+  date        DateTime
+  canal       String    // 'Courrier' | 'Email' | 'SMS' | 'Téléphone' | 'En personne' | 'Autre'
+  contenu     String?   @db.Text
+  resultat    String?   // 'Sans réponse' | 'Engagement de paiement' | 'Payée' | 'Refus' | 'Autre'
+  createdById String
+  createdBy   Person    @relation("RelanceCreator", fields: [createdById], references: [id], onDelete: Restrict)
+  createdAt   DateTime  @default(now())
+
+  @@map("relances")
 }
 
 // ─── Subventions ───────────────────────────────────────────────────

@@ -32,6 +32,9 @@ interface CreateBody {
   mois?: string
   loyerHC?: number
   charges?: number
+  chargesOrdures?: number
+  chargesGaz?: number
+  chargesAutres?: number
   total?: number
   statut?: StatutQuittance
   emiseAt?: string
@@ -59,6 +62,9 @@ export async function POST(req: Request) {
       numero,
       loyerHC: body.loyerHC,
       charges: body.charges,
+      chargesOrdures: body.chargesOrdures ?? 0,
+      chargesGaz: body.chargesGaz ?? 0,
+      chargesAutres: body.chargesAutres ?? body.charges,
       total: body.total,
       statut: quittStatutToDb(body.statut),
       emiseAt: body.emiseAt ? new Date(body.emiseAt) : null,

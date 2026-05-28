@@ -44,14 +44,26 @@ export async function POST(req: Request) {
 
       counter++
       const numero = `${prefix}${String(counter).padStart(3, '0')}`
+      // Pré-remplissage des charges ventilées depuis le bail. Le total charges
+      // recopie la ventilation pour rester cohérent avec le champ legacy.
+      const ord = Number(bail.chargesOrduresMensuelles)
+      const gaz = Number(bail.chargesGazMensuelles)
+      const autres = Number(bail.chargesAutresMensuelles)
+      // Si le bail n'a pas encore de ventilation saisie (tous à 0), retombe
+      // sur l'ancien champ chargesMensuelles bloqué dans 'chargesAutres'.
+      const sommeVentilee = ord + gaz + autres
+      const chargesTotal = sommeVentilee > 0 ? sommeVentilee : Number(bail.chargesMensuelles)
       const q = await tx.quittance.create({
         data: {
           bailId: bail.id,
           mois,
           numero,
           loyerHC: bail.loyerMensuel,
-          charges: bail.chargesMensuelles,
-          total: Number(bail.loyerMensuel) + Number(bail.chargesMensuelles),
+          charges: chargesTotal,
+          chargesOrdures: ord,
+          chargesGaz: gaz,
+          chargesAutres: sommeVentilee > 0 ? autres : Number(bail.chargesMensuelles),
+          total: Number(bail.loyerMensuel) + chargesTotal,
           statut: 'emise',
           emiseAt: new Date(),
         },
