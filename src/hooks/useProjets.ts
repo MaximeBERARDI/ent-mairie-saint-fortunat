@@ -5,82 +5,69 @@
 // (annuiteConstante, projeterProjet, combinerProjections) restent
 // purs et indépendants du stockage.
 
-import { useEffect, useState, useCallback } from 'react'
+import { useCallback } from 'react'
+import useSWR from 'swr'
+import { fetcher } from '@/lib/swr-fetcher'
 import type { Projet, ProjectionAnnuelle } from '@/lib/types'
 import type { RatiosM14 } from '@/lib/ratios'
 
+const KEY = '/api/projets'
+
 export function useProjets() {
-  const [projets, setProjets] = useState<Projet[]>([])
-  const [hydrated, setHydrated] = useState(false)
+  const { data, mutate } = useSWR<Projet[]>(KEY, fetcher, {
+    revalidateOnFocus: true,
+    revalidateOnReconnect: true,
+    dedupingInterval: 2000,
+  })
+  const projets = data ?? []
+  const hydrated = data !== undefined
 
-  useEffect(() => {
-    let cancelled = false
-    fetch('/api/projets')
-      .then((r) => (r.ok ? r.json() : Promise.reject(r)))
-      .then((data: Projet[]) => {
-        if (!cancelled) {
-          setProjets(data)
-          setHydrated(true)
-        }
-      })
-      .catch((e) => {
-        if (!cancelled) {
-          console.error('[useProjets] load error:', e)
-          setHydrated(true)
-        }
-      })
-    return () => { cancelled = true }
-  }, [])
-
-  const createProjet = useCallback((data: Omit<Projet, 'id' | 'createdAt'>): Projet => {
+  const createProjet = useCallback((dataInput: Omit<Projet, 'id' | 'createdAt'>): Projet => {
     const tempId = `tmp-${Date.now()}`
-    const optimistic: Projet = { ...data, id: tempId, createdAt: new Date().toISOString() }
-    setProjets((prev) => [optimistic, ...prev])
+    const optimistic: Projet = { ...dataInput, id: tempId, createdAt: new Date().toISOString() }
+    const previous = projets
+    mutate([optimistic, ...previous], { revalidate: false })
 
-    fetch('/api/projets', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data),
-    })
+    fetch(KEY, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dataInput) })
       .then((r) => (r.ok ? r.json() : Promise.reject(r)))
       .then((created: Projet) => {
-        setProjets((prev) => prev.map((p) => (p.id === tempId ? created : p)))
+        mutate((prev) => (prev ?? []).map((p) => (p.id === tempId ? created : p)), { revalidate: false })
       })
       .catch((e) => {
         console.error('[useProjets] create error:', e)
-        setProjets((prev) => prev.filter((p) => p.id !== tempId))
+        mutate(previous, { revalidate: false })
         alert('Impossible de créer le projet.')
       })
     return optimistic
-  }, [])
+  }, [projets, mutate])
 
   const updateProjet = useCallback((id: string, patch: Partial<Projet>) => {
-    let previous: Projet[] = []
-    setProjets((prev) => { previous = prev; return prev.map((p) => (p.id === id ? { ...p, ...patch } : p)) })
+    const previous = projets
+    mutate(previous.map((p) => (p.id === id ? { ...p, ...patch } : p)), { revalidate: false })
 
-    fetch(`/api/projets/${id}`, {
-      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch),
-    })
+    fetch(`${KEY}/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch) })
       .then((r) => (r.ok ? r.json() : Promise.reject(r)))
       .then((updated: Projet) => {
-        setProjets((prev) => prev.map((p) => (p.id === id ? updated : p)))
+        mutate((prev) => (prev ?? []).map((p) => (p.id === id ? updated : p)), { revalidate: false })
       })
       .catch((e) => {
         console.error('[useProjets] update error:', e)
-        setProjets(previous)
+        mutate(previous, { revalidate: false })
         alert('Impossible de mettre à jour le projet.')
       })
-  }, [])
+  }, [projets, mutate])
 
   const deleteProjet = useCallback((id: string) => {
-    let previous: Projet[] = []
-    setProjets((prev) => { previous = prev; return prev.filter((p) => p.id !== id) })
-    fetch(`/api/projets/${id}`, { method: 'DELETE' })
+    const previous = projets
+    mutate(previous.filter((p) => p.id !== id), { revalidate: false })
+    fetch(`${KEY}/${id}`, { method: 'DELETE' })
       .then((r) => { if (!r.ok) throw r })
       .catch((e) => {
         console.error('[useProjets] delete error:', e)
-        setProjets(previous)
+        mutate(previous, { revalidate: false })
         alert('Impossible de supprimer le projet.')
       })
-  }, [])
+  }, [projets, mutate])
 
   return { projets, hydrated, createProjet, updateProjet, deleteProjet }
 }

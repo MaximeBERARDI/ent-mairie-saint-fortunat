@@ -5,8 +5,12 @@
 // Prisma), donc les callbacks onApprove/onUnapprove ne sont plus
 // utilisés en production — gardés en signature pour rétrocompat.
 
-import { useEffect, useState, useCallback } from 'react'
+import { useCallback } from 'react'
+import useSWR from 'swr'
+import { fetcher } from '@/lib/swr-fetcher'
 import type { LeaveRequest, LeaveType, EmployeeRecord, TaskDocument } from '@/lib/types'
+
+const KEY = '/api/leaves'
 
 // Compte les jours ouvrés (lundi-vendredi) entre deux dates incluses.
 // Garde la même implémentation côté client pour l'affichage immédiat.
@@ -42,148 +46,131 @@ export function useLeaveRequests(_opts?: {
   onUnapprove?: (leave: LeaveRequest) => void
 }) {
   void _opts // gardés en signature, plus utilisés
-  const [leaves, setLeaves] = useState<LeaveRequest[]>([])
-  const [hydrated, setHydrated] = useState(false)
+  const { data, mutate } = useSWR<LeaveRequest[]>(KEY, fetcher, {
+    revalidateOnFocus: true,
+    revalidateOnReconnect: true,
+    dedupingInterval: 2000,
+  })
+  const leaves = data ?? []
+  const hydrated = data !== undefined
 
-  useEffect(() => {
-    let cancelled = false
-    fetch('/api/leaves')
-      .then((r) => (r.ok ? r.json() : Promise.reject(r)))
-      .then((data: LeaveRequest[]) => {
-        if (!cancelled) {
-          setLeaves(data)
-          setHydrated(true)
-        }
-      })
-      .catch((e) => {
-        if (!cancelled) {
-          console.error('[useLeaveRequests] load error:', e)
-          setHydrated(true)
-        }
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [])
-
-  const submitLeave = useCallback((data: NewLeaveInput): LeaveRequest => {
+  const submitLeave = useCallback((dataInput: NewLeaveInput): LeaveRequest => {
     const tempId = `tmp-${Date.now()}`
     const now = new Date().toISOString()
     const optimistic: LeaveRequest = {
-      ...data,
+      ...dataInput,
       id: tempId,
-      nbJoursOuvres: countOuvres(data.dateDebut, data.dateFin),
+      nbJoursOuvres: countOuvres(dataInput.dateDebut, dataInput.dateFin),
       statut: 'En attente',
       submittedAt: now,
       createdAt: now,
-      documents: data.documents ?? [],
+      documents: dataInput.documents ?? [],
     }
-    setLeaves((prev) => [optimistic, ...prev])
+    const previous = leaves
+    mutate([optimistic, ...previous], { revalidate: false })
 
-    fetch('/api/leaves', {
+    fetch(KEY, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
+      body: JSON.stringify(dataInput),
     })
       .then((r) => (r.ok ? r.json() : Promise.reject(r)))
       .then((created: LeaveRequest) => {
-        setLeaves((prev) => prev.map((l) => (l.id === tempId ? created : l)))
+        mutate((prev) => (prev ?? []).map((l) => (l.id === tempId ? created : l)), { revalidate: false })
       })
       .catch((e) => {
         console.error('[useLeaveRequests] submit error:', e)
-        setLeaves((prev) => prev.filter((l) => l.id !== tempId))
+        mutate(previous, { revalidate: false })
         alert('Impossible de soumettre la demande.')
       })
     return optimistic
-  }, [])
+  }, [leaves, mutate])
 
-  // Helper pour PATCH avec action workflow
+  // Helper pour PATCH avec action workflow. Le serveur recalcule aussi les
+  // compteurs de l'EmployeeRecord — on demande une revalidation de
+  // /api/employees pour garder le state RH cohérent.
   const patchAction = useCallback(
     (id: string, body: Record<string, unknown>, errorMsg: string) => {
-      const previousLeaves = leaves
-      fetch(`/api/leaves/${id}`, {
+      const previous = leaves
+      fetch(`${KEY}/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
         .then((r) => (r.ok ? r.json() : Promise.reject(r)))
         .then((updated: LeaveRequest) => {
-          setLeaves((prev) => prev.map((l) => (l.id === id ? updated : l)))
+          mutate((prev) => (prev ?? []).map((l) => (l.id === id ? updated : l)), { revalidate: false })
         })
         .catch((e) => {
           console.error('[useLeaveRequests] patch error:', e)
-          setLeaves(previousLeaves)
+          mutate(previous, { revalidate: false })
           alert(errorMsg)
         })
     },
-    [leaves],
+    [leaves, mutate],
   )
 
   const approveLeave = useCallback(
     (id: string, _decidedById: string) => {
       void _decidedById
-      setLeaves((prev) =>
-        prev.map((l) =>
+      const previous = leaves
+      mutate(
+        previous.map((l) =>
           l.id === id ? { ...l, statut: 'Approuvée', decidedAt: new Date().toISOString() } : l,
         ),
+        { revalidate: false },
       )
       patchAction(id, { action: 'approve' }, "Impossible d'approuver la demande.")
     },
-    [patchAction],
+    [leaves, mutate, patchAction],
   )
 
   const rejectLeave = useCallback(
     (id: string, _decidedById: string, motif: string) => {
       void _decidedById
-      setLeaves((prev) =>
-        prev.map((l) =>
+      const previous = leaves
+      mutate(
+        previous.map((l) =>
           l.id === id
-            ? {
-                ...l,
-                statut: 'Refusée',
-                decidedAt: new Date().toISOString(),
-                decisionMotif: motif,
-              }
+            ? { ...l, statut: 'Refusée', decidedAt: new Date().toISOString(), decisionMotif: motif }
             : l,
         ),
+        { revalidate: false },
       )
       patchAction(id, { action: 'reject', decisionMotif: motif }, 'Impossible de refuser la demande.')
     },
-    [patchAction],
+    [leaves, mutate, patchAction],
   )
 
   const reopenLeave = useCallback(
     (id: string) => {
-      setLeaves((prev) =>
-        prev.map((l) => {
+      const previous = leaves
+      mutate(
+        previous.map((l) => {
           if (l.id !== id) return l
           const { decidedById: _v, decidedAt: _va, decisionMotif: _r, ...rest } = l
           void _v; void _va; void _r
           return { ...rest, statut: 'En attente' }
         }),
+        { revalidate: false },
       )
       patchAction(id, { action: 'reopen' }, 'Impossible de réouvrir la demande.')
     },
-    [patchAction],
+    [leaves, mutate, patchAction],
   )
 
   const deleteLeave = useCallback((id: string) => {
-    let previous: LeaveRequest[] = []
-    setLeaves((prev) => {
-      previous = prev
-      return prev.filter((l) => l.id !== id)
-    })
+    const previous = leaves
+    mutate(previous.filter((l) => l.id !== id), { revalidate: false })
 
-    fetch(`/api/leaves/${id}`, { method: 'DELETE' })
-      .then((r) => {
-        if (!r.ok) throw r
-      })
+    fetch(`${KEY}/${id}`, { method: 'DELETE' })
+      .then((r) => { if (!r.ok) throw r })
       .catch((e) => {
         console.error('[useLeaveRequests] delete error:', e)
-        setLeaves(previous)
+        mutate(previous, { revalidate: false })
         alert('Impossible de supprimer la demande.')
       })
-  }, [])
+  }, [leaves, mutate])
 
   const byPerson = useCallback(
     (personId: string) => leaves.filter((l) => l.personId === personId),

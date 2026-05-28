@@ -5,8 +5,12 @@
 // la dédup des écritures auto-générées aussi (backstop), avec un pré-check
 // client pour éviter d'envoyer un doublon. Pattern optimistic (cf. useTasks).
 
-import { useEffect, useState, useCallback } from 'react'
+import { useCallback } from 'react'
+import useSWR from 'swr'
+import { fetcher } from '@/lib/swr-fetcher'
 import type { Ecriture, LigneEcriture, Facture, JournalCode } from '@/lib/types'
+
+const ECRITURES_KEY = '/api/ecritures'
 
 function newId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
@@ -42,17 +46,13 @@ interface Payload {
 }
 
 export function useEcritures() {
-  const [ecritures, setEcritures] = useState<Ecriture[]>([])
-  const [hydrated, setHydrated] = useState(false)
-
-  useEffect(() => {
-    let cancelled = false
-    fetch('/api/ecritures')
-      .then(r => (r.ok ? r.json() : Promise.reject(r)))
-      .then((data: Ecriture[]) => { if (!cancelled) { setEcritures(data); setHydrated(true) } })
-      .catch(e => { if (!cancelled) { console.error('[useEcritures] load error:', e); setHydrated(true) } })
-    return () => { cancelled = true }
-  }, [])
+  const { data, mutate } = useSWR<Ecriture[]>(ECRITURES_KEY, fetcher, {
+    revalidateOnFocus: true,
+    revalidateOnReconnect: true,
+    dedupingInterval: 2000,
+  })
+  const ecritures = data ?? []
+  const hydrated = data !== undefined
 
   // Crée l'optimiste, l'ajoute, POST, puis réconcilie avec la version serveur.
   const submit = useCallback((p: Payload): Ecriture => {
@@ -71,23 +71,26 @@ export function useEcritures() {
       createdAt: new Date().toISOString(),
       createdBy: p.createdBy,
     }
-    setEcritures(prev => [optimistic, ...prev])
+    mutate([optimistic, ...ecritures], { revalidate: false })
 
-    fetch('/api/ecritures', {
+    fetch(ECRITURES_KEY, {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(p),
     })
       .then(r => (r.ok ? r.json() : Promise.reject(r)))
       .then((saved: Ecriture) => {
-        setEcritures(prev => [saved, ...prev.filter(e => e.id !== optimistic.id && e.id !== saved.id)])
+        mutate(
+          (prev) => [saved, ...(prev ?? []).filter(e => e.id !== optimistic.id && e.id !== saved.id)],
+          { revalidate: false },
+        )
       })
       .catch(e => {
         console.error('[useEcritures] create error:', e)
-        setEcritures(prev => prev.filter(e => e.id !== optimistic.id))
+        mutate((prev) => (prev ?? []).filter(e => e.id !== optimistic.id), { revalidate: false })
         alert("Impossible d'enregistrer l'écriture (droits insuffisants ?).")
       })
 
     return optimistic
-  }, [])
+  }, [ecritures, mutate])
 
   const addEcriture = useCallback((input: NewEcritureInput): Ecriture | null => {
     const lignes = input.lignes.map(l => ({ ...l, id: newId('lig') }))
@@ -103,42 +106,49 @@ export function useEcritures() {
   }, [submit])
 
   const deleteEcriture = useCallback((id: string) => {
-    let previous: Ecriture[] = []
-    setEcritures(prev => { previous = prev; return prev.filter(e => e.id !== id) })
-    fetch(`/api/ecritures/${id}`, { method: 'DELETE' })
+    const previous = ecritures
+    mutate(previous.filter(e => e.id !== id), { revalidate: false })
+    fetch(`${ECRITURES_KEY}/${id}`, { method: 'DELETE' })
       .then(r => { if (!r.ok) throw r })
-      .catch(e => { console.error('[useEcritures] delete error:', e); setEcritures(previous); alert("Impossible de supprimer l'écriture.") })
-  }, [])
+      .catch(e => {
+        console.error('[useEcritures] delete error:', e)
+        mutate(previous, { revalidate: false })
+        alert("Impossible de supprimer l'écriture.")
+      })
+  }, [ecritures, mutate])
 
   // Le retrait optimiste est fait par l'appelant ; ici on déclenche juste la
   // suppression serveur (réconciliation au prochain chargement si erreur).
   const deleteByQuery = useCallback((qs: string) => {
-    fetch(`/api/ecritures?${qs}`, { method: 'DELETE' })
+    fetch(`${ECRITURES_KEY}?${qs}`, { method: 'DELETE' })
       .then(r => { if (!r.ok) throw r })
       .catch(e => console.error('[useEcritures] bulk delete error:', e))
   }, [])
 
   const deleteEcrituresByFacture = useCallback((factureId: string) => {
-    setEcritures(prev => prev.filter(e => e.factureId !== factureId))
+    mutate((prev) => (prev ?? []).filter(e => e.factureId !== factureId), { revalidate: false })
     deleteByQuery(`factureId=${encodeURIComponent(factureId)}`)
-  }, [deleteByQuery])
+  }, [mutate, deleteByQuery])
 
   // Suppression sélective du seul mandatement (journal BQ) — utilisé quand on
   // annule un paiement, sans toucher à l'engagement comptable (journal AC).
   const deleteEcriturePaiementByFacture = useCallback((factureId: string) => {
-    setEcritures(prev => prev.filter(e => !(e.factureId === factureId && e.journal === 'BQ')))
+    mutate(
+      (prev) => (prev ?? []).filter(e => !(e.factureId === factureId && e.journal === 'BQ')),
+      { revalidate: false },
+    )
     deleteByQuery(`factureId=${encodeURIComponent(factureId)}&journal=BQ`)
-  }, [deleteByQuery])
+  }, [mutate, deleteByQuery])
 
   const deleteEcrituresByQuittance = useCallback((quittanceId: string) => {
-    setEcritures(prev => prev.filter(e => e.quittanceId !== quittanceId))
+    mutate((prev) => (prev ?? []).filter(e => e.quittanceId !== quittanceId), { revalidate: false })
     deleteByQuery(`quittanceId=${encodeURIComponent(quittanceId)}`)
-  }, [deleteByQuery])
+  }, [mutate, deleteByQuery])
 
   const deleteEcrituresBySubvention = useCallback((subventionId: string) => {
-    setEcritures(prev => prev.filter(e => e.subventionId !== subventionId))
+    mutate((prev) => (prev ?? []).filter(e => e.subventionId !== subventionId), { revalidate: false })
     deleteByQuery(`subventionId=${encodeURIComponent(subventionId)}`)
-  }, [deleteByQuery])
+  }, [mutate, deleteByQuery])
 
   // ─── Génération automatique d'engagement (validation de facture) ──
   const generateEngagementFromFacture = useCallback((facture: Facture, validatorId: string): Ecriture | null => {

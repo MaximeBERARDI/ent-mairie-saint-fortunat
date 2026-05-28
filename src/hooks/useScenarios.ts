@@ -1,78 +1,67 @@
 'use client'
 
-// Hook gestion des scénarios de simulation financière, branché sur
-// /api/scenarios. Pattern optimistic update + rollback, cohérent avec les
-// autres hooks.
-
-import { useEffect, useState, useCallback } from 'react'
+import { useCallback } from 'react'
+import useSWR from 'swr'
+import { fetcher } from '@/lib/swr-fetcher'
 import type { Scenario } from '@/lib/types'
 
+const KEY = '/api/scenarios'
+
 export function useScenarios() {
-  const [scenarios, setScenarios] = useState<Scenario[]>([])
-  const [hydrated, setHydrated] = useState(false)
+  const { data, mutate } = useSWR<Scenario[]>(KEY, fetcher, {
+    revalidateOnFocus: true,
+    revalidateOnReconnect: true,
+    dedupingInterval: 2000,
+  })
+  const scenarios = data ?? []
+  const hydrated = data !== undefined
 
-  useEffect(() => {
-    let cancelled = false
-    fetch('/api/scenarios')
-      .then((r) => (r.ok ? r.json() : Promise.reject(r)))
-      .then((data: Scenario[]) => {
-        if (!cancelled) { setScenarios(data); setHydrated(true) }
-      })
-      .catch((e) => {
-        if (!cancelled) { console.error('[useScenarios] load error:', e); setHydrated(true) }
-      })
-    return () => { cancelled = true }
-  }, [])
-
-  const createScenario = useCallback((data: Omit<Scenario, 'id' | 'createdAt'>): Scenario => {
+  const createScenario = useCallback((dataInput: Omit<Scenario, 'id' | 'createdAt'>): Scenario => {
     const tempId = `tmp-${Date.now()}`
-    const optimistic: Scenario = { ...data, id: tempId, createdAt: new Date().toISOString() }
-    setScenarios((prev) => [optimistic, ...prev])
+    const optimistic: Scenario = { ...dataInput, id: tempId, createdAt: new Date().toISOString() }
+    const previous = scenarios
+    mutate([optimistic, ...previous], { revalidate: false })
 
-    fetch('/api/scenarios', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data),
-    })
+    fetch(KEY, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dataInput) })
       .then((r) => (r.ok ? r.json() : Promise.reject(r)))
       .then((created: Scenario) => {
-        setScenarios((prev) => prev.map((s) => (s.id === tempId ? created : s)))
+        mutate((prev) => (prev ?? []).map((s) => (s.id === tempId ? created : s)), { revalidate: false })
       })
       .catch((e) => {
         console.error('[useScenarios] create error:', e)
-        setScenarios((prev) => prev.filter((s) => s.id !== tempId))
-        alert('Impossible d\'enregistrer le scénario (droits insuffisants ?).')
+        mutate(previous, { revalidate: false })
+        alert("Impossible d'enregistrer le scénario (droits insuffisants ?).")
       })
     return optimistic
-  }, [])
+  }, [scenarios, mutate])
 
   const updateScenario = useCallback((id: string, patch: Partial<Scenario>) => {
-    let previous: Scenario[] = []
-    setScenarios((prev) => { previous = prev; return prev.map((s) => (s.id === id ? { ...s, ...patch } : s)) })
+    const previous = scenarios
+    mutate(previous.map((s) => (s.id === id ? { ...s, ...patch } : s)), { revalidate: false })
 
-    fetch(`/api/scenarios/${id}`, {
-      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch),
-    })
+    fetch(`${KEY}/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch) })
       .then((r) => (r.ok ? r.json() : Promise.reject(r)))
       .then((updated: Scenario) => {
-        setScenarios((prev) => prev.map((s) => (s.id === id ? updated : s)))
+        mutate((prev) => (prev ?? []).map((s) => (s.id === id ? updated : s)), { revalidate: false })
       })
       .catch((e) => {
         console.error('[useScenarios] update error:', e)
-        setScenarios(previous)
+        mutate(previous, { revalidate: false })
         alert('Impossible de mettre à jour le scénario.')
       })
-  }, [])
+  }, [scenarios, mutate])
 
   const deleteScenario = useCallback((id: string) => {
-    let previous: Scenario[] = []
-    setScenarios((prev) => { previous = prev; return prev.filter((s) => s.id !== id) })
-    fetch(`/api/scenarios/${id}`, { method: 'DELETE' })
+    const previous = scenarios
+    mutate(previous.filter((s) => s.id !== id), { revalidate: false })
+    fetch(`${KEY}/${id}`, { method: 'DELETE' })
       .then((r) => { if (!r.ok) throw r })
       .catch((e) => {
         console.error('[useScenarios] delete error:', e)
-        setScenarios(previous)
+        mutate(previous, { revalidate: false })
         alert('Impossible de supprimer le scénario.')
       })
-  }, [])
+  }, [scenarios, mutate])
 
   return { scenarios, hydrated, createScenario, updateScenario, deleteScenario }
 }

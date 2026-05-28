@@ -1,13 +1,17 @@
 'use client'
 
-// Hook gestion des bulletins de paie branché sur /api/bulletins.
-// Le calcul du bulletin reste côté client (computeBulletin) puis
-// envoyé à l'API pour stockage en DB (snapshot JSON).
+// Bulletins de paie branchés sur /api/bulletins.
+// Le calcul du bulletin reste côté client (computeBulletin) puis envoyé à
+// l'API pour stockage en DB. Cache cross-pages via SWR + mutations optimistes.
 
-import { useEffect, useState, useCallback } from 'react'
+import { useCallback } from 'react'
+import useSWR from 'swr'
+import { fetcher } from '@/lib/swr-fetcher'
 import type { BulletinPaie, EmployeeRecord, BulletinStatut } from '@/lib/types'
 import type { Person } from '@/lib/people'
 import { computeBulletin } from '@/lib/bulletin-paie-calc'
+
+const KEY = '/api/bulletins'
 
 function nextNumero(bulletins: BulletinPaie[], mois: string): string {
   const prefix = `PAIE-${mois}-`
@@ -21,56 +25,36 @@ function nextNumero(bulletins: BulletinPaie[], mois: string): string {
 }
 
 export function useBulletins() {
-  const [bulletins, setBulletins] = useState<BulletinPaie[]>([])
-  const [hydrated, setHydrated] = useState(false)
+  const { data, mutate } = useSWR<BulletinPaie[]>(KEY, fetcher, {
+    revalidateOnFocus: true,
+    revalidateOnReconnect: true,
+    dedupingInterval: 2000,
+  })
+  const bulletins = data ?? []
+  const hydrated = data !== undefined
 
-  useEffect(() => {
-    let cancelled = false
-    fetch('/api/bulletins')
-      .then((r) => (r.ok ? r.json() : Promise.reject(r)))
-      .then((data: BulletinPaie[]) => {
-        if (!cancelled) {
-          setBulletins(data)
-          setHydrated(true)
-        }
-      })
-      .catch((e) => {
-        if (!cancelled) {
-          console.error('[useBulletins] load error:', e)
-          setHydrated(true)
-        }
-      })
-    return () => { cancelled = true }
-  }, [])
-
-  // Sauvegarde un bulletin (calculé côté client) en DB
   const persistBulletin = useCallback((bulletin: BulletinPaie) => {
-    // Optimistic insert (l'id est déjà set par computeBulletin)
-    setBulletins((prev) => [bulletin, ...prev.filter((b) => b.id !== bulletin.id)])
+    const previous = bulletins
+    mutate([bulletin, ...previous.filter((b) => b.id !== bulletin.id)], { revalidate: false })
 
     const { id: _id, createdAt: _ca, ...payload } = bulletin
     void _id; void _ca
-    fetch('/api/bulletins', {
+    fetch(KEY, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     })
       .then((r) => (r.ok ? r.json() : Promise.reject(r)))
       .then((saved: BulletinPaie) => {
-        setBulletins((prev) => prev.map((b) => (b.id === bulletin.id ? saved : b)))
+        mutate((prev) => (prev ?? []).map((b) => (b.id === bulletin.id ? saved : b)), { revalidate: false })
       })
       .catch((e) => {
         console.error('[useBulletins] save error:', e)
-        // Rollback : retire le bulletin optimiste
-        setBulletins((prev) => prev.filter((b) => b.id !== bulletin.id))
+        mutate((prev) => (prev ?? []).filter((b) => b.id !== bulletin.id), { revalidate: false })
         alert('Impossible de sauvegarder le bulletin.')
       })
-  }, [])
+  }, [bulletins, mutate])
 
-  /**
-   * Génère un bulletin individuel pour un agent / mois donné.
-   * Si un bulletin existe déjà, il est retourné inchangé.
-   */
   const genererBulletin = useCallback((person: Person, employee: EmployeeRecord, mois: string): BulletinPaie => {
     const existing = bulletins.find((b) => b.personId === person.id && b.mois === mois)
     if (existing) return existing
@@ -80,10 +64,6 @@ export function useBulletins() {
     return bulletin
   }, [bulletins, persistBulletin])
 
-  /**
-   * Génère les bulletins du mois pour TOUS les agents passés. Pour
-   * éviter d'envoyer N requêtes parallèles, on les enchaîne en série.
-   */
   const genererBulletinsDuMois = useCallback((mois: string, persons: Person[], employees: EmployeeRecord[]): BulletinPaie[] => {
     const newOnes: BulletinPaie[] = []
     let counter = bulletins.filter((b) => b.mois === mois).length
@@ -101,13 +81,10 @@ export function useBulletins() {
   }, [bulletins, persistBulletin])
 
   const updateStatut = useCallback((id: string, statut: BulletinStatut) => {
-    let previous: BulletinPaie[] = []
-    setBulletins((prev) => {
-      previous = prev
-      return prev.map((b) => (b.id === id ? { ...b, statut } : b))
-    })
+    const previous = bulletins
+    mutate(previous.map((b) => (b.id === id ? { ...b, statut } : b)), { revalidate: false })
 
-    fetch(`/api/bulletins/${id}`, {
+    fetch(`${KEY}/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ statut }),
@@ -115,26 +92,23 @@ export function useBulletins() {
       .then((r) => { if (!r.ok) throw r })
       .catch((e) => {
         console.error('[useBulletins] update statut error:', e)
-        setBulletins(previous)
+        mutate(previous, { revalidate: false })
         alert('Impossible de changer le statut.')
       })
-  }, [])
+  }, [bulletins, mutate])
 
   const deleteBulletin = useCallback((id: string) => {
-    let previous: BulletinPaie[] = []
-    setBulletins((prev) => {
-      previous = prev
-      return prev.filter((b) => b.id !== id)
-    })
+    const previous = bulletins
+    mutate(previous.filter((b) => b.id !== id), { revalidate: false })
 
-    fetch(`/api/bulletins/${id}`, { method: 'DELETE' })
+    fetch(`${KEY}/${id}`, { method: 'DELETE' })
       .then((r) => { if (!r.ok) throw r })
       .catch((e) => {
         console.error('[useBulletins] delete error:', e)
-        setBulletins(previous)
+        mutate(previous, { revalidate: false })
         alert('Impossible de supprimer le bulletin.')
       })
-  }, [])
+  }, [bulletins, mutate])
 
   const byPerson = useCallback((personId: string) => {
     return bulletins

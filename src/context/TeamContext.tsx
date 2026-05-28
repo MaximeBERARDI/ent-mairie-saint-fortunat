@@ -3,14 +3,20 @@
 // Source de vérité de la couche identité, branchée sur la base via
 // /api/persons + la session NextAuth.
 //
+// Cache cross-pages via SWR : la liste des personnes est chargée une fois,
+// partagée par tous les consommateurs (Sidebar, TopBar, pages métier), et
+// revalidée en arrière-plan au retour de focus / reconnexion. Les mutations
+// passent par `mutate()` pour faire de l'optimistic update + revalidation.
+//
 // - `people` : annuaire chargé une seule fois (centralisé pour éviter que
 //   les 10+ composants consommateurs ne refetchent chacun).
 // - `currentUser` : dérivé du personId de la session NextAuth.
 // - `can()` : permissions effectives (authLevel + customPermissions).
-// - CRUD optimiste avec rollback (même pattern que useEmployees).
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { createContext, useCallback, useContext, useMemo } from 'react'
 import { useSession } from 'next-auth/react'
+import useSWR from 'swr'
+import { fetcher } from '@/lib/swr-fetcher'
 import type { Person } from '@/lib/people'
 import { hasPermission, type Permission } from '@/lib/permissions'
 
@@ -28,41 +34,25 @@ interface TeamContextValue {
 }
 
 const TeamContext = createContext<TeamContextValue | null>(null)
+const PERSONS_KEY = '/api/persons'
 
 const initials = (prenom: string, nom: string) =>
   `${prenom[0] ?? ''}${nom[0] ?? ''}`.toUpperCase()
 
 export function TeamProvider({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession()
-  const [people, setPeople] = useState<Person[]>([])
-  const [hydrated, setHydrated] = useState(false)
 
-  useEffect(() => {
-    if (status === 'loading') return
-    if (status !== 'authenticated') {
-      setPeople([])
-      setHydrated(true)
-      return
-    }
-    let cancelled = false
-    fetch('/api/persons')
-      .then((r) => (r.ok ? r.json() : Promise.reject(r)))
-      .then((data: Person[]) => {
-        if (!cancelled) {
-          setPeople(data)
-          setHydrated(true)
-        }
-      })
-      .catch((e) => {
-        if (!cancelled) {
-          console.error('[TeamProvider] load error:', e)
-          setHydrated(true)
-        }
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [status])
+  // Conditionne le fetch sur l'authentification : pas de clé tant que la
+  // session n'est pas chargée → pas de requête prématurée.
+  const swrKey = status === 'authenticated' ? PERSONS_KEY : null
+  const { data, mutate } = useSWR<Person[]>(swrKey, fetcher, {
+    revalidateOnFocus: true,
+    revalidateOnReconnect: true,
+    dedupingInterval: 2000,
+  })
+
+  const people = data ?? []
+  const hydrated = status !== 'loading' && (status !== 'authenticated' || data !== undefined)
 
   const currentUserId = session?.user?.personId ?? ''
   const currentUser = useMemo(
@@ -78,83 +68,79 @@ export function TeamProvider({ children }: { children: React.ReactNode }) {
     [currentUser],
   )
 
-  const createPerson = useCallback((data: NewPersonInput): Person => {
+  const createPerson = useCallback((dataInput: NewPersonInput): Person => {
     const id = `p-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`
     const optimistic: Person = {
-      ...data,
+      ...dataInput,
       id,
-      fullName: `${data.prenom} ${data.nom}`,
-      initials: initials(data.prenom, data.nom),
+      fullName: `${dataInput.prenom} ${dataInput.nom}`,
+      initials: initials(dataInput.prenom, dataInput.nom),
     }
-    setPeople((prev) => [...prev, optimistic])
+    const previous = people
+    mutate([...previous, optimistic], { revalidate: false })
 
-    fetch('/api/persons', {
+    fetch(PERSONS_KEY, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...data, id }),
+      body: JSON.stringify({ ...dataInput, id }),
     })
       .then((r) => (r.ok ? r.json() : Promise.reject(r)))
       .then((saved: Person) => {
-        setPeople((prev) => prev.map((p) => (p.id === id ? saved : p)))
+        mutate((prev) => (prev ?? []).map((p) => (p.id === id ? saved : p)), { revalidate: false })
       })
       .catch((e) => {
         console.error('[TeamProvider] create error:', e)
-        setPeople((prev) => prev.filter((p) => p.id !== id))
+        mutate(previous, { revalidate: false })
         alert("Impossible de créer le membre (droits insuffisants ?).")
       })
 
     return optimistic
-  }, [])
+  }, [people, mutate])
 
   const updatePerson = useCallback((id: string, patch: Partial<Person>) => {
-    let previous: Person[] = []
-    setPeople((prev) => {
-      previous = prev
-      return prev.map((p) => {
-        if (p.id !== id) return p
-        const next = { ...p, ...patch }
-        if (patch.prenom !== undefined || patch.nom !== undefined) {
-          next.fullName = `${next.prenom} ${next.nom}`
-          next.initials = initials(next.prenom, next.nom)
-        }
-        return next
-      })
+    const previous = people
+    const next = previous.map((p) => {
+      if (p.id !== id) return p
+      const merged = { ...p, ...patch }
+      if (patch.prenom !== undefined || patch.nom !== undefined) {
+        merged.fullName = `${merged.prenom} ${merged.nom}`
+        merged.initials = initials(merged.prenom, merged.nom)
+      }
+      return merged
     })
+    mutate(next, { revalidate: false })
 
-    fetch(`/api/persons/${id}`, {
+    fetch(`${PERSONS_KEY}/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(patch),
     })
       .then((r) => (r.ok ? r.json() : Promise.reject(r)))
       .then((saved: Person) => {
-        setPeople((prev) => prev.map((p) => (p.id === id ? saved : p)))
+        mutate((prev) => (prev ?? []).map((p) => (p.id === id ? saved : p)), { revalidate: false })
       })
       .catch((e) => {
         console.error('[TeamProvider] update error:', e)
-        setPeople(previous)
+        mutate(previous, { revalidate: false })
         alert('Impossible de mettre à jour le membre (droits insuffisants ?).')
       })
-  }, [])
+  }, [people, mutate])
 
   const deletePerson = useCallback((id: string) => {
-    let previous: Person[] = []
-    setPeople((prev) => {
-      previous = prev
-      return prev.map((p) => (p.id === id ? { ...p, active: false } : p))
-    })
+    const previous = people
+    mutate(previous.map((p) => (p.id === id ? { ...p, active: false } : p)), { revalidate: false })
 
-    fetch(`/api/persons/${id}`, { method: 'DELETE' })
+    fetch(`${PERSONS_KEY}/${id}`, { method: 'DELETE' })
       .then((r) => (r.ok ? r.json() : Promise.reject(r)))
       .then((saved: Person) => {
-        setPeople((prev) => prev.map((p) => (p.id === id ? saved : p)))
+        mutate((prev) => (prev ?? []).map((p) => (p.id === id ? saved : p)), { revalidate: false })
       })
       .catch((e) => {
         console.error('[TeamProvider] delete error:', e)
-        setPeople(previous)
+        mutate(previous, { revalidate: false })
         alert('Impossible de désactiver le membre (droits insuffisants ?).')
       })
-  }, [])
+  }, [people, mutate])
 
   const value: TeamContextValue = {
     people,

@@ -6,9 +6,13 @@
 // Pattern optimistic (cf. useTasks). computePosteWithConsumption et
 // totalSectionSens restent des calculs purs côté client.
 
-import { useEffect, useState, useCallback, useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
+import useSWR from 'swr'
+import { fetcher } from '@/lib/swr-fetcher'
 import type { CompteM14, Ecriture, Facture, Section, Sens } from '@/lib/types'
 import { CHAPITRES_M14 } from '@/lib/m14-plan'
+
+const BUDGET_KEY = '/api/budget'
 
 // Vue enrichie d'un compte M14 avec ses consommations calculées.
 export interface CompteWithConsumption extends CompteM14 {
@@ -22,56 +26,53 @@ export interface CompteWithConsumption extends CompteM14 {
 }
 
 export function useBudget() {
-  const [postes, setPostes] = useState<CompteM14[]>([])
-  const [hydrated, setHydrated] = useState(false)
-
-  useEffect(() => {
-    let cancelled = false
-    fetch('/api/budget')
-      .then(r => (r.ok ? r.json() : Promise.reject(r)))
-      .then((data: CompteM14[]) => { if (!cancelled) { setPostes(data); setHydrated(true) } })
-      .catch(e => { if (!cancelled) { console.error('[useBudget] load error:', e); setHydrated(true) } })
-    return () => { cancelled = true }
-  }, [])
+  const { data, mutate } = useSWR<CompteM14[]>(BUDGET_KEY, fetcher, {
+    revalidateOnFocus: true,
+    revalidateOnReconnect: true,
+    dedupingInterval: 2000,
+  })
+  const postes = data ?? []
+  const hydrated = data !== undefined
 
   const updatePoste = useCallback((code: string, patch: Partial<CompteM14>) => {
-    let previous: CompteM14[] = []
-    setPostes(prev => { previous = prev; return prev.map(p => (p.code === code ? { ...p, ...patch } : p)) })
-    fetch(`/api/budget/${encodeURIComponent(code)}`, {
+    const previous = postes
+    mutate(previous.map(p => (p.code === code ? { ...p, ...patch } : p)), { revalidate: false })
+    fetch(`${BUDGET_KEY}/${encodeURIComponent(code)}`, {
       method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(patch),
     })
       .then(r => { if (!r.ok) throw r })
       .catch(e => {
         console.error('[useBudget] update error:', e)
-        setPostes(previous)
+        mutate(previous, { revalidate: false })
         alert('Impossible de mettre à jour le poste (droits insuffisants ?).')
       })
-  }, [])
+  }, [postes, mutate])
 
-  const createPoste = useCallback((data: CompteM14) => {
-    setPostes(prev => [...prev, data])
-    fetch('/api/budget', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data),
+  const createPoste = useCallback((dataInput: CompteM14) => {
+    const previous = postes
+    mutate([...previous, dataInput], { revalidate: false })
+    fetch(BUDGET_KEY, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(dataInput),
     })
       .then(r => { if (!r.ok) throw r })
       .catch(e => {
         console.error('[useBudget] create error:', e)
-        setPostes(prev => prev.filter(p => p.code !== data.code))
+        mutate(previous, { revalidate: false })
         alert('Impossible de créer le poste.')
       })
-  }, [])
+  }, [postes, mutate])
 
   const deletePoste = useCallback((code: string) => {
-    let previous: CompteM14[] = []
-    setPostes(prev => { previous = prev; return prev.filter(p => p.code !== code) })
-    fetch(`/api/budget/${encodeURIComponent(code)}`, { method: 'DELETE' })
+    const previous = postes
+    mutate(previous.filter(p => p.code !== code), { revalidate: false })
+    fetch(`${BUDGET_KEY}/${encodeURIComponent(code)}`, { method: 'DELETE' })
       .then(r => { if (!r.ok) throw r })
       .catch(e => {
         console.error('[useBudget] delete error:', e)
-        setPostes(previous)
+        mutate(previous, { revalidate: false })
         alert('Impossible de supprimer le poste.')
       })
-  }, [])
+  }, [postes, mutate])
 
   // Le reset n'a plus de sens en mode DB (le plan vient du seed).
   const resetPostes = useCallback(() => {

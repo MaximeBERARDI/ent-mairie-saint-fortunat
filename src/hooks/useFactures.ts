@@ -1,12 +1,16 @@
 'use client'
 
 // Hook de gestion des factures branché sur /api/factures.
-// Pattern optimistic update + rollback en cas d'erreur API.
-// L'interface publique (submit/validate/reject/reopen/update/delete)
-// reste identique pour ne pas casser les pages consommatrices.
+// Cache cross-pages via SWR : un seul fetch partagé par /finances,
+// NotificationsBell, GlobalSearch, dashboard. Mutations optimistes via
+// `mutate()` + rollback en cas d'erreur API.
 
-import { useEffect, useState, useCallback } from 'react'
+import { useCallback } from 'react'
+import useSWR from 'swr'
+import { fetcher } from '@/lib/swr-fetcher'
 import type { Facture, TaskDocument } from '@/lib/types'
+
+const FACTURES_KEY = '/api/factures'
 
 export interface NewFactureInput {
   fournisseurId: string
@@ -20,151 +24,119 @@ export interface NewFactureInput {
 }
 
 export function useFactures() {
-  const [factures, setFactures] = useState<Facture[]>([])
-  const [hydrated, setHydrated] = useState(false)
+  const { data, mutate } = useSWR<Facture[]>(FACTURES_KEY, fetcher, {
+    revalidateOnFocus: true,
+    revalidateOnReconnect: true,
+    dedupingInterval: 2000,
+  })
+  const factures = data ?? []
+  const hydrated = data !== undefined
 
-  useEffect(() => {
-    let cancelled = false
-    fetch('/api/factures')
-      .then((r) => (r.ok ? r.json() : Promise.reject(r)))
-      .then((data: Facture[]) => {
-        if (!cancelled) {
-          setFactures(data)
-          setHydrated(true)
-        }
-      })
-      .catch((e) => {
-        if (!cancelled) {
-          console.error('[useFactures] load error:', e)
-          setHydrated(true)
-        }
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [])
-
-  // Création / soumission. Le numero définitif et l'id sont attribués
-  // par le serveur — on insère un placeholder optimiste puis on
-  // synchronise.
-  const submitFacture = useCallback((data: NewFactureInput): Facture => {
+  const submitFacture = useCallback((dataInput: NewFactureInput): Facture => {
     const tempId = `tmp-${Date.now()}`
     const now = new Date().toISOString()
     const optimistic: Facture = {
       id: tempId,
       numero: `FAC-${new Date().getFullYear()}-…`,
-      fournisseurId: data.fournisseurId,
-      montantTTC: data.montantTTC,
-      posteCode: data.posteCode,
-      dateFacture: data.dateFacture,
-      dateEcheance: data.dateEcheance,
+      fournisseurId: dataInput.fournisseurId,
+      montantTTC: dataInput.montantTTC,
+      posteCode: dataInput.posteCode,
+      dateFacture: dataInput.dateFacture,
+      dateEcheance: dataInput.dateEcheance,
       statut: 'En attente validation',
-      submittedById: data.submittedById,
+      submittedById: dataInput.submittedById,
       submittedAt: now,
-      notes: data.notes,
-      documents: data.documents ?? [],
+      notes: dataInput.notes,
+      documents: dataInput.documents ?? [],
       createdAt: now,
     }
-    setFactures((prev) => [optimistic, ...prev])
+    const previous = factures
+    mutate([optimistic, ...previous], { revalidate: false })
 
-    fetch('/api/factures', {
+    fetch(FACTURES_KEY, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        fournisseurId: data.fournisseurId,
-        montantTTC: data.montantTTC,
-        posteCode: data.posteCode,
-        dateFacture: data.dateFacture,
-        dateEcheance: data.dateEcheance,
-        notes: data.notes,
-        documents: data.documents,
+        fournisseurId: dataInput.fournisseurId,
+        montantTTC: dataInput.montantTTC,
+        posteCode: dataInput.posteCode,
+        dateFacture: dataInput.dateFacture,
+        dateEcheance: dataInput.dateEcheance,
+        notes: dataInput.notes,
+        documents: dataInput.documents,
       }),
     })
       .then((r) => (r.ok ? r.json() : Promise.reject(r)))
       .then((created: Facture) => {
-        setFactures((prev) => prev.map((f) => (f.id === tempId ? created : f)))
+        mutate((prev) => (prev ?? []).map((f) => (f.id === tempId ? created : f)), { revalidate: false })
       })
       .catch((e) => {
         console.error('[useFactures] submit error:', e)
-        setFactures((prev) => prev.filter((f) => f.id !== tempId))
+        mutate(previous, { revalidate: false })
         alert('Impossible de soumettre la facture.')
       })
     return optimistic
-  }, [])
+  }, [factures, mutate])
 
   // Helper pour les actions de workflow : envoie une action + rollback si KO
   const patchAction = useCallback(
     (id: string, body: Record<string, unknown>, errorMsg: string) => {
-      let previous: Facture[] = []
-      setFactures((prev) => {
-        previous = prev
-        return prev
-      })
-
-      fetch(`/api/factures/${id}`, {
+      const previous = factures
+      fetch(`${FACTURES_KEY}/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       })
         .then((r) => (r.ok ? r.json() : Promise.reject(r)))
         .then((updated: Facture) => {
-          setFactures((prev) => prev.map((f) => (f.id === id ? updated : f)))
+          mutate((prev) => (prev ?? []).map((f) => (f.id === id ? updated : f)), { revalidate: false })
         })
         .catch((e) => {
           console.error('[useFactures] patch error:', e)
-          setFactures(previous)
+          mutate(previous, { revalidate: false })
           alert(errorMsg)
         })
     },
-    [],
+    [factures, mutate],
   )
 
   const validateFacture = useCallback(
     (id: string, _validatorId: string) => {
-      // _validatorId n'est plus utilisé (le serveur prend session.user.personId)
-      // mais on conserve l'argument pour la rétrocompat de l'API du hook.
       void _validatorId
-      // Optimistic update
-      setFactures((prev) =>
-        prev.map((f) =>
-          f.id === id
-            ? { ...f, statut: 'Validée', validatedAt: new Date().toISOString() }
-            : f,
+      const previous = factures
+      mutate(
+        previous.map((f) =>
+          f.id === id ? { ...f, statut: 'Validée', validatedAt: new Date().toISOString() } : f,
         ),
+        { revalidate: false },
       )
       patchAction(id, { action: 'validate' }, 'Impossible de valider la facture.')
     },
-    [patchAction],
+    [factures, mutate, patchAction],
   )
 
   const rejectFacture = useCallback(
     (id: string, _rejectorId: string, reason: string) => {
       void _rejectorId
-      setFactures((prev) =>
-        prev.map((f) =>
+      const previous = factures
+      mutate(
+        previous.map((f) =>
           f.id === id
-            ? {
-                ...f,
-                statut: 'Rejetée',
-                rejectedAt: new Date().toISOString(),
-                rejectionReason: reason,
-              }
+            ? { ...f, statut: 'Rejetée', rejectedAt: new Date().toISOString(), rejectionReason: reason }
             : f,
         ),
+        { revalidate: false },
       )
-      patchAction(
-        id,
-        { action: 'reject', rejectionReason: reason },
-        'Impossible de rejeter la facture.',
-      )
+      patchAction(id, { action: 'reject', rejectionReason: reason }, 'Impossible de rejeter la facture.')
     },
-    [patchAction],
+    [factures, mutate, patchAction],
   )
 
   const reopenFacture = useCallback(
     (id: string) => {
-      setFactures((prev) =>
-        prev.map((f) => {
+      const previous = factures
+      mutate(
+        previous.map((f) => {
           if (f.id !== id) return f
           const {
             validatedById: _v,
@@ -177,50 +149,50 @@ export function useFactures() {
           void _v; void _va; void _r; void _ra; void _rr
           return { ...rest, statut: 'En attente validation' }
         }),
+        { revalidate: false },
       )
       patchAction(id, { action: 'reopen' }, 'Impossible de réouvrir la facture.')
     },
-    [patchAction],
+    [factures, mutate, patchAction],
   )
 
   const payFacture = useCallback(
     (id: string, _payerId: string, datePaiement: string) => {
       void _payerId
-      setFactures((prev) =>
-        prev.map((f) =>
-          f.id === id
-            ? { ...f, statut: 'Payée', paidAt: new Date().toISOString(), datePaiement }
-            : f,
+      const previous = factures
+      mutate(
+        previous.map((f) =>
+          f.id === id ? { ...f, statut: 'Payée', paidAt: new Date().toISOString(), datePaiement } : f,
         ),
+        { revalidate: false },
       )
       patchAction(id, { action: 'pay', datePaiement }, 'Impossible de marquer la facture comme payée.')
     },
-    [patchAction],
+    [factures, mutate, patchAction],
   )
 
   const unpayFacture = useCallback(
     (id: string) => {
-      setFactures((prev) =>
-        prev.map((f) => {
+      const previous = factures
+      mutate(
+        previous.map((f) => {
           if (f.id !== id) return f
           const { paidById: _p, paidAt: _pa, datePaiement: _dp, ...rest } = f
           void _p; void _pa; void _dp
           return { ...rest, statut: 'Validée' }
         }),
+        { revalidate: false },
       )
       patchAction(id, { action: 'unpay' }, "Impossible d'annuler le paiement.")
     },
-    [patchAction],
+    [factures, mutate, patchAction],
   )
 
   const updateFacture = useCallback((id: string, patch: Partial<Facture>) => {
-    let previous: Facture[] = []
-    setFactures((prev) => {
-      previous = prev
-      return prev.map((f) => (f.id === id ? { ...f, ...patch } : f))
-    })
+    const previous = factures
+    mutate(previous.map((f) => (f.id === id ? { ...f, ...patch } : f)), { revalidate: false })
 
-    fetch(`/api/factures/${id}`, {
+    fetch(`${FACTURES_KEY}/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -235,32 +207,27 @@ export function useFactures() {
     })
       .then((r) => (r.ok ? r.json() : Promise.reject(r)))
       .then((updated: Facture) => {
-        setFactures((prev) => prev.map((f) => (f.id === id ? updated : f)))
+        mutate((prev) => (prev ?? []).map((f) => (f.id === id ? updated : f)), { revalidate: false })
       })
       .catch((e) => {
         console.error('[useFactures] update error:', e)
-        setFactures(previous)
+        mutate(previous, { revalidate: false })
         alert('Impossible de mettre à jour la facture.')
       })
-  }, [])
+  }, [factures, mutate])
 
   const deleteFacture = useCallback((id: string) => {
-    let previous: Facture[] = []
-    setFactures((prev) => {
-      previous = prev
-      return prev.filter((f) => f.id !== id)
-    })
+    const previous = factures
+    mutate(previous.filter((f) => f.id !== id), { revalidate: false })
 
-    fetch(`/api/factures/${id}`, { method: 'DELETE' })
-      .then((r) => {
-        if (!r.ok) throw r
-      })
+    fetch(`${FACTURES_KEY}/${id}`, { method: 'DELETE' })
+      .then((r) => { if (!r.ok) throw r })
       .catch((e) => {
         console.error('[useFactures] delete error:', e)
-        setFactures(previous)
+        mutate(previous, { revalidate: false })
         alert('Impossible de supprimer la facture.')
       })
-  }, [])
+  }, [factures, mutate])
 
   // No-op en mode DB (compatibilité d'interface).
   const resetFactures = useCallback(() => {

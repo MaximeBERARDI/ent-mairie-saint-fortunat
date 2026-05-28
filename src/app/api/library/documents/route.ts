@@ -86,8 +86,9 @@ export async function POST(req: Request) {
   try {
     await uploadFile(storagePath, bytes, file.type || 'application/octet-stream')
   } catch (e) {
+    const msg = e instanceof Error ? e.message : 'erreur inconnue'
     console.error('[api/library/documents POST] upload:', e)
-    return NextResponse.json({ error: 'Upload échoué.' }, { status: 502 })
+    return NextResponse.json({ error: `Upload Supabase Storage échoué : ${msg}` }, { status: 502 })
   }
 
   try {

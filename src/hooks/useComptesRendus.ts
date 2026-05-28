@@ -1,57 +1,59 @@
 'use client'
 
-// Comptes rendus branchés sur /api/comptes-rendus (PostgreSQL via Prisma).
-// Pattern optimistic (cf. useTasks). Interface (crs, hydrated, createCR,
-// deleteCR) inchangée pour les consommateurs.
+// Comptes rendus branchés sur /api/comptes-rendus.
+// Cache cross-pages via SWR + mutations optimistes.
 
-import { useEffect, useState, useCallback } from 'react'
+import { useCallback } from 'react'
+import useSWR from 'swr'
+import { fetcher } from '@/lib/swr-fetcher'
 import type { CompteRendu } from '@/lib/types'
 
+const KEY = '/api/comptes-rendus'
+
 export function useComptesRendus() {
-  const [crs, setCrs] = useState<CompteRendu[]>([])
-  const [hydrated, setHydrated] = useState(false)
+  const { data, mutate } = useSWR<CompteRendu[]>(KEY, fetcher, {
+    revalidateOnFocus: true,
+    revalidateOnReconnect: true,
+    dedupingInterval: 2000,
+  })
+  const crs = data ?? []
+  const hydrated = data !== undefined
 
-  useEffect(() => {
-    let cancelled = false
-    fetch('/api/comptes-rendus')
-      .then(r => (r.ok ? r.json() : Promise.reject(r)))
-      .then((data: CompteRendu[]) => { if (!cancelled) { setCrs(data); setHydrated(true) } })
-      .catch(e => { if (!cancelled) { console.error('[useComptesRendus] load error:', e); setHydrated(true) } })
-    return () => { cancelled = true }
-  }, [])
-
-  const createCR = useCallback((data: Omit<CompteRendu, 'id' | 'importedAt'>): CompteRendu => {
+  const createCR = useCallback((dataInput: Omit<CompteRendu, 'id' | 'importedAt'>): CompteRendu => {
     const tempId = `tmp-${Date.now()}`
-    const optimistic: CompteRendu = { ...data, id: tempId, importedAt: new Date().toISOString() }
-    setCrs(prev => [optimistic, ...prev])
+    const optimistic: CompteRendu = { ...dataInput, id: tempId, importedAt: new Date().toISOString() }
+    const previous = crs
+    mutate([optimistic, ...previous], { revalidate: false })
 
-    fetch('/api/comptes-rendus', {
+    fetch(KEY, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
+      body: JSON.stringify(dataInput),
     })
-      .then(r => (r.ok ? r.json() : Promise.reject(r)))
-      .then((created: CompteRendu) => setCrs(prev => prev.map(c => (c.id === tempId ? created : c))))
-      .catch(e => {
+      .then((r) => (r.ok ? r.json() : Promise.reject(r)))
+      .then((created: CompteRendu) => {
+        mutate((prev) => (prev ?? []).map((c) => (c.id === tempId ? created : c)), { revalidate: false })
+      })
+      .catch((e) => {
         console.error('[useComptesRendus] create error:', e)
-        setCrs(prev => prev.filter(c => c.id !== tempId))
+        mutate(previous, { revalidate: false })
         alert("Impossible d'enregistrer le compte rendu (droits insuffisants ?).")
       })
 
     return optimistic
-  }, [])
+  }, [crs, mutate])
 
   const deleteCR = useCallback((id: string) => {
-    let previous: CompteRendu[] = []
-    setCrs(prev => { previous = prev; return prev.filter(c => c.id !== id) })
-    fetch(`/api/comptes-rendus/${id}`, { method: 'DELETE' })
-      .then(r => { if (!r.ok) throw r })
-      .catch(e => {
+    const previous = crs
+    mutate(previous.filter((c) => c.id !== id), { revalidate: false })
+    fetch(`${KEY}/${id}`, { method: 'DELETE' })
+      .then((r) => { if (!r.ok) throw r })
+      .catch((e) => {
         console.error('[useComptesRendus] delete error:', e)
-        setCrs(previous)
+        mutate(previous, { revalidate: false })
         alert('Impossible de supprimer le compte rendu.')
       })
-  }, [])
+  }, [crs, mutate])
 
   return { crs, hydrated, createCR, deleteCR }
 }

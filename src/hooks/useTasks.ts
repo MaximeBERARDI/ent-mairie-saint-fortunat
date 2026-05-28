@@ -3,88 +3,75 @@
 // Hook de gestion des tâches branché sur l'API /api/tasks
 // (PostgreSQL via Prisma — plus de localStorage).
 //
-// Pattern "optimistic update" : la mutation modifie le state local
-// immédiatement, puis appelle l'API. En cas d'erreur, rollback +
-// alert. L'interface (tasks, hydrated, create/update/delete/comments)
-// reste identique pour minimiser les changements dans les consommateurs.
+// Cache cross-pages via SWR : un seul fetch partagé par tous les composants
+// (Sidebar, NotificationsBell, GlobalSearch, pages métier). Revalidation en
+// arrière-plan au focus/reconnexion ; mutations optimistes via `mutate()`.
 
-import { useEffect, useState, useCallback } from 'react'
+import { useCallback } from 'react'
+import useSWR from 'swr'
+import { fetcher } from '@/lib/swr-fetcher'
 import type { Task, TaskComment } from '@/lib/types'
 
+const TASKS_KEY = '/api/tasks'
+
 export function useTasks() {
-  const [tasks, setTasks] = useState<Task[]>([])
-  const [hydrated, setHydrated] = useState(false)
+  const { data, mutate } = useSWR<Task[]>(TASKS_KEY, fetcher, {
+    revalidateOnFocus: true,
+    revalidateOnReconnect: true,
+    dedupingInterval: 2000,
+  })
+  const tasks = data ?? []
+  const hydrated = data !== undefined
 
-  useEffect(() => {
-    let cancelled = false
-    fetch('/api/tasks')
-      .then((r) => (r.ok ? r.json() : Promise.reject(r)))
-      .then((data: Task[]) => {
-        if (!cancelled) {
-          setTasks(data)
-          setHydrated(true)
-        }
-      })
-      .catch((e) => {
-        if (!cancelled) {
-          console.error('[useTasks] load error:', e)
-          setHydrated(true)
-        }
-      })
-    return () => {
-      cancelled = true
-    }
-  }, [])
-
-  const createTask = useCallback((data: Omit<Task, 'id' | 'createdAt'>, _createdById?: string): Task => {
+  const createTask = useCallback((dataInput: Omit<Task, 'id' | 'createdAt'>, _createdById?: string): Task => {
+    void _createdById
     const tempId = `tmp-${Date.now()}`
     const now = new Date().toISOString()
     const optimistic: Task = {
-      ...data,
+      ...dataInput,
       id: tempId,
       createdAt: now,
       updatedAt: now,
-      comments: data.comments ?? [],
+      comments: dataInput.comments ?? [],
     }
-    setTasks((prev) => [optimistic, ...prev])
+    const previous = tasks
+    mutate([optimistic, ...previous], { revalidate: false })
 
-    fetch('/api/tasks', {
+    fetch(TASKS_KEY, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        label: data.label,
-        description: data.description,
-        commissionIds: data.commissionIds,
-        assigneeIds: data.assigneeIds,
-        validatorId: data.validatorId,
-        dueDate: data.dueDate,
-        priority: data.priority,
-        status: data.status,
-        documents: data.documents,
+        label: dataInput.label,
+        description: dataInput.description,
+        commissionIds: dataInput.commissionIds,
+        assigneeIds: dataInput.assigneeIds,
+        validatorId: dataInput.validatorId,
+        dueDate: dataInput.dueDate,
+        priority: dataInput.priority,
+        status: dataInput.status,
+        documents: dataInput.documents,
       }),
     })
       .then((r) => (r.ok ? r.json() : Promise.reject(r)))
       .then((created: Task) => {
-        setTasks((prev) => prev.map((t) => (t.id === tempId ? created : t)))
+        mutate((prev) => (prev ?? []).map((t) => (t.id === tempId ? created : t)), { revalidate: false })
       })
       .catch((e) => {
         console.error('[useTasks] create error:', e)
-        setTasks((prev) => prev.filter((t) => t.id !== tempId))
+        mutate(previous, { revalidate: false })
         alert('Impossible de créer la tâche.')
       })
     return optimistic
-  }, [])
+  }, [tasks, mutate])
 
   const updateTask = useCallback((id: string, patch: Partial<Task>) => {
-    let previous: Task[] = []
-    setTasks((prev) => {
-      previous = prev
-      return prev.map((t) =>
-        t.id === id ? { ...t, ...patch, updatedAt: new Date().toISOString() } : t,
-      )
-    })
+    const previous = tasks
+    const next = previous.map((t) =>
+      t.id === id ? { ...t, ...patch, updatedAt: new Date().toISOString() } : t,
+    )
+    mutate(next, { revalidate: false })
 
-    fetch(`/api/tasks/${id}`, {
+    fetch(`${TASKS_KEY}/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -101,34 +88,27 @@ export function useTasks() {
     })
       .then((r) => (r.ok ? r.json() : Promise.reject(r)))
       .then((updated: Task) => {
-        // Synchronise avec la version serveur (notamment pour les
-        // vrais ids des documents fraîchement créés).
-        setTasks((prev) => prev.map((t) => (t.id === id ? updated : t)))
+        mutate((prev) => (prev ?? []).map((t) => (t.id === id ? updated : t)), { revalidate: false })
       })
       .catch((e) => {
         console.error('[useTasks] update error:', e)
-        setTasks(previous)
+        mutate(previous, { revalidate: false })
         alert('Impossible de mettre à jour la tâche.')
       })
-  }, [])
+  }, [tasks, mutate])
 
   const deleteTask = useCallback((id: string) => {
-    let previous: Task[] = []
-    setTasks((prev) => {
-      previous = prev
-      return prev.filter((t) => t.id !== id)
-    })
+    const previous = tasks
+    mutate(previous.filter((t) => t.id !== id), { revalidate: false })
 
-    fetch(`/api/tasks/${id}`, { method: 'DELETE' })
-      .then((r) => {
-        if (!r.ok) throw r
-      })
+    fetch(`${TASKS_KEY}/${id}`, { method: 'DELETE' })
+      .then((r) => { if (!r.ok) throw r })
       .catch((e) => {
         console.error('[useTasks] delete error:', e)
-        setTasks(previous)
+        mutate(previous, { revalidate: false })
         alert('Impossible de supprimer la tâche.')
       })
-  }, [])
+  }, [tasks, mutate])
 
   const addComment = useCallback((taskId: string, authorId: string, content: string) => {
     const trimmed = content.trim()
@@ -140,75 +120,56 @@ export function useTasks() {
       content: trimmed,
       createdAt: new Date().toISOString(),
     }
-    let previous: Task[] = []
-    setTasks((prev) => {
-      previous = prev
-      return prev.map((t) =>
-        t.id === taskId
-          ? {
-              ...t,
-              comments: [...(t.comments ?? []), optimistic],
-              updatedAt: optimistic.createdAt,
-            }
-          : t,
-      )
-    })
+    const previous = tasks
+    const next = previous.map((t) =>
+      t.id === taskId
+        ? { ...t, comments: [...(t.comments ?? []), optimistic], updatedAt: optimistic.createdAt }
+        : t,
+    )
+    mutate(next, { revalidate: false })
 
-    fetch(`/api/tasks/${taskId}/comments`, {
+    fetch(`${TASKS_KEY}/${taskId}/comments`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ content: trimmed }),
     })
       .then((r) => (r.ok ? r.json() : Promise.reject(r)))
       .then((created: TaskComment) => {
-        setTasks((prev) =>
-          prev.map((t) =>
+        mutate(
+          (prev) => (prev ?? []).map((t) =>
             t.id === taskId
-              ? {
-                  ...t,
-                  comments: (t.comments ?? []).map((c) =>
-                    c.id === tempId ? created : c,
-                  ),
-                }
+              ? { ...t, comments: (t.comments ?? []).map((c) => (c.id === tempId ? created : c)) }
               : t,
           ),
+          { revalidate: false },
         )
       })
       .catch((e) => {
         console.error('[useTasks] addComment error:', e)
-        setTasks(previous)
-        alert('Impossible d\'ajouter le commentaire.')
+        mutate(previous, { revalidate: false })
+        alert("Impossible d'ajouter le commentaire.")
       })
-  }, [])
+  }, [tasks, mutate])
 
   const deleteComment = useCallback((taskId: string, commentId: string) => {
-    let previous: Task[] = []
-    setTasks((prev) => {
-      previous = prev
-      return prev.map((t) =>
-        t.id === taskId
-          ? {
-              ...t,
-              comments: (t.comments ?? []).filter((c) => c.id !== commentId),
-              updatedAt: new Date().toISOString(),
-            }
-          : t,
-      )
-    })
+    const previous = tasks
+    const next = previous.map((t) =>
+      t.id === taskId
+        ? { ...t, comments: (t.comments ?? []).filter((c) => c.id !== commentId), updatedAt: new Date().toISOString() }
+        : t,
+    )
+    mutate(next, { revalidate: false })
 
-    fetch(`/api/tasks/${taskId}/comments/${commentId}`, { method: 'DELETE' })
-      .then((r) => {
-        if (!r.ok) throw r
-      })
+    fetch(`${TASKS_KEY}/${taskId}/comments/${commentId}`, { method: 'DELETE' })
+      .then((r) => { if (!r.ok) throw r })
       .catch((e) => {
         console.error('[useTasks] deleteComment error:', e)
-        setTasks(previous)
+        mutate(previous, { revalidate: false })
         alert('Impossible de supprimer le commentaire.')
       })
-  }, [])
+  }, [tasks, mutate])
 
-  // Le reset n'a plus de sens en mode DB — on garde l'export pour
-  // compatibilité d'interface mais c'est un no-op.
+  // Compatibilité d'interface — no-op en mode DB.
   const resetTasks = useCallback(() => {
     console.warn('[useTasks] resetTasks() est obsolète en mode DB.')
   }, [])
