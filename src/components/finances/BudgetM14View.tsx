@@ -68,6 +68,22 @@ const inputStyle: React.CSSProperties = {
 
 type BudgetTab = 'plan' | 'ecritures' | 'ratios' | 'historique' | 'projection' | 'simulation'
 
+// Sections du Rapport Financier — clés synchronisées avec /rapport-financier
+const RAPPORT_SECTIONS: { key: string; label: string; desc: string }[] = [
+  { key: 'att', label: 'Points d\'attention', desc: 'Alertes automatiques (ratios dégradés, dépassements, retards)' },
+  { key: 'bud', label: 'Exécution budgétaire', desc: 'Budget vs réalisé par section, postes en alerte' },
+  { key: 'rat', label: 'Ratios DGFiP & R. 2313-1', desc: '11 ratios réglementaires de pilotage' },
+  { key: 'evo', label: 'Évolution pluriannuelle', desc: 'Comparatif N-2 → N-1 → N (depuis l\'Historique)' },
+  { key: 'tre', label: 'Trésorerie', desc: 'Solde 515 + évolution mensuelle + durée de couverture' },
+  { key: 'fou', label: 'Contrôle paiements fournisseurs', desc: 'Factures en retard, délai moyen, top 10 fournisseurs' },
+  { key: 'loc', label: 'Patrimoine & revenus locatifs', desc: 'Taux de recouvrement + liste quittances impayées' },
+  { key: 'rh',  label: 'RH & masse salariale', desc: 'Effectifs, masse salariale, ratio MS/RRF' },
+  { key: 'prj', label: 'Projets d\'investissement & dette', desc: 'Projets en cours, plan de financement' },
+  { key: 'sub', label: 'Subventions', desc: 'Demandes en cours, accordées, versées' },
+  { key: 'pr5', label: 'Projection à 5 ans', desc: 'Impact pluriannuel sur CAF / dette' },
+]
+const RAPPORT_LS_KEY = ':rapport-financier-config:v1'
+
 export function BudgetM14View() {
   const { factures } = useFactures()
   const { fournisseurs } = useFournisseurs()
@@ -79,6 +95,7 @@ export function BudgetM14View() {
   const [drillCode, setDrillCode] = useState<string | null>(null)
   const [showEcritureForm, setShowEcritureForm] = useState(false)
   const [showRatiosConfig, setShowRatiosConfig] = useState(false)
+  const [showRapportConfig, setShowRapportConfig] = useState(false)
 
   // Population & encours dette saisis par la commune (persistés en localStorage)
   const [population, setPopulation] = useState<number>(900)
@@ -185,13 +202,23 @@ export function BudgetM14View() {
         <Button size="sm" onClick={() => exportPlanComptable(enriched)}>📊 Plan comptable .xlsx</Button>
         <Button size="sm" onClick={() => exportGrandLivre(ecritures)}>📒 Grand livre .xlsx</Button>
         <Button
-          variant="primary"
           size="sm"
           onClick={() => exportRapportBudgetaire({ postes: enriched, ecritures, factures, fournisseurs, ratios })}
         >
-          📑 Rapport complet .xlsx
+          📑 Rapport .xlsx
+        </Button>
+        <Button
+          variant="primary"
+          size="sm"
+          onClick={() => setShowRapportConfig(true)}
+        >
+          📰 Rapport financier .html
         </Button>
       </div>
+
+      {showRapportConfig && (
+        <RapportFinancierConfigModal onClose={() => setShowRapportConfig(false)} />
+      )}
 
       {/* Contenu selon onglet */}
       {tab === 'plan' && (
@@ -1085,6 +1112,131 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     <div>
       <p style={{ fontSize: 12, color: C.subtle, fontWeight: 600, marginBottom: 4 }}>{label}</p>
       {children}
+    </div>
+  )
+}
+
+// ─── Modale de config du Rapport Financier HTML ───────────────────────
+
+function RapportFinancierConfigModal({ onClose }: { onClose: () => void }) {
+  const defaultSections = new Set(RAPPORT_SECTIONS.map((s) => s.key))
+  const [selected, setSelected] = useState<Set<string>>(defaultSections)
+  const [destinataire, setDestinataire] = useState('')
+
+  // Restaure le dernier choix
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      const raw = window.localStorage.getItem(RAPPORT_LS_KEY)
+      if (raw) {
+        const parsed = JSON.parse(raw) as { sections?: string[]; destinataire?: string }
+        if (Array.isArray(parsed.sections)) setSelected(new Set(parsed.sections))
+        if (typeof parsed.destinataire === 'string') setDestinataire(parsed.destinataire)
+      }
+    } catch {/* ignore */}
+  }, [])
+
+  const toggle = (key: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }
+
+  const handleGenerate = () => {
+    const sec = Array.from(selected).join(',')
+    const params = new URLSearchParams()
+    if (sec) params.set('sec', sec)
+    if (destinataire.trim()) params.set('dest', destinataire.trim())
+    try {
+      window.localStorage.setItem(
+        RAPPORT_LS_KEY,
+        JSON.stringify({ sections: Array.from(selected), destinataire: destinataire.trim() }),
+      )
+    } catch {/* ignore */}
+    window.open(`/rapport-financier?${params.toString()}`, '_blank', 'noopener,noreferrer')
+    onClose()
+  }
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="rapport-fin-title"
+      onClick={onClose}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 200,
+        background: 'rgba(0,0,0,0.45)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: 20,
+      }}
+    >
+      <div onClick={(e) => e.stopPropagation()} style={{ maxWidth: 640, width: '100%', maxHeight: '90vh', overflow: 'auto' }}>
+      <Card
+        padding={20}
+      >
+        <SectionHeader title="Générer un rapport financier" />
+        <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.5, marginBottom: 14 }}>
+          Choisissez les sections à inclure et un destinataire optionnel. La couverture, la synthèse exécutive et la signature
+          sont toujours présentes. Vos choix sont mémorisés pour la prochaine fois.
+        </p>
+
+        <Field label="Destinataire (facultatif)">
+          <input
+            value={destinataire}
+            onChange={(e) => setDestinataire(e.target.value)}
+            placeholder='ex: "Crédit Agricole - dossier emprunt mairie" ou "Préfecture - DETR 2026"'
+            style={inputStyle}
+          />
+        </Field>
+
+        <p style={{ fontSize: 12, color: C.subtle, fontWeight: 600, margin: '16px 0 8px' }}>Sections à inclure</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 16 }}>
+          {RAPPORT_SECTIONS.map((s) => {
+            const checked = selected.has(s.key)
+            return (
+              <label
+                key={s.key}
+                style={{
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: 10,
+                  padding: '8px 10px',
+                  borderRadius: 6,
+                  cursor: 'pointer',
+                  background: checked ? C.greenLight : 'transparent',
+                  border: `1px solid ${checked ? C.green : C.border}`,
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={() => toggle(s.key)}
+                  style={{ marginTop: 3 }}
+                />
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: C.fg }}>{s.label}</p>
+                  <p style={{ fontSize: 12, color: C.subtle, marginTop: 2 }}>{s.desc}</p>
+                </div>
+              </label>
+            )
+          })}
+        </div>
+
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'space-between', alignItems: 'center' }}>
+          <button
+            onClick={() => setSelected(new Set(RAPPORT_SECTIONS.map((s) => s.key)))}
+            style={{ background: 'transparent', border: 'none', color: C.green, fontSize: 12, cursor: 'pointer', textDecoration: 'underline' }}
+          >Tout cocher</button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <Button onClick={onClose}>Annuler</Button>
+            <Button variant="primary" onClick={handleGenerate}>📰 Générer le rapport</Button>
+          </div>
+        </div>
+      </Card>
+      </div>
     </div>
   )
 }
