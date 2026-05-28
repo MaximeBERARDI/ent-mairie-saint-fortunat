@@ -31,6 +31,7 @@ export type Permission =
   // Finances
   | 'finance.view-all'
   | 'finance.validate-invoices'
+  | 'finance.pay-invoices'
   | 'finance.manage-budget'
   // Documents (GED)
   | 'documents.view-all'
@@ -87,6 +88,7 @@ export const PERMISSION_LABELS: Record<Permission, string> = {
   'hr.generate-payslips': 'Générer les fiches de paie',
   'finance.view-all': 'Voir le module Finances',
   'finance.validate-invoices': 'Valider les factures',
+  'finance.pay-invoices': 'Marquer les factures comme payées (mandatement)',
   'finance.manage-budget': 'Gérer le budget',
   'documents.view-all': 'Voir tous les documents (GED)',
   'documents.upload': 'Téléverser des documents',
@@ -121,7 +123,7 @@ export const ROLE_PERMISSIONS: Record<AuthLevel, Permission[]> = {
     'commissions.view-all', 'commissions.manage', 'commissions.add-members',
     'cr.upload', 'cr.validate', 'cr.publish',
     'hr.view-all', 'hr.manage', 'hr.validate-leaves',
-    'finance.view-all', 'finance.validate-invoices',
+    'finance.view-all', 'finance.validate-invoices', 'finance.pay-invoices',
     'documents.view-all', 'documents.upload', 'documents.delete',
     'team.view', 'team.invite',
   ],

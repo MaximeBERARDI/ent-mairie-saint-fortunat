@@ -182,7 +182,7 @@ function DashConseiller({ tasks, updateTask, currentUserId }: { tasks: Task[]; u
         label: `Facture ${f.numero} — ${fmtMontant(f.montantTTC)}`,
         sub: `Soumise par ${sub?.fullName ?? '—'}`,
         badge: f.statut === 'En attente validation' ? 'À valider' : f.statut,
-        badgeVariant: f.statut === 'Validée' ? 'success' : f.statut === 'Rejetée' ? 'danger' : 'warning',
+        badgeVariant: (f.statut === 'Validée' || f.statut === 'Payée') ? 'success' : f.statut === 'Rejetée' ? 'danger' : 'warning',
       })
     })
     leaves.forEach(l => {

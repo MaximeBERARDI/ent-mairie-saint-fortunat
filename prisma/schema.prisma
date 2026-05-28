@@ -132,6 +132,7 @@ model Person {
   facturesSubmitted   Facture[]    @relation("FactureSubmitter")
   facturesValidated   Facture[]    @relation("FactureValidator")
   facturesRejected    Facture[]    @relation("FactureRejecter")
+  facturesPaid        Facture[]    @relation("FacturePayer")
   bulletins      BulletinPaie[]
   ecrituresCreated Ecriture[]      @relation("EcritureCreator")
   comptesRendus  CompteRendu[]     @relation("CompteRenduUploader")
@@ -300,6 +301,7 @@ enum FactureStatut {
   a_soumettre
   en_attente_validation
   validee
+  payee
   rejetee
 }
 
@@ -343,6 +345,11 @@ model Facture {
   rejectedBy      Person?       @relation("FactureRejecter", fields: [rejectedById], references: [id], onDelete: SetNull)
   rejectedAt      DateTime?
   rejectionReason String?       @db.Text
+
+  paidById        String?
+  paidBy          Person?       @relation("FacturePayer", fields: [paidById], references: [id], onDelete: SetNull)
+  paidAt          DateTime?
+  datePaiement    DateTime?
 
   documents       Document[]
   notes           String?       @db.Text

@@ -570,7 +570,7 @@ function DrillDownPanel({
                 <span style={{ flex: 1, color: C.fg }}>{four?.nom ?? '—'}</span>
                 <span style={{ color: C.subtle, minWidth: 50 }}>{fmtDate(f.dateFacture)}</span>
                 <span style={{ color: C.fg, fontWeight: 600, minWidth: 70, textAlign: 'right' }}>{fmtMontant(f.montantTTC)}</span>
-                <Badge label={f.statut === 'En attente validation' ? 'En attente' : f.statut} variant={f.statut === 'Validée' ? 'success' : f.statut === 'Rejetée' ? 'danger' : 'warning'} />
+                <Badge label={f.statut === 'En attente validation' ? 'En attente' : f.statut} variant={(f.statut === 'Validée' || f.statut === 'Payée') ? 'success' : f.statut === 'Rejetée' ? 'danger' : 'warning'} />
               </div>
             )
           })}

@@ -11,12 +11,14 @@ const STATUT_TO_DB: Record<FactureStatut, DbFactureStatut> = {
   'À soumettre': 'a_soumettre',
   'En attente validation': 'en_attente_validation',
   Validée: 'validee',
+  Payée: 'payee',
   Rejetée: 'rejetee',
 }
 const STATUT_FROM_DB: Record<DbFactureStatut, FactureStatut> = {
   a_soumettre: 'À soumettre',
   en_attente_validation: 'En attente validation',
   validee: 'Validée',
+  payee: 'Payée',
   rejetee: 'Rejetée',
 }
 
@@ -55,6 +57,9 @@ export function factureFromDb(f: DbFacture & { documents?: DbDocument[] }): Fact
     rejectedById: f.rejectedById ?? undefined,
     rejectedAt: f.rejectedAt?.toISOString(),
     rejectionReason: f.rejectionReason ?? undefined,
+    paidById: f.paidById ?? undefined,
+    paidAt: f.paidAt?.toISOString(),
+    datePaiement: f.datePaiement ? f.datePaiement.toISOString().slice(0, 10) : undefined,
     documents: f.documents?.map(documentFromDb) ?? [],
     notes: f.notes ?? undefined,
     createdAt: f.createdAt.toISOString(),

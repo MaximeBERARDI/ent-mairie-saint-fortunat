@@ -142,11 +142,13 @@ export async function DELETE(req: Request) {
   const factureId = searchParams.get('factureId')
   const quittanceId = searchParams.get('quittanceId')
   const subventionId = searchParams.get('subventionId')
-  const where = factureId ? { factureId }
+  const journal = searchParams.get('journal') ?? undefined
+  const base = factureId ? { factureId }
     : quittanceId ? { quittanceId }
     : subventionId ? { subventionId }
     : null
-  if (!where) return NextResponse.json({ error: 'Filtre de suppression requis.' }, { status: 400 })
+  if (!base) return NextResponse.json({ error: 'Filtre de suppression requis.' }, { status: 400 })
+  const where = journal ? { ...base, journal } : base
 
   const { count } = await db.ecriture.deleteMany({ where })
   return NextResponse.json({ ok: true, count })

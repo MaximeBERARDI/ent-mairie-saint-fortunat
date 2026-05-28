@@ -82,7 +82,7 @@ export function useBudget() {
   const computePosteWithConsumption = useCallback(
     (poste: CompteM14, factures: Facture[], ecritures: Ecriture[] = []): CompteWithConsumption => {
       const consoFactures = factures
-        .filter(f => f.posteCode === poste.code && f.statut === 'Validée')
+        .filter(f => f.posteCode === poste.code && (f.statut === 'Validée' || f.statut === 'Payée'))
         .reduce((acc, f) => acc + f.montantTTC, 0)
 
       let consoEcritures = 0

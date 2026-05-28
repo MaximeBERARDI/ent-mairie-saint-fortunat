@@ -119,10 +119,10 @@ export default function FinancesPage() {
 // ─── Vue Factures ────────────────────────────────────────────────────
 
 function FacturesView() {
-  const { factures, hydrated, submitFacture, validateFacture, rejectFacture, reopenFacture, deleteFacture } = useFactures()
+  const { factures, hydrated, submitFacture, validateFacture, rejectFacture, reopenFacture, payFacture, unpayFacture, deleteFacture } = useFactures()
   const { fournisseurs } = useFournisseurs()
   const { postes } = useBudget()
-  const { generateEngagementFromFacture, deleteEcrituresByFacture } = useEcritures()
+  const { generateEngagementFromFacture, generateMandatementFromFacture, deleteEcrituresByFacture, deleteEcriturePaiementByFacture } = useEcritures()
   const { people } = useTeam()
   const { currentUserId } = useCurrentUser()
 
@@ -131,6 +131,18 @@ function FacturesView() {
     validateFacture(factureId, currentUserId)
     const f = factures.find(x => x.id === factureId)
     if (f) generateEngagementFromFacture(f, currentUserId)
+  }
+  // Marquer payée : déclenche aussi l'écriture de mandatement (D 4011 / C 515).
+  const handlePay = (factureId: string, datePaiement: string) => {
+    payFacture(factureId, currentUserId, datePaiement)
+    const f = factures.find(x => x.id === factureId)
+    if (f) generateMandatementFromFacture(f, currentUserId, datePaiement)
+  }
+  // Annuler le paiement : retire seulement l'écriture de mandatement (BQ),
+  // l'engagement (AC) reste en place tant que la facture est validée.
+  const handleUnpay = (factureId: string) => {
+    unpayFacture(factureId)
+    deleteEcriturePaiementByFacture(factureId)
   }
   // Réouvrir / supprimer : on retire aussi les écritures liées
   const handleReopen = (factureId: string) => {
@@ -144,6 +156,7 @@ function FacturesView() {
 
   const currentUser = people.find(p => p.id === currentUserId)
   const canValidate = currentUser ? hasPermission(currentUser.authLevel, 'finance.validate-invoices', currentUser.customPermissions) : false
+  const canPay = currentUser ? hasPermission(currentUser.authLevel, 'finance.pay-invoices', currentUser.customPermissions) : false
 
   const [filter, setFilter] = useState<'toutes' | FactureStatut>('En attente validation')
   const [selectedId, setSelectedId] = useState<string | null>(factures[0]?.id ?? null)
@@ -158,17 +171,17 @@ function FacturesView() {
   // KPIs calculés à partir des vraies factures
   const kpis = useMemo(() => {
     const enAttente = factures.filter(f => f.statut === 'En attente validation')
-    const validees = factures.filter(f => f.statut === 'Validée')
+    const aPayer = factures.filter(f => f.statut === 'Validée')      // validée mais pas encore décaissée
+    const payees = factures.filter(f => f.statut === 'Payée')
     const rejetees = factures.filter(f => f.statut === 'Rejetée')
-    const totalAttente = enAttente.reduce((acc, f) => acc + f.montantTTC, 0)
-    const totalValidees = validees.reduce((acc, f) => acc + f.montantTTC, 0)
     return {
       enAttenteCount: enAttente.length,
-      enAttenteMontant: totalAttente,
-      valideesCount: validees.length,
-      valideesMontant: totalValidees,
+      enAttenteMontant: enAttente.reduce((acc, f) => acc + f.montantTTC, 0),
+      aPayerCount: aPayer.length,
+      aPayerMontant: aPayer.reduce((acc, f) => acc + f.montantTTC, 0),
+      payeesCount: payees.length,
+      payeesMontant: payees.reduce((acc, f) => acc + f.montantTTC, 0),
       rejeteesCount: rejetees.length,
-      total: totalValidees,
     }
   }, [factures])
 
@@ -177,6 +190,7 @@ function FacturesView() {
     'À soumettre': factures.filter(f => f.statut === 'À soumettre').length,
     'En attente validation': factures.filter(f => f.statut === 'En attente validation').length,
     'Validée': factures.filter(f => f.statut === 'Validée').length,
+    'Payée': factures.filter(f => f.statut === 'Payée').length,
     'Rejetée': factures.filter(f => f.statut === 'Rejetée').length,
   }
 
@@ -188,9 +202,9 @@ function FacturesView() {
     <div>
       <div style={{ display: 'flex', gap: 'var(--gap)', marginBottom: 'var(--gap)' }}>
         <KpiCard label="En attente validation" value={String(kpis.enAttenteCount)} sub={`${fmtMontant(kpis.enAttenteMontant)} à valider`} color={C.warning} />
-        <KpiCard label="Validées ce mois" value={String(kpis.valideesCount)} sub={`${fmtMontant(kpis.valideesMontant)} imputés`} color={C.success} />
+        <KpiCard label="À payer" value={String(kpis.aPayerCount)} sub={`${fmtMontant(kpis.aPayerMontant)} engagés`} color={C.success} />
+        <KpiCard label="Payées" value={String(kpis.payeesCount)} sub={`${fmtMontant(kpis.payeesMontant)} décaissés`} color={C.slate} />
         <KpiCard label="Rejetées" value={String(kpis.rejeteesCount)} sub={kpis.rejeteesCount > 0 ? 'commentaire requis' : '—'} color={C.danger} />
-        <KpiCard label="Total dépensé / mois" value={fmtMontant(kpis.total)} sub="sur factures imputées" color={C.slate} />
       </div>
 
       <div style={{ display: 'flex', gap: 'var(--gap)' }}>
@@ -199,7 +213,8 @@ function FacturesView() {
             {([
               ['toutes', `Toutes (${counts.toutes})`],
               ['En attente validation', `En attente (${counts['En attente validation']})`],
-              ['Validée', `Validées (${counts['Validée']})`],
+              ['Validée', `À payer (${counts['Validée']})`],
+              ['Payée', `Payées (${counts['Payée']})`],
               ['Rejetée', `Rejetées (${counts['Rejetée']})`],
             ] as [typeof filter, string][]).map(([v, label]) => (
               <button key={v} onClick={() => setFilter(v)} style={{ padding: '5px 12px', borderRadius: 20, background: v === filter ? C.green : '#fff', border: `1px solid ${v === filter ? C.green : C.border}`, color: v === filter ? '#fff' : C.muted, fontSize: 12, fontWeight: v === filter ? 600 : 400, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif" }}>
@@ -322,9 +337,12 @@ function FacturesView() {
               fournisseurs={fournisseurs}
               postes={postes}
               canValidate={canValidate}
+              canPay={canPay}
               onValidate={() => handleValidate(selected.id)}
               onReject={(reason) => rejectFacture(selected.id, currentUserId, reason)}
               onReopen={() => handleReopen(selected.id)}
+              onPay={(datePaiement) => handlePay(selected.id, datePaiement)}
+              onUnpay={() => handleUnpay(selected.id)}
               onDelete={() => { handleDelete(selected.id); setSelectedId(null) }}
             />
           ) : (
@@ -514,25 +532,31 @@ function SubmitFactureForm({
 // ─── Sous-composant : panneau détail d'une facture ───────────────────
 
 function FactureDetailPanel({
-  facture, fournisseurs, postes, canValidate,
-  onValidate, onReject, onReopen, onDelete,
+  facture, fournisseurs, postes, canValidate, canPay,
+  onValidate, onReject, onReopen, onPay, onUnpay, onDelete,
 }: {
   facture: Facture
   fournisseurs: Fournisseur[]
   postes: PosteBudget[]
   canValidate: boolean
+  canPay: boolean
   onValidate: () => void
   onReject: (reason: string) => void
   onReopen: () => void
+  onPay: (datePaiement: string) => void
+  onUnpay: () => void
   onDelete: () => void
 }) {
   const { people } = useTeam()
   const [comment, setComment] = useState('')
+  const [showPayForm, setShowPayForm] = useState(false)
+  const [datePaiement, setDatePaiement] = useState(new Date().toISOString().slice(0, 10))
   const fournisseur = fournisseurs.find(f => f.id === facture.fournisseurId)
   const poste = postes.find(p => p.code === facture.posteCode)
   const submitter = people.find(p => p.id === facture.submittedById)
   const validator = facture.validatedById ? people.find(p => p.id === facture.validatedById) : null
   const rejector = facture.rejectedById ? people.find(p => p.id === facture.rejectedById) : null
+  const payer = facture.paidById ? people.find(p => p.id === facture.paidById) : null
 
   const handleReject = () => {
     const reason = comment.trim()
@@ -590,6 +614,20 @@ function FactureDetailPanel({
           <div style={{ flex: 1 }}>
             <p style={{ fontSize: 12, color: C.success, fontWeight: 600 }}>Validée par {validator.fullName}</p>
             <p style={{ fontSize: 11, color: C.muted }}>{fmtDateTime(facture.validatedAt)} — imputée sur le poste {facture.posteCode}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Décision : payée (mandatement) */}
+      {payer && facture.paidAt && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, padding: 8, background: C.successLight, borderRadius: 6 }}>
+          <Avatar initials={payer.initials} size={20} color={payer.color} />
+          <div style={{ flex: 1 }}>
+            <p style={{ fontSize: 12, color: C.success, fontWeight: 600 }}>
+              Payée par {payer.fullName}
+              {facture.datePaiement && <span style={{ fontWeight: 500 }}> — décaissement le {new Date(facture.datePaiement).toLocaleDateString('fr-FR')}</span>}
+            </p>
+            <p style={{ fontSize: 11, color: C.muted }}>Mandatée — écriture banque D 4011 / C 515 générée</p>
           </div>
         </div>
       )}
@@ -670,7 +708,56 @@ function FactureDetailPanel({
         </p>
       )}
 
-      {(facture.statut === 'Validée' || facture.statut === 'Rejetée') && canValidate && (
+      {/* Statut Validée : peut être payée (canPay) et/ou rouverte/supprimée (canValidate). */}
+      {facture.statut === 'Validée' && (
+        <div style={{ marginTop: 8 }}>
+          {canPay && (
+            <>
+              {!showPayForm ? (
+                <Button variant="primary" style={{ width: '100%', justifyContent: 'center', marginBottom: 6 }} onClick={() => setShowPayForm(true)}>
+                  € Marquer payée
+                </Button>
+              ) : (
+                <div style={{ padding: 10, background: C.bg, border: `1px solid ${C.border}`, borderRadius: 6, marginBottom: 8 }}>
+                  <p style={{ fontSize: 12, color: C.muted, fontWeight: 600, marginBottom: 6 }}>Date de paiement (décaissement)</p>
+                  <input type="date" value={datePaiement} onChange={e => setDatePaiement(e.target.value)} style={inputStyle} />
+                  <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+                    <Button style={{ flex: 1, justifyContent: 'center' }} onClick={() => setShowPayForm(false)}>Annuler</Button>
+                    <Button variant="primary" style={{ flex: 1, justifyContent: 'center' }} disabled={!datePaiement} onClick={() => { onPay(datePaiement); setShowPayForm(false) }}>
+                      Confirmer le paiement
+                    </Button>
+                  </div>
+                  <p style={{ fontSize: 11, color: C.subtle, marginTop: 6 }}>
+                    Génère automatiquement l&apos;écriture de mandatement : D 4011 (solde fournisseur) / C 515 (banque).
+                  </p>
+                </div>
+              )}
+            </>
+          )}
+          {canValidate && !showPayForm && (
+            <div style={{ display: 'flex', gap: 6 }}>
+              <Button style={{ flex: 1, justifyContent: 'center' }} onClick={onReopen}>↺ Rouvrir</Button>
+              <Button variant="danger" style={{ flex: 1, justifyContent: 'center' }} onClick={() => { if (confirm('Supprimer définitivement cette facture ?')) onDelete() }}>Supprimer</Button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Statut Payée : annuler le paiement (canPay) ou supprimer (canValidate). */}
+      {facture.statut === 'Payée' && (canPay || canValidate) && (
+        <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+          {canPay && (
+            <Button style={{ flex: 1, justifyContent: 'center' }} onClick={() => { if (confirm('Annuler le paiement de cette facture ? L\'écriture de mandatement sera supprimée.')) onUnpay() }}>
+              ↺ Annuler le paiement
+            </Button>
+          )}
+          {canValidate && (
+            <Button variant="danger" style={{ flex: 1, justifyContent: 'center' }} onClick={() => { if (confirm('Supprimer définitivement cette facture ?')) onDelete() }}>Supprimer</Button>
+          )}
+        </div>
+      )}
+
+      {facture.statut === 'Rejetée' && canValidate && (
         <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
           <Button style={{ flex: 1, justifyContent: 'center' }} onClick={onReopen}>↺ Rouvrir</Button>
           <Button variant="danger" style={{ flex: 1, justifyContent: 'center' }} onClick={() => { if (confirm('Supprimer définitivement cette facture ?')) onDelete() }}>Supprimer</Button>
@@ -961,6 +1048,7 @@ function statutShortLabel(s: FactureStatut): string {
   switch (s) {
     case 'En attente validation': return 'En attente'
     case 'Validée': return 'Validée'
+    case 'Payée': return 'Payée'
     case 'Rejetée': return 'Rejetée'
     case 'À soumettre': return 'Brouillon'
   }
@@ -970,6 +1058,7 @@ function statutBadgeVariant(s: FactureStatut): 'warning' | 'success' | 'danger' 
   switch (s) {
     case 'En attente validation': return 'warning'
     case 'Validée': return 'success'
+    case 'Payée': return 'success'
     case 'Rejetée': return 'danger'
     case 'À soumettre': return 'default'
   }

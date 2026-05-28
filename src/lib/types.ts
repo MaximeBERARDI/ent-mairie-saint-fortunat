@@ -125,7 +125,8 @@ export interface Invoice {
 export type FactureStatut =
   | 'À soumettre'              // brouillon (rare en pratique)
   | 'En attente validation'    // soumis, attend validation par adjoint au budget
-  | 'Validée'                  // validée → imputée sur le budget
+  | 'Validée'                  // validée → imputée sur le budget (engagement comptable)
+  | 'Payée'                    // mandatée et payée → écriture banque générée
   | 'Rejetée'                  // refusée avec motif
 
 export interface Facture {
@@ -147,6 +148,9 @@ export interface Facture {
   rejectedById?: string
   rejectedAt?: string
   rejectionReason?: string
+  paidById?: string
+  paidAt?: string               // ISO timestamp de l'action « marquer payée »
+  datePaiement?: string         // ISO YYYY-MM-DD : date comptable du décaissement
 
   documents?: TaskDocument[]    // PDF facture (même shape que TaskDocument)
   notes?: string

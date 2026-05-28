@@ -93,7 +93,7 @@ Le module Finances implémente la **comptabilité publique M14 développée** :
 - ~150 articles pré-chargés
 - Sections fonctionnement / investissement, sens dépense / recette
 - Écritures en double partie (équilibre débit/crédit vérifié)
-- Génération automatique de l'écriture d'engagement à la validation d'une facture
+- Génération automatique de **l'écriture d'engagement** à la validation d'une facture (D poste / C 4011, journal AC) **et de l'écriture de mandatement** au clic « Marquer payée » (D 4011 / C 515, journal BQ). Annuler le paiement (`unpay`) supprime sélectivement la seule écriture BQ — l'engagement reste tant que la facture est validée. Statuts de la facture : `À soumettre → En attente validation → Validée → Payée` (+ `Rejetée`).
 - Ratios R. 2313-1 + indicateurs DGFiP (CAF, désendettement, taux d'épargne)
 - **Saisie des montants** (budget alloué + consommation initiale *avant app*) dans `src/lib/m14-plan.ts` (`COMPTES_M14`, args des helpers `D(...)`/`R(...)`) puis `npm run seed`. Le seed du plan comptable est **autoritatif** : un re-seed réécrit `budgetAlloue` + `consommationInitiale` depuis ce fichier (⚠️ écrase les éditions faites dans l'UI).
 - **Compte fournisseur persistant** : `Fournisseur.totalEngage` (cumul des factures validées) est stocké et recalculé en transaction à chaque mutation de facture (`src/lib/fournisseur-total.ts`), plutôt que recalculé à la volée.
@@ -211,4 +211,4 @@ préserve l'interface des hooks, donc les pages n'ont pas bougé.
 
 5 niveaux dans `AuthLevel` : `super-admin`, `admin`, `gestionnaire`, `contributeur`, `lecteur`.
 Permissions agrégées par niveau dans `ROLE_PERMISSIONS` + extensions custom par personne.
-**Toujours** vérifier via `hasPermission()` avant d'afficher une action de validation. Côté **serveur**, les routes sensibles ré-appliquent le droit via `getAuthContext().can(...)` (`src/lib/authz.ts`) — ex. validation/rejet/suppression de facture → `finance.validate-invoices` ; délibérations → `commissions.manage`. Ne pas se reposer uniquement sur le gating UI.
+**Toujours** vérifier via `hasPermission()` avant d'afficher une action de validation. Côté **serveur**, les routes sensibles ré-appliquent le droit via `getAuthContext().can(...)` (`src/lib/authz.ts`) — ex. validation/rejet/suppression de facture → `finance.validate-invoices` ; **paiement** d'une facture (mandatement) → `finance.pay-invoices` (séparée volontairement pour permettre une séparation des rôles ordonnateur / payeur) ; délibérations → `commissions.manage`. Ne pas se reposer uniquement sur le gating UI.

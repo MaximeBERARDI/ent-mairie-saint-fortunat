@@ -95,7 +95,8 @@ export default function RapportPage() {
 
   const today = new Date().toISOString().slice(0, 10)
   const facEnAttente = factures.filter(f => f.statut === 'En attente validation')
-  const facValidees = factures.filter(f => f.statut === 'Validée')
+  // « Imputées » = validées ou payées (les deux ont passé la validation budgétaire)
+  const facValidees = factures.filter(f => f.statut === 'Validée' || f.statut === 'Payée')
   const facEnAttenteMontant = facEnAttente.reduce((s, f) => s + f.montantTTC, 0)
   const facValideesMontant = facValidees.reduce((s, f) => s + f.montantTTC, 0)
 

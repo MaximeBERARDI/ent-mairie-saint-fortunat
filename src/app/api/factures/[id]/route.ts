@@ -1,10 +1,11 @@
-// PATCH  /api/factures/[id]   → update (édition + actions validate/reject/reopen)
+// PATCH  /api/factures/[id]   → update (édition + actions validate/reject/reopen/pay/unpay)
 // DELETE /api/factures/[id]   → delete
 //
 // Le PATCH gère plusieurs cas selon les champs envoyés :
-// - action: 'validate' / 'reject' / 'reopen' → workflow, réservé aux personnes
-//   habilitées (permission finance.validate-invoices, vérifiée ICI côté serveur
-//   et pas seulement dans l'UI)
+// - action: 'validate' / 'reject' / 'reopen' → workflow de validation, réservé
+//   aux personnes habilitées (permission finance.validate-invoices)
+// - action: 'pay' / 'unpay' → mandatement (paiement), permission séparée
+//   finance.pay-invoices, précondition de statut imposée serveur
 // - sinon : édition de champs (sauf statut qui passe par action)
 //
 // Toute mutation recalcule le compte fournisseur persistant (totalEngage).
@@ -24,8 +25,9 @@ interface DocumentInput {
 }
 
 interface PatchBody {
-  action?: 'validate' | 'reject' | 'reopen'
+  action?: 'validate' | 'reject' | 'reopen' | 'pay' | 'unpay'
   rejectionReason?: string
+  datePaiement?: string
   // Champs éditables
   fournisseurId?: string
   montantTTC?: number
@@ -47,10 +49,33 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     return NextResponse.json({ error: 'Requête invalide.' }, { status: 400 })
   }
 
-  // Le changement de statut (validation / rejet / réouverture) exige le droit
-  // de valider les factures — appliqué côté serveur.
-  if (body.action && !ctx.can('finance.validate-invoices')) {
+  // Permissions par action — la validation/rejet/réouverture exige
+  // finance.validate-invoices ; le paiement (mandatement) exige la permission
+  // séparée finance.pay-invoices.
+  const validateActions = new Set(['validate', 'reject', 'reopen'])
+  const payActions = new Set(['pay', 'unpay'])
+  if (body.action && validateActions.has(body.action) && !ctx.can('finance.validate-invoices')) {
     return NextResponse.json({ error: 'Action non autorisée.' }, { status: 403 })
+  }
+  if (body.action && payActions.has(body.action) && !ctx.can('finance.pay-invoices')) {
+    return NextResponse.json({ error: 'Action non autorisée.' }, { status: 403 })
+  }
+
+  // Préconditions de statut pour les actions de paiement (lecture nécessaire)
+  let currentStatut: string | null = null
+  if (body.action && payActions.has(body.action)) {
+    const cur = await db.facture.findUnique({
+      where: { id: params.id },
+      select: { statut: true },
+    })
+    if (!cur) return NextResponse.json({ error: 'Facture introuvable.' }, { status: 404 })
+    currentStatut = cur.statut
+    if (body.action === 'pay' && currentStatut !== 'validee') {
+      return NextResponse.json({ error: 'La facture doit être validée avant d\'être payée.' }, { status: 409 })
+    }
+    if (body.action === 'unpay' && currentStatut !== 'payee') {
+      return NextResponse.json({ error: 'La facture n\'est pas marquée comme payée.' }, { status: 409 })
+    }
   }
 
   const data: Record<string, unknown> = {}
@@ -80,6 +105,16 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     data.rejectedById = null
     data.rejectedAt = null
     data.rejectionReason = null
+  } else if (body.action === 'pay') {
+    data.statut = 'payee'
+    data.paidById = ctx.actor.id
+    data.paidAt = new Date()
+    data.datePaiement = body.datePaiement ? new Date(body.datePaiement) : new Date()
+  } else if (body.action === 'unpay') {
+    data.statut = 'validee'
+    data.paidById = null
+    data.paidAt = null
+    data.datePaiement = null
   }
 
   // Édition de champs (compatibles avec le workflow)

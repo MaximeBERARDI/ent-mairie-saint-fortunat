@@ -183,6 +183,36 @@ export function useFactures() {
     [patchAction],
   )
 
+  const payFacture = useCallback(
+    (id: string, _payerId: string, datePaiement: string) => {
+      void _payerId
+      setFactures((prev) =>
+        prev.map((f) =>
+          f.id === id
+            ? { ...f, statut: 'Payée', paidAt: new Date().toISOString(), datePaiement }
+            : f,
+        ),
+      )
+      patchAction(id, { action: 'pay', datePaiement }, 'Impossible de marquer la facture comme payée.')
+    },
+    [patchAction],
+  )
+
+  const unpayFacture = useCallback(
+    (id: string) => {
+      setFactures((prev) =>
+        prev.map((f) => {
+          if (f.id !== id) return f
+          const { paidById: _p, paidAt: _pa, datePaiement: _dp, ...rest } = f
+          void _p; void _pa; void _dp
+          return { ...rest, statut: 'Validée' }
+        }),
+      )
+      patchAction(id, { action: 'unpay' }, "Impossible d'annuler le paiement.")
+    },
+    [patchAction],
+  )
+
   const updateFacture = useCallback((id: string, patch: Partial<Facture>) => {
     let previous: Facture[] = []
     setFactures((prev) => {
@@ -244,6 +274,8 @@ export function useFactures() {
     validateFacture,
     rejectFacture,
     reopenFacture,
+    payFacture,
+    unpayFacture,
     updateFacture,
     deleteFacture,
     resetFactures,

@@ -123,6 +123,13 @@ export function useEcritures() {
     deleteByQuery(`factureId=${encodeURIComponent(factureId)}`)
   }, [deleteByQuery])
 
+  // Suppression sélective du seul mandatement (journal BQ) — utilisé quand on
+  // annule un paiement, sans toucher à l'engagement comptable (journal AC).
+  const deleteEcriturePaiementByFacture = useCallback((factureId: string) => {
+    setEcritures(prev => prev.filter(e => !(e.factureId === factureId && e.journal === 'BQ')))
+    deleteByQuery(`factureId=${encodeURIComponent(factureId)}&journal=BQ`)
+  }, [deleteByQuery])
+
   const deleteEcrituresByQuittance = useCallback((quittanceId: string) => {
     setEcritures(prev => prev.filter(e => e.quittanceId !== quittanceId))
     deleteByQuery(`quittanceId=${encodeURIComponent(quittanceId)}`)
@@ -144,6 +151,23 @@ export function useEcritures() {
       lignes: [
         { compteCode: facture.posteCode, libelle: `Engagement — ${facture.numero}`, debit: facture.montantTTC, credit: 0 },
         { compteCode: '4011', libelle: `Fournisseur — ${facture.numero}`, debit: 0, credit: facture.montantTTC },
+      ],
+    })
+  }, [ecritures, submit])
+
+  // ─── Génération automatique de mandatement (paiement de facture) ──
+  // Solde la dette envers le fournisseur (D 4011) par un décaissement banque
+  // (C 515). Équilibre garanti par construction.
+  const generateMandatementFromFacture = useCallback((facture: Facture, payerId: string, datePaiement: string): Ecriture | null => {
+    const existing = ecritures.find(e => e.factureId === facture.id && e.journal === 'BQ')
+    if (existing) return existing
+    return submit({
+      date: datePaiement, journal: 'BQ',
+      libelle: `Paiement ${facture.numero}`, pieceRef: facture.numero, factureId: facture.id,
+      createdBy: payerId,
+      lignes: [
+        { compteCode: '4011', libelle: `Solde fournisseur — ${facture.numero}`, debit: facture.montantTTC, credit: 0 },
+        { compteCode: '515',  libelle: `Décaissement — ${facture.numero}`,      debit: 0, credit: facture.montantTTC },
       ],
     })
   }, [ecritures, submit])
@@ -201,9 +225,11 @@ export function useEcritures() {
     addEcriture,
     deleteEcriture,
     deleteEcrituresByFacture,
+    deleteEcriturePaiementByFacture,
     deleteEcrituresByQuittance,
     deleteEcrituresBySubvention,
     generateEngagementFromFacture,
+    generateMandatementFromFacture,
     generateEncaissementLoyer,
     generateVersementSubvention,
     consommationParCompte,
