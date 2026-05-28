@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { Card, KpiCard } from '@/components/ui/Card'
 import { DataList } from '@/components/ui/DataList'
 import { Badge } from '@/components/ui/Badge'
@@ -127,6 +127,8 @@ export function ParcImmobilierView() {
     }
   }, [biens, baillEnCours, quittances])
 
+  const [showRapportConfig, setShowRapportConfig] = useState(false)
+
   if (!hydrated) {
     return <p style={{ padding: 20, fontSize: 12, color: C.subtle }}>Chargement…</p>
   }
@@ -145,6 +147,17 @@ export function ParcImmobilierView() {
           color={kpis.impayesCount > 0 ? C.danger : C.subtle}
         />
       </div>
+
+      {/* Bouton Rapport loyers */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+        <Button variant="primary" size="sm" onClick={() => setShowRapportConfig(true)}>
+          📰 Rapport loyers .html
+        </Button>
+      </div>
+
+      {showRapportConfig && (
+        <RapportLoyersConfigModal onClose={() => setShowRapportConfig(false)} />
+      )}
 
       {/* Onglets */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 14, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -1220,6 +1233,182 @@ function RelancesModal({
               Vous n&apos;avez pas les droits pour ajouter ou modifier une relance.
             </p>
           )}
+        </Card>
+      </div>
+    </div>
+  )
+}
+
+// ─── Modale de config du Rapport de suivi des loyers ───────────────
+
+const RAPPORT_LOYERS_SECTIONS: { key: string; label: string; desc: string }[] = [
+  { key: 'dash',    label: 'Tableau de bord des impayés', desc: 'Locataires concernés, mois impayés, montant dû, relances' },
+  { key: 'biens',   label: 'Synthèse par bien', desc: 'Performance locative et impayés par bien immobilier' },
+  { key: 'mois',    label: 'Synthèse mensuelle', desc: 'Évolution mois par mois sur la période' },
+  { key: 'ordures', label: 'Suivi ordures ménagères (TEOM)', desc: 'Matrice locataire × mois pour la TEOM' },
+  { key: 'gaz',     label: 'Suivi gaz / chauffage', desc: 'Matrice locataire × mois pour le gaz' },
+  { key: 'relances', label: 'Historique des relances', desc: 'Liste chronologique de toutes les relances envoyées' },
+  { key: 'fiches',  label: 'Fiches détaillées par locataire (annexe)', desc: 'Une fiche par locataire avec historique, solde, relances' },
+]
+const LOYERS_LS_KEY = ':rapport-loyers-config:v1'
+
+const PERIODES: { key: 'p12mois' | 'pExercice' | 'pTout'; value: '12mois' | 'exercice' | 'tout'; label: string; desc: string }[] = [
+  { key: 'p12mois',   value: '12mois',   label: '12 derniers mois glissants', desc: 'Vue récente, exclut les vieux impayés soldés' },
+  { key: 'pExercice', value: 'exercice', label: 'Exercice en cours uniquement', desc: 'Janvier → mois courant. Vue bilan annuel.' },
+  { key: 'pTout',     value: 'tout',     label: "Tout l'historique des impayés", desc: 'Inclut les vieux impayés non soldés > 12 mois' },
+]
+
+function RapportLoyersConfigModal({ onClose }: { onClose: () => void }) {
+  const defaultSections = new Set(RAPPORT_LOYERS_SECTIONS.map((s) => s.key))
+  const [selected, setSelected] = useState<Set<string>>(defaultSections)
+  const [destinataire, setDestinataire] = useState('')
+  const [periode, setPeriode] = useState<'12mois' | 'exercice' | 'tout'>('12mois')
+  const [inclureAnalyse, setInclureAnalyse] = useState(true)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      const raw = window.localStorage.getItem(LOYERS_LS_KEY)
+      if (raw) {
+        const parsed = JSON.parse(raw) as { sections?: string[]; destinataire?: string; periode?: '12mois'|'exercice'|'tout'; analyse?: boolean }
+        if (Array.isArray(parsed.sections)) setSelected(new Set(parsed.sections))
+        if (typeof parsed.destinataire === 'string') setDestinataire(parsed.destinataire)
+        if (parsed.periode === '12mois' || parsed.periode === 'exercice' || parsed.periode === 'tout') setPeriode(parsed.periode)
+        if (typeof parsed.analyse === 'boolean') setInclureAnalyse(parsed.analyse)
+      }
+    } catch {/* ignore */}
+  }, [])
+
+  const toggle = (key: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev)
+      if (next.has(key)) next.delete(key)
+      else next.add(key)
+      return next
+    })
+  }
+
+  const handleGenerate = () => {
+    const sec = Array.from(selected).join(',')
+    const params = new URLSearchParams()
+    if (sec) params.set('sec', sec)
+    if (destinataire.trim()) params.set('dest', destinataire.trim())
+    params.set('p', periode)
+    if (inclureAnalyse) params.set('analyse', '1')
+    try {
+      window.localStorage.setItem(LOYERS_LS_KEY, JSON.stringify({
+        sections: Array.from(selected), destinataire: destinataire.trim(), periode, analyse: inclureAnalyse,
+      }))
+    } catch {/* ignore */}
+    window.open(`/rapport-loyers?${params.toString()}`, '_blank', 'noopener,noreferrer')
+    onClose()
+  }
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="rapport-loyers-title"
+      onClick={onClose}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 200,
+        background: 'rgba(0,0,0,0.45)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: 20,
+      }}
+    >
+      <div onClick={(e) => e.stopPropagation()} style={{ maxWidth: 720, width: '100%', maxHeight: '90vh', overflow: 'auto' }}>
+        <Card padding={20}>
+          <SectionHeader title="Générer un rapport de suivi des loyers" />
+          <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.5, marginBottom: 14 }}>
+            Choisissez la période, les sections à inclure et un destinataire optionnel. La couverture, la synthèse exécutive et la signature sont toujours présentes. Vos choix sont mémorisés.
+          </p>
+
+          <Field label="Destinataire (facultatif)">
+            <input
+              value={destinataire}
+              onChange={(e) => setDestinataire(e.target.value)}
+              placeholder='ex: "Trésorerie municipale - dossier recouvrement"'
+              style={inputStyle}
+            />
+          </Field>
+
+          <p style={{ fontSize: 12, color: C.subtle, fontWeight: 600, margin: '16px 0 8px' }}>Période</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 12 }}>
+            {PERIODES.map((p) => {
+              const checked = periode === p.value
+              return (
+                <label
+                  key={p.key}
+                  style={{
+                    display: 'flex', alignItems: 'flex-start', gap: 10, padding: '8px 10px',
+                    borderRadius: 6, cursor: 'pointer',
+                    background: checked ? C.greenLight : 'transparent',
+                    border: `1px solid ${checked ? C.green : C.border}`,
+                  }}
+                >
+                  <input type="radio" checked={checked} onChange={() => setPeriode(p.value)} style={{ marginTop: 3 }} />
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: C.fg }}>{p.label}</p>
+                    <p style={{ fontSize: 12, color: C.subtle, marginTop: 2 }}>{p.desc}</p>
+                  </div>
+                </label>
+              )
+            })}
+          </div>
+
+          <label
+            style={{
+              display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 12px',
+              borderRadius: 6, cursor: 'pointer',
+              background: inclureAnalyse ? C.terraLight : C.bg,
+              border: `1px solid ${inclureAnalyse ? C.terra : C.border}`,
+              marginTop: 4,
+            }}
+          >
+            <input type="checkbox" checked={inclureAnalyse} onChange={(e) => setInclureAnalyse(e.target.checked)} style={{ marginTop: 3 }} />
+            <div style={{ flex: 1 }}>
+              <p style={{ fontSize: 13, fontWeight: 600, color: C.fg }}>📝 Inclure l&apos;analyse commentée par IA</p>
+              <p style={{ fontSize: 12, color: C.subtle, marginTop: 2 }}>
+                Synthèse globale + commentaire par section, rédigés comme un gestionnaire de patrimoine. Délai : 5–15 s. Nécessite la clé Anthropic.
+              </p>
+            </div>
+          </label>
+
+          <p style={{ fontSize: 12, color: C.subtle, fontWeight: 600, margin: '16px 0 8px' }}>Sections à inclure</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 16 }}>
+            {RAPPORT_LOYERS_SECTIONS.map((s) => {
+              const checked = selected.has(s.key)
+              return (
+                <label
+                  key={s.key}
+                  style={{
+                    display: 'flex', alignItems: 'flex-start', gap: 10, padding: '8px 10px',
+                    borderRadius: 6, cursor: 'pointer',
+                    background: checked ? C.greenLight : 'transparent',
+                    border: `1px solid ${checked ? C.green : C.border}`,
+                  }}
+                >
+                  <input type="checkbox" checked={checked} onChange={() => toggle(s.key)} style={{ marginTop: 3 }} />
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontSize: 13, fontWeight: 600, color: C.fg }}>{s.label}</p>
+                    <p style={{ fontSize: 12, color: C.subtle, marginTop: 2 }}>{s.desc}</p>
+                  </div>
+                </label>
+              )
+            })}
+          </div>
+
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'space-between', alignItems: 'center' }}>
+            <button
+              onClick={() => setSelected(new Set(RAPPORT_LOYERS_SECTIONS.map((s) => s.key)))}
+              style={{ background: 'transparent', border: 'none', color: C.green, fontSize: 12, cursor: 'pointer', textDecoration: 'underline' }}
+            >Tout cocher</button>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <Button onClick={onClose}>Annuler</Button>
+              <Button variant="primary" onClick={handleGenerate}>📰 Générer le rapport</Button>
+            </div>
+          </div>
         </Card>
       </div>
     </div>
