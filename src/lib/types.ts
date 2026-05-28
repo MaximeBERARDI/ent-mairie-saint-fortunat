@@ -120,6 +120,28 @@ export interface Invoice {
   statut: 'En attente' | 'Validée' | 'Rejetée'
 }
 
+// ─── Bibliothèque (GED arborescente, stockage Supabase Storage) ────
+
+export interface LibraryFolder {
+  id: string
+  name: string
+  parentId?: string             // null → racine
+  createdById: string
+  createdAt: string             // ISO
+  updatedAt: string             // ISO
+}
+
+export interface LibraryDocument {
+  id: string
+  folderId: string
+  name: string                  // nom affiché (peut être édité)
+  filename: string              // nom du fichier original
+  mimeType: string
+  size: number                  // octets
+  uploadedById: string
+  uploadedAt: string            // ISO
+}
+
 // ─── Finances : factures, fournisseurs, budget ─────────────────────
 
 export type FactureStatut =

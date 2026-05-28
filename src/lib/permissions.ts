@@ -33,10 +33,14 @@ export type Permission =
   | 'finance.validate-invoices'
   | 'finance.pay-invoices'
   | 'finance.manage-budget'
-  // Documents (GED)
+  // Documents (GED legacy — non utilisé pour la bibliothèque)
   | 'documents.view-all'
   | 'documents.upload'
   | 'documents.delete'
+  // Bibliothèque (arborescence + Supabase Storage)
+  | 'library.read'
+  | 'library.write'
+  | 'library.admin'
   // Équipe
   | 'team.view'
   | 'team.invite'
@@ -93,6 +97,9 @@ export const PERMISSION_LABELS: Record<Permission, string> = {
   'documents.view-all': 'Voir tous les documents (GED)',
   'documents.upload': 'Téléverser des documents',
   'documents.delete': 'Supprimer des documents',
+  'library.read': 'Consulter la bibliothèque',
+  'library.write': 'Ajouter / déposer dans la bibliothèque',
+  'library.admin': 'Administrer la bibliothèque (suppression, déplacement de tiers)',
   'team.view': "Voir l'annuaire de l'équipe",
   'team.invite': 'Inviter un nouveau membre',
   'team.edit-roles': 'Modifier rôles et permissions',
@@ -125,6 +132,7 @@ export const ROLE_PERMISSIONS: Record<AuthLevel, Permission[]> = {
     'hr.view-all', 'hr.manage', 'hr.validate-leaves',
     'finance.view-all', 'finance.validate-invoices', 'finance.pay-invoices',
     'documents.view-all', 'documents.upload', 'documents.delete',
+    'library.read', 'library.write', 'library.admin',
     'team.view', 'team.invite',
   ],
   'gestionnaire': [
@@ -134,6 +142,7 @@ export const ROLE_PERMISSIONS: Record<AuthLevel, Permission[]> = {
     'hr.view-all',
     'finance.view-all',
     'documents.view-all', 'documents.upload',
+    'library.read', 'library.write',
     'team.view',
   ],
   'contributeur': [
@@ -141,11 +150,13 @@ export const ROLE_PERMISSIONS: Record<AuthLevel, Permission[]> = {
     'commissions.view-all',
     'cr.upload',
     'documents.view-all', 'documents.upload',
+    'library.read', 'library.write',
     'team.view',
   ],
   'lecteur': [
     'commissions.view-all',
     'documents.view-all',
+    'library.read',
     'team.view',
   ],
 }

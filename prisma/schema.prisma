@@ -136,6 +136,8 @@ model Person {
   bulletins      BulletinPaie[]
   ecrituresCreated Ecriture[]      @relation("EcritureCreator")
   comptesRendus  CompteRendu[]     @relation("CompteRenduUploader")
+  libraryFoldersCreated LibraryFolder[]
+  libraryDocumentsUploaded LibraryDocument[]
 
   @@map("persons")
 }
@@ -741,4 +743,38 @@ model CompteRendu {
   taskIds       String[]      // tâches créées suite à validation
 
   @@map("comptes_rendus")
+}
+
+// ─── Bibliothèque (GED arborescente, stockage Supabase Storage) ────
+
+model LibraryFolder {
+  id          String            @id @default(cuid())
+  name        String
+  parentId    String?
+  parent      LibraryFolder?    @relation("FolderTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children    LibraryFolder[]   @relation("FolderTree")
+  documents   LibraryDocument[]
+  createdById String
+  createdBy   Person            @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@unique([parentId, name])
+  @@map("library_folders")
+}
+
+model LibraryDocument {
+  id           String        @id @default(cuid())
+  folderId     String
+  folder       LibraryFolder @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  name         String
+  filename     String
+  mimeType     String
+  size         Int
+  storagePath  String        // chemin dans le bucket Supabase Storage
+  uploadedById String
+  uploadedBy   Person        @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+  uploadedAt   DateTime      @default(now())
+
+  @@map("library_documents")
 }

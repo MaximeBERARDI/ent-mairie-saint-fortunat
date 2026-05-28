@@ -59,6 +59,7 @@ Chaque module suit le **même pattern** :
 | Projets d'investissement | `useProjets` | `Projet` | `/api/projets` |
 | Subventions | `useSubventions` | `DemandeSubvention` | `/api/subventions` |
 | Scénarios de simulation | `useScenarios` | `Scenario` (+ `ScenarioParams`) | `/api/scenarios` |
+| Bibliothèque (GED arborescente) | `useLibrary` | `LibraryFolder`, `LibraryDocument` | `/api/library/folders`, `/api/library/documents` |
 
 **Ce qui reste volontairement en `localStorage`** (préférences locales, pas
 des données métier) :
@@ -139,6 +140,7 @@ Toujours type-checker avant de commit. Le build inclut le type-check + le lint N
 - ✅ **Visibilité des modules par profil** — `Person.hiddenModules` en DB, UI admin dans `PersonForm`, garde de route côté nav.
 - ✅ **Commissions** — CRUD tâches + admin (renommer/créer/supprimer) ; **membres dynamiques** (`Person.commissions`, onglet Membres, gaté `commissions.manage`/`team.edit-roles`) ; **réunions avec ordre du jour structuré** (`Meeting` + `/api/meetings` + `useMeetings`) ; onglet Comptes rendus câblé (`CompteRendu.commissionId`). **Espace Conseil Municipal** : encadré dédié en tête de `/commissions` (commission spéciale `id: 'conseil-municipal'`, **exclue de la grille**, membres **dérivés du rôle** — pas via `Person.commissions`) avec un **module Délibérations** (`Deliberation` : numéro, objet, date, vote pour/contre/abstention, statut ; gaté `commissions.manage`). **Reste** : GED par commission (différée, stockage cloud).
 - ✅ **Auth réelle** — NextAuth (Credentials + bcrypt) : login, session JWT, `useCurrentUser()`/`TeamContext` dérivent l'utilisateur courant. Changement de mot de passe via `/api/auth/change-password` (Profil → Sécurité). Réinitialisation par un admin via `POST /api/persons/[id]/reset-password` (mot de passe temporaire affiché une fois, gaté `team.edit-roles`, action dans `PersonForm`). Page « mot de passe oublié » informative (renvoie vers l'admin, pas de SMTP). Plus de store de mots de passe en `localStorage`. Mot de passe par défaut au seed : `saintfortunat2026`.
+- ✅ **Bibliothèque** — GED arborescente (`/bibliotheque`) : dossiers et sous-dossiers libres (`LibraryFolder` parent/enfant, contrainte d'unicité `(parentId, name)`, anti-cycle côté API), fichiers stockés sur **Supabase Storage** (bucket privé `library-files`, métadonnées en DB `LibraryDocument`), accès via **signed URL** (15 min). Limite **25 Mo/fichier** côté serveur. UI 2 colonnes (arbre + contenu) avec drag-and-drop, breadcrumb, create/rename/move/delete. Permissions : `library.read` (par défaut tous niveaux), `library.write` (contributeur+), `library.admin` (admin+). Variables d'env requises : `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` (cf. `.env.example`). Le bucket doit être créé manuellement dans Supabase. La route POST/documents renvoie `503` si non configuré.
 
 ## Dette technique connue
 
@@ -146,8 +148,9 @@ Toujours type-checker avant de commit. Le build inclut le type-check + le lint N
   1ère connexion (tous partent du défaut au seed), pas de reset self-service
   par email (pas de SMTP) → le reset passe par un admin.
 - **GED des commissions** différée : l'onglet GED affiche un message honnête
-  (« à venir »), en attente du stockage cloud (Supabase Storage / OVH) pour les
-  fichiers volumineux. Les comptes rendus et pièces de tâches existent déjà.
+  (« à venir »), en attente d'un rattachement de la **Bibliothèque** (déjà en
+  place pour les documents globaux) par commission. Les comptes rendus et
+  pièces de tâches existent déjà.
 
 ## Back-end (Supabase + Prisma + NextAuth)
 

@@ -11,6 +11,7 @@ export type ModuleKey =
   | 'rh'
   | 'finances'
   | 'equipe'
+  | 'bibliotheque'
 
 export const GATEABLE_MODULES: { key: ModuleKey; label: string }[] = [
   { key: 'taches', label: 'Tâches' },
@@ -19,6 +20,7 @@ export const GATEABLE_MODULES: { key: ModuleKey; label: string }[] = [
   { key: 'rh', label: 'Ressources humaines' },
   { key: 'finances', label: 'Finances' },
   { key: 'equipe', label: 'Équipe' },
+  { key: 'bibliotheque', label: 'Bibliothèque' },
 ]
 
 const HREF_TO_MODULE: Record<string, ModuleKey> = {
@@ -28,6 +30,7 @@ const HREF_TO_MODULE: Record<string, ModuleKey> = {
   '/rh': 'rh',
   '/finances': 'finances',
   '/equipe': 'equipe',
+  '/bibliotheque': 'bibliotheque',
 }
 
 // Clé de module d'un href de nav, ou null si non masquable (ex. /dashboard).

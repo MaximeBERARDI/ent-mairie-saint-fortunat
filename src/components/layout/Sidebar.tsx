@@ -10,7 +10,7 @@ import { moduleKeyForHref } from '@/lib/modules'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { useTasks } from '@/hooks/useTasks'
 
-type IconName = 'dashboard' | 'check' | 'users' | 'doc' | 'briefcase' | 'euro' | 'team'
+type IconName = 'dashboard' | 'check' | 'users' | 'doc' | 'briefcase' | 'euro' | 'team' | 'folder'
 
 const NAV_ITEMS: { label: string; href: string; icon: IconName }[] = [
   { label: 'Tableau de bord', href: '/dashboard', icon: 'dashboard' },
@@ -20,6 +20,7 @@ const NAV_ITEMS: { label: string; href: string; icon: IconName }[] = [
   { label: 'Ressources humaines', href: '/rh', icon: 'briefcase' },
   { label: 'Finances', href: '/finances', icon: 'euro' },
   { label: 'Équipe', href: '/equipe', icon: 'team' },
+  { label: 'Bibliothèque', href: '/bibliotheque', icon: 'folder' },
 ]
 
 // Icônes trait cohérentes (viewBox 24, currentColor → la couleur active/inactive
@@ -51,6 +52,8 @@ function NavIcon({ name }: { name: IconName }) {
       return <svg {...p}><path d="M18 7a6 6 0 1 0 0 10" /><line x1="4" y1="10" x2="13" y2="10" /><line x1="4" y1="14" x2="13" y2="14" /></svg>
     case 'team':
       return <svg {...p}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+    case 'folder':
+      return <svg {...p}><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" /></svg>
   }
 }
 
