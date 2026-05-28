@@ -12,13 +12,15 @@ import { Separator } from '@/components/ui/Separator'
 import { COLORS as C } from '@/lib/theme'
 import { useParcImmobilier } from '@/hooks/useParcImmobilier'
 import { useEcritures } from '@/hooks/useEcritures'
+import { useRelances } from '@/hooks/useRelances'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
+import { useTeam } from '@/hooks/useTeam'
 import {
   openQuittancePreview, buildMailto, buildRelanceMailto,
 } from '@/lib/quittance-pdf'
 import type {
   BienImmobilier, Locataire, Bail, Quittance, TypeBien, StatutBail,
-  ModeReglement, StatutQuittance,
+  ModeReglement, StatutQuittance, Relance, CanalRelance, ResultatRelance,
 } from '@/lib/types'
 
 const fmtMontant = (v: number) =>
@@ -76,7 +78,10 @@ export function ParcImmobilierView() {
     genererQuittancesDuMois,
   } = useParcImmobilier()
   const { generateEncaissementLoyer, deleteEcrituresByQuittance } = useEcritures()
-  const { currentUserId } = useCurrentUser()
+  const { currentUserId, can } = useCurrentUser()
+  const { people } = useTeam()
+  const { byQuittance: relancesByQuittance, createRelance, updateRelance, deleteRelance } = useRelances()
+  const canManageRelances = can('parc.manage-relances')
 
   // Wraps : marquer payée déclenche aussi l'encaissement comptable.
   const handleMarkPayee = (id: string, mode: ModeReglement) => {
@@ -203,6 +208,12 @@ export function ParcImmobilierView() {
           onMarkRelancee={markRelancee}
           onDelete={handleDeleteQuittance}
           onGenererMois={genererQuittancesDuMois}
+          relancesByQuittance={relancesByQuittance}
+          createRelance={createRelance}
+          updateRelance={updateRelance}
+          deleteRelance={deleteRelance}
+          canManageRelances={canManageRelances}
+          people={people}
         />
       )}
     </div>
@@ -651,12 +662,21 @@ function BailForm({ biens, locataires, initial, onSubmit, onCancel }: {
 
   const selectedBien = biens.find(b => b.id === bienId)
   const [loyerMensuel, setLoyerMensuel] = useState(String(initial?.loyerMensuel ?? selectedBien?.loyerMensuel ?? ''))
-  const [chargesMensuelles, setChargesMensuelles] = useState(String(initial?.chargesMensuelles ?? selectedBien?.chargesMensuelles ?? ''))
+  // Ventilation des charges. Si on édite un bail déjà ventilé, on reprend les
+  // valeurs ; sinon on récupère le total existant dans 'autres' pour amorçage.
+  const initOrdures = initial?.chargesOrduresMensuelles ?? 0
+  const initGaz = initial?.chargesGazMensuelles ?? 0
+  const initAutres = initial?.chargesAutresMensuelles
+    ?? (initial?.chargesMensuelles && (initOrdures + initGaz === 0) ? initial.chargesMensuelles : 0)
+  const [chargesOrdures, setChargesOrdures] = useState(String(initOrdures || ''))
+  const [chargesGaz, setChargesGaz] = useState(String(initGaz || ''))
+  const [chargesAutres, setChargesAutres] = useState(String(initAutres || ''))
   const [depotGarantie, setDepotGarantie] = useState(String(initial?.depotGarantie ?? selectedBien?.loyerMensuel ?? ''))
   const [statut, setStatut] = useState<StatutBail>(initial?.statut ?? 'En cours')
   const [notes, setNotes] = useState(initial?.notes ?? '')
 
   const num = (s: string) => Number.isNaN(parseFloat(s)) ? 0 : parseFloat(s)
+  const chargesTotal = num(chargesOrdures) + num(chargesGaz) + num(chargesAutres)
   const valid = bienId && locataireId && dateDebut && num(loyerMensuel) > 0
 
   return (
@@ -686,12 +706,9 @@ function BailForm({ biens, locataires, initial, onSubmit, onCancel }: {
           <input type="date" value={dateFin} onChange={e => setDateFin(e.target.value)} style={inputStyle} />
         </Field>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 10 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 10 }}>
         <Field label="Loyer mensuel HC (€) *">
           <input type="number" min="0" step="0.01" value={loyerMensuel} onChange={e => setLoyerMensuel(e.target.value)} style={inputStyle} />
-        </Field>
-        <Field label="Charges mensuelles (€)">
-          <input type="number" min="0" step="0.01" value={chargesMensuelles} onChange={e => setChargesMensuelles(e.target.value)} style={inputStyle} />
         </Field>
         <Field label="Dépôt de garantie (€)">
           <input type="number" min="0" step="0.01" value={depotGarantie} onChange={e => setDepotGarantie(e.target.value)} style={inputStyle} />
@@ -702,6 +719,21 @@ function BailForm({ biens, locataires, initial, onSubmit, onCancel }: {
             <option value="Préavis">En préavis</option>
             <option value="Terminé">Terminé</option>
           </select>
+        </Field>
+      </div>
+
+      <p style={{ fontSize: 12, color: C.subtle, fontWeight: 600, margin: '4px 0 6px' }}>
+        Charges mensuelles ventilées · total = <b style={{ color: C.fg }}>{fmtMontant(chargesTotal)}</b>
+      </p>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 10 }}>
+        <Field label="Ordures ménagères (€)">
+          <input type="number" min="0" step="0.01" value={chargesOrdures} onChange={e => setChargesOrdures(e.target.value)} placeholder="TEOM" style={inputStyle} />
+        </Field>
+        <Field label="Gaz / chauffage (€)">
+          <input type="number" min="0" step="0.01" value={chargesGaz} onChange={e => setChargesGaz(e.target.value)} placeholder="quote-part" style={inputStyle} />
+        </Field>
+        <Field label="Autres charges (€)">
+          <input type="number" min="0" step="0.01" value={chargesAutres} onChange={e => setChargesAutres(e.target.value)} placeholder="eau, communs…" style={inputStyle} />
         </Field>
       </div>
       <Field label="Notes (clauses particulières…)">
@@ -717,12 +749,10 @@ function BailForm({ biens, locataires, initial, onSubmit, onCancel }: {
             bienId, locataireId, dateDebut,
             dateFin: dateFin || undefined,
             loyerMensuel: num(loyerMensuel),
-            chargesMensuelles: num(chargesMensuelles),
-            // Pré-ventilation par défaut : tout dans 'autres' (ventilation
-            // fine via le formulaire à venir au commit 2).
-            chargesOrduresMensuelles: 0,
-            chargesGazMensuelles: 0,
-            chargesAutresMensuelles: num(chargesMensuelles),
+            chargesMensuelles: chargesTotal,
+            chargesOrduresMensuelles: num(chargesOrdures),
+            chargesGazMensuelles: num(chargesGaz),
+            chargesAutresMensuelles: num(chargesAutres),
             depotGarantie: num(depotGarantie),
             statut,
             notes: notes.trim() || undefined,
@@ -741,6 +771,8 @@ function BailForm({ biens, locataires, initial, onSubmit, onCancel }: {
 function QuittancesTab({
   quittances, baux, biens, locataires,
   onMarkPayee, onMarkImpayee, onMarkRelancee, onDelete, onGenererMois,
+  relancesByQuittance, createRelance, updateRelance, deleteRelance,
+  canManageRelances, people,
 }: {
   quittances: Quittance[]
   baux: Bail[]
@@ -751,7 +783,14 @@ function QuittancesTab({
   onMarkRelancee: (id: string) => void
   onDelete: (id: string) => void
   onGenererMois: (mois: string) => Quittance[]
+  relancesByQuittance: Map<string, Relance[]>
+  createRelance: ReturnType<typeof useRelances>['createRelance']
+  updateRelance: ReturnType<typeof useRelances>['updateRelance']
+  deleteRelance: ReturnType<typeof useRelances>['deleteRelance']
+  canManageRelances: boolean
+  people: ReturnType<typeof useTeam>['people']
 }) {
+  const [showRelances, setShowRelances] = useState<Quittance | null>(null)
   const [filterStatut, setFilterStatut] = useState<StatutQuittance | 'tous' | 'impayes'>('tous')
   const [moisAGenerer, setMoisAGenerer] = useState(currentMois())
   const [feedbackGen, setFeedbackGen] = useState<string | null>(null)
@@ -875,6 +914,7 @@ function QuittancesTab({
               const bail = baux.find(b => b.id === q.bailId)
               const bien = bail ? biens.find(x => x.id === bail.bienId) : null
               const locataire = bail ? locataires.find(x => x.id === bail.locataireId) : null
+              const relances = relancesByQuittance.get(q.id) ?? []
               return (
                 <QuittanceActions
                   quittance={q}
@@ -885,12 +925,35 @@ function QuittancesTab({
                   onMarkImpayee={onMarkImpayee}
                   onMarkRelancee={onMarkRelancee}
                   onDelete={onDelete}
+                  nbRelances={relances.length}
+                  onOpenRelances={() => setShowRelances(q)}
+                  onLogRelance={canManageRelances ? (canal) => createRelance({
+                    quittanceId: q.id,
+                    date: new Date().toISOString().slice(0, 10),
+                    canal,
+                  }) : undefined}
                 />
               )
             },
           },
         ]}
       />
+
+      {showRelances && (
+        <RelancesModal
+          quittance={showRelances}
+          bail={baux.find(b => b.id === showRelances.bailId)}
+          bien={baux.find(b => b.id === showRelances.bailId) ? biens.find(x => x.id === baux.find(b => b.id === showRelances.bailId)!.bienId) : undefined}
+          locataire={baux.find(b => b.id === showRelances.bailId) ? locataires.find(x => x.id === baux.find(b => b.id === showRelances.bailId)!.locataireId) : undefined}
+          relances={relancesByQuittance.get(showRelances.id) ?? []}
+          canManage={canManageRelances}
+          people={people}
+          onCreate={createRelance}
+          onUpdate={updateRelance}
+          onDelete={deleteRelance}
+          onClose={() => setShowRelances(null)}
+        />
+      )}
     </div>
   )
 }
@@ -898,6 +961,7 @@ function QuittancesTab({
 function QuittanceActions({
   quittance, bail, bien, locataire,
   onMarkPayee, onMarkImpayee, onMarkRelancee, onDelete,
+  nbRelances, onOpenRelances, onLogRelance,
 }: {
   quittance: Quittance
   bail: Bail | null | undefined
@@ -907,6 +971,9 @@ function QuittanceActions({
   onMarkImpayee: (id: string) => void
   onMarkRelancee: (id: string) => void
   onDelete: (id: string) => void
+  nbRelances: number
+  onOpenRelances: () => void
+  onLogRelance?: (canal: CanalRelance) => void
 }) {
   const [showPayee, setShowPayee] = useState(false)
   const [mode, setMode] = useState<ModeReglement>('Virement')
@@ -930,6 +997,9 @@ function QuittanceActions({
       return
     }
     onMarkRelancee(quittance.id)
+    // Trace administrative de la relance (canal Email, date du jour) si on a
+    // les droits ; sinon le statut "Relancée" reste suivi sans historique.
+    onLogRelance?.('Email')
     window.location.href = buildRelanceMailto(quittance, bien, locataire)
   }
 
@@ -954,8 +1024,15 @@ function QuittanceActions({
         )
       )}
       {(quittance.statut === 'Émise' || quittance.statut === 'Impayée') && (
-        <button onClick={handleRelancer} title="Envoyer relance" style={{ ...btnIcon, borderColor: C.warning, background: C.warningLight, color: C.warning }} disabled={!locataire?.email}>⏰</button>
+        <button onClick={handleRelancer} title="Envoyer relance par email + trace" style={{ ...btnIcon, borderColor: C.warning, background: C.warningLight, color: C.warning }} disabled={!locataire?.email}>⏰</button>
       )}
+      <button
+        onClick={onOpenRelances}
+        title={`Historique des relances (${nbRelances})`}
+        style={{ ...btnIcon, borderColor: nbRelances > 0 ? C.terra : C.border, color: nbRelances > 0 ? C.terra : C.subtle, position: 'relative' }}
+      >
+        📋{nbRelances > 0 && <sup style={{ marginLeft: 2, fontSize: 9 }}>{nbRelances}</sup>}
+      </button>
       {quittance.statut === 'Émise' && (
         <button onClick={() => onMarkImpayee(quittance.id)} title="Marquer impayée" style={{ ...btnIcon, borderColor: C.danger, color: C.danger }}>!</button>
       )}
@@ -979,6 +1056,172 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     <div>
       <p style={{ fontSize: 12, color: C.subtle, fontWeight: 600, marginBottom: 4 }}>{label}</p>
       {children}
+    </div>
+  )
+}
+
+// ─── Modale Historique des relances d'une quittance ─────────────────
+
+const CANAUX: CanalRelance[] = ['Courrier', 'Email', 'SMS', 'Téléphone', 'En personne', 'Autre']
+const RESULTATS: ResultatRelance[] = ['Sans réponse', 'Engagement de paiement', 'Payée', 'Refus', 'Autre']
+
+function RelancesModal({
+  quittance, bail, bien, locataire, relances, canManage, people,
+  onCreate, onUpdate, onDelete, onClose,
+}: {
+  quittance: Quittance
+  bail: Bail | undefined
+  bien: BienImmobilier | undefined
+  locataire: Locataire | undefined
+  relances: Relance[]
+  canManage: boolean
+  people: ReturnType<typeof useTeam>['people']
+  onCreate: ReturnType<typeof useRelances>['createRelance']
+  onUpdate: ReturnType<typeof useRelances>['updateRelance']
+  onDelete: ReturnType<typeof useRelances>['deleteRelance']
+  onClose: () => void
+}) {
+  const [showForm, setShowForm] = useState(false)
+  const [date, setDate] = useState(new Date().toISOString().slice(0, 10))
+  const [canal, setCanal] = useState<CanalRelance>('Courrier')
+  const [contenu, setContenu] = useState('')
+  const [resultat, setResultat] = useState<ResultatRelance | ''>('')
+  void bail
+
+  const handleCreate = () => {
+    if (!date || !canal) return
+    onCreate({
+      quittanceId: quittance.id,
+      date,
+      canal,
+      contenu: contenu.trim() || undefined,
+      resultat: resultat || undefined,
+    })
+    setDate(new Date().toISOString().slice(0, 10))
+    setCanal('Courrier')
+    setContenu('')
+    setResultat('')
+    setShowForm(false)
+  }
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="relances-title"
+      onClick={onClose}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 200,
+        background: 'rgba(0,0,0,0.45)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: 20,
+      }}
+    >
+      <div onClick={(e) => e.stopPropagation()} style={{ maxWidth: 720, width: '100%', maxHeight: '90vh', overflow: 'auto' }}>
+        <Card padding={20}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16 }}>
+            <div style={{ flex: 1 }}>
+              <p id="relances-title" style={{ fontSize: 16, fontWeight: 700, color: C.fg, marginBottom: 4 }}>
+                Historique des relances · {quittance.numero}
+              </p>
+              <p style={{ fontSize: 12, color: C.subtle }}>
+                {locataire?.fullName ?? '—'} · {bien?.nom ?? '—'} · {fmtMois(quittance.mois)} · <b>{fmtMontantDec(quittance.total)}</b>
+              </p>
+            </div>
+            <button onClick={onClose} aria-label="Fermer" style={{ background: 'transparent', border: 'none', fontSize: 20, color: C.subtle, cursor: 'pointer' }}>×</button>
+          </div>
+
+          <Separator my={12} />
+
+          {relances.length === 0 && (
+            <p style={{ fontSize: 13, color: C.subtle, fontStyle: 'italic', padding: '6px 0' }}>
+              Aucune relance enregistrée. {canManage ? 'Cliquez « + Ajouter » pour en saisir une.' : ''}
+            </p>
+          )}
+
+          {relances.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
+              {relances.map((r) => {
+                const auteur = people.find((p) => p.id === r.createdById)
+                return (
+                  <div key={r.id} style={{ display: 'flex', gap: 10, padding: 10, background: C.bg, border: `1px solid ${C.border}`, borderRadius: 6 }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                        <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12, color: C.subtle }}>{fmtDate(r.date)}</span>
+                        <Badge label={r.canal} variant="terra" />
+                        {r.resultat && <Badge label={r.resultat} variant={r.resultat === 'Payée' ? 'success' : r.resultat === 'Refus' ? 'danger' : 'default'} />}
+                        {auteur && <span style={{ fontSize: 11, color: C.subtle }}>par {auteur.fullName}</span>}
+                      </div>
+                      {r.contenu && <p style={{ fontSize: 12, color: C.fg, whiteSpace: 'pre-wrap', lineHeight: 1.5 }}>{r.contenu}</p>}
+                      {canManage && (
+                        <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
+                          <select
+                            value={r.resultat ?? ''}
+                            onChange={(e) => onUpdate(r.id, { resultat: e.target.value ? (e.target.value as ResultatRelance) : undefined })}
+                            style={{ ...inputStyle, height: 26, fontSize: 11, padding: '0 6px', width: 'auto' }}
+                          >
+                            <option value="">— Résultat —</option>
+                            {RESULTATS.map((res) => <option key={res} value={res}>{res}</option>)}
+                          </select>
+                          <button
+                            onClick={() => { if (confirm('Supprimer cette relance ?')) onDelete(r.id) }}
+                            style={{ ...btnIcon, borderColor: C.danger, color: C.danger, fontSize: 11 }}
+                          >Suppr</button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          {canManage && (
+            !showForm ? (
+              <Button variant="primary" size="sm" onClick={() => setShowForm(true)}>+ Ajouter une relance</Button>
+            ) : (
+              <Card padding={12} style={{ background: C.terraLight, borderColor: C.terra, marginTop: 8 }}>
+                <SectionHeader title="Nouvelle relance" />
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+                  <Field label="Date *">
+                    <input type="date" value={date} onChange={(e) => setDate(e.target.value)} style={inputStyle} />
+                  </Field>
+                  <Field label="Canal *">
+                    <select value={canal} onChange={(e) => setCanal(e.target.value as CanalRelance)} style={inputStyle}>
+                      {CANAUX.map((c) => <option key={c} value={c}>{c}</option>)}
+                    </select>
+                  </Field>
+                  <Field label="Résultat (facultatif)">
+                    <select value={resultat} onChange={(e) => setResultat(e.target.value as ResultatRelance | '')} style={inputStyle}>
+                      <option value="">—</option>
+                      {RESULTATS.map((r) => <option key={r} value={r}>{r}</option>)}
+                    </select>
+                  </Field>
+                </div>
+                <Field label="Contenu / commentaire (facultatif)">
+                  <textarea
+                    value={contenu}
+                    onChange={(e) => setContenu(e.target.value)}
+                    rows={2}
+                    placeholder="Résumé de la relance, montant promis, échéance convenue…"
+                    style={{ ...inputStyle, height: 'auto', resize: 'vertical' as const, padding: 8 }}
+                  />
+                </Field>
+                <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', marginTop: 10 }}>
+                  <Button size="sm" onClick={() => setShowForm(false)}>Annuler</Button>
+                  <Button variant="primary" size="sm" onClick={handleCreate}>Enregistrer</Button>
+                </div>
+              </Card>
+            )
+          )}
+
+          {!canManage && (
+            <p style={{ fontSize: 12, color: C.subtle, fontStyle: 'italic', marginTop: 8 }}>
+              Vous n&apos;avez pas les droits pour ajouter ou modifier une relance.
+            </p>
+          )}
+        </Card>
+      </div>
     </div>
   )
 }
