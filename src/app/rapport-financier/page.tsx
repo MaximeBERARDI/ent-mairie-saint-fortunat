@@ -7,7 +7,7 @@
 // Réutilise le design system du rapport général /rapport (typo Georgia,
 // classes .rpt-*) pour cohérence visuelle.
 
-import { Suspense, useMemo } from 'react'
+import { Suspense, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useFactures } from '@/hooks/useFactures'
 import { useFournisseurs } from '@/hooks/useFournisseurs'
@@ -28,6 +28,7 @@ import {
   computePointsAttention, alertPoste,
   fmtMontantInt, fmtMontantDec, fmtPct, fmtDateFR,
 } from '@/lib/rapport-financier'
+import { buildAnalysePayload, type AnalyseResponse, type AnalyseSectionKey } from '@/lib/rapport-analyse'
 
 const SECTION_KEYS = ['att', 'bud', 'rat', 'evo', 'tre', 'fou', 'loc', 'rh', 'prj', 'sub', 'pr5'] as const
 type SectionKey = (typeof SECTION_KEYS)[number]
@@ -43,6 +44,7 @@ export default function RapportFinancierPage() {
 function RapportFinancierContent() {
   const params = useSearchParams()
   const destinataire = params.get('dest') ?? ''
+  const analyseEnabled = params.get('analyse') === '1'
   const sectionsRaw = params.get('sec') ?? SECTION_KEYS.join(',')
   const activeSections = new Set(sectionsRaw.split(',').filter((s): s is SectionKey => SECTION_KEYS.includes(s as SectionKey)))
 
@@ -76,6 +78,53 @@ function RapportFinancierContent() {
   const projection = useMemo(() => projets.length > 0 ? combinerProjections(projets.map((p) => projeterProjet(p, ratios, 5))) : [], [projets, ratios])
   const pointsAttention = useMemo(() => computePointsAttention(ratios, enriched, controle, patrimoine, rh), [ratios, enriched, controle, patrimoine, rh])
 
+  // Analyse IA : appel à /api/rapport-financier/analyse une fois les données
+  // hydratées, si ?analyse=1. État null=pas demandée, undefined=en cours,
+  // objet=reçue, string=erreur.
+  const [analyse, setAnalyse] = useState<AnalyseResponse | string | null | undefined>(analyseEnabled ? undefined : null)
+  useEffect(() => {
+    if (!analyseEnabled || !allHydrated) return
+    let cancelled = false
+    const payload = buildAnalysePayload({
+      exerciceN,
+      population: 900,
+      ratios,
+      sections: Array.from(activeSections) as AnalyseSectionKey[],
+      pointsAttention: activeSections.has('att') ? pointsAttention : undefined,
+      enriched: activeSections.has('bud') ? enriched : undefined,
+      pluriannuel: activeSections.has('evo') ? pluriannuel : undefined,
+      tresorerie: activeSections.has('tre') ? tresorerie : undefined,
+      controle: activeSections.has('fou') ? controle : undefined,
+      topFournisseurs: activeSections.has('fou') ? topFournisseurs : undefined,
+      patrimoine: activeSections.has('loc') ? patrimoine : undefined,
+      rh: activeSections.has('rh') ? rh : undefined,
+      projets: activeSections.has('prj') ? projets : undefined,
+      subventionsAgrege: activeSections.has('sub') ? {
+        nbDemandes: subventions.length,
+        montantDemande: subventions.reduce((acc, s) => acc + s.montantDemande, 0),
+        montantAccorde: subventions.reduce((acc, s) => acc + (s.montantAccorde ?? 0), 0),
+        montantVerse: subventions.reduce((acc, s) => acc + (s.montantVerse ?? 0), 0),
+      } : undefined,
+      projection5ans: activeSections.has('pr5') ? projection : undefined,
+    })
+    fetch('/api/rapport-financier/analyse', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+      .then(async (r) => {
+        if (!r.ok) {
+          const err = await r.json().catch(() => ({ error: `HTTP ${r.status}` }))
+          throw new Error(err.error ?? 'Erreur inconnue.')
+        }
+        return r.json() as Promise<AnalyseResponse>
+      })
+      .then((data) => { if (!cancelled) setAnalyse(data) })
+      .catch((e) => { if (!cancelled) setAnalyse(e instanceof Error ? e.message : 'Erreur d\'analyse.') })
+    return () => { cancelled = true }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [analyseEnabled, allHydrated])
+
   if (!allHydrated) {
     return <p style={{ padding: 40, fontSize: 14, color: '#5e7480', textAlign: 'center' }}>Préparation du rapport…</p>
   }
@@ -83,6 +132,19 @@ function RapportFinancierContent() {
   // Numérotation des sections rendues (auto)
   let numero = 0
   const num = () => ++numero
+
+  // Helper : encart commentaire IA en fin de section (si analyse disponible)
+  const sectionAnalyse = (key: AnalyseSectionKey) => {
+    if (!analyseEnabled || !analyse || typeof analyse === 'string') return null
+    const txt = analyse.commentaires[key]
+    if (!txt) return null
+    return (
+      <div className="rpt-analyse-block rpt-analyse-comment">
+        <p className="rpt-analyse-label">📝 Analyse</p>
+        <p className="rpt-analyse-text">{txt}</p>
+      </div>
+    )
+  }
 
   return (
     <>
@@ -108,6 +170,30 @@ function RapportFinancierContent() {
               {currentUser && <div><b>Édité par</b> · {currentUser.fullName}</div>}
             </div>
           </div>
+
+          {/* Analyse globale IA (avant la synthèse exécutive) */}
+          {analyseEnabled && (
+            <section className="rpt-section rpt-analyse-section">
+              <h2>{num()}. Synthèse de l&apos;analyse comptable</h2>
+              {analyse === undefined && (
+                <p className="rpt-muted">Génération de l&apos;analyse par l&apos;assistant IA en cours… (peut prendre 5 à 15 secondes)</p>
+              )}
+              {typeof analyse === 'string' && (
+                <p className="rpt-muted">Analyse IA indisponible : {analyse}</p>
+              )}
+              {analyse && typeof analyse === 'object' && (
+                <>
+                  <div className="rpt-analyse-block">
+                    <p className="rpt-analyse-text">{analyse.synthese}</p>
+                  </div>
+                  <p className="rpt-muted" style={{ fontSize: 11 }}>
+                    Synthèse générée par Claude (Anthropic) à partir des chiffres réels — peut comporter des
+                    imprécisions ; à relire avant transmission externe.
+                  </p>
+                </>
+              )}
+            </section>
+          )}
 
           {/* Synthèse exécutive (obligatoire) */}
           <section className="rpt-section">
@@ -143,6 +229,7 @@ function RapportFinancierContent() {
               {pointsAttention.length === 0 && (
                 <p className="rpt-muted">Aucune alerte automatique. Tous les ratios sont dans les seuils acceptables.</p>
               )}
+              {sectionAnalyse('att')}
             </section>
           )}
 
@@ -154,6 +241,7 @@ function RapportFinancierContent() {
               <BudgetExecutionTable postes={enriched} />
               <h3>Postes en alerte (≥ 80 % du budget consommé)</h3>
               <PostesEnAlerte postes={enriched} />
+              {sectionAnalyse('bud')}
             </section>
           )}
 
@@ -176,6 +264,7 @@ function RapportFinancierContent() {
                 <Ratio label="Dépenses équipement / RRF (10)" value={fmtPct(ratios.ratio10_equipementSurRrf)} />
                 <Ratio label="Encours dette / RRF (11)" value={fmtPct(ratios.ratio11_detteSurRrf)} />
               </div>
+              {sectionAnalyse('rat')}
             </section>
           )}
 
@@ -190,6 +279,7 @@ function RapportFinancierContent() {
                   Données pluriannuelles incomplètes — saisir les exercices N-1 et N-2 dans Finances → Historique pour un comparatif complet.
                 </p>
               )}
+              {sectionAnalyse('evo')}
             </section>
           )}
 
@@ -219,6 +309,7 @@ function RapportFinancierContent() {
               ) : (
                 <p className="rpt-muted">Aucun mouvement enregistré sur le compte 515 sur la période.</p>
               )}
+              {sectionAnalyse('tre')}
             </section>
           )}
 
@@ -275,6 +366,7 @@ function RapportFinancierContent() {
               ) : (
                 <p className="rpt-muted">Aucun engagement fournisseur enregistré.</p>
               )}
+              {sectionAnalyse('fou')}
             </section>
           )}
 
@@ -314,6 +406,7 @@ function RapportFinancierContent() {
               ) : (
                 <p className="rpt-muted">Aucune quittance impayée sur l&apos;exercice.</p>
               )}
+              {sectionAnalyse('loc')}
             </section>
           )}
 
@@ -346,6 +439,7 @@ function RapportFinancierContent() {
                   })}
                 </tbody>
               </table>
+              {sectionAnalyse('rh')}
             </section>
           )}
 
@@ -378,6 +472,7 @@ function RapportFinancierContent() {
               ) : (
                 <p className="rpt-muted">Aucun projet d&apos;investissement enregistré.</p>
               )}
+              {sectionAnalyse('prj')}
             </section>
           )}
 
@@ -406,6 +501,7 @@ function RapportFinancierContent() {
               ) : (
                 <p className="rpt-muted">Aucune demande de subvention enregistrée.</p>
               )}
+              {sectionAnalyse('sub')}
             </section>
           )}
 
@@ -428,6 +524,7 @@ function RapportFinancierContent() {
                   ))}
                 </tbody>
               </table>
+              {sectionAnalyse('pr5')}
             </section>
           )}
 
@@ -613,6 +710,11 @@ const REPORT_CSS = `
 .rpt-attention-tag{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:2px 8px;border-radius:4px;background:rgba(0,0,0,.08)}
 .rpt-attention-dom{font-weight:600;color:var(--s8);min-width:90px}
 .rpt-attention-msg{color:var(--s5);flex:1}
+.rpt-analyse-section{background:linear-gradient(180deg,#f8f7f1,#fdfcf6);}
+.rpt-analyse-block{background:#fefdf8;border:1px solid #e8e4d4;border-left:4px solid var(--terra);border-radius:8px;padding:14px 18px;margin:10px 0}
+.rpt-analyse-comment{margin-top:14px}
+.rpt-analyse-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--terra);margin:0 0 6px}
+.rpt-analyse-text{font-size:14px;line-height:1.65;color:var(--s8);margin:0;text-align:justify;font-family:Georgia,'Times New Roman',serif}
 .rpt-foot{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:space-between;
   padding:20px 48px;font-size:12px;color:var(--sub)}
 @media print{

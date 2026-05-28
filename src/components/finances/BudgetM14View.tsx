@@ -1122,6 +1122,7 @@ function RapportFinancierConfigModal({ onClose }: { onClose: () => void }) {
   const defaultSections = new Set(RAPPORT_SECTIONS.map((s) => s.key))
   const [selected, setSelected] = useState<Set<string>>(defaultSections)
   const [destinataire, setDestinataire] = useState('')
+  const [inclureAnalyse, setInclureAnalyse] = useState(true)
 
   // Restaure le dernier choix
   useEffect(() => {
@@ -1129,9 +1130,10 @@ function RapportFinancierConfigModal({ onClose }: { onClose: () => void }) {
     try {
       const raw = window.localStorage.getItem(RAPPORT_LS_KEY)
       if (raw) {
-        const parsed = JSON.parse(raw) as { sections?: string[]; destinataire?: string }
+        const parsed = JSON.parse(raw) as { sections?: string[]; destinataire?: string; analyse?: boolean }
         if (Array.isArray(parsed.sections)) setSelected(new Set(parsed.sections))
         if (typeof parsed.destinataire === 'string') setDestinataire(parsed.destinataire)
+        if (typeof parsed.analyse === 'boolean') setInclureAnalyse(parsed.analyse)
       }
     } catch {/* ignore */}
   }, [])
@@ -1150,10 +1152,15 @@ function RapportFinancierConfigModal({ onClose }: { onClose: () => void }) {
     const params = new URLSearchParams()
     if (sec) params.set('sec', sec)
     if (destinataire.trim()) params.set('dest', destinataire.trim())
+    if (inclureAnalyse) params.set('analyse', '1')
     try {
       window.localStorage.setItem(
         RAPPORT_LS_KEY,
-        JSON.stringify({ sections: Array.from(selected), destinataire: destinataire.trim() }),
+        JSON.stringify({
+          sections: Array.from(selected),
+          destinataire: destinataire.trim(),
+          analyse: inclureAnalyse,
+        }),
       )
     } catch {/* ignore */}
     window.open(`/rapport-financier?${params.toString()}`, '_blank', 'noopener,noreferrer')
@@ -1191,6 +1198,33 @@ function RapportFinancierConfigModal({ onClose }: { onClose: () => void }) {
             style={inputStyle}
           />
         </Field>
+
+        <label
+          style={{
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: 10,
+            padding: '10px 12px',
+            borderRadius: 6,
+            cursor: 'pointer',
+            background: inclureAnalyse ? C.greenLight : C.bg,
+            border: `1px solid ${inclureAnalyse ? C.green : C.border}`,
+            marginTop: 12,
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={inclureAnalyse}
+            onChange={(e) => setInclureAnalyse(e.target.checked)}
+            style={{ marginTop: 3 }}
+          />
+          <div style={{ flex: 1 }}>
+            <p style={{ fontSize: 13, fontWeight: 600, color: C.fg }}>📝 Inclure l&apos;analyse commentée par IA</p>
+            <p style={{ fontSize: 12, color: C.subtle, marginTop: 2 }}>
+              Génère une synthèse globale et un commentaire par section, rédigés comme un expert-comptable. Délai : 5–15 s à l&apos;ouverture. Nécessite la clé Anthropic configurée côté serveur.
+            </p>
+          </div>
+        </label>
 
         <p style={{ fontSize: 12, color: C.subtle, fontWeight: 600, margin: '16px 0 8px' }}>Sections à inclure</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 16 }}>
