@@ -6,7 +6,7 @@ import { Avatar } from '@/components/ui/Avatar'
 import { COLORS as C } from '@/lib/theme'
 import { ROLE_LABELS } from '@/lib/people'
 import type { Person } from '@/lib/people'
-import { sortPeople, isDGS } from '@/lib/team-order'
+import { sortPeople, isDGS, isAdjointDelegue } from '@/lib/team-order'
 
 // L'organigramme distingue deux branches qui partent toutes deux du maire :
 //  - la branche ÉLUE (conseil municipal : adjoints + conseillers)
@@ -50,7 +50,8 @@ export function OrganigrammeView({ people, selectedId, onSelect }: OrganigrammeV
     const active = sortPeople(people.filter(p => p.active))
     const maire = active.find(p => p.role === 'maire')
     const adjoints = active.filter(p => p.role === 'adjoint')
-    const elus = active.filter(p => p.role === 'elu')
+    const adjointsDelegues = active.filter(isAdjointDelegue)
+    const conseillers = active.filter(p => p.role === 'elu' && !isAdjointDelegue(p))
     const agents = active.filter(p => p.role === 'agent')
     const dgs = agents.filter(isDGS)
     const autres = agents.filter(a => !isDGS(a))
@@ -63,9 +64,9 @@ export function OrganigrammeView({ people, selectedId, onSelect }: OrganigrammeV
       .filter(p => p.agents.length > 0)
 
     const agentsCount = agents.length
-    const elusCount = (maire ? 1 : 0) + adjoints.length + elus.length
+    const elusCount = (maire ? 1 : 0) + adjoints.length + adjointsDelegues.length + conseillers.length
 
-    return { maire, adjoints, elus, dgs, poles, agentsCount, elusCount }
+    return { maire, adjoints, adjointsDelegues, conseillers, dgs, poles, agentsCount, elusCount }
   }, [people])
 
   if (!tree.maire) {
@@ -134,10 +135,20 @@ export function OrganigrammeView({ people, selectedId, onSelect }: OrganigrammeV
                 </div>
               </SubGroup>
             )}
-            {tree.elus.length > 0 && (
-              <SubGroup label="Conseillers municipaux" count={tree.elus.length}>
+            {tree.adjointsDelegues.length > 0 && (
+              <SubGroup label="Adjoints délégués" count={tree.adjointsDelegues.length}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 8 }}>
+                  {tree.adjointsDelegues.map(p => (
+                    <OrgPerson key={p.id} person={p} variant="chip" accent={C.green}
+                      selected={selectedId === p.id} onSelect={() => onSelect(p.id)} />
+                  ))}
+                </div>
+              </SubGroup>
+            )}
+            {tree.conseillers.length > 0 && (
+              <SubGroup label="Conseillers municipaux" count={tree.conseillers.length}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 8 }}>
-                  {tree.elus.map(p => (
+                  {tree.conseillers.map(p => (
                     <OrgPerson key={p.id} person={p} variant="chip" accent={C.green}
                       selected={selectedId === p.id} onSelect={() => onSelect(p.id)} />
                   ))}

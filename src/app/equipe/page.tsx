@@ -20,7 +20,7 @@ import {
 } from '@/lib/permissions'
 import { useTeam } from '@/hooks/useTeam'
 import { useTasks } from '@/hooks/useTasks'
-import { sortPeople } from '@/lib/team-order'
+import { sortPeople, roleDisplayLabel } from '@/lib/team-order'
 import { PersonForm } from '@/components/team/PersonForm'
 import { formatLongFR } from '@/lib/dateUtils'
 
@@ -383,7 +383,7 @@ function PersonDetail({ person, tasks, canEdit, canDeactivate, currentUserId, on
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
               <h2 style={{ fontSize: 20, color: C.fg, fontWeight: 700 }}>{person.fullName}</h2>
-              <Badge label={ROLE_LABELS[person.role]} variant="primary" />
+              <Badge label={roleDisplayLabel(person)} variant="primary" />
               {person.id === currentUserId && <Badge label="Vous" variant="success" />}
               {!person.active && <Badge label="Désactivé" variant="danger" />}
             </div>
