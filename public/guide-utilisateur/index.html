@@ -338,6 +338,10 @@ code{font-family:var(--font-mono);font-size:.85em;background:var(--slate-50);pad
   <div class="callout info"><svg class="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
   <p><b>Vous ne voyez pas tous les modules&nbsp;?</b> C'est normal : l'affichage dépend de votre profil. Un administrateur peut masquer certains modules pour une personne, et certaines fonctions n'apparaissent qu'avec les droits correspondants.</p></div>
 
+  <h3>Naviguer dans un module&nbsp;: la sous-navigation</h3>
+  <p>Les modules les plus riches — <span class="ui">Finances</span> et <span class="ui">Ressources humaines</span> — affichent, à l'intérieur de la zone de contenu, une <strong>deuxième colonne à gauche</strong> : la <em>sous-navigation</em>. Elle range les rubriques du module en <strong>groupes</strong> (par exemple, pour Finances : Dépenses, Budget M14, Pilotage, Patrimoine). Cliquez une rubrique pour l'afficher à droite ; la rubrique active est surlignée en vert.</p>
+  <p>Cette organisation remplace l'ancienne rangée d'onglets : tout est visible d'un coup d'œil, et les rubriques de pilotage (indicateurs, historique, projets, simulation) sont désormais accessibles <strong>en un seul clic</strong>. Vous ne voyez que les rubriques auxquelles vous avez droit (un groupe entièrement masqué disparaît). Sur téléphone, la colonne se replie et laisse place à un menu déroulant en haut de page.</p>
+
   <h3>La barre du haut</h3>
   <ul>
     <li><strong>Recherche globale</strong> — retrouvez rapidement une tâche, une personne, une facture, un document.</li>
@@ -581,14 +585,14 @@ code{font-family:var(--font-mono);font-size:.85em;background:var(--slate-50);pad
   <h2>Ressources humaines</h2>
   <p class="lead">Le module RH gère les agents, les congés, le calendrier des absences, le pointage des heures, les bulletins de paie et les missions. Selon vos droits, vous voyez tout (gestion) ou uniquement votre propre fiche.</p>
 
-  <p>Les onglets disponibles sur <span class="path">/rh</span> : <span class="ui">Agents</span> (ou <span class="ui">Mon profil</span>), <span class="ui">Congés &amp; RTT</span>, <span class="ui">Calendrier</span>, <span class="ui">Pointage</span>, <span class="ui">Paies</span> et <span class="ui">Missions</span> (les deux derniers selon droits).</p>
+  <p>La sous-navigation de <span class="path">/rh</span> regroupe les rubriques en trois familles : <b>Personnel</b> (<span class="ui">Agents</span> — ou <span class="ui">Mon profil</span> — et <span class="ui">Calendrier</span>), <b>Temps &amp; absences</b> (<span class="ui">Pointage</span> et <span class="ui">Congés &amp; RTT</span>) et <b>Paie &amp; missions</b> (<span class="ui">Paies</span> et <span class="ui">Missions</span>, selon vos droits). Une <strong>pastille</strong> sur <span class="ui">Congés &amp; RTT</span> indique aux valideurs le nombre de demandes en attente.</p>
 
   <h3>Demander un congé</h3>
   <div class="tuto">
     <div class="tuto__h"><span class="tag">Tutoriel</span> Déposer une demande d'absence</div>
     <div class="who">Pour : tous les agents</div>
     <ol>
-      <li>Ouvrez <span class="path">/rh</span> → onglet <span class="ui">Congés &amp; RTT</span>.</li>
+      <li>Ouvrez <span class="path">/rh</span> → <span class="ui">Temps &amp; absences</span> › <span class="ui">Congés &amp; RTT</span>.</li>
       <li>Cliquez <span class="ui green">+ Saisir une demande</span>.</li>
       <li>Choisissez le <b>Type</b> : Congés annuels, RTT, Maladie, Sans solde, Formation, Évènement familial, Maternité&nbsp;/&nbsp;Paternité.</li>
       <li>Indiquez la <b>Date de début</b> et la <b>Date de fin</b>. Le nombre de <b>jours ouvrés</b> se calcule tout seul.</li>
@@ -608,14 +612,14 @@ code{font-family:var(--font-mono);font-size:.85em;background:var(--slate-50);pad
       <li>Une décision peut être revue : <span class="ui">↺ Rouvrir</span> remet la demande en attente et réajuste les compteurs.</li>
     </ol>
   </div>
-  <p>Les congés approuvés apparaissent ensuite dans l'onglet <span class="ui">Calendrier</span>, colorés par type d'absence, pour une vision d'équipe mois par mois.</p>
+  <p>Les congés approuvés apparaissent ensuite dans <span class="ui">Personnel</span> › <span class="ui">Calendrier</span>, colorés par type d'absence, pour une vision d'équipe mois par mois.</p>
 
   <h3>Pointer ses heures</h3>
   <div class="tuto">
     <div class="tuto__h"><span class="tag">Tutoriel</span> Badger sa journée</div>
     <div class="who">Pour : agents</div>
     <ol>
-      <li>Ouvrez <span class="ui">Pointage</span> → <span class="ui">Mon pointage</span>.</li>
+      <li>Ouvrez <span class="ui">Temps &amp; absences</span> › <span class="ui">Pointage</span> → <span class="ui">Mon pointage</span>.</li>
       <li>En arrivant, cliquez <span class="ui green">🟢 Pointer ENTRÉE</span>.</li>
       <li>Pour la pause déjeuner : <span class="ui">⏸ Début pause</span>, puis <span class="ui">▶ Fin pause</span> au retour.</li>
       <li>En partant, cliquez <span class="ui danger">🔴 Pointer SORTIE</span>.</li>
@@ -644,7 +648,7 @@ code{font-family:var(--font-mono);font-size:.85em;background:var(--slate-50);pad
   <h2>Finances&nbsp;: la comptabilité M14, automatisée</h2>
   <p class="lead">Le module Finances met en œuvre la comptabilité publique <strong>M14</strong> : plan comptable, factures, écritures en double partie, ratios réglementaires, et bien plus. L'outil garantit la cohérence (une écriture déséquilibrée est refusée) et calcule les indicateurs en temps réel.</p>
 
-  <p>La page <span class="path">/finances</span> s'organise en onglets : <span class="ui">🧾 Factures</span>, <span class="ui">💰 Budget</span>, <span class="ui">🏢 Fournisseurs</span>, <span class="ui">🏠 Parc immobilier</span>, <span class="ui">🎫 Subventions</span>. L'onglet Budget contient lui-même des sous-onglets (Plan comptable, Écritures, Indicateurs, Historique, Projection, Simulation).</p>
+  <p>La page <span class="path">/finances</span> s'organise en une sous-navigation à gauche, regroupée en quatre familles : <b>Dépenses</b> (<span class="ui">Factures</span>, <span class="ui">Fournisseurs</span>), <b>Budget M14</b> (<span class="ui">Plan comptable</span>, <span class="ui">Écritures</span>), <b>Pilotage</b> (<span class="ui">Indicateurs</span>, <span class="ui">Historique</span>, <span class="ui">Projets d'investissement</span>, <span class="ui">Simulation</span>, <span class="ui">Subventions</span>) et <b>Patrimoine</b> (<span class="ui">Parc immobilier</span>). Les rubriques de pilotage, autrefois imbriquées dans l'onglet Budget, sont désormais accessibles directement.</p>
 
   <h3>Le circuit d'une facture</h3>
   <p>Une facture suit un circuit clair, avec une séparation volontaire des rôles entre celui qui <strong>valide</strong> (ordonnateur) et celui qui <strong>paie</strong> (mandatement) :</p>
@@ -662,7 +666,7 @@ code{font-family:var(--font-mono);font-size:.85em;background:var(--slate-50);pad
     <div class="tuto__h"><span class="tag">Tutoriel</span> Saisir, puis valider et payer une facture</div>
     <div class="who">Pour : secrétariat (saisie), valideur, payeur</div>
     <ol>
-      <li>Onglet <span class="ui">🧾 Factures</span> → cliquez <span class="ui green">+ Soumettre une facture</span>.</li>
+      <li>Dans <span class="ui">Dépenses</span> › <span class="ui">Factures</span>, cliquez <span class="ui green">+ Soumettre une facture</span>.</li>
       <li>Choisissez le <b>Fournisseur</b> (le poste comptable peut se pré-remplir), saisissez le <b>Montant TTC</b>, le <b>Poste comptable M14</b>, la <b>Date de facture</b> (et l'échéance).</li>
       <li>Indiquez « Soumis par », ajoutez la <b>facture PDF</b> en pièce jointe, puis <span class="ui green">Soumettre la facture</span>.</li>
       <li><b>Validation</b> (droit « valider les factures ») : sélectionnez la facture, puis cliquez <span class="ui green">Valider</span>. L'outil crée automatiquement l'<b>écriture d'engagement</b>. Pour refuser, saisissez le motif et cliquez <span class="ui danger">Rejeter</span>.</li>
@@ -672,14 +676,14 @@ code{font-family:var(--font-mono);font-size:.85em;background:var(--slate-50);pad
   </div>
 
   <h3>Budget &amp; plan comptable</h3>
-  <p>Le sous-onglet <span class="ui">📋 Plan comptable</span> affiche le budget par section (fonctionnement / investissement), chapitre et article. Cliquez un article pour ouvrir son <strong>détail</strong> : budget alloué, réalisé, reste à engager, % consommé, et la liste des factures et écritures qui l'alimentent.</p>
+  <p>La rubrique <span class="ui">Budget M14</span> › <span class="ui">Plan comptable</span> affiche le budget par section (fonctionnement / investissement), chapitre et article. Cliquez un article pour ouvrir son <strong>détail</strong> : budget alloué, réalisé, reste à engager, % consommé, et la liste des factures et écritures qui l'alimentent.</p>
 
   <h3>Écritures comptables</h3>
   <div class="tuto">
     <div class="tuto__h"><span class="tag">Tutoriel</span> Saisir une écriture manuelle équilibrée</div>
     <div class="who">Pour : gestion comptable</div>
     <ol>
-      <li>Onglet <span class="ui">💰 Budget</span> → sous-onglet <span class="ui">📒 Écritures</span> → <span class="ui green">+ Nouvelle écriture</span>.</li>
+      <li><span class="ui">Budget M14</span> › <span class="ui">Écritures</span> → <span class="ui green">+ Nouvelle écriture</span>.</li>
       <li>Renseignez la <b>Date</b>, le <b>Journal</b> (AC, BQ, OD, AN, CA), le <b>Libellé</b> et la <b>pièce/mandat</b>.</li>
       <li>Ajoutez les lignes (compte, libellé, montant au <b>Débit</b> ou au <b>Crédit</b>). Utilisez <span class="ui">+ Ligne</span> pour en ajouter.</li>
       <li>Vérifiez l'indicateur d'équilibre en bas : le bouton n'est actif que si <b>total débit = total crédit</b> (<span class="badge b-green">✓ Équilibrée</span>).</li>
@@ -688,7 +692,7 @@ code{font-family:var(--font-mono);font-size:.85em;background:var(--slate-50);pad
   </div>
 
   <h3>Indicateurs &amp; ratios (R. 2313-1 / DGFiP)</h3>
-  <p>Le sous-onglet <span class="ui">📊 Indicateurs</span> calcule automatiquement la <strong>CAF brute et nette</strong>, le <strong>taux d'épargne</strong>, la <strong>capacité de désendettement</strong> et les <strong>11 ratios réglementaires</strong> (par habitant, % de rigidité…), avec un code couleur selon les seuils DGFiP. Renseignez la population et l'encours de dette via le bouton <span class="ui">⚙</span> pour des ratios exacts.</p>
+  <p>La rubrique <span class="ui">Pilotage</span> › <span class="ui">Indicateurs</span> calcule automatiquement la <strong>CAF brute et nette</strong>, le <strong>taux d'épargne</strong>, la <strong>capacité de désendettement</strong> et les <strong>11 ratios réglementaires</strong> (par habitant, % de rigidité…), avec un code couleur selon les seuils DGFiP. Renseignez la population et l'encours de dette via le bouton <span class="ui">⚙</span> pour des ratios exacts.</p>
 
   <h3>Fournisseurs &amp; historique</h3>
   <ul>
@@ -703,7 +707,7 @@ code{font-family:var(--font-mono);font-size:.85em;background:var(--slate-50);pad
   <h2>Parc immobilier&nbsp;: baux, quittances et relances</h2>
   <p class="lead">Gérez les biens communaux, les locataires, les baux et les quittances. Les loyers impayés remontent automatiquement, avec un suivi des relances.</p>
 
-  <p>Dans l'onglet <span class="ui">🏠 Parc immobilier</span>, quatre sous-onglets : <span class="ui">Biens</span>, <span class="ui">Locataires</span>, <span class="ui">Baux</span>, <span class="ui">Quittances</span>.</p>
+  <p>Dans <span class="ui">Patrimoine</span> › <span class="ui">Parc immobilier</span>, quatre sous-onglets : <span class="ui">Biens</span>, <span class="ui">Locataires</span>, <span class="ui">Baux</span>, <span class="ui">Quittances</span>.</p>
 
   <div class="tuto">
     <div class="tuto__h"><span class="tag">Tutoriel</span> Mettre en place un bien loué (de A à Z)</div>
@@ -739,7 +743,7 @@ code{font-family:var(--font-mono);font-size:.85em;background:var(--slate-50);pad
     <div class="tuto__h"><span class="tag">Tutoriel</span> Suivre une demande de subvention</div>
     <div class="who">Pour : secrétariat, adjoint aux finances</div>
     <ol>
-      <li>Onglet <span class="ui">🎫 Subventions</span> → <span class="ui green">+ Nouvelle demande</span>.</li>
+      <li><span class="ui">Pilotage</span> › <span class="ui">Subventions</span> → <span class="ui green">+ Nouvelle demande</span>.</li>
       <li>Renseignez l'<b>intitulé</b>, la <b>source</b> (financeur), l'<b>organisme</b> et un contact.</li>
       <li>Saisissez les <b>montants</b> : coût total du projet et subvention demandée. Indiquez le compte M14 d'<b>imputation</b>.</li>
       <li>Faites évoluer le <b>statut</b> au fil du dossier : <span class="badge b-terra">Déposée</span> → <span class="badge b-warn">Instruction</span> → <span class="badge b-green">Accordée</span>.</li>
@@ -754,13 +758,13 @@ code{font-family:var(--font-mono);font-size:.85em;background:var(--slate-50);pad
   <h2>Projets, projection &amp; simulation « what-if »</h2>
   <p class="lead">Avant de voter une décision, mesurez son impact. L'outil projette les finances sur plusieurs années et compare la trajectoire « scénario » à la « référence » (situation actuelle projetée).</p>
 
-  <p>Les <strong>projets d'investissement</strong> intègrent l'étalement, les emprunts, les subventions et le FCTVA, avec leur effet sur la CAF et la dette. Le sous-onglet <span class="ui">🧮 Simulation</span> permet de tester des hypothèses.</p>
+  <p>Les <strong>projets d'investissement</strong> intègrent l'étalement, les emprunts, les subventions et le FCTVA, avec leur effet sur la CAF et la dette. Ils ont leur propre rubrique <span class="ui">Pilotage</span> › <span class="ui">Projets d'investissement</span> ; la rubrique <span class="ui">Pilotage</span> › <span class="ui">Simulation</span> permet de tester des hypothèses « what-if ».</p>
 
   <div class="tuto">
     <div class="tuto__h"><span class="tag">Tutoriel</span> Tester un scénario et l'enregistrer</div>
     <div class="who">Pour : maire, adjoint aux finances</div>
     <ol>
-      <li>Onglet <span class="ui">💰 Budget</span> → sous-onglet <span class="ui">🧮 Simulation</span>.</li>
+      <li><span class="ui">Pilotage</span> › <span class="ui">Simulation</span>.</li>
       <li>Actionnez les <b>leviers</b> à gauche : pression fiscale (chap. 73), dotations (chap. 74), charges de personnel (012) et générales (011).</li>
       <li>Ajoutez si besoin une <b>vente de bâtiment</b>, un <b>nouvel emprunt</b> (montant, taux, durée) ou une <b>recette exceptionnelle</b>.</li>
       <li>Réglez l'<b>horizon</b> (3 à 15 ans) et le taux de <b>croissance</b>.</li>
@@ -861,11 +865,11 @@ code{font-family:var(--font-mono);font-size:.85em;background:var(--slate-50);pad
   <p class="lead">L'ENT produit en un clic des documents prêts à présenter ou à transmettre (banque, préfecture, conseil), et des exports de travail au format Excel.</p>
 
   <div class="cols">
-    <div class="card"><h4>📰 Rapport financier (.html)</h4><p>Depuis Finances → Budget. Une fenêtre permet de choisir les sections (points d'attention, exécution budgétaire, ratios, trésorerie, fournisseurs, patrimoine, RH, projets, subventions, projection N+5) et d'ajouter une <b>analyse rédigée par l'IA</b>. Idéal pour un dossier d'emprunt ou de subvention.</p></div>
+    <div class="card"><h4>📰 Rapport financier (.html)</h4><p>Depuis Finances, rubriques <b>Budget M14</b> ou <b>Pilotage</b> (boutons en haut de la zone). Une fenêtre permet de choisir les sections (points d'attention, exécution budgétaire, ratios, trésorerie, fournisseurs, patrimoine, RH, projets, subventions, projection N+5) et d'ajouter une <b>analyse rédigée par l'IA</b>. Idéal pour un dossier d'emprunt ou de subvention.</p></div>
     <div class="card"><h4>📰 Rapport loyers (.html)</h4><p>Depuis Finances → Parc immobilier. Tableau de bord des impayés, synthèse par bien, suivi TEOM et gaz, historique des relances, fiches par locataire. Analyse IA optionnelle.</p></div>
   </div>
   <div class="cols">
-    <div class="card"><h4>📊 Exports Excel</h4><p>Plan comptable, grand livre, rapport budgétaire — en plusieurs feuilles, depuis l'onglet Budget.</p></div>
+    <div class="card"><h4>📊 Exports Excel</h4><p>Plan comptable, grand livre, rapport budgétaire — en plusieurs feuilles, via les boutons en haut des rubriques <b>Budget M14</b> / <b>Pilotage</b>.</p></div>
     <div class="card"><h4>🗂 Rapport de gestion</h4><p>Le document complet généré depuis le tableau de bord (page <span class="path">/rapport</span>), imprimable en PDF.</p></div>
   </div>
 
