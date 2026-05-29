@@ -115,11 +115,15 @@ export default function EquipePage() {
       {/* Bascule vue Liste / Organigramme */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 14, alignItems: 'center' }}>
         <div style={{ display: 'flex', gap: 4, background: C.ph, borderRadius: 8, padding: 3 }}>
-          {([['liste', '📋 Liste'], ['organigramme', '🌳 Organigramme']] as [TeamView, string][]).map(([v, label]) => (
+          {([
+            ['liste', 'Liste', <IconList key="l" />],
+            ['organigramme', 'Organigramme', <IconHierarchy key="o" />],
+          ] as [TeamView, string, React.ReactNode][]).map(([v, label, icon]) => (
             <button
               key={v}
               onClick={() => setView(v)}
               style={{
+                display: 'flex', alignItems: 'center', gap: 6,
                 padding: '5px 12px', borderRadius: 6,
                 background: v === view ? '#fff' : 'transparent',
                 border: 'none',
@@ -129,7 +133,7 @@ export default function EquipePage() {
                 boxShadow: v === view ? '0 1px 2px rgba(0,0,0,0.1)' : 'none',
               }}
             >
-              {label}
+              {icon}{label}
             </button>
           ))}
         </div>
@@ -239,7 +243,16 @@ export default function EquipePage() {
             />
           ) : (
             <Card padding={40} style={{ textAlign: 'center' }}>
-              <p style={{ fontSize: 32, marginBottom: 12 }}>👥</p>
+              <div style={{
+                width: 56, height: 56, borderRadius: '50%', margin: '0 auto 14px',
+                background: C.bg, color: C.subtle,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <svg width={26} height={26} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+              </div>
               <p style={{ fontSize: 14, color: C.fg, fontWeight: 600, marginBottom: 6 }}>
                 Sélectionnez un membre
               </p>
@@ -521,6 +534,26 @@ function PersonDetail({ person, tasks, canEdit, canDeactivate, currentUserId, on
         </Card>
       </div>
     </div>
+  )
+}
+
+// ── Icônes de la bascule de vue ──────────────────────────────────────────────
+
+function IconList() {
+  return (
+    <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" />
+      <line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" />
+    </svg>
+  )
+}
+
+function IconHierarchy() {
+  return (
+    <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <rect x="9" y="2" width="6" height="5" rx="1" /><rect x="3" y="17" width="6" height="5" rx="1" /><rect x="15" y="17" width="6" height="5" rx="1" />
+      <path d="M12 7v5" /><path d="M6 17v-2h12v2" />
+    </svg>
   )
 }
 
