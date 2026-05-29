@@ -805,18 +805,29 @@ function QuittancesTab({
 }) {
   const [showRelances, setShowRelances] = useState<Quittance | null>(null)
   const [filterStatut, setFilterStatut] = useState<StatutQuittance | 'tous' | 'impayes'>('tous')
+  const [filterLocataire, setFilterLocataire] = useState('')
   const [moisAGenerer, setMoisAGenerer] = useState(currentMois())
   const [feedbackGen, setFeedbackGen] = useState<string | null>(null)
+
+  // Locataires ayant au moins une quittance (pour ne proposer que ceux-là).
+  const locatairesAvecQuittances = useMemo(() => {
+    const ids = new Set(quittances.map(q => baux.find(b => b.id === q.bailId)?.locataireId).filter(Boolean))
+    return locataires.filter(l => ids.has(l.id)).sort((a, b) => a.fullName.localeCompare(b.fullName, 'fr'))
+  }, [quittances, baux, locataires])
 
   const filtered = useMemo(() => {
     return quittances
       .filter(q => {
+        if (filterLocataire) {
+          const bail = baux.find(b => b.id === q.bailId)
+          if (!bail || bail.locataireId !== filterLocataire) return false
+        }
         if (filterStatut === 'tous') return true
         if (filterStatut === 'impayes') return q.statut === 'Impayée' || q.statut === 'Relancée'
         return q.statut === filterStatut
       })
       .sort((a, b) => b.mois.localeCompare(a.mois) || b.numero.localeCompare(a.numero))
-  }, [quittances, filterStatut])
+  }, [quittances, baux, filterStatut, filterLocataire])
 
   const handleGenerer = () => {
     const created = onGenererMois(moisAGenerer)
@@ -863,6 +874,18 @@ function QuittancesTab({
             {label}
           </button>
         ))}
+        <div style={{ flex: 1 }} />
+        <select
+          value={filterLocataire}
+          onChange={e => setFilterLocataire(e.target.value)}
+          aria-label="Filtrer par locataire"
+          style={{ ...inputStyle, width: 220, height: 32 }}
+        >
+          <option value="">Tous les locataires</option>
+          {locatairesAvecQuittances.map(l => (
+            <option key={l.id} value={l.id}>{l.fullName}</option>
+          ))}
+        </select>
       </div>
 
       <DataList
