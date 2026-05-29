@@ -221,7 +221,7 @@ export function PersonForm({ open, onClose, onSubmit, onDelete, initial }: Perso
       >
         {/* Header */}
         <div style={{ padding: '16px 20px', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', gap: 10 }}>
-          {prenom && nom && <Avatar initials={`${prenom[0]}${nom[0]}`.toUpperCase()} color={color} size={36} />}
+          {prenom && nom && <Avatar initials={`${prenom[0]}${nom[0]}`.toUpperCase()} color={color} size={36} photo={initial?.photoUrl ?? null} />}
           <div style={{ flex: 1 }}>
             <h2 style={{ fontSize: 16, fontWeight: 700, color: C.fg, margin: 0 }}>
               {initial?.id ? 'Modifier la fiche' : 'Nouveau membre'}
@@ -310,7 +310,7 @@ export function PersonForm({ open, onClose, onSubmit, onDelete, initial }: Perso
               </div>
               <div>
                 <label style={labelStyle}>Couleur de l&apos;avatar</label>
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
                   {COLORS_PALETTE.map(co => (
                     <button
                       key={co} type="button"
@@ -324,6 +324,23 @@ export function PersonForm({ open, onClose, onSubmit, onDelete, initial }: Perso
                       aria-label={`Couleur ${co}`}
                     />
                   ))}
+                  <label
+                    title="Couleur personnalisée"
+                    style={{
+                      width: 32, height: 32, borderRadius: '50%', cursor: 'pointer', overflow: 'hidden',
+                      border: COLORS_PALETTE.includes(color) ? '2px solid transparent' : `3px solid ${C.fg}`,
+                      display: 'inline-flex',
+                      background: 'conic-gradient(red,orange,yellow,lime,cyan,blue,magenta,red)',
+                    }}
+                  >
+                    <input
+                      type="color"
+                      value={/^#[0-9a-f]{6}$/i.test(color) ? color : '#6ab123'}
+                      onChange={e => setColor(e.target.value)}
+                      aria-label="Couleur personnalisée"
+                      style={{ opacity: 0, width: '100%', height: '100%', cursor: 'pointer', border: 'none', padding: 0 }}
+                    />
+                  </label>
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: active ? C.successLight : C.dangerLight, border: `1px solid ${(active ? C.success : C.danger)}40`, borderRadius: 6 }}>

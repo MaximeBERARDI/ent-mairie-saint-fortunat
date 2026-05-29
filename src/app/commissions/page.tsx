@@ -422,7 +422,7 @@ function GrilleView({
                   <div style={{ display: 'flex', gap: 4, flex: 1, flexWrap: 'wrap' }}>
                     {responsibles.map(p => (
                       <div key={p.id} title={p.fullName} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                        <Avatar initials={p.initials} color={p.color} size={20} />
+                        <Avatar initials={p.initials} color={p.color} size={20} photo={p.photoUrl} />
                         <span style={{ fontSize: 12, color: C.fg, fontWeight: 500 }}>{p.prenom}</span>
                       </div>
                     ))}
@@ -575,7 +575,7 @@ function DetailView({
                     borderRadius: 16,
                     textDecoration: 'none',
                   }}>
-                    <Avatar initials={p.initials} color={p.color} size={20} />
+                    <Avatar initials={p.initials} color={p.color} size={20} photo={p.photoUrl} />
                     <span style={{ fontSize: 12, color: C.fg, fontWeight: 500 }}>{p.fullName}</span>
                     <span style={{ fontSize: 12, color: C.subtle }}>· {ROLE_LABELS[p.role]}</span>
                   </Link>
@@ -752,7 +752,7 @@ function MemberManager({
               borderBottom: i < members.length - 1 ? `1px solid ${C.border}` : 'none',
             }}
           >
-            <Avatar initials={p.initials} size={32} color={p.color} />
+            <Avatar initials={p.initials} size={32} color={p.color} photo={p.photoUrl} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                 <p style={{ fontSize: 12, color: C.fg, fontWeight: 600 }}>{p.fullName}</p>
@@ -1060,7 +1060,7 @@ function CommissionTaskRow({
               <span style={{ display: 'flex' }}>
                 {assignees.slice(0, 3).map((a, idx) => (
                   <span key={a.id} style={{ marginLeft: idx === 0 ? 0 : -5 }}>
-                    <Avatar initials={a.initials} size={16} color={a.color} />
+                    <Avatar initials={a.initials} size={16} color={a.color} photo={a.photoUrl} />
                   </span>
                 ))}
               </span>

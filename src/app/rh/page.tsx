@@ -265,7 +265,7 @@ function AgentsView({ currentUserId, canViewAll, canManage }: { currentUserId: s
                       fontFamily: "'DM Sans', sans-serif",
                     }}
                   >
-                    <Avatar initials={a.initials} size={28} color={isAbsent ? C.terra : C.green} />
+                    <Avatar initials={a.initials} size={28} color={isAbsent ? C.terra : C.green} photo={a.photoUrl} />
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p style={{ fontSize: 12, color: C.fg, fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.fullName}</p>
                       <p style={{ fontSize: 12, color: C.subtle, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.poste}</p>
@@ -379,7 +379,7 @@ function EmployeeDetail({
   return (
     <Card padding={16}>
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, marginBottom: 14 }}>
-        <Avatar initials={person.initials} size={56} color={isAbsent ? C.terra : C.green} />
+        <Avatar initials={person.initials} size={56} color={isAbsent ? C.terra : C.green} photo={person.photoUrl} />
         <div style={{ flex: 1 }}>
           <p style={{ fontSize: 17, color: C.fg, fontWeight: 700 }}>{person.fullName}</p>
           <p style={{ fontSize: 12, color: C.subtle, marginBottom: 4 }}>{person.poste}</p>
@@ -821,7 +821,7 @@ function DemandesView({ currentUserId, canValidate, canViewAll }: { currentUserI
                     style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1.4fr 0.6fr 0.9fr 0.8fr', padding: '10px 14px', borderBottom: i < filtered.length - 1 ? `1px solid ${C.border}` : 'none', background: isSel ? `${C.green}06` : (l.statut === 'En attente' ? `${C.warning}06` : '#fff'), alignItems: 'center', cursor: 'pointer' }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      {p && <Avatar initials={p.initials} size={22} color={p.color} />}
+                      {p && <Avatar initials={p.initials} size={22} color={p.color} photo={p.photoUrl} />}
                       <p style={{ fontSize: 12, color: C.fg, fontWeight: 500 }}>{p?.fullName ?? '—'}</p>
                     </div>
                     <Tag label={l.type} color={l.type === 'Maladie' ? C.danger : l.type === 'RTT' ? C.warning : C.green} />
@@ -899,7 +899,7 @@ function LeaveDetailPanel({
   return (
     <>
       <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 8 }}>
-        {submitter && <Avatar initials={submitter.initials} size={32} color={submitter.color} />}
+        {submitter && <Avatar initials={submitter.initials} size={32} color={submitter.color} photo={submitter.photoUrl} />}
         <div style={{ flex: 1 }}>
           <p style={{ fontSize: 14, color: C.fg, fontWeight: 700 }}>{submitter?.fullName ?? '—'}</p>
           <p style={{ fontSize: 12, color: C.subtle }}>{submitter?.poste ?? ''}</p>
@@ -934,7 +934,7 @@ function LeaveDetailPanel({
           <Separator my={10} />
           <div style={{ padding: 8, background: leave.statut === 'Approuvée' ? C.successLight : C.dangerLight, borderRadius: 6 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-              <Avatar initials={decider.initials} size={20} color={decider.color} />
+              <Avatar initials={decider.initials} size={20} color={decider.color} photo={decider.photoUrl} />
               <p style={{ fontSize: 12, color: leave.statut === 'Approuvée' ? C.success : C.danger, fontWeight: 600 }}>
                 {leave.statut === 'Approuvée' ? 'Approuvée' : 'Refusée'} par {decider.fullName}
               </p>
@@ -1128,7 +1128,7 @@ function CalendrierView() {
           {agents.map(a => (
             <FragmentRow key={a.id}>
               <div style={{ background: '#fff', padding: '6px 8px', display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Avatar initials={a.initials} size={22} color={a.color} />
+                <Avatar initials={a.initials} size={22} color={a.color} photo={a.photoUrl} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{ fontSize: 12, color: C.fg, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.fullName}</p>
                 </div>
@@ -1308,7 +1308,7 @@ function PaiesView() {
                   const person = people.find(p => p.id === b.personId)
                   return (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-                      {person && <Avatar initials={person.initials} size={28} color={person.color} />}
+                      {person && <Avatar initials={person.initials} size={28} color={person.color} photo={person.photoUrl} />}
                       <div style={{ minWidth: 0 }}>
                         <p style={{ color: C.fg, fontWeight: 600 }}>{b.snapshot.fullName}</p>
                         <p style={{ fontSize: 12, color: C.subtle }}>
@@ -1502,7 +1502,7 @@ function MissionsView() {
                 return (
                   <div key={m.id} style={{ display: 'grid', gridTemplateColumns: '1.5fr 2fr 1.4fr 1fr 0.6fr', gap: 10, padding: '10px 14px', borderBottom: i < arr.length - 1 ? `1px solid ${C.border}` : 'none', alignItems: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      {p && <Avatar initials={p.initials} size={26} color={p.color} />}
+                      {p && <Avatar initials={p.initials} size={26} color={p.color} photo={p.photoUrl} />}
                       <p style={{ fontSize: 12, color: C.fg, fontWeight: 500 }}>{p?.fullName ?? '—'}</p>
                     </div>
                     <div>

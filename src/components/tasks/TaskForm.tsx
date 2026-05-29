@@ -325,7 +325,7 @@ export function TaskForm({ open, onClose, onSubmit, onDelete, initial, title }: 
                           onClick={() => setAssigneeIds(prev => toggleId(prev, p.id))}
                           style={chipStyle(on)}
                         >
-                          <Avatar initials={p.initials} size={18} color={p.color} />
+                          <Avatar initials={p.initials} size={18} color={p.color} photo={p.photoUrl} />
                           {p.fullName}
                         </button>
                       )
@@ -369,7 +369,7 @@ export function TaskForm({ open, onClose, onSubmit, onDelete, initial, title }: 
               {renderPersonSelect(validatorId, setValidatorId, '— Sélectionnez la personne qui doit valider —')}
               {validator && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6, fontSize: 11, color: C.muted }}>
-                  <Avatar initials={validator.initials} size={20} color={validator.color} />
+                  <Avatar initials={validator.initials} size={20} color={validator.color} photo={validator.photoUrl} />
                   <span>{validator.fullName} sera notifié(e) de la demande de validation.</span>
                 </div>
               )}

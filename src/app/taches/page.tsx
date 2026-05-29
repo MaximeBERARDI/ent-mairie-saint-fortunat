@@ -314,7 +314,7 @@ function ListeView({
                         <span style={{ display: 'flex' }}>
                           {assignees.slice(0, 3).map((a, idx) => (
                             <span key={a.id} style={{ marginLeft: idx === 0 ? 0 : -6 }}>
-                              <Avatar initials={a.initials} size={20} color={a.color} />
+                              <Avatar initials={a.initials} size={20} color={a.color} photo={a.photoUrl} />
                             </span>
                           ))}
                         </span>
@@ -422,7 +422,7 @@ function KanbanView({
                             <span style={{ display: 'flex' }}>
                               {assignees.slice(0, 3).map((a, idx) => (
                                 <span key={a.id} style={{ marginLeft: idx === 0 ? 0 : -6 }}>
-                                  <Avatar initials={a.initials} size={18} color={a.color} />
+                                  <Avatar initials={a.initials} size={18} color={a.color} photo={a.photoUrl} />
                                 </span>
                               ))}
                             </span>

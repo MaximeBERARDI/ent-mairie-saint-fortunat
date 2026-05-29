@@ -123,7 +123,7 @@ export function TaskDetailContent({
             <span style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
               {assignees.map(a => (
                 <span key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <Avatar initials={a.initials} size={20} color={a.color} />
+                  <Avatar initials={a.initials} size={20} color={a.color} photo={a.photoUrl} />
                   {a.fullName}
                 </span>
               ))}
@@ -135,7 +135,7 @@ export function TaskDetailContent({
             label="Validateur"
             value={
               <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Avatar initials={validator.initials} size={20} color={validator.color} />
+                <Avatar initials={validator.initials} size={20} color={validator.color} photo={validator.photoUrl} />
                 {validator.fullName}
               </span>
             }
@@ -232,7 +232,7 @@ export function TaskDetailContent({
                   borderRadius: 6,
                 }}
               >
-                {author && <Avatar initials={author.initials} size={24} color={author.color} />}
+                {author && <Avatar initials={author.initials} size={24} color={author.color} photo={author.photoUrl} />}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
                     <p style={{ fontSize: 11, color: C.fg, fontWeight: 600 }}>{author?.fullName ?? '—'}</p>

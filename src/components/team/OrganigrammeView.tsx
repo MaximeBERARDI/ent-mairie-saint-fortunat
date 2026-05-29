@@ -283,7 +283,7 @@ function OrgPerson({ person, variant, subtitle, accent, selected, onSelect }: {
           fontFamily: "'DM Sans', sans-serif",
         }}
       >
-        <Avatar initials={person.initials} size={52} color={person.color} />
+        <Avatar initials={person.initials} size={52} color={person.color} photo={person.photoUrl} />
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
             <p style={{ fontSize: 15, color: C.fg, fontWeight: 700, lineHeight: 1.2 }}>{person.fullName}</p>
@@ -315,7 +315,7 @@ function OrgPerson({ person, variant, subtitle, accent, selected, onSelect }: {
         fontFamily: "'DM Sans', sans-serif",
       }}
     >
-      <Avatar initials={person.initials} size={30} color={person.color} />
+      <Avatar initials={person.initials} size={30} color={person.color} photo={person.photoUrl} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
           <p style={{ fontSize: 12.5, color: C.fg, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

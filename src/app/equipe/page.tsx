@@ -329,7 +329,7 @@ function PersonListRow({ person, selected, onSelect, currentUserId }: {
         opacity: person.active ? 1 : 0.55,
       }}
     >
-      <Avatar initials={person.initials} color={person.color} size={32} />
+      <Avatar initials={person.initials} color={person.color} size={32} photo={person.photoUrl} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <p style={{ fontSize: 12, color: C.fg, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -379,7 +379,7 @@ function PersonDetail({ person, tasks, canEdit, canDeactivate, currentUserId, on
       {/* En-tête */}
       <Card padding={20}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
-          <Avatar initials={person.initials} color={person.color} size={64} />
+          <Avatar initials={person.initials} color={person.color} size={64} photo={person.photoUrl} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
               <h2 style={{ fontSize: 20, color: C.fg, fontWeight: 700 }}>{person.fullName}</h2>

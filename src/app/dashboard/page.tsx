@@ -842,7 +842,7 @@ function DashMaire({ tasks, currentUserId, createTask }: { tasks: Task[]; curren
           ) : (
             chargeByPerson.map(({ person, count }) => (
               <div key={person.id} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                <Avatar initials={person.initials} size={22} color={person.color} />
+                <Avatar initials={person.initials} size={22} color={person.color} photo={person.photoUrl} />
                 <p style={{ fontSize: 12, color: C.fg, flex: 1 }}>{person.fullName}</p>
                 <p style={{ fontSize: 12, color: C.subtle, fontWeight: 600 }}>{count} tâche{count > 1 ? 's' : ''}</p>
               </div>
@@ -871,7 +871,7 @@ function DashMaire({ tasks, currentUserId, createTask }: { tasks: Task[]; curren
               if (!p) return null
               return (
                 <div key={l.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 0', borderBottom: `1px solid ${C.border}` }}>
-                  <Avatar initials={p.initials} size={22} color={C.terra} />
+                  <Avatar initials={p.initials} size={22} color={C.terra} photo={p.photoUrl} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{ fontSize: 12, color: C.fg, fontWeight: 500 }}>{p.fullName}</p>
                     <p style={{ fontSize: 11, color: C.subtle }}>{l.type} · jusqu&apos;au {formatShortFR(l.dateFin)}</p>

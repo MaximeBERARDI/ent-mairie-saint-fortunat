@@ -295,7 +295,7 @@ function TaskMiniCard({ task, onClick }: { task: Task; onClick: () => void }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
         {firstAssignee ? (
           <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <Avatar initials={firstAssignee.initials} size={16} color={firstAssignee.color} />
+            <Avatar initials={firstAssignee.initials} size={16} color={firstAssignee.color} photo={firstAssignee.photoUrl} />
             <span style={{ fontSize: 10, color: C.muted }}>
               {firstAssignee.fullName}{assignees.length > 1 ? ` +${assignees.length - 1}` : ''}
             </span>

@@ -725,7 +725,7 @@ function ValidationStep({
             if (!p) return null
             return (
               <div key={personId} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 0', borderBottom: i < arr.length - 1 ? `1px solid ${C.border}` : 'none' }}>
-                <Avatar initials={p.initials} size={20} color={p.color} />
+                <Avatar initials={p.initials} size={20} color={p.color} photo={p.photoUrl} />
                 <p style={{ fontSize: 12, color: C.fg, flex: 1 }}>{p.fullName}</p>
                 <p style={{ fontSize: 12, color: C.subtle }}>{count} tâche{count > 1 ? 's' : ''}</p>
               </div>

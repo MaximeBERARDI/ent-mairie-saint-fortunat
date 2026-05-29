@@ -228,6 +228,7 @@ export function Sidebar() {
         const fullName = me?.fullName ?? '—'
         const roleLabel = me ? ROLE_LABELS[me.role] : ''
         const color = me?.color ?? C.terra
+        const photo = me?.photoUrl ?? null
         if (!isIcons) {
           return (
             <Link href="/equipe" style={{ textDecoration: 'none' }}>
@@ -237,7 +238,7 @@ export function Sidebar() {
                 display: 'flex', alignItems: 'center', gap: 8,
                 cursor: 'pointer',
               }}>
-                <Avatar initials={initials} size={28} color={color} />
+                <Avatar initials={initials} size={28} color={color} photo={photo} />
                 <div style={{ minWidth: 0 }}>
                   <p style={{ fontSize: 11, color: 'var(--sidebar-text)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{fullName}</p>
                   <p style={{ fontSize: 9, color: 'var(--sidebar-muted)' }}>{roleLabel}</p>
@@ -249,7 +250,7 @@ export function Sidebar() {
         return (
           <Link href="/equipe" style={{ textDecoration: 'none' }}>
             <div style={{ padding: '10px 0', borderTop: '1px solid rgba(255,255,255,0.08)', display: 'flex', justifyContent: 'center', cursor: 'pointer' }}>
-              <Avatar initials={initials} size={26} color={color} />
+              <Avatar initials={initials} size={26} color={color} photo={photo} />
             </div>
           </Link>
         )

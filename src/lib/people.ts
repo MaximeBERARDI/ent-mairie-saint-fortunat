@@ -17,6 +17,7 @@ export interface Person {
   email: string
   phone?: string
   color: string
+  photoUrl?: string                  // photo d'avatar (data URL base64, miniature) — optionnelle
   initials: string
   // Authentification & autorisations
   authLevel: AuthLevel

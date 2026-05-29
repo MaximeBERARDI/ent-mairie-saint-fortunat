@@ -108,6 +108,7 @@ model Person {
   email                    String     @unique
   phone                    String?
   color                    String
+  photoUrl                 String?    // photo d'avatar (data URL base64, miniature ~128px) — optionnelle
   initials                 String
   authLevel                AuthLevel
   customPermissions        String[]   // tableau de Permission keys

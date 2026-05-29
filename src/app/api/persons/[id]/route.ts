@@ -19,6 +19,7 @@ interface PatchBody {
   email?: string
   phone?: string | null
   color?: string
+  photoUrl?: string | null
   authLevel?: AuthLevel
   customPermissions?: Permission[]
   canSign?: boolean
@@ -58,6 +59,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     if (body.email !== undefined) data.email = body.email
     if (body.phone !== undefined) data.phone = body.phone
     if (body.color !== undefined) data.color = body.color
+    if (body.photoUrl !== undefined) data.photoUrl = body.photoUrl
     if (body.startDate !== undefined) {
       data.startDate = body.startDate ? new Date(body.startDate) : null
     }

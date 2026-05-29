@@ -146,6 +146,7 @@ export function TopBar({ title }: TopBarProps) {
             initials={currentUser?.initials ?? '?'}
             size={30}
             color={currentUser?.color ?? C.terra}
+            photo={currentUser?.photoUrl ?? null}
           />
         </button>
         {userMenuOpen && (

@@ -60,6 +60,75 @@ const inputStyle: React.CSSProperties = {
   boxSizing: 'border-box',
 }
 
+// Palette d'avatar (couleurs du design system + quelques teintes). Le sélecteur
+// natif permet en plus n'importe quelle couleur.
+const AVATAR_PALETTE = [
+  '#6ab123', '#2d9c6e', '#1f7a52', '#2563a8', '#1d4d85', '#4d5e6c',
+  '#c4793a', '#a8612a', '#8a4c1e', '#d4860a', '#c4393a', '#7c3aed',
+]
+
+// Redimensionne une image en miniature carrée-compatible (max N px sur le plus
+// grand côté), encodée en JPEG → data URL légère.
+function resizeImageToDataUrl(file: File, max: number): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => {
+      const img = new Image()
+      img.onload = () => {
+        const scale = Math.min(1, max / Math.max(img.width, img.height))
+        const w = Math.max(1, Math.round(img.width * scale))
+        const h = Math.max(1, Math.round(img.height * scale))
+        const canvas = document.createElement('canvas')
+        canvas.width = w
+        canvas.height = h
+        const ctx = canvas.getContext('2d')
+        if (!ctx) { reject(new Error('no ctx')); return }
+        ctx.drawImage(img, 0, 0, w, h)
+        resolve(canvas.toDataURL('image/jpeg', 0.82))
+      }
+      img.onerror = reject
+      img.src = reader.result as string
+    }
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+}
+
+function ColorPicker({ value, onChange }: { value: string; onChange: (c: string) => void }) {
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, justifyContent: 'center', maxWidth: 124 }}>
+      {AVATAR_PALETTE.map(c => (
+        <button
+          key={c}
+          onClick={() => onChange(c)}
+          aria-label={`Couleur ${c}`}
+          title={c}
+          style={{
+            width: 18, height: 18, borderRadius: '50%', background: c, cursor: 'pointer', padding: 0,
+            border: value.toLowerCase() === c.toLowerCase() ? `2px solid ${C.fg}` : '2px solid #fff',
+            boxShadow: `0 0 0 1px ${C.border}`,
+          }}
+        />
+      ))}
+      <label
+        title="Couleur personnalisée"
+        style={{
+          width: 18, height: 18, borderRadius: '50%', cursor: 'pointer', overflow: 'hidden',
+          border: '2px solid #fff', boxShadow: `0 0 0 1px ${C.border}`, display: 'inline-flex',
+          background: 'conic-gradient(red,orange,yellow,lime,cyan,blue,magenta,red)',
+        }}
+      >
+        <input
+          type="color"
+          value={/^#[0-9a-f]{6}$/i.test(value) ? value : '#6ab123'}
+          onChange={e => onChange(e.target.value)}
+          style={{ opacity: 0, width: '100%', height: '100%', cursor: 'pointer', border: 'none', padding: 0 }}
+        />
+      </label>
+    </div>
+  )
+}
+
 export default function ProfilPage() {
   const { currentUser, currentUserId, hydrated } = useCurrentUser()
   const { updatePerson } = useTeam()
@@ -69,6 +138,7 @@ export default function ProfilPage() {
   // Champs identité
   const [phone, setPhone] = useState('')
   const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null)
+  const [color, setColor] = useState<string>(C.terra)
   const photoInputRef = useRef<HTMLInputElement>(null)
   const [savedMsg, setSavedMsg] = useState<string | null>(null)
 
@@ -86,13 +156,9 @@ export default function ProfilPage() {
     if (!currentUser) return
     setPhone(currentUser.phone ?? '')
     setPrefs(loadPrefs(currentUser.id))
-    // Charger la photo persistée pour ce profil
-    if (typeof window !== 'undefined') {
-      try {
-        const stored = window.localStorage.getItem(`ent-mairie:profil-photo:${currentUser.id}`)
-        setPhotoDataUrl(stored)
-      } catch {}
-    }
+    // Photo & couleur : persistées en base (partagées sur toutes les pages).
+    setPhotoDataUrl(currentUser.photoUrl ?? null)
+    setColor(currentUser.color)
   }, [currentUserId, currentUser])
 
   if (!hydrated || !currentUser) {
@@ -140,24 +206,38 @@ export default function ProfilPage() {
   }
 
   const handlePhotoUpload = async (file: File | null) => {
-    if (!file) return
-    if (file.size > 1024 * 1024) {
-      alert('La photo doit faire moins de 1 Mo.')
+    if (!file || !currentUser) return
+    if (!file.type.startsWith('image/')) {
+      alert('Veuillez choisir un fichier image.')
       return
     }
-    if (!currentUser) return
-    const reader = new FileReader()
-    reader.onload = () => {
-      const dataUrl = reader.result as string
-      setPhotoDataUrl(dataUrl)
-      // Persister dans localStorage par profil
-      try {
-        window.localStorage.setItem(`ent-mairie:profil-photo:${currentUser.id}`, dataUrl)
-      } catch {
-        alert('Impossible d\'enregistrer la photo (espace de stockage saturé).')
-      }
+    if (file.size > 8 * 1024 * 1024) {
+      alert('Image trop volumineuse (8 Mo max).')
+      return
     }
-    reader.readAsDataURL(file)
+    try {
+      // Redimensionnée côté client en miniature (~256px) pour rester légère en
+      // base (la photo voyage dans /api/persons chargé sur toutes les pages).
+      const dataUrl = await resizeImageToDataUrl(file, 256)
+      setPhotoDataUrl(dataUrl)
+      updatePerson(currentUser.id, { photoUrl: dataUrl })
+      setSavedMsg('Photo mise à jour.')
+      setTimeout(() => setSavedMsg(null), 3000)
+    } catch {
+      alert('Impossible de traiter cette image.')
+    }
+  }
+
+  const handleRemovePhoto = () => {
+    if (!currentUser) return
+    setPhotoDataUrl(null)
+    updatePerson(currentUser.id, { photoUrl: '' })
+  }
+
+  const handleColorChange = (c: string) => {
+    if (!currentUser) return
+    setColor(c)
+    updatePerson(currentUser.id, { color: c })
   }
 
   const updatePref = (key: keyof NotifPrefs, value: boolean) => {
@@ -170,36 +250,38 @@ export default function ProfilPage() {
     <Shell title="Mon profil">
       {/* En-tête profil */}
       <Card padding={20} style={{ marginBottom: 'var(--gap)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <div style={{ position: 'relative' }}>
-            {photoDataUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={photoDataUrl}
-                alt={currentUser.fullName}
-                style={{ width: 80, height: 80, borderRadius: '50%', objectFit: 'cover', border: `2px solid ${C.border}` }}
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+            <div style={{ position: 'relative' }}>
+              <Avatar initials={currentUser.initials} size={80} color={color} photo={photoDataUrl} alt={currentUser.fullName} />
+              <button
+                onClick={() => photoInputRef.current?.click()}
+                aria-label="Modifier la photo"
+                title="Changer la photo"
+                style={{
+                  position: 'absolute', bottom: 0, right: 0,
+                  width: 26, height: 26, borderRadius: '50%',
+                  background: '#fff', border: `1px solid ${C.border}`,
+                  cursor: 'pointer', fontSize: 12, padding: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}
+              >📷</button>
+              <input
+                ref={photoInputRef}
+                type="file"
+                accept="image/*"
+                onChange={e => handlePhotoUpload(e.target.files?.[0] ?? null)}
+                style={{ display: 'none' }}
               />
+            </div>
+            {photoDataUrl ? (
+              <button
+                onClick={handleRemovePhoto}
+                style={{ background: 'none', border: 'none', color: C.danger, fontSize: 11, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", padding: 0 }}
+              >Retirer la photo</button>
             ) : (
-              <Avatar initials={currentUser.initials} size={80} color={currentUser.color} />
+              <ColorPicker value={color} onChange={handleColorChange} />
             )}
-            <button
-              onClick={() => photoInputRef.current?.click()}
-              aria-label="Modifier la photo"
-              title="Changer la photo"
-              style={{
-                position: 'absolute', bottom: 0, right: 0,
-                width: 26, height: 26, borderRadius: '50%',
-                background: '#fff', border: `1px solid ${C.border}`,
-                cursor: 'pointer', fontSize: 12, padding: 0,
-              }}
-            >📷</button>
-            <input
-              ref={photoInputRef}
-              type="file"
-              accept="image/*"
-              onChange={e => handlePhotoUpload(e.target.files?.[0] ?? null)}
-              style={{ display: 'none' }}
-            />
           </div>
           <div style={{ flex: 1 }}>
             <p style={{ fontSize: 22, color: C.fg, fontWeight: 700 }}>{currentUser.fullName}</p>
@@ -211,6 +293,7 @@ export default function ProfilPage() {
               {currentUser.role === 'adjoint' && <Tag label="Adjoint" color={C.terra} />}
               {currentUser.role === 'agent' && <Tag label="Agent" color={C.slate} />}
             </div>
+            {savedMsg && <p style={{ fontSize: 11, color: C.success, marginTop: 8 }}>✓ {savedMsg}</p>}
           </div>
         </div>
       </Card>

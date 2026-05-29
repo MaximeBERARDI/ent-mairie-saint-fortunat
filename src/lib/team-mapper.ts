@@ -46,6 +46,7 @@ export function personFromDb(p: DbPerson): Person {
     email: p.email,
     phone: p.phone ?? undefined,
     color: p.color,
+    photoUrl: p.photoUrl ?? undefined,
     initials: p.initials,
     authLevel: authLevelFromDb(p.authLevel),
     customPermissions: p.customPermissions as Permission[],
