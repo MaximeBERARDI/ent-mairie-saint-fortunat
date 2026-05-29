@@ -17,6 +17,7 @@ import { NotificationsBell } from './NotificationsBell'
 
 const NAV_ITEMS = [
   { label: 'Tableau de bord', href: '/dashboard' },
+  { label: 'Calendrier', href: '/calendrier' },
   { label: 'Tâches', href: '/taches' },
   { label: 'Commissions', href: '/commissions' },
   { label: 'Comptes rendus', href: '/comptes-rendus' },

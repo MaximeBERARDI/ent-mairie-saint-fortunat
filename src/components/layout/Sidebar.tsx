@@ -12,10 +12,11 @@ import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { useTasks } from '@/hooks/useTasks'
 import { isMyActiveTask } from '@/lib/task-filters'
 
-type IconName = 'dashboard' | 'check' | 'users' | 'doc' | 'briefcase' | 'euro' | 'team' | 'folder'
+type IconName = 'dashboard' | 'calendar' | 'check' | 'users' | 'doc' | 'briefcase' | 'euro' | 'team' | 'folder'
 
 const NAV_ITEMS: { label: string; href: string; icon: IconName }[] = [
   { label: 'Tableau de bord', href: '/dashboard', icon: 'dashboard' },
+  { label: 'Calendrier', href: '/calendrier', icon: 'calendar' },
   { label: 'Tâches', href: '/taches', icon: 'check' },
   { label: 'Commissions', href: '/commissions', icon: 'users' },
   { label: 'Comptes rendus', href: '/comptes-rendus', icon: 'doc' },
@@ -42,6 +43,8 @@ function NavIcon({ name }: { name: IconName }) {
   switch (name) {
     case 'dashboard':
       return <svg {...p}><rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" /><rect x="3" y="14" width="7" height="7" rx="1.5" /></svg>
+    case 'calendar':
+      return <svg {...p}><rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
     case 'check':
       return <svg {...p}><polyline points="9 11 12 14 22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>
     case 'users':

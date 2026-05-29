@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 
 // Polices auto-hebergees via @fontsource (paquets npm qui embarquent les
 // .woff2) au lieu de fonts.googleapis.com : conformite RGPD (CNIL 2022).
@@ -17,11 +17,21 @@ import '@/styles/globals.css'
 import { SettingsProvider } from '@/context/SettingsContext'
 import { AuthSessionProvider } from '@/components/providers/AuthSessionProvider'
 import { IdleTimeout } from '@/components/providers/IdleTimeout'
+import { PwaRegister } from '@/components/providers/PwaRegister'
 import { TeamProvider } from '@/context/TeamContext'
 
 export const metadata: Metadata = {
   title: 'ENT - Mairie de Saint-Fortunat-sur-Eyrieux',
   description: 'Environnement Numerique de Travail - reserve aux elus et agents municipaux',
+  appleWebApp: {
+    capable: true,
+    title: 'ENT Saint-Fortunat',
+    statusBarStyle: 'default',
+  },
+}
+
+export const viewport: Viewport = {
+  themeColor: '#1f2a31',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -29,6 +39,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="fr">
       <body>
         <AuthSessionProvider>
+          <PwaRegister />
           <IdleTimeout />
           <TeamProvider>
             <SettingsProvider>
