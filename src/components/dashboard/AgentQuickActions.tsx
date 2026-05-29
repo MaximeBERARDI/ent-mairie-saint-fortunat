@@ -11,8 +11,8 @@ import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { SectionHeader } from '@/components/ui/SectionHeader'
 import { COLORS as C } from '@/lib/theme'
-import { getPerson } from '@/lib/people'
 import { hasPermission } from '@/lib/permissions'
+import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { usePointages } from '@/hooks/usePointages'
 import { useLeaveRequests } from '@/hooks/useLeaveRequests'
 import { useEmployees } from '@/hooks/useEmployees'
@@ -28,7 +28,7 @@ export function AgentQuickActions({ currentUserId, createTask }: {
   currentUserId: string
   createTask: (data: Omit<Task, 'id' | 'createdAt'>) => Task
 }) {
-  const me = getPerson(currentUserId)
+  const { currentUser: me } = useCurrentUser()
   const { badger, byPersonDay, isPresentNow } = usePointages()
   const { submitLeave } = useLeaveRequests()
   const { findByPersonId } = useEmployees()

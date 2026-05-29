@@ -2,11 +2,11 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { COLORS as C } from '@/lib/theme'
-import { PEOPLE, getPerson } from '@/lib/people'
 import { Button } from '@/components/ui/Button'
 import { Avatar } from '@/components/ui/Avatar'
 import { useCommissions } from '@/hooks/useCommissions'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
+import { useTeam } from '@/hooks/useTeam'
 import { useModalA11y } from '@/hooks/useModalA11y'
 import type { Task, TaskPriority, TaskStatus, TaskDocument } from '@/lib/types'
 
@@ -43,6 +43,7 @@ function readFileAsDataURL(file: File): Promise<string> {
 export function TaskForm({ open, onClose, onSubmit, onDelete, initial, title }: TaskFormProps) {
   const { currentUserId } = useCurrentUser()
   const { commissions } = useCommissions()
+  const { people } = useTeam()
   const [label, setLabel] = useState('')
   const [description, setDescription] = useState('')
   const [commissionIds, setCommissionIds] = useState<string[]>([])
@@ -181,11 +182,11 @@ export function TaskForm({ open, onClose, onSubmit, onDelete, initial, title }: 
     arr.includes(id) ? arr.filter(x => x !== id) : [...arr, id]
 
   // Groupes pour l'affichage des personnes
-  const elus = PEOPLE.filter(p => p.role !== 'agent')
-  const agents = PEOPLE.filter(p => p.role === 'agent')
+  const elus = people.filter(p => p.role !== 'agent')
+  const agents = people.filter(p => p.role === 'agent')
 
   const PersonOption = ({ id, label }: { id: string; label?: string }) => {
-    const p = getPerson(id)
+    const p = people.find(x => x.id === id)
     if (!p) return null
     return <option value={p.id}>{label ?? `${p.fullName} — ${p.poste}`}</option>
   }
@@ -205,7 +206,7 @@ export function TaskForm({ open, onClose, onSubmit, onDelete, initial, title }: 
     </select>
   )
 
-  const validator = getPerson(validatorId)
+  const validator = people.find(p => p.id === validatorId)
 
   return (
     <div

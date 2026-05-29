@@ -17,8 +17,8 @@ import { TaskDetailContent, TaskDetailModal } from '@/components/tasks/TaskDetai
 import { useTasks } from '@/hooks/useTasks'
 import { useCommissions } from '@/hooks/useCommissions'
 import type { Commission } from '@/lib/types'
-import { getPerson, getPersonName } from '@/lib/people'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
+import { useTeam } from '@/hooks/useTeam'
 import { formatShortFR, formatLongFR, relativeBucket } from '@/lib/dateUtils'
 import { isMyActiveTask } from '@/lib/task-filters'
 import type { Task, TaskStatus } from '@/lib/types'
@@ -236,6 +236,7 @@ function ListeView({
 }) {
   const { commissions } = useCommissions()
   const { currentUserId } = useCurrentUser()
+  const { people } = useTeam()
   const FILTERS: [TaskFilter, string][] = [
     ['toutes', `Toutes (${counts.toutes})`],
     ['mes', `Mes tâches (${counts.mes})`],
@@ -277,7 +278,7 @@ function ListeView({
           ) : (
             tasks.map((t, i) => {
               const assignees = t.assigneeIds
-                .map(id => getPerson(id))
+                .map(id => people.find(p => p.id === id))
                 .filter((p): p is NonNullable<typeof p> => Boolean(p))
               const commName = getCommissionShortName(commissions, t.commissionIds[0])
               const commColor = getCommissionColor(commissions, t.commissionIds[0])
@@ -370,6 +371,7 @@ function KanbanView({
   onCycleStatus: (t: Task) => void
 }) {
   const { commissions } = useCommissions()
+  const { people } = useTeam()
   const COLUMNS: { status: TaskStatus; color: string }[] = [
     { status: 'À faire', color: C.subtle },
     { status: 'En cours', color: C.warning },
@@ -400,7 +402,7 @@ function KanbanView({
               )}
               {columnTasks.map(card => {
                 const assignees = card.assigneeIds
-                  .map(id => getPerson(id))
+                  .map(id => people.find(p => p.id === id))
                   .filter((p): p is NonNullable<typeof p> => Boolean(p))
                 const commName = getCommissionShortName(commissions, card.commissionIds[0])
                 const commColor = getCommissionColor(commissions, card.commissionIds[0])

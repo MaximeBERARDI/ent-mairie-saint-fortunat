@@ -7,8 +7,8 @@ import { Button } from '@/components/ui/Button'
 import { Tag } from '@/components/ui/Tag'
 import { Avatar } from '@/components/ui/Avatar'
 import { COLORS as C } from '@/lib/theme'
-import { getPerson } from '@/lib/people'
 import { useCommissions } from '@/hooks/useCommissions'
+import { useTeam } from '@/hooks/useTeam'
 import { isoDate, parseISO, FRENCH_MONTHS } from '@/lib/dateUtils'
 import type { Task } from '@/lib/types'
 
@@ -262,8 +262,9 @@ function formatDayHeading(iso: string): string {
 
 function TaskMiniCard({ task, onClick }: { task: Task; onClick: () => void }) {
   const { commissions } = useCommissions()
+  const { people } = useTeam()
   const assignees = task.assigneeIds
-    .map(id => getPerson(id))
+    .map(id => people.find(p => p.id === id))
     .filter((p): p is NonNullable<typeof p> => Boolean(p))
   const firstAssignee = assignees[0]
   const firstComm = commissions.find(c => task.commissionIds.includes(c.id))

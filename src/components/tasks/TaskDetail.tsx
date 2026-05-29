@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/Button'
 import { Avatar } from '@/components/ui/Avatar'
 import { Separator } from '@/components/ui/Separator'
 import { COLORS as C } from '@/lib/theme'
-import { getPerson } from '@/lib/people'
 import { useCommissions } from '@/hooks/useCommissions'
+import { useTeam } from '@/hooks/useTeam'
 import { useModalA11y } from '@/hooks/useModalA11y'
 import { formatLongFR } from '@/lib/dateUtils'
 import type { Task, TaskStatus, TaskPriority, TaskComment } from '@/lib/types'
@@ -61,11 +61,12 @@ export function TaskDetailContent({
   onAddComment, onDeleteComment, compact = false,
 }: TaskDetailContentProps) {
   const { commissions } = useCommissions()
+  const { people } = useTeam()
   const assignees = task.assigneeIds
-    .map(id => getPerson(id))
+    .map(id => people.find(p => p.id === id))
     .filter((p): p is NonNullable<typeof p> => Boolean(p))
-  const validator = task.validatorId ? getPerson(task.validatorId) : null
-  const author = task.createdById ? getPerson(task.createdById) : null
+  const validator = task.validatorId ? people.find(p => p.id === task.validatorId) ?? null : null
+  const author = task.createdById ? people.find(p => p.id === task.createdById) ?? null : null
   const taskCommissions = task.commissionIds
     .map(id => commissions.find(c => c.id === id))
     .filter((c): c is NonNullable<typeof c> => Boolean(c))
@@ -220,7 +221,7 @@ export function TaskDetailContent({
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 8 }}>
           {comments.map(c => {
-            const author = getPerson(c.authorId)
+            const author = people.find(p => p.id === c.authorId)
             const isMine = c.authorId === currentUserId
             return (
               <div

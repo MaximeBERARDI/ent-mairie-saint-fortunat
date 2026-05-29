@@ -11,7 +11,7 @@ import { Avatar } from '@/components/ui/Avatar'
 import { Row } from '@/components/ui/Row'
 import { COLORS as C } from '@/lib/theme'
 import { useCommissions } from '@/hooks/useCommissions'
-import { PEOPLE } from '@/lib/people'
+import { useTeam } from '@/hooks/useTeam'
 import { useTasks } from '@/hooks/useTasks'
 import { useComptesRendus } from '@/hooks/useComptesRendus'
 import type { ExtractedTask, CompteRendu, TaskPriority } from '@/lib/types'
@@ -540,6 +540,7 @@ function ValidationStep({
   onNext: () => void
 }) {
   const { commissions } = useCommissions()
+  const { people } = useTeam()
   // Helper : valeur effective d'une tâche (extracted + edits)
   const effective = (i: number): ExtractedTask => ({
     ...wizard.extractedTasks[i],
@@ -660,7 +661,7 @@ function ValidationStep({
                     style={{ flex: 1.5, height: 28, border: `1px solid ${needsAssignee ? C.warning : C.border}`, borderRadius: 5, background: needsAssignee ? '#fff' : C.bg, padding: '0 8px', fontSize: 12, color: t.assigneeId ? C.fg : C.warning, fontFamily: "'DM Sans', sans-serif" }}
                   >
                     <option value="">— Choisir un responsable —</option>
-                    {PEOPLE.filter(p => p.active).map(p => (
+                    {people.filter(p => p.active).map(p => (
                       <option key={p.id} value={p.id}>{p.fullName} ({p.poste})</option>
                     ))}
                   </select>
@@ -721,7 +722,7 @@ function ValidationStep({
             <p style={{ fontSize: 12, color: C.subtle }}>Aucune personne à notifier — les tâches non assignées tomberont dans la commission.</p>
           )}
           {Array.from(notifyCounts.entries()).map(([personId, count], i, arr) => {
-            const p = PEOPLE.find(x => x.id === personId)
+            const p = people.find(x => x.id === personId)
             if (!p) return null
             return (
               <div key={personId} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '5px 0', borderBottom: i < arr.length - 1 ? `1px solid ${C.border}` : 'none' }}>
@@ -749,6 +750,7 @@ function NotificationStep({
   const { createTask } = useTasks()
   const { createCR } = useComptesRendus()
   const { commissions } = useCommissions()
+  const { people } = useTeam()
 
   // Création des tâches au montage (idempotent : un ref évite la double-exécution en strict mode)
   const createdRef = useRef(false)

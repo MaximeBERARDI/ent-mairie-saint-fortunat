@@ -23,7 +23,7 @@ import { useDeliberations } from '@/hooks/useDeliberations'
 import { TaskForm } from '@/components/tasks/TaskForm'
 import { TaskDetailModal } from '@/components/tasks/TaskDetail'
 import { DeliberationsTab } from '@/components/commissions/DeliberationsTab'
-import { getPerson, ROLE_LABELS, type Person } from '@/lib/people'
+import { ROLE_LABELS, type Person } from '@/lib/people'
 import { formatShortFR, formatLongFR } from '@/lib/dateUtils'
 import type { Commission, Task, TaskStatus, Meeting, AgendaItem, CompteRendu, Deliberation } from '@/lib/types'
 
@@ -391,6 +391,7 @@ function GrilleView({
   responsiblesByCommission: Map<string, Person[]>
   onSelect: (c: Commission) => void
 }) {
+  const { people } = useTeam()
   // Activité récente : tâches les plus récemment créées avec une commission
   const recent = tasks
     .filter(t => t.commissionIds.length > 0)
@@ -460,7 +461,7 @@ function GrilleView({
         ) : (
           recent.map((t, i) => {
             const c = commissions.find(c => c.id === t.commissionIds[0])
-            const assignees = t.assigneeIds.map(id => getPerson(id)).filter(Boolean)
+            const assignees = t.assigneeIds.map(id => people.find(p => p.id === id)).filter(Boolean)
             const assigneeLabel = assignees.length === 0
               ? 'Non assignée'
               : assignees.length === 1 ? assignees[0]!.fullName : `${assignees.length} personnes`
@@ -1036,8 +1037,9 @@ function CommissionTaskRow({
   onComplete: () => void
   completeLabel?: string
 }) {
+  const { people } = useTeam()
   const assignees = task.assigneeIds
-    .map(id => getPerson(id))
+    .map(id => people.find(p => p.id === id))
     .filter((p): p is NonNullable<typeof p> => Boolean(p))
   return (
     <div

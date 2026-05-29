@@ -298,12 +298,3 @@ export const ROLE_COLORS: Record<PersonRole, string> = {
   elu: C.info,
   agent: C.slate,
 }
-
-export function getPerson(id: string | undefined): Person | null {
-  if (!id) return null
-  return PEOPLE.find(p => p.id === id) ?? null
-}
-
-export function getPersonName(id: string | undefined): string {
-  return getPerson(id)?.fullName ?? '—'
-}
