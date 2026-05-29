@@ -25,7 +25,6 @@ import { useMissions } from '@/hooks/useMissions'
 import { useTeam } from '@/hooks/useTeam'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { AgentQuickActions } from '@/components/dashboard/AgentQuickActions'
-import { PEOPLE, getPerson } from '@/lib/people'
 import { computeRatios } from '@/lib/ratios'
 import { InfoTooltip } from '@/components/ui/InfoTooltip'
 import { CHAPITRES_M14 } from '@/lib/m14-plan'
@@ -175,7 +174,7 @@ function DashConseiller({ tasks, updateTask, currentUserId }: { tasks: Task[]; u
   const recent = useMemo<ActivityItem[]>(() => {
     const items: ActivityItem[] = []
     tasks.forEach(t => {
-      const a = getPerson(t.assigneeIds[0])
+      const a = people.find(p => p.id === t.assigneeIds[0])
       items.push({ date: t.createdAt, type: 'task', label: t.label, sub: a?.fullName ?? '—', badge: t.status, badgeVariant: STATUS_VARIANTS[t.status] })
     })
     factures.forEach(f => {
@@ -545,6 +544,7 @@ function DashAgent({ tasks, updateTask, createTask, currentUserId }: { tasks: Ta
 }
 
 function NotificationsList({ tasks, currentUserId }: { tasks: Task[]; currentUserId: string }) {
+  const { people } = useTeam()
   // Notifications dynamiques :
   // - tâches en attente de ma validation
   // - tâches en retard pour moi
@@ -577,7 +577,7 @@ function NotificationsList({ tasks, currentUserId }: { tasks: Task[]; currentUse
   }
   if (recentByOthers.length > 0) {
     const t = recentByOthers[0]
-    const author = getPerson(t.assigneeIds[0])
+    const author = people.find(p => p.id === t.assigneeIds[0])
     notifs.push({
       text: `Tâche : ${t.label}`,
       sub: `Assignée à ${author?.fullName ?? '—'}`,
@@ -645,13 +645,13 @@ function DashMaire({ tasks, currentUserId, createTask }: { tasks: Task[]; curren
     })
     return Array.from(counts.entries())
       .map(([id, count]) => {
-        const p = getPerson(id)
+        const p = people.find(x => x.id === id)
         return p ? { person: p, count } : null
       })
-      .filter((x): x is { person: NonNullable<ReturnType<typeof getPerson>>; count: number } => x !== null)
+      .filter((x): x is { person: (typeof people)[number]; count: number } => x !== null)
       .sort((a, b) => b.count - a.count)
       .slice(0, 6)
-  }, [tasks])
+  }, [tasks, people])
 
   const totalActive = tasks.filter(t => t.status !== 'Terminé').length
   const totalLate = tasks.filter(t => {
