@@ -1192,9 +1192,25 @@ function PaiesView() {
   const moisCourant = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`
   const [moisSelected, setMoisSelected] = useState(moisCourant)
   const [feedbackGen, setFeedbackGen] = useState<string | null>(null)
+  const [vue, setVue] = useState<'mois' | 'historique'>('mois')
+  const [agentFiltre, setAgentFiltre] = useState('')
 
   // Bulletins du mois sélectionné (live)
   const bulletinsMois = bulletins.filter(b => b.mois === moisSelected)
+
+  // Historique complet : tous les bulletins, du plus récent au plus ancien,
+  // filtrables par agent. (Les bulletins sont persistés en base.)
+  const historiqueRows = useMemo(() => {
+    return [...bulletins]
+      .filter(b => !agentFiltre || b.personId === agentFiltre)
+      .sort((a, b) => b.mois.localeCompare(a.mois) || a.snapshot.fullName.localeCompare(b.snapshot.fullName, 'fr'))
+  }, [bulletins, agentFiltre])
+
+  const rows = vue === 'mois' ? bulletinsMois : historiqueRows
+  const moisLabelOf = (m: string) => {
+    const [y, mo] = m.split('-').map(Number)
+    return new Date(y, mo - 1, 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
+  }
 
   // KPI : masse salariale calculée live (comme avant) — utile même sans bulletin émis
   const liveStats = useMemo(() => {
@@ -1274,23 +1290,52 @@ function PaiesView() {
       </Card>
 
       <Card padding={0}>
-        <div style={{ padding: '8px 14px', borderBottom: `1px solid ${C.border}`, background: C.bg }}>
-          <p style={{ fontSize: 12, color: C.fg, fontWeight: 700, textTransform: 'capitalize' }}>
-            Bulletins de {moisLabel} ({bulletinsMois.length})
+        <div style={{ padding: '8px 14px', borderBottom: `1px solid ${C.border}`, background: C.bg, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+          <p style={{ fontSize: 12, color: C.fg, fontWeight: 700, textTransform: 'capitalize', flex: 1, minWidth: 160 }}>
+            {vue === 'mois' ? `Bulletins de ${moisLabel} (${bulletinsMois.length})` : `Historique des bulletins (${historiqueRows.length})`}
           </p>
+          {vue === 'historique' && (
+            <select
+              value={agentFiltre}
+              onChange={e => setAgentFiltre(e.target.value)}
+              aria-label="Filtrer par agent"
+              style={{ ...inputStyle, width: 200, height: 32 }}
+            >
+              <option value="">Tous les agents</option>
+              {agents.map(a => <option key={a.id} value={a.id}>{a.fullName}</option>)}
+            </select>
+          )}
+          <div style={{ display: 'flex', gap: 4, background: C.ph, borderRadius: 8, padding: 3 }}>
+            {([['mois', 'Ce mois'], ['historique', 'Historique']] as ['mois' | 'historique', string][]).map(([v, label]) => (
+              <button
+                key={v}
+                onClick={() => setVue(v)}
+                style={{
+                  padding: '4px 12px', borderRadius: 6, border: 'none', cursor: 'pointer',
+                  fontFamily: "'DM Sans', sans-serif", fontSize: 12,
+                  background: v === vue ? '#fff' : 'transparent',
+                  color: v === vue ? C.fg : C.muted,
+                  fontWeight: v === vue ? 600 : 400,
+                  boxShadow: v === vue ? '0 1px 2px rgba(0,0,0,0.1)' : 'none',
+                }}
+              >{label}</button>
+            ))}
+          </div>
         </div>
-        {bulletinsMois.length === 0 ? (
+        {rows.length === 0 ? (
           <div style={{ padding: 32, textAlign: 'center' }}>
             <p style={{ fontSize: 14, color: C.fg, fontWeight: 600, marginBottom: 6 }}>
-              Aucun bulletin émis pour {moisLabel}
+              {vue === 'mois' ? `Aucun bulletin émis pour ${moisLabel}` : 'Aucun bulletin dans l\'historique'}
             </p>
             <p style={{ fontSize: 12, color: C.subtle }}>
-              Cliquez sur « Générer pour {moisLabel} » pour créer les bulletins de tous les agents actifs.
+              {vue === 'mois'
+                ? `Cliquez sur « Générer pour ${moisLabel} » pour créer les bulletins de tous les agents actifs.`
+                : 'Les bulletins générés chaque mois apparaîtront ici.'}
             </p>
           </div>
         ) : (
           <DataList
-            rows={bulletinsMois}
+            rows={rows}
             rowKey={(b) => b.id}
             columns={[
               {
@@ -1299,6 +1344,12 @@ function PaiesView() {
                 width: '130px',
                 render: (b) => <span style={{ fontFamily: "'JetBrains Mono', monospace", color: C.subtle, fontSize: 12 }}>{b.numero}</span>,
               },
+              ...(vue === 'historique' ? [{
+                key: 'mois',
+                label: 'Mois',
+                width: '120px',
+                render: (b: BulletinPaie) => <span style={{ textTransform: 'capitalize', color: C.fg }}>{moisLabelOf(b.mois)}</span>,
+              }] : []),
               {
                 key: 'agent',
                 label: 'Agent',

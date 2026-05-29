@@ -12,7 +12,11 @@ import { Tag } from '@/components/ui/Tag'
 import { COLORS as C } from '@/lib/theme'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { useTeam } from '@/hooks/useTeam'
+import { useBulletins } from '@/hooks/useBulletins'
+import { openBulletinPreview } from '@/lib/bulletin-paie-pdf'
 import { AUTH_LEVEL_LABELS, AUTH_LEVEL_DESCRIPTIONS } from '@/lib/permissions'
+
+type ProfilTab = 'infos' | 'securite' | 'bulletins' | 'notifications'
 
 const STORAGE_PREFS = 'ent-mairie:profil-prefs:v1'
 
@@ -94,6 +98,11 @@ function resizeImageToDataUrl(file: File, max: number): Promise<string> {
   })
 }
 
+function moisLabelLong(m: string): string {
+  const [y, mo] = m.split('-').map(Number)
+  return new Date(y, mo - 1, 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
+}
+
 function ColorPicker({ value, onChange }: { value: string; onChange: (c: string) => void }) {
   return (
     <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, justifyContent: 'center', maxWidth: 124 }}>
@@ -132,8 +141,15 @@ function ColorPicker({ value, onChange }: { value: string; onChange: (c: string)
 export default function ProfilPage() {
   const { currentUser, currentUserId, hydrated } = useCurrentUser()
   const { updatePerson } = useTeam()
+  const { bulletins } = useBulletins()
 
-  const [tab, setTab] = useState<'infos' | 'securite' | 'notifications'>('infos')
+  // Mes bulletins de paie (l'API ne renvoie que les siens aux non-RH).
+  const myBulletins = bulletins
+    .filter(b => b.personId === currentUserId)
+    .sort((a, b) => b.mois.localeCompare(a.mois))
+  const showBulletinsTab = currentUser?.role === 'agent' || myBulletins.length > 0
+
+  const [tab, setTab] = useState<ProfilTab>('infos')
 
   // Champs identité
   const [phone, setPhone] = useState('')
@@ -304,8 +320,9 @@ export default function ProfilPage() {
           {([
             ['infos', 'Informations'],
             ['securite', 'Sécurité'],
+            ...(showBulletinsTab ? [['bulletins', 'Bulletins de paie'] as [ProfilTab, string]] : []),
             ['notifications', 'Notifications'],
-          ] as ['infos' | 'securite' | 'notifications', string][]).map(([v, label]) => (
+          ] as [ProfilTab, string][]).map(([v, label]) => (
             <button
               key={v}
               onClick={() => setTab(v)}
@@ -324,6 +341,38 @@ export default function ProfilPage() {
           ))}
         </div>
       </div>
+
+      {tab === 'bulletins' && (
+        <Card padding={0}>
+          <div style={{ padding: '12px 16px', borderBottom: `1px solid ${C.border}` }}>
+            <p style={{ fontSize: 14, fontWeight: 700, color: C.fg }}>Mes bulletins de paie ({myBulletins.length})</p>
+            <p style={{ fontSize: 12, color: C.subtle, marginTop: 2 }}>
+              Retrouvez et téléchargez vos bulletins. Ils sont confidentiels et visibles de vous seul(e).
+            </p>
+          </div>
+          {myBulletins.length === 0 ? (
+            <div style={{ padding: 32, textAlign: 'center' }}>
+              <p style={{ fontSize: 13, color: C.subtle }}>Aucun bulletin de paie disponible pour le moment.</p>
+            </div>
+          ) : (
+            <div>
+              {myBulletins.map((b, i) => (
+                <div key={b.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: i < myBulletins.length - 1 ? `1px solid ${C.border}` : 'none' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontSize: 13, color: C.fg, fontWeight: 600, textTransform: 'capitalize' }}>{moisLabelLong(b.mois)}</p>
+                    <p style={{ fontSize: 11, color: C.subtle, fontFamily: "'JetBrains Mono', monospace" }}>{b.numero}</p>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <p style={{ fontSize: 11, color: C.subtle }}>Net à payer</p>
+                    <p style={{ fontSize: 14, color: C.success, fontWeight: 700 }}>{b.netAPayer.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} €</p>
+                  </div>
+                  <Button size="sm" onClick={() => openBulletinPreview(b)}>🧾 Aperçu / PDF</Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+      )}
 
       {tab === 'infos' && (
         <Card padding={20}>

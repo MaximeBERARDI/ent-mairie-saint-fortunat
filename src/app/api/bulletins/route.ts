@@ -5,24 +5,32 @@
 // pour stockage. Cela évite de dupliquer la logique métier côté serveur.
 
 import { NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
+import { getAuthContext } from '@/lib/authz'
 import { bulletinFromDb } from '@/lib/bulletin-mapper'
 import type { BulletinPaie } from '@/lib/types'
 
 export async function GET() {
-  const session = await auth()
-  if (!session?.user) return NextResponse.json({ error: 'Non authentifié.' }, { status: 401 })
+  const ctx = await getAuthContext()
+  if (!ctx) return NextResponse.json({ error: 'Non authentifié.' }, { status: 401 })
 
-  const rows = await db.bulletinPaie.findMany({ orderBy: [{ mois: 'desc' }, { emisAt: 'desc' }] })
+  // Confidentialité de la paie : seuls les profils RH voient tous les
+  // bulletins ; les autres ne voient que les leurs (profil agent).
+  const canViewAll = ctx.can('hr.view-all') || ctx.can('hr.manage') || ctx.can('hr.generate-payslips')
+  const where = canViewAll ? {} : { personId: ctx.actor.id }
+
+  const rows = await db.bulletinPaie.findMany({ where, orderBy: [{ mois: 'desc' }, { emisAt: 'desc' }] })
   return NextResponse.json(rows.map(bulletinFromDb))
 }
 
 type CreateBody = Omit<BulletinPaie, 'id' | 'createdAt'>
 
 export async function POST(req: Request) {
-  const session = await auth()
-  if (!session?.user) return NextResponse.json({ error: 'Non authentifié.' }, { status: 401 })
+  const ctx = await getAuthContext()
+  if (!ctx) return NextResponse.json({ error: 'Non authentifié.' }, { status: 401 })
+  if (!(ctx.can('hr.generate-payslips') || ctx.can('hr.manage'))) {
+    return NextResponse.json({ error: 'Action non autorisée.' }, { status: 403 })
+  }
 
   let body: CreateBody
   try {
