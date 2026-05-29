@@ -66,7 +66,7 @@ const inputStyle: React.CSSProperties = {
   fontFamily: "'DM Sans', sans-serif",
 }
 
-type BudgetTab = 'plan' | 'ecritures' | 'ratios' | 'historique' | 'projection' | 'simulation'
+export type BudgetTab = 'plan' | 'ecritures' | 'ratios' | 'historique' | 'projection' | 'simulation'
 
 // Sections du Rapport Financier — clés synchronisées avec /rapport-financier
 const RAPPORT_SECTIONS: { key: string; label: string; desc: string }[] = [
@@ -84,13 +84,22 @@ const RAPPORT_SECTIONS: { key: string; label: string; desc: string }[] = [
 ]
 const RAPPORT_LS_KEY = ':rapport-financier-config:v1'
 
-export function BudgetM14View() {
+export function BudgetM14View({ activeTab, onTabChange, embedded }: {
+  // Onglet pilotable de l'extérieur (sous-navigation du module). Quand
+  // `activeTab` est fourni, le composant est contrôlé et `embedded` masque sa
+  // propre barre d'onglets (la sous-nav la remplace). Sans props : autonome.
+  activeTab?: BudgetTab
+  onTabChange?: (t: BudgetTab) => void
+  embedded?: boolean
+} = {}) {
   const { factures } = useFactures()
   const { fournisseurs } = useFournisseurs()
   const { postes, hydrated, computePosteWithConsumption, updatePoste, postesByChapitre } = useBudget()
   const { ecritures, addEcriture, deleteEcriture, ecrituresParCompte } = useEcritures()
 
-  const [tab, setTab] = useState<BudgetTab>('plan')
+  const [internalTab, setInternalTab] = useState<BudgetTab>('plan')
+  const tab = activeTab ?? internalTab
+  const setTab = (t: BudgetTab) => { if (onTabChange) onTabChange(t); else setInternalTab(t) }
   const [section, setSection] = useState<Section>('fonctionnement')
   const [drillCode, setDrillCode] = useState<string | null>(null)
   const [showEcritureForm, setShowEcritureForm] = useState(false)
@@ -166,6 +175,7 @@ export function BudgetM14View() {
 
       {/* Onglets sous-vue */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 18, alignItems: 'center', flexWrap: 'wrap' }}>
+        {!embedded && (<>
         <div className="tabs-buttons" style={{ display: 'flex', gap: 4, background: C.ph, borderRadius: 10, padding: 4 }}>
           {BUDGET_TABS.map(([v, label]) => (
             <button
@@ -198,6 +208,8 @@ export function BudgetM14View() {
         >
           {BUDGET_TABS.map(([v, label]) => <option key={v} value={v}>{label}</option>)}
         </select>
+        </>
+        )}
         <div style={{ flex: 1 }} />
         <Button size="sm" onClick={() => exportPlanComptable(enriched)}>📊 Plan comptable .xlsx</Button>
         <Button size="sm" onClick={() => exportGrandLivre(ecritures)}>📒 Grand livre .xlsx</Button>

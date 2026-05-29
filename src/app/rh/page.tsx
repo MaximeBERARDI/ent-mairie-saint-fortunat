@@ -2,6 +2,8 @@
 
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { Shell } from '@/components/layout/Shell'
+import { ModuleSubNav, type SubNavGroup, type SubNavItem } from '@/components/layout/ModuleSubNav'
+import { NavIcon } from '@/components/layout/nav-icons'
 import { Card, KpiCard } from '@/components/ui/Card'
 import { DataList } from '@/components/ui/DataList'
 import { Badge } from '@/components/ui/Badge'
@@ -106,40 +108,72 @@ export default function RHPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUserId])
 
+  // Badge « à traiter » sur Congés, pour les valideurs uniquement.
+  const { leaves } = useLeaveRequests()
+  const pendingLeaves = canValidate ? leaves.filter(l => l.statut === 'En attente').length : 0
+
+  // Sous-navigation groupée. La visibilité reste pilotée par visibleTabs
+  // (donc par les permissions) — on ne fait que regrouper et filtrer.
+  const visibleIds = new Set(visibleTabs.map(([v]) => v))
+  const RH_ICON: Record<RHTab, SubNavItem['icon']> = {
+    agents: <NavIcon name="users" />,
+    calendrier: <NavIcon name="calendar" />,
+    pointage: <NavIcon name="clock" />,
+    demandes: <NavIcon name="leaf" />,
+    paies: <NavIcon name="file" />,
+    missions: <NavIcon name="briefcase" />,
+  }
+  const rhGroups: SubNavGroup[] = [
+    { label: 'Personnel', items: [
+      { id: 'agents', label: canViewAll ? 'Agents' : 'Mon profil', icon: RH_ICON.agents },
+      { id: 'calendrier', label: 'Calendrier', icon: RH_ICON.calendrier },
+    ] },
+    { label: 'Temps & absences', items: [
+      { id: 'pointage', label: 'Pointage', icon: RH_ICON.pointage },
+      { id: 'demandes', label: 'Congés & RTT', icon: RH_ICON.demandes, badge: pendingLeaves || undefined },
+    ] },
+    { label: 'Paie & missions', items: [
+      { id: 'paies', label: 'Paies', icon: RH_ICON.paies },
+      { id: 'missions', label: 'Missions', icon: RH_ICON.missions },
+    ] },
+  ]
+    .map(g => ({ label: g.label, items: g.items.filter(i => visibleIds.has(i.id as RHTab)) }))
+    .filter(g => g.items.length > 0)
+
   return (
     <Shell title="Ressources humaines">
-      <div style={{ display: 'flex', gap: 8, marginBottom: 16, alignItems: 'center' }}>
-        <div className="tabs-buttons" style={{ display: 'flex', gap: 4, background: C.ph, borderRadius: 8, padding: 3 }}>
-          {visibleTabs.map(([v, label]) => (
-            <button key={v} onClick={() => setTab(v)} style={{ minHeight: 36, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: '5px 12px', borderRadius: 6, background: v === tab ? '#fff' : 'transparent', border: 'none', color: v === tab ? C.fg : C.muted, fontSize: 12, fontWeight: v === tab ? 600 : 400, cursor: 'pointer', fontFamily: "'DM Sans', sans-serif", boxShadow: v === tab ? '0 1px 2px rgba(0,0,0,0.1)' : 'none' }}>
-              {label}
-            </button>
-          ))}
-        </div>
-        <select
-          className="tabs-select"
-          value={tab}
-          onChange={e => setTab(e.target.value as RHTab)}
-          aria-label="Choisir une section RH"
-          style={{ minHeight: 40, width: '100%', borderRadius: 8, border: `1px solid ${C.border}`, padding: '0 12px', fontSize: 14, color: C.fg, background: '#fff', fontFamily: "'DM Sans', sans-serif" }}
-        >
-          {visibleTabs.map(([v, label]) => <option key={v} value={v}>{label}</option>)}
-        </select>
-      </div>
+      <select
+        className="tabs-select"
+        value={tab}
+        onChange={e => setTab(e.target.value as RHTab)}
+        aria-label="Choisir une section RH"
+        style={{ minHeight: 40, width: '100%', marginBottom: 12, borderRadius: 8, border: `1px solid ${C.border}`, padding: '0 12px', fontSize: 14, color: C.fg, background: '#fff', fontFamily: "'DM Sans', sans-serif" }}
+      >
+        {rhGroups.map(g => (
+          <optgroup key={g.label} label={g.label}>
+            {g.items.map(i => <option key={i.id} value={i.id}>{i.label}</option>)}
+          </optgroup>
+        ))}
+      </select>
 
-      {tab === 'agents' && <AgentsView currentUserId={currentUserId} canViewAll={canViewAll} canManage={canManage} />}
-      {tab === 'demandes' && <DemandesView currentUserId={currentUserId} canValidate={canValidate} canViewAll={canViewAll} />}
-      {tab === 'calendrier' && <CalendrierView />}
-      {tab === 'pointage' && (
-        <PointageView
-          currentUserId={currentUserId}
-          currentUser={currentUser}
-          canViewAll={canViewAll}
-          canValidate={canValidatePointage}
-        />
-      )}
-      {tab === 'paies' && canSeeFinances && <PaiesView />}
-      {tab === 'missions' && canManage && <MissionsView />}
+      <div className="module-layout" style={{ display: 'flex', gap: 'var(--gap)', alignItems: 'flex-start' }}>
+        <ModuleSubNav groups={rhGroups} activeId={tab} onSelect={id => setTab(id as RHTab)} />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          {tab === 'agents' && <AgentsView currentUserId={currentUserId} canViewAll={canViewAll} canManage={canManage} />}
+          {tab === 'demandes' && <DemandesView currentUserId={currentUserId} canValidate={canValidate} canViewAll={canViewAll} />}
+          {tab === 'calendrier' && <CalendrierView />}
+          {tab === 'pointage' && (
+            <PointageView
+              currentUserId={currentUserId}
+              currentUser={currentUser}
+              canViewAll={canViewAll}
+              canValidate={canValidatePointage}
+            />
+          )}
+          {tab === 'paies' && canSeeFinances && <PaiesView />}
+          {tab === 'missions' && canManage && <MissionsView />}
+        </div>
+      </div>
     </Shell>
   )
 }

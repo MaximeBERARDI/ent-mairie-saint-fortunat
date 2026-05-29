@@ -1,7 +1,9 @@
 'use client'
 
-import { useState, useMemo, useRef } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import { Shell } from '@/components/layout/Shell'
+import { ModuleSubNav, type SubNavGroup, type SubNavItem } from '@/components/layout/ModuleSubNav'
+import { NavIcon } from '@/components/layout/nav-icons'
 import { Card, KpiCard } from '@/components/ui/Card'
 import { DataList } from '@/components/ui/DataList'
 import { Badge } from '@/components/ui/Badge'
@@ -21,19 +23,11 @@ import { useTeam } from '@/hooks/useTeam'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { hasPermission } from '@/lib/permissions'
 import type { Facture, FactureStatut, Fournisseur, PosteBudget, TaskDocument } from '@/lib/types'
-import { BudgetM14View } from '@/components/finances/BudgetM14View'
+import { BudgetM14View, type BudgetTab } from '@/components/finances/BudgetM14View'
 import { ParcImmobilierView } from '@/components/finances/ParcImmobilierView'
 import { SubventionsView } from '@/components/finances/SubventionsView'
 
-type FinView = 'factures' | 'budget' | 'fournisseurs' | 'parc-immobilier' | 'subventions'
-
-const FIN_TABS: [FinView, string][] = [
-  ['factures', '🧾 Factures'],
-  ['budget', '💰 Budget'],
-  ['fournisseurs', '🏢 Fournisseurs'],
-  ['parc-immobilier', '🏠 Parc immobilier'],
-  ['subventions', '🎫 Subventions'],
-]
+const BUDGET_PREFIX = 'budget:'
 
 const fmtMontant = (v: number) =>
   new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v)
@@ -65,54 +59,94 @@ function readFileAsDataURL(file: File): Promise<string> {
   })
 }
 
+// Visibilité par défaut (matrice par rôle) : l'accès au module reste géré par
+// Person.hiddenModules (garde dans Shell). À l'intérieur, Factures et Parc sont
+// visibles dès qu'on accède au module ; le reste demande `finance.view-all`
+// (gestionnaire+). Les ACTIONS (valider/payer) restent gatées dans les vues.
+function buildFinanceGroups(canViewAll: boolean): SubNavGroup[] {
+  type Cfg = SubNavItem & { visible?: boolean }
+  const raw: { label: string; items: Cfg[] }[] = [
+    { label: 'Dépenses', items: [
+      { id: 'factures', label: 'Factures', icon: <NavIcon name="receipt" /> },
+      { id: 'fournisseurs', label: 'Fournisseurs', icon: <NavIcon name="building" />, visible: canViewAll },
+    ] },
+    { label: 'Budget M14', items: [
+      { id: 'budget:plan', label: 'Plan comptable', icon: <NavIcon name="book" />, visible: canViewAll },
+      { id: 'budget:ecritures', label: 'Écritures', icon: <NavIcon name="list" />, visible: canViewAll },
+    ] },
+    { label: 'Pilotage', items: [
+      { id: 'budget:ratios', label: 'Indicateurs', icon: <NavIcon name="chart" />, visible: canViewAll },
+      { id: 'budget:historique', label: 'Historique', icon: <NavIcon name="clock" />, visible: canViewAll },
+      { id: 'budget:projection', label: "Projets d'investissement", icon: <NavIcon name="target" />, visible: canViewAll },
+      { id: 'budget:simulation', label: 'Simulation', icon: <NavIcon name="chart" />, visible: canViewAll },
+      { id: 'subventions', label: 'Subventions', icon: <NavIcon name="ticket" />, visible: canViewAll },
+    ] },
+    { label: 'Patrimoine', items: [
+      { id: 'parc-immobilier', label: 'Parc immobilier', icon: <NavIcon name="home" /> },
+    ] },
+  ]
+  return raw
+    .map(g => ({ label: g.label, items: g.items.filter(i => i.visible !== false) }))
+    .filter(g => g.items.length > 0)
+}
+
 export default function FinancesPage() {
-  const [view, setView] = useState<FinView>('factures')
+  const { can } = useCurrentUser()
+  const canViewAll = can('finance.view-all')
+
+  const groups = useMemo(() => buildFinanceGroups(canViewAll), [canViewAll])
+  const flatIds = useMemo(() => groups.flatMap(g => g.items.map(i => i.id)), [groups])
+
+  const [activeId, setActiveId] = useState<string>('factures')
+
+  // Si l'item actif n'est plus accessible (droits/hydratation), retomber sur le
+  // premier item visible — même garde que rh/page.tsx.
+  useEffect(() => {
+    if (flatIds.length > 0 && !flatIds.includes(activeId)) setActiveId(flatIds[0])
+  }, [flatIds, activeId])
+
+  const renderContent = () => {
+    if (activeId.startsWith(BUDGET_PREFIX)) {
+      const budgetTab = activeId.slice(BUDGET_PREFIX.length) as BudgetTab
+      return (
+        <BudgetM14View
+          embedded
+          activeTab={budgetTab}
+          onTabChange={t => setActiveId(BUDGET_PREFIX + t)}
+        />
+      )
+    }
+    switch (activeId) {
+      case 'fournisseurs': return <FournisseursView />
+      case 'parc-immobilier': return <ParcImmobilierView />
+      case 'subventions': return <SubventionsView />
+      case 'factures':
+      default: return <FacturesView />
+    }
+  }
 
   return (
     <Shell title="Finances">
-      <div style={{ display: 'flex', gap: 8, marginBottom: 22, alignItems: 'center', flexWrap: 'wrap' }}>
-        <div className="tabs-buttons" style={{ display: 'flex', gap: 4, background: C.ph, borderRadius: 10, padding: 4 }}>
-          {FIN_TABS.map(([v, label]) => (
-            <button
-              key={v}
-              onClick={() => setView(v)}
-              style={{
-                minHeight: 36,
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '8px 16px',
-                borderRadius: 8,
-                background: v === view ? '#fff' : 'transparent',
-                border: 'none',
-                color: v === view ? C.fg : C.muted,
-                fontSize: 14,
-                fontWeight: v === view ? 600 : 500,
-                cursor: 'pointer',
-                fontFamily: "'DM Sans', sans-serif",
-                boxShadow: v === view ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-              }}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-        <select
-          className="tabs-select"
-          value={view}
-          onChange={e => setView(e.target.value as FinView)}
-          aria-label="Choisir une section Finances"
-          style={{ minHeight: 40, width: '100%', borderRadius: 8, border: `1px solid ${C.border}`, padding: '0 12px', fontSize: 14, color: C.fg, background: '#fff', fontFamily: "'DM Sans', sans-serif" }}
-        >
-          {FIN_TABS.map(([v, label]) => <option key={v} value={v}>{label}</option>)}
-        </select>
-      </div>
+      <select
+        className="tabs-select"
+        value={activeId}
+        onChange={e => setActiveId(e.target.value)}
+        aria-label="Choisir une section Finances"
+        style={{ minHeight: 40, width: '100%', marginBottom: 12, borderRadius: 8, border: `1px solid ${C.border}`, padding: '0 12px', fontSize: 14, color: C.fg, background: '#fff', fontFamily: "'DM Sans', sans-serif" }}
+      >
+        {groups.map(g => (
+          <optgroup key={g.label} label={g.label}>
+            {g.items.map(i => <option key={i.id} value={i.id}>{i.label}</option>)}
+          </optgroup>
+        ))}
+      </select>
 
-      {view === 'factures' && <FacturesView />}
-      {view === 'budget' && <BudgetM14View />}
-      {view === 'fournisseurs' && <FournisseursView />}
-      {view === 'parc-immobilier' && <ParcImmobilierView />}
-      {view === 'subventions' && <SubventionsView />}
+      <div className="module-layout" style={{ display: 'flex', gap: 'var(--gap)', alignItems: 'flex-start' }}>
+        <ModuleSubNav groups={groups} activeId={activeId} onSelect={setActiveId} />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          {renderContent()}
+        </div>
+      </div>
     </Shell>
   )
 }

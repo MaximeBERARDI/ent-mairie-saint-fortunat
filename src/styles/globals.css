@@ -209,6 +209,10 @@ textarea:focus {
   .tabs-buttons { display: none !important; }
   .tabs-select { display: block; }
 
+  /* Sous-navigation latérale de module (Finances/RH) : masquée sur mobile,
+     remplacée par le <select.tabs-select> placé en tête de page. */
+  .module-subnav { display: none !important; }
+
   /* TopBar mobile : la recherche (220px non-rétrécissable) faisait déborder
      la barre — cloche coupée, avatar profil hors écran. On la masque. Et on
      plafonne les menus déroulants pour éviter le débordement horizontal. */
