@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ENT — Mairie de Saint-Fortunat-sur-Eyrieux · Guide de l'utilisateur</title>
+<style>
+/* Polices auto-hebergees (RGPD : aucun appel a Google Fonts). Fichiers woff2
+   dans ./fonts/ — DM Sans, Playfair Display, JetBrains Mono. */
+@font-face{font-family:'DM Sans';font-style:normal;font-weight:300;font-display:swap;src:url('fonts/dm-sans-latin-300-normal.woff2') format('woff2')}
+@font-face{font-family:'DM Sans';font-style:normal;font-weight:400;font-display:swap;src:url('fonts/dm-sans-latin-400-normal.woff2') format('woff2')}
+@font-face{font-family:'DM Sans';font-style:normal;font-weight:500;font-display:swap;src:url('fonts/dm-sans-latin-500-normal.woff2') format('woff2')}
+@font-face{font-family:'DM Sans';font-style:normal;font-weight:600;font-display:swap;src:url('fonts/dm-sans-latin-600-normal.woff2') format('woff2')}
+@font-face{font-family:'DM Sans';font-style:normal;font-weight:700;font-display:swap;src:url('fonts/dm-sans-latin-700-normal.woff2') format('woff2')}
+@font-face{font-family:'Playfair Display';font-style:normal;font-weight:400;font-display:swap;src:url('fonts/playfair-display-latin-400-normal.woff2') format('woff2')}
+@font-face{font-family:'Playfair Display';font-style:normal;font-weight:600;font-display:swap;src:url('fonts/playfair-display-latin-600-normal.woff2') format('woff2')}
+@font-face{font-family:'Playfair Display';font-style:normal;font-weight:700;font-display:swap;src:url('fonts/playfair-display-latin-700-normal.woff2') format('woff2')}
+@font-face{font-family:'JetBrains Mono';font-style:normal;font-weight:400;font-display:swap;src:url('fonts/jetbrains-mono-latin-400-normal.woff2') format('woff2')}
+@font-face{font-family:'JetBrains Mono';font-style:normal;font-weight:500;font-display:swap;src:url('fonts/jetbrains-mono-latin-500-normal.woff2') format('woff2')}
+</style>
+<style>
+/* ===== Design system Saint-Fortunat (tokens, repris de la présentation) ===== */
+:root{
+  --green-50:#f2f9e8;--green-100:#e0f0c4;--green-200:#c4e18a;--green-400:#7dc12b;--green-500:#6ab123;--green-600:#569018;--green-700:#416d11;--green-800:#2d4d0c;
+  --slate-50:#f0f3f5;--slate-100:#dde4e9;--slate-300:#94aab7;--slate-500:#4d5e6c;--slate-700:#2e3b45;--slate-800:#1f2a31;--slate-900:#111820;
+  --terra-50:#fdf4ec;--terra-100:#fae3cc;--terra-500:#c4793a;--terra-600:#a8612a;--terra-700:#8a4c1e;
+  --neutral-50:#f4f6f1;--neutral-100:#e8ece5;
+  --bg:#f4f6f1;--surface:#ffffff;--border:#dde4e9;
+  --fg:#1f2a31;--fg-muted:#4d5e6c;--fg-subtle:#6e8899;--fg-inverse:#fff;
+  --primary:#6ab123;--primary-hover:#569018;--accent:#c4793a;
+  --success:#2d9c6e;--success-bg:#e8f7f1;--warning:#d4860a;--warning-bg:#fef5e4;--danger:#c4393a;--danger-bg:#fdeaea;--info:#2563a8;--info-bg:#eaf1fb;
+  --font-display:'Playfair Display',Georgia,'Times New Roman',serif;
+  --font-body:'DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --font-mono:'JetBrains Mono','Courier New',monospace;
+  --radius-md:8px;--radius-lg:12px;--radius-xl:16px;--radius-2xl:24px;--radius-pill:9999px;
+  --shadow-1:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.04);
+  --shadow-2:0 4px 12px rgba(0,0,0,.10),0 2px 4px rgba(0,0,0,.06);
+  --shadow-3:0 8px 32px rgba(0,0,0,.14),0 4px 8px rgba(0,0,0,.08);
+  --caps:.12em;
+  --sidebar-w:288px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-body);background:var(--bg);color:var(--fg);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;line-height:1.6}
+
+/* ===== Layout : sommaire fixe + contenu ===== */
+.layout{display:grid;grid-template-columns:var(--sidebar-w) 1fr}
+.toc{position:sticky;top:0;align-self:start;height:100vh;overflow-y:auto;background:linear-gradient(180deg,var(--slate-800),var(--slate-900));color:#fff;padding:0 0 40px}
+.toc__brand{display:flex;align-items:center;gap:11px;padding:22px 22px 18px;border-bottom:1px solid rgba(255,255,255,.1);position:sticky;top:0;background:var(--slate-900);z-index:2}
+.toc__logo{width:40px;height:40px;border-radius:var(--radius-md);background:var(--primary);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;font-size:1.1rem;color:#fff;flex-shrink:0}
+.toc__brand b{font-size:.95rem;font-weight:700;display:block;line-height:1.25}
+.toc__brand span{font-size:.72rem;color:rgba(255,255,255,.55)}
+.toc nav{padding:14px 12px}
+.toc .grp{font-size:.68rem;font-weight:700;letter-spacing:var(--caps);text-transform:uppercase;color:var(--green-200);padding:16px 12px 7px}
+.toc a{display:block;color:rgba(255,255,255,.72);text-decoration:none;font-size:.84rem;padding:6px 12px;border-radius:7px;border-left:2px solid transparent;transition:.15s}
+.toc a:hover{background:rgba(255,255,255,.07);color:#fff}
+.toc a.sub{padding-left:24px;font-size:.79rem;color:rgba(255,255,255,.55)}
+.toc a.active{background:rgba(106,177,35,.18);color:#fff;border-left-color:var(--primary);font-weight:600}
+
+.content{max-width:920px;padding:0 6vw 120px;margin:0 auto}
+
+/* ===== Hero ===== */
+.hero{background:radial-gradient(1000px 500px at 90% -20%,rgba(106,177,35,.22),transparent 60%),linear-gradient(135deg,var(--slate-800),var(--slate-900));color:#fff;margin:0 -6vw 0;padding:8vh 6vw 7vh}
+.hero .pill{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);padding:7px 16px;border-radius:var(--radius-pill);font-size:.78rem;font-weight:600;letter-spacing:.03em;margin-bottom:24px}
+.hero h1{font-family:var(--font-display);font-weight:700;font-size:clamp(2.2rem,5vw,3.6rem);line-height:1.05;letter-spacing:-.02em;max-width:20ch}
+.hero p{font-size:clamp(1.05rem,1.6vw,1.3rem);color:rgba(255,255,255,.82);margin-top:18px;max-width:54ch;line-height:1.55}
+.hero .meta{margin-top:34px;display:flex;gap:26px;flex-wrap:wrap;font-size:.85rem;color:rgba(255,255,255,.62)}
+.hero .meta b{color:#fff;font-weight:600}
+
+/* ===== Sections ===== */
+.sec{padding:54px 0 8px;scroll-margin-top:20px;border-bottom:1px solid var(--border)}
+.sec:last-of-type{border-bottom:none}
+.kicker{font-family:var(--font-body);font-weight:600;font-size:.74rem;letter-spacing:var(--caps);text-transform:uppercase;color:var(--primary);margin-bottom:12px;display:flex;align-items:center;gap:10px}
+.kicker::before{content:"";width:24px;height:2px;background:var(--primary);display:inline-block}
+.sec h2{font-family:var(--font-display);font-weight:700;font-size:clamp(1.7rem,3vw,2.4rem);line-height:1.14;letter-spacing:-.02em;color:var(--slate-800);margin-bottom:14px}
+.sec h3{font-family:var(--font-display);font-weight:600;font-size:1.4rem;color:var(--slate-800);margin:38px 0 12px;scroll-margin-top:20px}
+.sec h4{font-weight:700;font-size:1.05rem;color:var(--slate-800);margin:26px 0 10px}
+.sec p{color:var(--fg-muted);margin-bottom:14px;max-width:72ch}
+.sec p.lead{font-size:1.12rem;color:var(--fg-muted);max-width:68ch;line-height:1.6;margin-bottom:24px}
+.sec ul,.sec ol{margin:0 0 16px 0;padding-left:22px;color:var(--fg-muted);max-width:72ch}
+.sec li{margin-bottom:7px}
+.sec a{color:var(--primary-hover);text-decoration:none;border-bottom:1px solid transparent}
+.sec a:hover{border-bottom-color:var(--primary-hover)}
+.sec strong{color:var(--slate-800);font-weight:600}
+hr.soft{border:none;border-top:1px solid var(--border);margin:34px 0}
+
+/* Inline UI element chip (libellés de boutons/onglets) */
+.ui{display:inline-block;font-family:var(--font-body);font-size:.84em;font-weight:600;color:var(--slate-700);background:var(--slate-50);border:1px solid var(--slate-100);border-radius:6px;padding:1px 8px;white-space:nowrap;line-height:1.7}
+.ui.green{background:var(--green-50);border-color:var(--green-200);color:var(--green-700)}
+.ui.danger{background:var(--danger-bg);border-color:#c4393a30;color:var(--danger)}
+.path{font-family:var(--font-mono);font-size:.82em;color:var(--accent);background:var(--terra-50);border-radius:5px;padding:1px 7px}
+code{font-family:var(--font-mono);font-size:.85em;background:var(--slate-50);padding:1px 6px;border-radius:5px;color:var(--slate-700)}
+
+/* Cards / grids (repris) */
+.cols{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;align-items:start;margin:8px 0 20px}
+.cols-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:8px 0 20px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px;box-shadow:var(--shadow-1)}
+.card h4{margin:0 0 6px;font-size:1rem}
+.card p{font-size:.9rem;margin:0;line-height:1.5}
+.icon{width:40px;height:40px;border-radius:var(--radius-md);background:var(--green-50);color:var(--green-700);display:flex;align-items:center;justify-content:center;margin-bottom:12px}
+.icon svg{width:21px;height:21px}
+.icon.terra{background:var(--terra-50);color:var(--terra-700)}
+.icon.slate{background:var(--slate-50);color:var(--slate-700)}
+.icon.info{background:var(--info-bg);color:var(--info)}
+
+/* Badges (repris) */
+.badge{display:inline-flex;align-items:center;padding:2px 10px;border-radius:var(--radius-pill);font-size:.74rem;font-weight:600;line-height:1.6}
+.b-green{background:var(--green-50);color:var(--green-700)}.b-terra{background:var(--terra-50);color:var(--terra-700)}
+.b-warn{background:var(--warning-bg);color:var(--warning)}.b-info{background:var(--info-bg);color:var(--info)}.b-danger{background:var(--danger-bg);color:var(--danger)}.b-slate{background:var(--slate-50);color:var(--slate-500)}
+
+/* Tutoriels : étapes numérotées */
+.tuto{background:linear-gradient(135deg,var(--green-50),#fff);border:1.5px solid var(--green-200);border-radius:var(--radius-xl);padding:24px 26px;margin:20px 0 26px}
+.tuto > .tuto__h{display:flex;align-items:center;gap:10px;font-family:var(--font-display);font-weight:600;font-size:1.15rem;color:var(--slate-800);margin-bottom:6px}
+.tuto > .tuto__h .tag{font-family:var(--font-body);font-size:.66rem;font-weight:700;letter-spacing:var(--caps);text-transform:uppercase;color:var(--green-700);background:#fff;border:1px solid var(--green-200);padding:3px 9px;border-radius:var(--radius-pill)}
+.tuto .who{font-size:.82rem;color:var(--fg-subtle);margin-bottom:16px}
+.tuto ol{list-style:none;counter-reset:step;padding:0;margin:0;max-width:none}
+.tuto ol li{counter-increment:step;position:relative;padding:0 0 14px 42px;margin:0;color:var(--fg-muted)}
+.tuto ol li::before{content:counter(step);position:absolute;left:0;top:0;width:28px;height:28px;border-radius:50%;background:var(--primary);color:#fff;font-weight:700;font-size:.85rem;display:flex;align-items:center;justify-content:center;font-family:var(--font-body)}
+.tuto ol li:not(:last-child)::after{content:"";position:absolute;left:13px;top:30px;bottom:2px;width:2px;background:var(--green-200)}
+.tuto ol li b{color:var(--slate-800)}
+
+/* Callouts */
+.callout{display:flex;gap:14px;border-radius:var(--radius-lg);padding:16px 18px;margin:18px 0;font-size:.93rem;line-height:1.55}
+.callout .ci{flex-shrink:0;width:22px;height:22px;margin-top:1px}
+.callout p{margin:0;max-width:none}
+.callout.tip{background:var(--green-50);border:1px solid var(--green-200);color:var(--green-800)}
+.callout.tip .ci{color:var(--green-600)}
+.callout.warn{background:var(--warning-bg);border:1px solid #d4860a40;color:#7a4d06}
+.callout.warn .ci{color:var(--warning)}
+.callout.info{background:var(--info-bg);border:1px solid #2563a830;color:#1a3a5c}
+.callout.info .ci{color:var(--info)}
+.callout.danger{background:var(--danger-bg);border:1px solid #c4393a30;color:#7a1f20}
+.callout.danger .ci{color:var(--danger)}
+.callout b{font-weight:700}
+
+/* Tableaux */
+.tbl{width:100%;border-collapse:collapse;margin:14px 0 22px;font-size:.88rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+.tbl th{background:var(--slate-50);text-align:left;font-weight:700;color:var(--slate-700);font-size:.74rem;letter-spacing:.03em;text-transform:uppercase;padding:11px 14px;border-bottom:1px solid var(--border)}
+.tbl td{padding:10px 14px;border-bottom:1px solid var(--border);color:var(--fg-muted);vertical-align:top}
+.tbl tr:last-child td{border-bottom:none}
+.tbl td b{color:var(--slate-800)}
+.tbl .mono{font-family:var(--font-mono);font-size:.92em;color:var(--slate-700)}
+
+/* Frame mockup (repris) */
+.frame{border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--surface);box-shadow:var(--shadow-2);overflow:hidden;margin:16px 0 22px}
+.frame__bar{display:flex;align-items:center;gap:7px;padding:10px 14px;background:var(--slate-50);border-bottom:1px solid var(--border)}
+.frame__bar i{width:10px;height:10px;border-radius:50%;background:var(--slate-300);display:inline-block}
+.frame__bar .url{margin-left:10px;font-size:.72rem;color:var(--fg-subtle);font-family:var(--font-mono)}
+.frame__body{padding:16px}
+.row{display:flex;align-items:center;gap:11px;padding:9px 0;border-bottom:1px solid var(--border);font-size:.86rem}
+.row:last-child{border-bottom:none}
+.row .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+.row .t{flex:1;min-width:0;color:var(--fg)}
+.row .t small{display:block;color:var(--fg-subtle);font-size:.74rem}
+
+/* Toolbar haut de page (print) */
+.topbar{position:fixed;right:20px;top:16px;z-index:30;display:flex;gap:8px}
+.topbar button{font-family:var(--font-body);font-size:.78rem;font-weight:600;color:var(--slate-700);background:rgba(255,255,255,.92);border:1px solid var(--border);border-radius:var(--radius-pill);padding:7px 15px;cursor:pointer;box-shadow:var(--shadow-1)}
+.topbar button:hover{background:#fff;color:var(--primary-hover)}
+.menu-toggle{display:none}
+
+.totop{position:fixed;right:20px;bottom:20px;z-index:30;width:42px;height:42px;border-radius:50%;background:var(--primary);color:#fff;border:none;cursor:pointer;box-shadow:var(--shadow-2);font-size:1.1rem;opacity:0;pointer-events:none;transition:.2s}
+.totop.show{opacity:1;pointer-events:auto}
+
+.faq{border:1px solid var(--border);border-radius:var(--radius-lg);background:var(--surface);margin:10px 0;overflow:hidden}
+.faq summary{cursor:pointer;padding:15px 18px;font-weight:600;color:var(--slate-800);font-size:.96rem;list-style:none;display:flex;justify-content:space-between;align-items:center}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";font-size:1.3rem;color:var(--primary);font-weight:400}
+.faq[open] summary::after{content:"–"}
+.faq .a{padding:0 18px 16px;color:var(--fg-muted);font-size:.92rem}
+.faq .a p{margin-bottom:8px}
+
+/* ===== Responsive ===== */
+@media(max-width:980px){
+  .layout{grid-template-columns:1fr}
+  .toc{position:fixed;left:0;top:0;width:280px;z-index:40;transform:translateX(-100%);transition:transform .25s ease;box-shadow:var(--shadow-3)}
+  .toc.open{transform:none}
+  .content{padding:0 7vw 100px}
+  .hero{margin:0 -7vw}
+  .menu-toggle{display:inline-block}
+  .cols,.cols-3{grid-template-columns:1fr}
+}
+
+/* ===== Impression PDF ===== */
+@media print{
+  .toc,.topbar,.totop,.menu-toggle{display:none!important}
+  .layout{display:block}
+  .content{max-width:none;padding:0 24px}
+  .hero{margin:0;color:#000;background:#fff;border-bottom:2px solid var(--primary);padding:24px 0}
+  .hero *{color:#000!important}
+  body{font-size:11pt}
+  .sec{page-break-inside:auto}
+  .sec h2{page-break-after:avoid}
+  .tuto,.card,.callout,.frame,.tbl{page-break-inside:avoid}
+  a{color:var(--slate-800)!important}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <button class="menu-toggle" onclick="document.getElementById('toc').classList.toggle('open')">☰ Sommaire</button>
+  <button onclick="window.print()">⎙ Imprimer / PDF</button>
+</div>
+
+<div class="layout">
+
+<!-- ============ SOMMAIRE ============ -->
+<aside class="toc" id="toc">
+  <div class="toc__brand">
+    <div class="toc__logo">SF</div>
+    <div><b>Guide de l'ENT</b><span>Mairie de Saint-Fortunat</span></div>
+  </div>
+  <nav id="tocnav">
+    <div class="grp">Démarrer</div>
+    <a href="#intro">Bienvenue</a>
+    <a href="#premiers-pas">Premiers pas &amp; connexion</a>
+    <a href="#navigation">Se repérer dans l'outil</a>
+    <a href="#roles">Rôles &amp; autorisations</a>
+
+    <div class="grp">Au quotidien</div>
+    <a href="#dashboard">Tableau de bord</a>
+    <a href="#taches">Tâches</a>
+    <a href="#commissions">Commissions &amp; Conseil</a>
+    <a href="#cr">Comptes rendus &amp; IA</a>
+
+    <div class="grp">Gestion</div>
+    <a href="#rh">Ressources humaines</a>
+    <a href="#finances">Finances M14</a>
+    <a href="#parc">Parc immobilier</a>
+    <a href="#subventions">Subventions</a>
+    <a href="#simulation">Projection &amp; simulation</a>
+
+    <div class="grp">Documents &amp; équipe</div>
+    <a href="#bibliotheque">Bibliothèque (GED)</a>
+    <a href="#equipe">Équipe &amp; accès</a>
+    <a href="#rapports">Rapports &amp; exports</a>
+    <a href="#profil">Profil &amp; sécurité</a>
+
+    <div class="grp">Aide</div>
+    <a href="#faq">Questions fréquentes</a>
+    <a href="#glossaire">Glossaire</a>
+  </nav>
+</aside>
+
+<!-- ============ CONTENU ============ -->
+<main class="content">
+
+<!-- HERO -->
+<header class="hero" id="intro">
+  <span class="pill">● Guide de l'utilisateur · Version 1</span>
+  <h1>Bien utiliser l'Espace Numérique de Travail de la commune</h1>
+  <p>Ce guide vous accompagne pas à pas dans toutes les fonctions de l'ENT : tâches, finances, ressources humaines, commissions, comptes rendus et documents. Chaque module est expliqué, avec des tutoriels concrets.</p>
+  <div class="meta">
+    <span><b>Mairie de Saint-Fortunat-sur-Eyrieux</b> · Vallée de l'Eyrieux, Ardèche</span>
+    <span>Réservé aux <b>élus et agents municipaux</b></span>
+  </div>
+</header>
+
+<!-- ============ BIENVENUE ============ -->
+<section class="sec">
+  <span class="kicker">Introduction</span>
+  <h2>Qu'est-ce que l'ENT, et à qui s'adresse ce guide&nbsp;?</h2>
+  <p class="lead">L'<strong>Espace Numérique de Travail</strong> (ENT) est l'application interne de la mairie. Elle regroupe en un seul endroit, et de façon sécurisée, tout ce qui fait tourner la commune : le suivi des dossiers, la comptabilité, la paie, la vie des commissions et du conseil municipal.</p>
+  <p>Vous y accédez depuis n'importe quel navigateur (ordinateur, tablette, téléphone), avec votre adresse e-mail et votre mot de passe. Les données sont partagées entre tous les utilisateurs : ce que vous saisissez est immédiatement visible par vos collègues concernés, selon leurs droits.</p>
+
+  <div class="cols-3">
+    <div class="card"><div class="icon" data-i="users"></div><h4>Pour les élus</h4><p>Suivre les dossiers, préparer les réunions, consulter les finances, voter les délibérations.</p></div>
+    <div class="card"><div class="icon terra" data-i="briefcase"></div><h4>Pour les agents</h4><p>Gérer ses tâches, pointer ses heures, déposer ses congés, consulter ses bulletins.</p></div>
+    <div class="card"><div class="icon info" data-i="grid"></div><h4>Pour le secrétariat</h4><p>Piloter l'ensemble : comptabilité, RH, comptes rendus, accès des utilisateurs.</p></div>
+  </div>
+
+  <div class="callout tip"><svg class="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+  <p><b>Comment lire ce guide&nbsp;?</b> Utilisez le sommaire à gauche pour aller directement à un module. Les blocs verts numérotés sont des <b>tutoriels pas à pas</b>. Les libellés exacts des boutons sont affichés ainsi : <span class="ui">+ Nouvelle tâche</span>.</p></div>
+</section>
+
+<!-- ============ PREMIERS PAS ============ -->
+<section class="sec" id="premiers-pas">
+  <span class="kicker">Démarrer</span>
+  <h2>Premiers pas&nbsp;: se connecter</h2>
+  <p class="lead">Avant tout, il vous faut votre adresse e-mail (votre identifiant) et un mot de passe. Si vous n'avez pas encore de mot de passe, le secrétariat de mairie vous en communique un.</p>
+
+  <div class="tuto">
+    <div class="tuto__h"><span class="tag">Tutoriel</span> Se connecter pour la première fois</div>
+    <div class="who">Pour : tout le monde</div>
+    <ol>
+      <li>Ouvrez l'adresse de l'ENT dans votre navigateur (lien fourni par la mairie).</li>
+      <li>Dans le champ <b>Adresse e-mail</b>, saisissez votre adresse professionnelle (ou celle communiquée par la mairie).</li>
+      <li>Saisissez votre <b>mot de passe</b>. Pour cette première phase, le mot de passe initial commun est <code>saintfortunat2026</code>, sauf si un mot de passe personnel vous a été remis.</li>
+      <li>Cliquez sur <span class="ui green">Se connecter</span>. Vous arrivez sur votre <b>tableau de bord</b>.</li>
+      <li><b>Changez immédiatement votre mot de passe</b> (voir le tutoriel ci-dessous) — c'est la première chose à faire pour sécuriser votre compte.</li>
+    </ol>
+  </div>
+
+  <div class="callout warn"><svg class="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+  <p><b>Déconnexion automatique.</b> Par sécurité, vous êtes déconnecté après <b>30&nbsp;minutes d'inactivité</b> (aucune action souris/clavier). Vous verrez alors le message « Session expirée » sur la page de connexion : reconnectez-vous simplement, sans perte de données enregistrées.</p></div>
+
+  <h3>Mot de passe oublié</h3>
+  <p>L'ENT n'envoie pas (encore) d'e-mail de réinitialisation. En cas d'oubli, cliquez sur <span class="ui">Mot de passe oublié&nbsp;?</span> sous le formulaire : la page vous invite à contacter le <strong>secrétariat de mairie</strong>, qui réinitialisera votre accès et vous remettra un mot de passe temporaire. Vous le changerez ensuite vous-même.</p>
+</section>
+
+<!-- ============ NAVIGATION ============ -->
+<section class="sec" id="navigation">
+  <span class="kicker">Démarrer</span>
+  <h2>Se repérer dans l'outil</h2>
+  <p class="lead">L'écran se compose de trois zones : le <strong>menu latéral</strong> (à gauche), la <strong>barre du haut</strong> (recherche, notifications, votre profil), et la <strong>zone de contenu</strong> centrale.</p>
+
+  <div class="frame">
+    <div class="frame__bar"><i></i><i></i><i></i><span class="url">ent-mairie-saint-fortunat · /dashboard</span></div>
+    <div class="frame__body">
+      <div class="row"><span class="badge b-slate">Menu</span><span class="t">Tableau de bord · Tâches · Commissions · Comptes rendus · RH · Finances · Équipe · Bibliothèque</span></div>
+      <div class="row"><span class="badge b-info">Haut</span><span class="t">🔎 Recherche globale · 🔔 Notifications · 👤 Profil / Déconnexion</span></div>
+    </div>
+  </div>
+
+  <h3>Le menu latéral</h3>
+  <p>Il donne accès aux 8 grands modules. Un <strong>badge rouge</strong> sur <span class="ui">Tâches</span> indique le nombre de tâches qui vous sont assignées et non terminées. Le menu peut être affiché en mode « icônes » (compact) ou « libellés » — réglable dans votre profil.</p>
+
+  <div class="callout info"><svg class="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+  <p><b>Vous ne voyez pas tous les modules&nbsp;?</b> C'est normal : l'affichage dépend de votre profil. Un administrateur peut masquer certains modules pour une personne, et certaines fonctions n'apparaissent qu'avec les droits correspondants.</p></div>
+
+  <h3>La barre du haut</h3>
+  <ul>
+    <li><strong>Recherche globale</strong> — retrouvez rapidement une tâche, une personne, une facture, un document.</li>
+    <li><strong>Notifications</strong> (🔔) — les événements qui vous concernent (tâche assignée, validation demandée…).</li>
+    <li><strong>Profil</strong> — accès à vos informations, à la sécurité (mot de passe) et à la <span class="ui">Déconnexion</span>.</li>
+  </ul>
+</section>
+
+<!-- ============ ROLES ============ -->
+<section class="sec" id="roles">
+  <span class="kicker">Concepts clés</span>
+  <h2>Rôles &amp; autorisations&nbsp;: qui peut faire quoi</h2>
+  <p class="lead">Chaque personne a un <strong>niveau d'autorisation</strong> qui détermine ce qu'elle peut voir et faire. C'est ce qui garantit que chacun n'accède qu'à ce qui le concerne.</p>
+
+  <p>Il existe <strong>5 niveaux</strong>, du plus large au plus restreint. À ces niveaux peuvent s'ajouter des <strong>permissions spécifiques</strong> accordées personne par personne (par exemple : autoriser un agent précis à valider les factures).</p>
+
+  <table class="tbl">
+    <thead><tr><th>Niveau</th><th>À qui</th><th>Peut faire (en général)</th></tr></thead>
+    <tbody>
+      <tr><td><b>Super-administrateur</b></td><td>Référent technique</td><td>Tout, y compris la gestion fine des accès.</td></tr>
+      <tr><td><b>Administrateur</b></td><td>Maire, secrétaire de mairie (DGS)</td><td>Gérer et valider partout : factures, congés, tâches, accès.</td></tr>
+      <tr><td><b>Gestionnaire</b></td><td>Adjoints, responsables</td><td>Gérer la vie courante : commissions, GED, suivi RH et finances.</td></tr>
+      <tr><td><b>Contributeur</b></td><td>Élus, agents</td><td>Créer des tâches, participer aux commissions, déposer ses congés.</td></tr>
+      <tr><td><b>Lecteur</b></td><td>Accès consultation</td><td>Consulter, sans modifier.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Le pouvoir de signature</h3>
+  <p>Indépendamment du niveau, une personne peut être <strong>signataire</strong> sur un ou plusieurs domaines (finances, RH, délibérations, conventions, état civil…). Cela conditionne par exemple sa désignation comme validateur d'une tâche ou d'un document.</p>
+
+  <div class="callout tip"><svg class="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+  <p><b>Bon à savoir.</b> Les vérifications de droits sont faites à la fois à l'écran (les boutons interdits n'apparaissent pas) <b>et</b> côté serveur (une action non autorisée est refusée même si on tente de la forcer). Vous ne pouvez donc rien « casser » par erreur.</p></div>
+</section>
+
+<!-- ============ DASHBOARD ============ -->
+<section class="sec" id="dashboard">
+  <span class="kicker">Au quotidien</span>
+  <h2>Le tableau de bord</h2>
+  <p class="lead">C'est votre page d'accueil. Son contenu <strong>s'adapte automatiquement à votre rôle</strong> : vous n'avez rien à régler, l'outil affiche la vue la plus utile pour vous.</p>
+
+  <div class="cols-3">
+    <div class="card"><div class="icon" data-i="grid"></div><h4>Vue Pilotage</h4><p>Pour le maire, les adjoints et les valideurs : santé financière, ce qui demande attention, alertes, absences du jour. Sections repliables.</p></div>
+    <div class="card"><div class="icon terra" data-i="check"></div><h4>Vue Élu</h4><p>Vos tâches prioritaires, ce que vous devez valider, les prochaines réunions, l'activité récente.</p></div>
+    <div class="card"><div class="icon info" data-i="briefcase"></div><h4>Vue Agent</h4><p>« À faire aujourd'hui », « Cette semaine », vos infos RH (congés, missions), vos notifications.</p></div>
+  </div>
+
+  <h3>« Ce qui demande votre attention » (vue Pilotage)</h3>
+  <p>En haut de la vue Pilotage, un encadré remonte automatiquement les points sensibles : tâches en retard, contrats à renouveler (90&nbsp;jours), tâches/factures/congés à valider, postes de budget proches de la limite. Chaque alerte est cliquable et mène au bon module.</p>
+
+  <div class="tuto">
+    <div class="tuto__h"><span class="tag">Tutoriel</span> Générer un rapport de gestion complet</div>
+    <div class="who">Pour : maire, adjoints, secrétariat (vue Pilotage)</div>
+    <ol>
+      <li>Depuis le tableau de bord, repérez le bouton <span class="ui green">Générer un rapport complet</span> en haut de la vue Pilotage.</li>
+      <li>Cliquez dessus : un <b>document imprimable</b> s'ouvre dans un nouvel onglet (page <span class="path">/rapport</span>).</li>
+      <li>Il reprend l'essentiel sur 100&nbsp;% de données réelles : propos liminaire, finances et ratios, postes sous tension, projets, subventions, projection à 5&nbsp;ans, RH, prochaines réunions, délibérations.</li>
+      <li>Utilisez <b>Ctrl + P</b> (⌘ + P sur Mac) pour l'imprimer ou l'enregistrer en PDF, prêt à présenter en conseil.</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============ TACHES ============ -->
+<section class="sec" id="taches">
+  <span class="kicker">Au quotidien</span>
+  <h2>Tâches&nbsp;: qui fait quoi, et où ça en est</h2>
+  <p class="lead">Le module Tâches organise le travail de la commune : chaque action à mener devient une tâche, avec un responsable, une échéance, une priorité et, si besoin, une validation.</p>
+
+  <h3>Les trois vues</h3>
+  <p>En haut de la page <span class="path">/taches</span>, basculez entre :</p>
+  <ul>
+    <li><span class="ui">Liste</span> — tableau complet, avec filtres et panneau de détail à droite.</li>
+    <li><span class="ui">Kanban</span> — colonnes par statut (<b>À faire</b>, <b>En cours</b>, <b>En attente validation</b>, <b>Terminé</b>), avec un bouton <span class="ui">→ Suivant</span> pour faire avancer une tâche.</li>
+    <li><span class="ui">Calendrier</span> — les tâches positionnées sur leurs échéances ; cliquer une date crée une tâche pré-datée.</li>
+  </ul>
+  <p>En vue Liste, des filtres rapides : <span class="ui">Toutes</span>, <span class="ui">Mes tâches</span>, <span class="ui">En attente</span>, <span class="ui">Terminées</span>.</p>
+
+  <h4>Les statuts d'une tâche</h4>
+  <table class="tbl">
+    <thead><tr><th>Statut</th><th>Signification</th></tr></thead>
+    <tbody>
+      <tr><td><span class="badge b-slate">À faire</span></td><td>Créée, pas encore commencée.</td></tr>
+      <tr><td><span class="badge b-warn">En cours</span></td><td>Travail engagé.</td></tr>
+      <tr><td><span class="badge b-terra">En attente validation</span></td><td>Terminée par l'exécutant, en attente du feu vert d'un valideur.</td></tr>
+      <tr><td><span class="badge b-green">Terminé</span></td><td>Validée / clôturée.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="tuto">
+    <div class="tuto__h"><span class="tag">Tutoriel</span> Créer une tâche</div>
+    <div class="who">Pour : toute personne autorisée à créer des tâches</div>
+    <ol>
+      <li>Sur la page <span class="path">/taches</span>, cliquez <span class="ui green">+ Nouvelle tâche</span>. Une fenêtre s'ouvre.</li>
+      <li>Saisissez un <b>Titre</b> clair (obligatoire), ex. « Préparer l'ordre du jour du conseil ».</li>
+      <li>Ajoutez une <b>Description</b> si besoin (contexte, liens).</li>
+      <li>Cochez une ou plusieurs <b>Commissions</b> concernées (facultatif).</li>
+      <li>Choisissez le ou les <b>Assigné(s)</b> parmi les élus et agents. Laisser vide = tâche non assignée.</li>
+      <li>Renseignez l'<b>Échéance</b>, la <b>Priorité</b> (Urgent / Normal / Faible) et le <b>Statut</b> initial.</li>
+      <li>Si vous mettez le statut sur <b>En attente validation</b>, choisissez le <b>Validateur</b> (il sera notifié). Par défaut, le maire est proposé.</li>
+      <li>Au besoin, glissez des <b>pièces jointes</b> (max 1&nbsp;Mo par fichier, 4&nbsp;Mo au total).</li>
+      <li>Cliquez <span class="ui green">Créer la tâche</span>.</li>
+    </ol>
+  </div>
+
+  <div class="tuto">
+    <div class="tuto__h"><span class="tag">Tutoriel</span> Terminer et faire valider une tâche</div>
+    <div class="who">Pour : l'exécutant, puis le valideur</div>
+    <ol>
+      <li>Ouvrez la tâche (clic sur sa ligne en vue Liste, ou sur sa carte en Kanban).</li>
+      <li>Quand le travail est fait et qu'une validation est requise, passez le statut à <b>En attente validation</b> et vérifiez le <b>validateur</b> désigné.</li>
+      <li>Le valideur reçoit la tâche dans « À valider » (tableau de bord et filtre <span class="ui">En attente</span>).</li>
+      <li>Le valideur ouvre la tâche, vérifie, puis clique <span class="ui green">✓ Marquer terminée</span> pour clôturer — ou la renvoie en arrière si besoin.</li>
+      <li>Vous pouvez échanger via les <b>commentaires</b> en bas du détail de la tâche, ce qui garde l'historique au même endroit.</li>
+    </ol>
+  </div>
+
+  <div class="callout tip"><svg class="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+  <p><b>Astuce.</b> Un agent peut cocher directement une tâche du jour comme terminée depuis son tableau de bord, sans ouvrir le module.</p></div>
+</section>
+
+<!-- ============ COMMISSIONS ============ -->
+<section class="sec" id="commissions">
+  <span class="kicker">Au quotidien</span>
+  <h2>Commissions &amp; Conseil municipal</h2>
+  <p class="lead">Ce module rassemble la vie des commissions (tâches, réunions, membres, comptes rendus) et l'espace dédié au <strong>Conseil municipal</strong> avec ses <strong>délibérations</strong>.</p>
+
+  <h3>Vue d'ensemble</h3>
+  <p>Sur <span class="path">/commissions</span>, choisissez l'affichage : <span class="ui">Grille</span> (cartes des commissions), <span class="ui">Timeline</span> (vue chronologique) ou, pour les gestionnaires, <span class="ui">⚙ Administration</span> (créer, renommer, supprimer des commissions). Le <strong>Conseil municipal</strong> a sa propre carte en tête de page.</p>
+
+  <h3>Le détail d'une commission</h3>
+  <p>En cliquant sur une commission, vous accédez à ses onglets :</p>
+  <table class="tbl">
+    <thead><tr><th>Onglet</th><th>Contenu</th></tr></thead>
+    <tbody>
+      <tr><td><b>Tâches</b></td><td>Les tâches de la commission, en cours et terminées. Bouton <span class="ui">+ Nouvelle tâche</span>.</td></tr>
+      <tr><td><b>Réunions</b></td><td>Réunions à venir et passées, avec ordre du jour structuré et rapporteurs.</td></tr>
+      <tr><td><b>Délibérations</b></td><td><em>(Conseil municipal uniquement)</em> Le registre des délibérations et leurs votes.</td></tr>
+      <tr><td><b>Comptes rendus</b></td><td>Les CR rattachés à la commission.</td></tr>
+      <tr><td><b>Membres</b></td><td>Composition de la commission ; ajout / retrait (gestionnaires).</td></tr>
+      <tr><td><b>GED</b></td><td>Documents de la commission — <em>fonction à venir</em> (voir la Bibliothèque en attendant).</td></tr>
+    </tbody>
+  </table>
+
+  <div class="tuto">
+    <div class="tuto__h"><span class="tag">Tutoriel</span> Planifier une réunion avec ordre du jour</div>
+    <div class="who">Pour : gestionnaires de commissions</div>
+    <ol>
+      <li>Ouvrez la commission, puis l'onglet <span class="ui">Réunions</span>.</li>
+      <li>Cliquez <span class="ui green">+ Nouvelle réunion</span>.</li>
+      <li>Renseignez la <b>Date</b> (obligatoire) et l'<b>Heure</b>.</li>
+      <li>Ajoutez un <b>Titre</b> (ex. « Préparation du budget ») et un <b>Lieu</b> (ex. « Salle du conseil »).</li>
+      <li>Construisez l'<b>ordre du jour</b> : cliquez <span class="ui">+ Ajouter un point</span> pour chaque sujet, et désignez éventuellement un <b>rapporteur</b>.</li>
+      <li>Ajoutez des <b>Notes</b> si besoin, puis cliquez <span class="ui green">Créer la réunion</span>.</li>
+    </ol>
+  </div>
+
+  <div class="tuto">
+    <div class="tuto__h"><span class="tag">Tutoriel</span> Gérer les membres d'une commission</div>
+    <div class="who">Pour : gestionnaires de commissions / admin équipe</div>
+    <ol>
+      <li>Dans la commission, ouvrez l'onglet <span class="ui">Membres</span>.</li>
+      <li>Pour ajouter : choisissez une personne dans la liste <span class="ui">+ Ajouter un membre…</span> puis cliquez <span class="ui green">Ajouter</span>.</li>
+      <li>Les badges <span class="badge b-green">Référent(e)</span> et <span class="badge b-terra">✍ Signataire</span> s'affichent automatiquement selon les attributs de la personne.</li>
+      <li>Pour retirer quelqu'un, cliquez <span class="ui danger">Retirer</span> sur sa ligne.</li>
+    </ol>
+  </div>
+
+  <h3>Le Conseil municipal et ses délibérations</h3>
+  <p>Le Conseil municipal est un espace particulier (membres dérivés du rôle, pas de la composition libre). Son onglet <strong>Délibérations</strong> tient le registre officiel.</p>
+
+  <div class="tuto">
+    <div class="tuto__h"><span class="tag">Tutoriel</span> Enregistrer une délibération</div>
+    <div class="who">Pour : gestionnaires (droit « gérer les commissions »)</div>
+    <ol>
+      <li>Ouvrez le <b>Conseil municipal</b> (carte en tête de <span class="path">/commissions</span>), puis l'onglet <span class="ui">Délibérations</span>.</li>
+      <li>Cliquez <span class="ui green">+ Nouvelle délibération</span>.</li>
+      <li>Saisissez le <b>N°</b> (ex. <code>2026-014</code>) et la <b>Date</b>.</li>
+      <li>Renseignez l'<b>Objet</b> (ex. « Approbation du budget primitif 2026 »).</li>
+      <li>Choisissez le <b>Statut</b> : <span class="badge b-slate">À venir</span>, <span class="badge b-green">Adoptée</span>, <span class="badge b-danger">Rejetée</span> ou <span class="badge b-warn">Reportée</span>.</li>
+      <li>Saisissez le <b>vote</b> : nombre de voix <b>Pour</b>, <b>Contre</b>, <b>Abstention</b>.</li>
+      <li>Ajoutez des <b>Notes</b> si utile, puis <span class="ui green">Créer</span>.</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============ COMPTES RENDUS ============ -->
+<section class="sec" id="cr">
+  <span class="kicker">Au quotidien</span>
+  <h2>Comptes rendus&nbsp;: l'IA extrait les tâches à votre place</h2>
+  <p class="lead">Importez le PDF d'un compte rendu : l'intelligence artificielle le lit, repère les décisions et les actions, et vous propose des tâches prêtes à créer. Fini la ressaisie.</p>
+
+  <div class="tuto">
+    <div class="tuto__h"><span class="tag">Tutoriel</span> Importer un CR et créer les tâches</div>
+    <div class="who">Pour : secrétariat, élus rédacteurs</div>
+    <ol>
+      <li>Allez dans <span class="path">/comptes-rendus</span> et cliquez <span class="ui green">Nouveau CR</span>.</li>
+      <li><b>Déposez le PDF</b> (glisser-déposer ou clic pour parcourir) — PDF uniquement, 10&nbsp;Mo max.</li>
+      <li>Si vous voulez, rattachez-le à une <b>commission</b> et indiquez la <b>date de réunion</b>.</li>
+      <li>Cliquez <span class="ui green">Lancer l'extraction →</span>. L'IA analyse le document (15 à 45&nbsp;secondes).</li>
+      <li>Cliquez <span class="ui">Voir les tâches extraites →</span> : la liste s'affiche, chaque tâche avec un score de confiance et l'extrait du texte d'origine.</li>
+      <li><b>Vérifiez et ajustez</b> chaque tâche : modifiez le titre, choisissez le <b>responsable</b>, l'<b>échéance</b> et la <b>priorité</b>. Écartez une suggestion non pertinente avec <span class="ui">✕</span>.</li>
+      <li>Cliquez <span class="ui green">Créer les tâches et notifier →</span>. Les tâches sont créées et les personnes concernées notifiées.</li>
+    </ol>
+  </div>
+
+  <div class="callout info"><svg class="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+  <p><b>Important.</b> L'IA <b>propose</b>, vous <b>décidez</b>. Relisez toujours les tâches avant de les créer : corrigez un titre, assignez le bon responsable, retirez ce qui n'est pas pertinent. Rien n'est créé tant que vous n'avez pas validé la dernière étape.</p></div>
+</section>
+
+<!-- ============ RH ============ -->
+<section class="sec" id="rh">
+  <span class="kicker">Gestion</span>
+  <h2>Ressources humaines</h2>
+  <p class="lead">Le module RH gère les agents, les congés, le calendrier des absences, le pointage des heures, les bulletins de paie et les missions. Selon vos droits, vous voyez tout (gestion) ou uniquement votre propre fiche.</p>
+
+  <p>Les onglets disponibles sur <span class="path">/rh</span> : <span class="ui">Agents</span> (ou <span class="ui">Mon profil</span>), <span class="ui">Congés &amp; RTT</span>, <span class="ui">Calendrier</span>, <span class="ui">Pointage</span>, <span class="ui">Paies</span> et <span class="ui">Missions</span> (les deux derniers selon droits).</p>
+
+  <h3>Demander un congé</h3>
+  <div class="tuto">
+    <div class="tuto__h"><span class="tag">Tutoriel</span> Déposer une demande d'absence</div>
+    <div class="who">Pour : tous les agents</div>
+    <ol>
+      <li>Ouvrez <span class="path">/rh</span> → onglet <span class="ui">Congés &amp; RTT</span>.</li>
+      <li>Cliquez <span class="ui green">+ Saisir une demande</span>.</li>
+      <li>Choisissez le <b>Type</b> : Congés annuels, RTT, Maladie, Sans solde, Formation, Évènement familial, Maternité&nbsp;/&nbsp;Paternité.</li>
+      <li>Indiquez la <b>Date de début</b> et la <b>Date de fin</b>. Le nombre de <b>jours ouvrés</b> se calcule tout seul.</li>
+      <li>Ajoutez un <b>motif</b> si vous le souhaitez. Une alerte vous prévient si votre solde est insuffisant.</li>
+      <li>Cliquez <span class="ui green">Soumettre la demande</span>. Elle passe en statut <span class="badge b-warn">En attente</span>.</li>
+    </ol>
+  </div>
+
+  <div class="tuto">
+    <div class="tuto__h"><span class="tag">Tutoriel</span> Valider (ou refuser) un congé</div>
+    <div class="who">Pour : valideurs RH (maire, responsable)</div>
+    <ol>
+      <li>Dans <span class="ui">Congés &amp; RTT</span>, sélectionnez la demande à traiter (filtre <span class="ui">En attente</span>).</li>
+      <li>Vérifiez le détail dans le panneau de droite (type, période, jours, motif).</li>
+      <li>Pour accepter : cliquez <span class="ui green">Approuver</span>. Le <b>solde de l'agent est décompté automatiquement</b>.</li>
+      <li>Pour refuser : saisissez un <b>commentaire</b> (obligatoire) puis cliquez <span class="ui danger">Refuser</span>.</li>
+      <li>Une décision peut être revue : <span class="ui">↺ Rouvrir</span> remet la demande en attente et réajuste les compteurs.</li>
+    </ol>
+  </div>
+  <p>Les congés approuvés apparaissent ensuite dans l'onglet <span class="ui">Calendrier</span>, colorés par type d'absence, pour une vision d'équipe mois par mois.</p>
+
+  <h3>Pointer ses heures</h3>
+  <div class="tuto">
+    <div class="tuto__h"><span class="tag">Tutoriel</span> Badger sa journée</div>
+    <div class="who">Pour : agents</div>
+    <ol>
+      <li>Ouvrez <span class="ui">Pointage</span> → <span class="ui">Mon pointage</span>.</li>
+      <li>En arrivant, cliquez <span class="ui green">🟢 Pointer ENTRÉE</span>.</li>
+      <li>Pour la pause déjeuner : <span class="ui">⏸ Début pause</span>, puis <span class="ui">▶ Fin pause</span> au retour.</li>
+      <li>En partant, cliquez <span class="ui danger">🔴 Pointer SORTIE</span>.</li>
+      <li>Vos heures et heures supplémentaires sont calculées automatiquement (récap « semaine » et « mois » à droite).</li>
+    </ol>
+  </div>
+  <p>Oubli de badge&nbsp;? Utilisez la <strong>saisie manuelle</strong> en indiquant un motif : elle part en validation auprès du responsable (onglet <span class="ui">À valider</span>). Les seuils d'alerte des heures supplémentaires se règlent dans l'onglet <span class="ui">⚙ Seuils</span>.</p>
+
+  <h3>Fiches agents, paies et missions</h3>
+  <ul>
+    <li><strong>Agents</strong> — fiche complète (contrat, grade, échelon, temps de travail, rémunération, soldes de congés, documents, missions). Cliquez <span class="ui">✎ Modifier</span> pour la mettre à jour (droits de gestion requis).</li>
+    <li><strong>Paies</strong> — sélectionnez un mois, cliquez <span class="ui green">🧾 Générer pour&nbsp;[mois]</span> : un bulletin au format fonction publique territoriale est créé pour chaque agent (cotisations CSG/CRDS, CNRACL ou IRCANTEC, RAFP…). Chaque bulletin s'imprime ou s'envoie par e-mail (icônes 🧾 / ✉).</li>
+    <li><strong>Missions</strong> — créez une mission ponctuelle (agent, dates, lieu, intitulé) ; elle apparaît sur la fiche de l'agent.</li>
+  </ul>
+
+  <div class="callout info"><svg class="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+  <p><b>Lien avec les finances.</b> La masse salariale s'impute sur le chapitre <b>012 — Charges de personnel</b> de la comptabilité M14. Le coût annualisé estimé en paie est à rapprocher du budget alloué à ce chapitre dans le module Finances.</p></div>
+</section>
+
+<!-- ============ FINANCES ============ -->
+<section class="sec" id="finances">
+  <span class="kicker">Gestion</span>
+  <h2>Finances&nbsp;: la comptabilité M14, automatisée</h2>
+  <p class="lead">Le module Finances met en œuvre la comptabilité publique <strong>M14</strong> : plan comptable, factures, écritures en double partie, ratios réglementaires, et bien plus. L'outil garantit la cohérence (une écriture déséquilibrée est refusée) et calcule les indicateurs en temps réel.</p>
+
+  <p>La page <span class="path">/finances</span> s'organise en onglets : <span class="ui">🧾 Factures</span>, <span class="ui">💰 Budget</span>, <span class="ui">🏢 Fournisseurs</span>, <span class="ui">🏠 Parc immobilier</span>, <span class="ui">🎫 Subventions</span>. L'onglet Budget contient lui-même des sous-onglets (Plan comptable, Écritures, Indicateurs, Historique, Projection, Simulation).</p>
+
+  <h3>Le circuit d'une facture</h3>
+  <p>Une facture suit un circuit clair, avec une séparation volontaire des rôles entre celui qui <strong>valide</strong> (ordonnateur) et celui qui <strong>paie</strong> (mandatement) :</p>
+  <div class="frame">
+    <div class="frame__bar"><i></i><i></i><i></i><span class="url">/finances · circuit facture</span></div>
+    <div class="frame__body">
+      <div class="row"><span class="badge b-slate">1</span><span class="t">À soumettre → En attente validation<small>Saisie de la facture</small></span></div>
+      <div class="row"><span class="badge b-green">2</span><span class="t">Validée<small>Génère l'écriture d'engagement : D poste / C 4011 (journal AC)</small></span></div>
+      <div class="row"><span class="badge b-green">3</span><span class="t">Payée<small>Génère l'écriture de mandatement : D 4011 / C 515 (journal BQ)</small></span></div>
+      <div class="row"><span class="dot" style="background:var(--danger)"></span><span class="t">Rejetée<small>Avec motif obligatoire ; les écritures liées sont supprimées</small></span></div>
+    </div>
+  </div>
+
+  <div class="tuto">
+    <div class="tuto__h"><span class="tag">Tutoriel</span> Saisir, puis valider et payer une facture</div>
+    <div class="who">Pour : secrétariat (saisie), valideur, payeur</div>
+    <ol>
+      <li>Onglet <span class="ui">🧾 Factures</span> → cliquez <span class="ui green">+ Soumettre une facture</span>.</li>
+      <li>Choisissez le <b>Fournisseur</b> (le poste comptable peut se pré-remplir), saisissez le <b>Montant TTC</b>, le <b>Poste comptable M14</b>, la <b>Date de facture</b> (et l'échéance).</li>
+      <li>Indiquez « Soumis par », ajoutez la <b>facture PDF</b> en pièce jointe, puis <span class="ui green">Soumettre la facture</span>.</li>
+      <li><b>Validation</b> (droit « valider les factures ») : sélectionnez la facture, puis cliquez <span class="ui green">Valider</span>. L'outil crée automatiquement l'<b>écriture d'engagement</b>. Pour refuser, saisissez le motif et cliquez <span class="ui danger">Rejeter</span>.</li>
+      <li><b>Paiement</b> (droit « payer les factures ») : sur une facture validée, cliquez <span class="ui green">€ Marquer payée</span>, indiquez la <b>date de décaissement</b>, puis <span class="ui green">Confirmer le paiement</span>. L'<b>écriture de mandatement</b> est générée.</li>
+      <li>En cas d'erreur de paiement : <span class="ui">↺ Annuler le paiement</span> supprime la seule écriture de banque (l'engagement reste).</li>
+    </ol>
+  </div>
+
+  <h3>Budget &amp; plan comptable</h3>
+  <p>Le sous-onglet <span class="ui">📋 Plan comptable</span> affiche le budget par section (fonctionnement / investissement), chapitre et article. Cliquez un article pour ouvrir son <strong>détail</strong> : budget alloué, réalisé, reste à engager, % consommé, et la liste des factures et écritures qui l'alimentent.</p>
+
+  <h3>Écritures comptables</h3>
+  <div class="tuto">
+    <div class="tuto__h"><span class="tag">Tutoriel</span> Saisir une écriture manuelle équilibrée</div>
+    <div class="who">Pour : gestion comptable</div>
+    <ol>
+      <li>Onglet <span class="ui">💰 Budget</span> → sous-onglet <span class="ui">📒 Écritures</span> → <span class="ui green">+ Nouvelle écriture</span>.</li>
+      <li>Renseignez la <b>Date</b>, le <b>Journal</b> (AC, BQ, OD, AN, CA), le <b>Libellé</b> et la <b>pièce/mandat</b>.</li>
+      <li>Ajoutez les lignes (compte, libellé, montant au <b>Débit</b> ou au <b>Crédit</b>). Utilisez <span class="ui">+ Ligne</span> pour en ajouter.</li>
+      <li>Vérifiez l'indicateur d'équilibre en bas : le bouton n'est actif que si <b>total débit = total crédit</b> (<span class="badge b-green">✓ Équilibrée</span>).</li>
+      <li>Cliquez <span class="ui green">Enregistrer l'écriture</span>.</li>
+    </ol>
+  </div>
+
+  <h3>Indicateurs &amp; ratios (R. 2313-1 / DGFiP)</h3>
+  <p>Le sous-onglet <span class="ui">📊 Indicateurs</span> calcule automatiquement la <strong>CAF brute et nette</strong>, le <strong>taux d'épargne</strong>, la <strong>capacité de désendettement</strong> et les <strong>11 ratios réglementaires</strong> (par habitant, % de rigidité…), avec un code couleur selon les seuils DGFiP. Renseignez la population et l'encours de dette via le bouton <span class="ui">⚙</span> pour des ratios exacts.</p>
+
+  <h3>Fournisseurs &amp; historique</h3>
+  <ul>
+    <li><strong>Fournisseurs</strong> — annuaire avec coordonnées, poste comptable par défaut et <strong>total engagé</strong> (cumul des factures validées). Bouton <span class="ui">+ Nouveau fournisseur</span>.</li>
+    <li><strong>Historique</strong> — évolution pluriannuelle (N-2 → N-1 → N) sous forme de graphiques.</li>
+  </ul>
+</section>
+
+<!-- ============ PARC IMMOBILIER ============ -->
+<section class="sec" id="parc">
+  <span class="kicker">Gestion</span>
+  <h2>Parc immobilier&nbsp;: baux, quittances et relances</h2>
+  <p class="lead">Gérez les biens communaux, les locataires, les baux et les quittances. Les loyers impayés remontent automatiquement, avec un suivi des relances.</p>
+
+  <p>Dans l'onglet <span class="ui">🏠 Parc immobilier</span>, quatre sous-onglets : <span class="ui">Biens</span>, <span class="ui">Locataires</span>, <span class="ui">Baux</span>, <span class="ui">Quittances</span>.</p>
+
+  <div class="tuto">
+    <div class="tuto__h"><span class="tag">Tutoriel</span> Mettre en place un bien loué (de A à Z)</div>
+    <div class="who">Pour : gestion du patrimoine</div>
+    <ol>
+      <li><b>Créer le bien</b> : onglet <span class="ui">Biens</span> → <span class="ui green">+ Nouveau bien</span>. Renseignez référence, nom, type, adresse, surface, loyer HC et charges.</li>
+      <li><b>Créer le locataire</b> : onglet <span class="ui">Locataires</span> → <span class="ui green">+ Nouveau locataire</span> (nom, e-mail, téléphone). L'e-mail permettra l'envoi des quittances et relances.</li>
+      <li><b>Créer le bail</b> : onglet <span class="ui">Baux</span> → <span class="ui green">+ Nouveau bail</span>. Reliez le bien et le locataire, dates, loyer, dépôt de garantie, et la <b>ventilation des charges</b> (ordures ménagères, gaz, autres).</li>
+    </ol>
+  </div>
+
+  <div class="tuto">
+    <div class="tuto__h"><span class="tag">Tutoriel</span> Générer les quittances du mois et relancer un impayé</div>
+    <div class="who">Pour : gestion du patrimoine</div>
+    <ol>
+      <li>Onglet <span class="ui">Quittances</span> : choisissez le mois, puis <span class="ui green">🧾 Générer pour&nbsp;[mois]</span>. Une quittance est créée pour chaque bail en cours.</li>
+      <li>Pour chaque quittance : <span class="ui">🧾</span> ouvre l'aperçu PDF, <span class="ui">✉</span> envoie au locataire par e-mail.</li>
+      <li>À l'encaissement, cliquez l'action « marquer payée » et choisissez le moyen (virement, chèque…). L'écriture d'encaissement du loyer est générée automatiquement.</li>
+      <li>Pour un <b>impayé</b> : utilisez l'action de relance (✉) — la quittance passe en <span class="badge b-terra">Relancée</span>.</li>
+      <li>Consultez ou ajoutez une relance via l'icône <span class="ui">📋</span> (canal, résultat, notes) — droit « gérer les relances » requis.</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============ SUBVENTIONS ============ -->
+<section class="sec" id="subventions">
+  <span class="kicker">Gestion</span>
+  <h2>Subventions&nbsp;: de la demande au versement</h2>
+  <p class="lead">Suivez chaque dossier de subvention, de la préparation au versement, par financeur (État DETR/DSIL, Région, Département, Europe…).</p>
+
+  <div class="tuto">
+    <div class="tuto__h"><span class="tag">Tutoriel</span> Suivre une demande de subvention</div>
+    <div class="who">Pour : secrétariat, adjoint aux finances</div>
+    <ol>
+      <li>Onglet <span class="ui">🎫 Subventions</span> → <span class="ui green">+ Nouvelle demande</span>.</li>
+      <li>Renseignez l'<b>intitulé</b>, la <b>source</b> (financeur), l'<b>organisme</b> et un contact.</li>
+      <li>Saisissez les <b>montants</b> : coût total du projet et subvention demandée. Indiquez le compte M14 d'<b>imputation</b>.</li>
+      <li>Faites évoluer le <b>statut</b> au fil du dossier : <span class="badge b-terra">Déposée</span> → <span class="badge b-warn">Instruction</span> → <span class="badge b-green">Accordée</span>.</li>
+      <li>À réception des fonds, cliquez <span class="ui green">€ Enregistrer un versement</span> : le montant est enregistré (passage en « Versement partiel » ou « Versée ») et l'écriture comptable est générée.</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============ SIMULATION ============ -->
+<section class="sec" id="simulation">
+  <span class="kicker">Gestion · Anticiper</span>
+  <h2>Projets, projection &amp; simulation « what-if »</h2>
+  <p class="lead">Avant de voter une décision, mesurez son impact. L'outil projette les finances sur plusieurs années et compare la trajectoire « scénario » à la « référence » (situation actuelle projetée).</p>
+
+  <p>Les <strong>projets d'investissement</strong> intègrent l'étalement, les emprunts, les subventions et le FCTVA, avec leur effet sur la CAF et la dette. Le sous-onglet <span class="ui">🧮 Simulation</span> permet de tester des hypothèses.</p>
+
+  <div class="tuto">
+    <div class="tuto__h"><span class="tag">Tutoriel</span> Tester un scénario et l'enregistrer</div>
+    <div class="who">Pour : maire, adjoint aux finances</div>
+    <ol>
+      <li>Onglet <span class="ui">💰 Budget</span> → sous-onglet <span class="ui">🧮 Simulation</span>.</li>
+      <li>Actionnez les <b>leviers</b> à gauche : pression fiscale (chap. 73), dotations (chap. 74), charges de personnel (012) et générales (011).</li>
+      <li>Ajoutez si besoin une <b>vente de bâtiment</b>, un <b>nouvel emprunt</b> (montant, taux, durée) ou une <b>recette exceptionnelle</b>.</li>
+      <li>Réglez l'<b>horizon</b> (3 à 15 ans) et le taux de <b>croissance</b>.</li>
+      <li>Lisez à droite l'<b>impact immédiat</b> (CAF, dette, épargne, désendettement) et les <b>graphiques</b> référence vs scénario.</li>
+      <li>Pour conserver l'hypothèse, saisissez un <b>nom</b> et cliquez <span class="ui green">Enregistrer</span> (droit « gérer le budget »). Vous pourrez la recharger plus tard.</li>
+    </ol>
+  </div>
+</section>
+
+<!-- ============ BIBLIOTHEQUE ============ -->
+<section class="sec" id="bibliotheque">
+  <span class="kicker">Documents</span>
+  <h2>Bibliothèque&nbsp;: la GED partagée</h2>
+  <p class="lead">La Bibliothèque est l'espace documentaire de la commune, organisé en dossiers et sous-dossiers. Les fichiers sont stockés de façon sécurisée et téléchargeables par les personnes autorisées.</p>
+
+  <div class="tuto">
+    <div class="tuto__h"><span class="tag">Tutoriel</span> Classer et déposer un document</div>
+    <div class="who">Pour : contributeurs (droit « écrire » dans la GED)</div>
+    <ol>
+      <li>Ouvrez <span class="path">/bibliotheque</span>. La colonne de gauche montre l'arborescence des dossiers.</li>
+      <li>Pour créer un dossier racine : cliquez <span class="ui">+</span> en haut de l'arbre, nommez-le, validez.</li>
+      <li>Sélectionnez le dossier de destination ; au besoin créez un <span class="ui">+ Sous-dossier</span>.</li>
+      <li>Déposez le fichier par <b>glisser-déposer</b> dans la zone prévue, ou cliquez <span class="ui">+ Déposer un fichier</span> (taille max <b>25&nbsp;Mo</b> par fichier).</li>
+      <li>Le fichier apparaît avec son nom, sa taille, l'auteur du dépôt et la date. Boutons <span class="ui">Télécharger</span>, <span class="ui">Renommer</span>, <span class="ui danger">Supprimer</span> selon vos droits.</li>
+    </ol>
+  </div>
+
+  <div class="callout info"><svg class="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+  <p><b>Droits.</b> <b>Lecture</b> pour tous par défaut ; <b>écriture</b> (créer/déposer/renommer) pour les contributeurs ; <b>administration</b> (supprimer dossiers et fichiers d'autrui) réservée aux administrateurs.</p></div>
+</section>
+
+<!-- ============ EQUIPE ============ -->
+<section class="sec" id="equipe">
+  <span class="kicker">Équipe &amp; accès</span>
+  <h2>Équipe&nbsp;: gérer les personnes et leurs accès</h2>
+  <p class="lead">Le module Équipe est l'annuaire de la commune (élus et agents) et le lieu où l'on gère les rôles, les droits, les signatures et les délégations. L'organigramme se déduit automatiquement des rôles et postes.</p>
+
+  <p>Sur <span class="path">/equipe</span>, basculez entre <span class="ui">📋 Liste</span> et <span class="ui">🌳 Organigramme</span>. La liste se filtre (Tous / Élus / Agents / Signataires / Désactivés) et se recherche par nom ou poste.</p>
+
+  <div class="tuto">
+    <div class="tuto__h"><span class="tag">Tutoriel</span> Créer ou modifier une personne</div>
+    <div class="who">Pour : administrateurs (droit « inviter / gérer les rôles »)</div>
+    <ol>
+      <li>Cliquez <span class="ui green">+ Nouveau membre</span>, ou ouvrez une fiche existante puis <span class="ui">✎ Modifier</span>.</li>
+      <li>Onglet <b>Identité</b> : prénom, nom, rôle, poste, e-mail, téléphone, couleur. <em>(L'e-mail sert d'identifiant de connexion.)</em></li>
+      <li>Onglet <b>Autorisations</b> : choisissez le niveau et, si besoin, cochez des permissions spécifiques supplémentaires.</li>
+      <li>Onglet <b>Signature</b> : activez le pouvoir de signature et cochez les domaines concernés.</li>
+      <li>Onglet <b>Délégations</b> : désignez les commissions dont la personne est référente.</li>
+      <li>Onglet <b>Accès aux modules</b> : masquez éventuellement certains modules pour cette personne.</li>
+      <li>Cliquez <span class="ui green">Enregistrer</span>.</li>
+    </ol>
+  </div>
+
+  <div class="tuto">
+    <div class="tuto__h"><span class="tag">Tutoriel</span> Réinitialiser le mot de passe d'un agent</div>
+    <div class="who">Pour : administrateurs</div>
+    <ol>
+      <li>Ouvrez la fiche de la personne, puis <span class="ui">✎ Modifier</span>.</li>
+      <li>Cliquez <span class="ui">Réinitialiser le mot de passe</span>.</li>
+      <li>Un <b>mot de passe temporaire</b> s'affiche <b>une seule fois</b> : copiez-le et transmettez-le à la personne en main propre ou par un canal sûr.</li>
+      <li>Invitez-la à se connecter avec, puis à le changer immédiatement dans <b>Profil → Sécurité</b>.</li>
+    </ol>
+  </div>
+
+  <div class="callout warn"><svg class="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+  <p><b>Changer l'e-mail d'une personne.</b> Si vous modifiez l'adresse e-mail dans la fiche, c'est aussi son <b>identifiant de connexion</b> qui change : la personne devra désormais se connecter avec la nouvelle adresse.</p></div>
+
+  <p>Pour retirer un accès, utilisez <span class="ui">⊘ Désactiver</span> (vous ne pouvez pas désactiver votre propre compte). La personne désactivée n'apparaît plus dans les listes actives mais reste liée à l'historique (tâches passées, etc.).</p>
+</section>
+
+<!-- ============ RAPPORTS ============ -->
+<section class="sec" id="rapports">
+  <span class="kicker">Documents</span>
+  <h2>Rapports &amp; exports</h2>
+  <p class="lead">L'ENT produit en un clic des documents prêts à présenter ou à transmettre (banque, préfecture, conseil), et des exports de travail au format Excel.</p>
+
+  <div class="cols">
+    <div class="card"><h4>📰 Rapport financier (.html)</h4><p>Depuis Finances → Budget. Une fenêtre permet de choisir les sections (points d'attention, exécution budgétaire, ratios, trésorerie, fournisseurs, patrimoine, RH, projets, subventions, projection N+5) et d'ajouter une <b>analyse rédigée par l'IA</b>. Idéal pour un dossier d'emprunt ou de subvention.</p></div>
+    <div class="card"><h4>📰 Rapport loyers (.html)</h4><p>Depuis Finances → Parc immobilier. Tableau de bord des impayés, synthèse par bien, suivi TEOM et gaz, historique des relances, fiches par locataire. Analyse IA optionnelle.</p></div>
+  </div>
+  <div class="cols">
+    <div class="card"><h4>📊 Exports Excel</h4><p>Plan comptable, grand livre, rapport budgétaire — en plusieurs feuilles, depuis l'onglet Budget.</p></div>
+    <div class="card"><h4>🗂 Rapport de gestion</h4><p>Le document complet généré depuis le tableau de bord (page <span class="path">/rapport</span>), imprimable en PDF.</p></div>
+  </div>
+
+  <div class="callout tip"><svg class="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+  <p><b>Imprimer en PDF.</b> Tous les rapports HTML s'ouvrent dans un nouvel onglet : faites <b>Ctrl + P</b> (⌘ + P) puis « Enregistrer au format PDF ».</p></div>
+</section>
+
+<!-- ============ PROFIL ============ -->
+<section class="sec" id="profil">
+  <span class="kicker">Votre compte</span>
+  <h2>Profil &amp; sécurité</h2>
+  <p class="lead">Depuis votre profil (icône en haut à droite, ou via le menu), gérez vos informations, votre mot de passe et vos préférences de notifications.</p>
+
+  <div class="tuto">
+    <div class="tuto__h"><span class="tag">Tutoriel</span> Changer son mot de passe</div>
+    <div class="who">Pour : tout le monde</div>
+    <ol>
+      <li>Ouvrez <span class="path">/profil</span> → onglet <span class="ui">Sécurité</span>.</li>
+      <li>Saisissez votre <b>mot de passe actuel</b>.</li>
+      <li>Saisissez le <b>nouveau mot de passe</b> (8 caractères minimum, idéalement avec chiffres et caractères spéciaux), puis confirmez-le.</li>
+      <li>Cliquez <span class="ui green">Modifier le mot de passe</span>. Un message « ✓ Mot de passe modifié » confirme l'opération.</li>
+    </ol>
+  </div>
+
+  <h3>Informations &amp; préférences</h3>
+  <ul>
+    <li><strong>Informations</strong> — vous pouvez modifier votre <b>téléphone</b>. Le prénom, nom, e-mail et poste sont gérés par les administrateurs (module Équipe).</li>
+    <li><strong>Notifications</strong> — cochez les événements pour lesquels vous souhaitez être prévenu (tâche assignée, validation, signature, facture, congés).</li>
+    <li><strong>Affichage</strong> — le thème et le mode du menu (icônes ou libellés) se règlent dans les préférences.</li>
+  </ul>
+</section>
+
+<!-- ============ FAQ ============ -->
+<section class="sec" id="faq">
+  <span class="kicker">Aide</span>
+  <h2>Questions fréquentes</h2>
+
+  <details class="faq"><summary>J'ai été déconnecté tout seul, est-ce normal&nbsp;?</summary><div class="a"><p>Oui. Après 30 minutes sans activité, l'ENT vous déconnecte par sécurité. Vos données déjà enregistrées sont intactes : reconnectez-vous simplement.</p></div></details>
+
+  <details class="faq"><summary>Je ne vois pas un module présent dans ce guide.</summary><div class="a"><p>L'affichage dépend de votre profil. Certains modules peuvent être masqués pour vous, ou certaines actions n'apparaissent qu'avec les droits correspondants. Contactez le secrétariat si vous pensez devoir y accéder.</p></div></details>
+
+  <details class="faq"><summary>L'IA a mal compris une tâche dans un compte rendu.</summary><div class="a"><p>C'est prévu : l'IA propose, vous validez. À l'étape de vérification, corrigez le titre, changez le responsable, ou écartez la suggestion avec ✕ avant de créer les tâches.</p></div></details>
+
+  <details class="faq"><summary>Une facture refuse d'être enregistrée comme « payée ».</summary><div class="a"><p>Le paiement (mandatement) requiert le droit spécifique « payer les factures », distinct du droit de validation. Cette séparation est volontaire (ordonnateur / payeur). Demandez à une personne disposant de ce droit, ou faites-vous l'attribuer par un administrateur.</p></div></details>
+
+  <details class="faq"><summary>Mon écriture comptable ne peut pas être enregistrée.</summary><div class="a"><p>Une écriture doit être équilibrée : le total des débits doit égaler le total des crédits. Tant que ce n'est pas le cas, le bouton d'enregistrement reste inactif et l'écart est affiché.</p></div></details>
+
+  <details class="faq"><summary>J'ai oublié mon mot de passe.</summary><div class="a"><p>Sur la page de connexion, cliquez « Mot de passe oublié&nbsp;? ». La réinitialisation passe par le secrétariat de mairie, qui vous remet un mot de passe temporaire à changer ensuite.</p></div></details>
+
+  <details class="faq"><summary>Mes données sont-elles en sécurité&nbsp;?</summary><div class="a"><p>Oui : connexion par identifiant et mot de passe chiffré, accès par profil, données hébergées en France/UE, et déconnexion automatique. Chacun ne voit que ce qui le concerne.</p></div></details>
+</section>
+
+<!-- ============ GLOSSAIRE ============ -->
+<section class="sec" id="glossaire">
+  <span class="kicker">Aide</span>
+  <h2>Glossaire</h2>
+  <table class="tbl">
+    <thead><tr><th>Terme</th><th>Définition</th></tr></thead>
+    <tbody>
+      <tr><td><b>M14</b></td><td>Plan comptable applicable aux communes. L'ENT en met en œuvre la version « développée » (28 chapitres, double partie).</td></tr>
+      <tr><td><b>CAF</b></td><td>Capacité d'autofinancement : l'épargne dégagée par la commune (recettes − dépenses de fonctionnement). « Brute » avant remboursement du capital, « nette » après.</td></tr>
+      <tr><td><b>Capacité de désendettement</b></td><td>Nombre d'années nécessaires pour rembourser la dette avec l'épargne actuelle. < 8 ans = sain ; > 12 ans = critique (seuils DGFiP).</td></tr>
+      <tr><td><b>Taux d'épargne</b></td><td>Part des recettes de fonctionnement transformée en épargne. > 12 % = sain.</td></tr>
+      <tr><td><b>Engagement / Mandatement</b></td><td>Engagement = on réserve la dépense (facture validée). Mandatement = on ordonne le paiement effectif.</td></tr>
+      <tr><td><b>Journaux (AC, BQ, OD…)</b></td><td>Carnets comptables : Achats, Banque, Opérations diverses, reports (AN), Caisse (CA).</td></tr>
+      <tr><td><b>FCTVA</b></td><td>Fonds de compensation de la TVA : remboursement partiel de la TVA sur les investissements.</td></tr>
+      <tr><td><b>Délibération</b></td><td>Décision officielle votée par le conseil municipal (objet, vote pour/contre/abstention, statut).</td></tr>
+      <tr><td><b>GED</b></td><td>Gestion électronique des documents — la Bibliothèque de l'ENT.</td></tr>
+      <tr><td><b>IFSE / RAFP / CNRACL</b></td><td>Éléments de la rémunération et des cotisations dans la fonction publique territoriale, calculés dans les bulletins de paie.</td></tr>
+      <tr><td><b>TEOM</b></td><td>Taxe d'enlèvement des ordures ménagères, suivie par locataire dans le rapport loyers.</td></tr>
+    </tbody>
+  </table>
+
+  <hr class="soft" />
+  <p style="font-size:.85rem;color:var(--fg-subtle)">Guide de l'utilisateur — ENT de la Mairie de Saint-Fortunat-sur-Eyrieux. Ce document décrit l'application telle qu'elle existe à ce jour ; certaines fonctions évolueront. En cas de doute, le secrétariat de mairie reste votre premier interlocuteur.</p>
+</section>
+
+</main>
+</div>
+
+<button class="totop" id="totop" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Haut de page">↑</button>
+
+<script>
+// Icônes SVG inline (même jeu que la présentation)
+const ICONS = {
+  grid:'<rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/>',
+  check:'<polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
+  users:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  briefcase:'<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>',
+};
+function svg(name){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(ICONS[name]||'')+'</svg>'}
+document.querySelectorAll('[data-i]').forEach(el=>{el.innerHTML=svg(el.getAttribute('data-i'))});
+
+// Scroll-spy : surligne la section courante dans le sommaire
+const links = [...document.querySelectorAll('#tocnav a')];
+const map = new Map();
+links.forEach(a=>{const id=a.getAttribute('href').slice(1);const el=document.getElementById(id);if(el)map.set(el,a);});
+const obs = new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting){
+      links.forEach(l=>l.classList.remove('active'));
+      const a=map.get(e.target); if(a)a.classList.add('active');
+    }
+  });
+},{rootMargin:'-10% 0px -80% 0px',threshold:0});
+map.forEach((a,el)=>obs.observe(el));
+
+// Fermer le menu mobile au clic d'un lien
+links.forEach(a=>a.addEventListener('click',()=>document.getElementById('toc').classList.remove('open')));
+
+// Bouton "haut de page"
+const totop=document.getElementById('totop');
+window.addEventListener('scroll',()=>{totop.classList.toggle('show',window.scrollY>600)});
+</script>
+</body>
+</html>

@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { useSettings } from '@/context/SettingsContext'
 import { Avatar } from '@/components/ui/Avatar'
@@ -62,6 +63,7 @@ export function Sidebar() {
   const { nav } = useSettings()
   const { currentUser: me, can } = useCurrentUser()
   const { tasks } = useTasks()
+  const [guideHover, setGuideHover] = useState(false)
   const isIcons = nav === 'icons'
   const w = isIcons ? 54 : 212
 
@@ -173,6 +175,50 @@ export function Sidebar() {
           )
         })}
       </nav>
+
+      {/* Guide d'utilisateur — page statique servie depuis /public, ouverte en
+          plein écran dans un nouvel onglet (design system propre, hors shell). */}
+      <a
+        href="/guide-utilisateur/index.html"
+        target="_blank"
+        rel="noopener noreferrer"
+        title={isIcons ? "Guide d'utilisateur" : undefined}
+        onMouseEnter={() => setGuideHover(true)}
+        onMouseLeave={() => setGuideHover(false)}
+        style={{ textDecoration: 'none', padding: '6px 8px' }}
+      >
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: isIcons ? 0 : 10,
+          padding: isIcons ? '8px 0' : '7px 10px',
+          justifyContent: isIcons ? 'center' : 'flex-start',
+          borderRadius: 6,
+          background: guideHover ? 'var(--sidebar-active)' : 'transparent',
+          cursor: 'pointer',
+        }}>
+          <span style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0,
+            color: guideHover ? 'var(--accent)' : 'var(--sidebar-muted)',
+          }}>
+            <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+            </svg>
+          </span>
+          {!isIcons && (
+            <span style={{
+              fontSize: 12,
+              color: guideHover ? 'var(--sidebar-text)' : 'var(--sidebar-muted)',
+              fontWeight: guideHover ? 600 : 400,
+              flex: 1,
+            }}>
+              Guide d&apos;utilisateur
+            </span>
+          )}
+        </div>
+      </a>
 
       {/* User courant — dérivé de la session NextAuth via useCurrentUser */}
       {(() => {
