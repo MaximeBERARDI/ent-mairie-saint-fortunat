@@ -128,7 +128,7 @@ export default function DashboardPage() {
 // ── Vue Élu / Conseiller ──────────────────────────────────────────────────────
 
 function DashConseiller({ tasks, updateTask, currentUserId }: { tasks: Task[]; updateTask: (id: string, p: Partial<Task>) => void; currentUserId: string }) {
-  const me = getPerson(currentUserId)
+  const { currentUser: me } = useCurrentUser()
   const { factures } = useFactures()
   const { leaves } = useLeaveRequests()
   const { people } = useTeam()
@@ -357,7 +357,7 @@ function DashboardTaskRow({
 // ── Vue Agent (focus "Aujourd'hui") ───────────────────────────────────────────
 
 function DashAgent({ tasks, updateTask, createTask, currentUserId }: { tasks: Task[]; updateTask: (id: string, p: Partial<Task>) => void; createTask: (data: Omit<Task, 'id' | 'createdAt'>) => Task; currentUserId: string }) {
-  const me = getPerson(currentUserId)
+  const { currentUser: me } = useCurrentUser()
   const { records, findByPersonId } = useEmployees()
   const { leaves, byPerson: leavesByPerson } = useLeaveRequests()
   const { byPerson: missionsByPerson } = useMissions()
@@ -613,7 +613,7 @@ function NotificationsList({ tasks, currentUserId }: { tasks: Task[]; currentUse
 // ── Vue Maire / Pilotage ──────────────────────────────────────────────────────
 
 function DashMaire({ tasks, currentUserId, createTask }: { tasks: Task[]; currentUserId: string; createTask: (data: Omit<Task, 'id' | 'createdAt'>) => Task }) {
-  const me = getPerson(currentUserId)
+  const { currentUser: me } = useCurrentUser()
   // Sources de données réelles
   const { factures } = useFactures()
   const { commissions } = useCommissions()
