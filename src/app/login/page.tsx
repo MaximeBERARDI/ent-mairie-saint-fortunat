@@ -219,20 +219,6 @@ export default function LoginPage() {
           >
             {submitting ? 'Connexion…' : 'Se connecter'}
           </Button>
-
-          <div style={{
-            marginTop: 24, padding: '10px 14px',
-            background: '#eaf1fb', border: `1px solid #2563a830`,
-            borderRadius: 8, fontSize: 11, color: C.muted,
-          }}>
-            <strong style={{ color: C.info, fontWeight: 600 }}>Mot de passe par défaut</strong>
-            <p style={{ marginTop: 4 }}>
-              Pour cette première phase, le mot de passe initial est{' '}
-              <code style={{ background: '#fff', padding: '1px 5px', borderRadius: 3, fontFamily: 'monospace' }}>
-                saintfortunat2026
-              </code>. Il sera personnalisable dans une prochaine version.
-            </p>
-          </div>
         </form>
       </div>
     </div>
