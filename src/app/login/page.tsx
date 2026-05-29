@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { signIn, getSession } from 'next-auth/react'
@@ -20,6 +20,15 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [timedOut, setTimedOut] = useState(false)
+
+  // Déconnexion sur inactivité (cf. <IdleTimeout/>) : on lit la query string
+  // directement pour ne pas imposer un <Suspense> autour de useSearchParams.
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('reason') === 'timeout') {
+      setTimedOut(true)
+    }
+  }, [])
 
   // Connexion via NextAuth (Credentials provider + bcrypt côté serveur).
   // L'identité de l'utilisateur courant est dérivée de la session côté
@@ -187,6 +196,19 @@ export default function LoginPage() {
               Mot de passe oublié ?
             </Link>
           </div>
+
+          {timedOut && !error && (
+            <div style={{
+              marginBottom: 16, padding: '10px 14px',
+              background: '#fdf3e7', border: `1px solid ${C.warning}40`,
+              borderRadius: 8, fontSize: 12, color: C.muted,
+            }}>
+              <strong style={{ color: C.warning, fontWeight: 600 }}>Session expirée</strong>
+              <p style={{ marginTop: 4 }}>
+                Vous avez été déconnecté après 30 minutes d'inactivité. Veuillez vous reconnecter.
+              </p>
+            </div>
+          )}
 
           <FormError message={error} />
 

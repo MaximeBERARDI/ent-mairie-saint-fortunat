@@ -25,7 +25,11 @@ declare module 'next-auth' {
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(db),
-  session: { strategy: 'jwt' },
+  // maxAge : plafond dur de la session (filet de sécurité côté serveur).
+  // updateAge : le JWT est réémis à chaque requête espacée d'au moins 5 min,
+  // donc la session « roule » tant que l'utilisateur navigue. La déconnexion
+  // sur inactivité réelle est gérée côté client par <IdleTimeout/>.
+  session: { strategy: 'jwt', maxAge: 30 * 60, updateAge: 5 * 60 },
   // Indispensable derrière le proxy Vercel : sans ça, NextAuth refuse
   // de poser le cookie de session (on ne voit que csrf-token + callback-url
   // dans les cookies, jamais authjs.session-token).

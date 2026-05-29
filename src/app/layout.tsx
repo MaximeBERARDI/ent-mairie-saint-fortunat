@@ -16,6 +16,7 @@ import '@fontsource/caveat/600.css'
 import '@/styles/globals.css'
 import { SettingsProvider } from '@/context/SettingsContext'
 import { AuthSessionProvider } from '@/components/providers/AuthSessionProvider'
+import { IdleTimeout } from '@/components/providers/IdleTimeout'
 import { TeamProvider } from '@/context/TeamContext'
 
 export const metadata: Metadata = {
@@ -28,6 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="fr">
       <body>
         <AuthSessionProvider>
+          <IdleTimeout />
           <TeamProvider>
             <SettingsProvider>
               <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
