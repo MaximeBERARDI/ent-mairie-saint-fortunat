@@ -180,7 +180,6 @@ export default function LoginPage() {
               value={password}
               onChange={e => setPassword(e.target.value)}
               autoComplete="current-password"
-              placeholder="Laisser vide à la première connexion"
               style={{
                 width: '100%', height: 42, padding: '0 12px',
                 border: `1px solid ${C.border}`, borderRadius: 6,
