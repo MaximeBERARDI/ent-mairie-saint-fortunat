@@ -10,6 +10,7 @@ import { SectionHeader } from '@/components/ui/SectionHeader'
 import { Separator } from '@/components/ui/Separator'
 import { Tag } from '@/components/ui/Tag'
 import { COLORS as C } from '@/lib/theme'
+import { useSession } from 'next-auth/react'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { useTeam } from '@/hooks/useTeam'
 import { useBulletins } from '@/hooks/useBulletins'
@@ -142,6 +143,8 @@ export default function ProfilPage() {
   const { currentUser, currentUserId, hydrated } = useCurrentUser()
   const { updatePerson } = useTeam()
   const { bulletins } = useBulletins()
+  const { data: session, update: updateSession } = useSession()
+  const mustChangePassword = session?.user?.mustChangePassword ?? false
 
   // Mes bulletins de paie (l'API ne renvoie que les siens aux non-RH).
   const myBulletins = bulletins
@@ -176,6 +179,11 @@ export default function ProfilPage() {
     setPhotoDataUrl(currentUser.photoUrl ?? null)
     setColor(currentUser.color)
   }, [currentUserId, currentUser])
+
+  // Changement de mot de passe forcé : ouvrir d'office l'onglet Sécurité.
+  useEffect(() => {
+    if (mustChangePassword) setTab('securite')
+  }, [mustChangePassword])
 
   if (!hydrated || !currentUser) {
     return (
@@ -215,6 +223,8 @@ export default function ProfilPage() {
       }
       setPwdOk(true)
       setOldPwd(''); setNewPwd(''); setConfirmPwd('')
+      // Rafraîchit la session pour lever le changement forcé (cf. ForcePasswordChange).
+      await updateSession()
       setTimeout(() => setPwdOk(false), 3000)
     } catch {
       setPwdError('Erreur réseau.')
@@ -313,6 +323,15 @@ export default function ProfilPage() {
           </div>
         </div>
       </Card>
+
+      {mustChangePassword && (
+        <Card padding={14} style={{ marginBottom: 'var(--gap)', background: C.warningLight, border: `1px solid ${C.warning}55` }}>
+          <p style={{ fontSize: 13, color: C.warningDark, fontWeight: 700 }}>🔒 Changement de mot de passe requis</p>
+          <p style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>
+            Pour votre sécurité, définissez un nouveau mot de passe ci-dessous avant d&apos;accéder au reste de l&apos;application.
+          </p>
+        </Card>
+      )}
 
       {/* Onglets */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>

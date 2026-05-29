@@ -3,9 +3,11 @@
 // POST /api/persons  → créer une personne (permission team.invite)
 
 import { NextResponse } from 'next/server'
+import bcrypt from 'bcryptjs'
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { getAuthContext } from '@/lib/authz'
+import { genTempPassword } from '@/lib/temp-password'
 import { authLevelToDb, deriveInitials, personFromDb } from '@/lib/team-mapper'
 import type { PersonRole } from '@/lib/people'
 import type { AuthLevel, Permission, SignatureDomain } from '@/lib/permissions'
@@ -57,28 +59,59 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Champs requis manquants.' }, { status: 400 })
   }
 
-  const created = await db.person.create({
-    data: {
-      ...(body.id ? { id: body.id } : {}),
-      prenom: body.prenom,
-      nom: body.nom,
-      fullName: `${body.prenom} ${body.nom}`,
-      role: body.role,
-      poste: body.poste,
-      email: body.email,
-      phone: body.phone ?? null,
-      color: body.color,
-      initials: deriveInitials(body.prenom, body.nom),
-      authLevel: authLevelToDb(body.authLevel),
-      customPermissions: body.customPermissions ?? [],
-      canSign: body.canSign ?? false,
-      signatureDomains: body.signatureDomains ?? [],
-      responsibleCommissions: body.responsibleCommissions ?? [],
-      commissions: body.commissions ?? [],
-      hiddenModules: body.hiddenModules ?? [],
-      active: body.active ?? true,
-      startDate: body.startDate ? new Date(body.startDate) : null,
-    },
+  // Champs obligatoires capturés en consts : le narrowing est perdu dans le
+  // closure de la transaction si on lit body.* directement.
+  const { prenom, nom, role, poste, color, authLevel } = body
+  const email = body.email.toLowerCase().trim()
+
+  // Email déjà utilisé (Person ou User) → 409 explicite.
+  const clash = await db.person.findUnique({ where: { email } })
+  if (clash) {
+    return NextResponse.json({ error: 'Cet email est déjà utilisé.' }, { status: 409 })
+  }
+
+  // Création de la personne ET de son compte de connexion (avec mot de passe
+  // temporaire à changer à la 1ère connexion) dans une seule transaction.
+  const tempPassword = genTempPassword()
+  const hashedPassword = await bcrypt.hash(tempPassword, 10)
+
+  const created = await db.$transaction(async (tx) => {
+    const person = await tx.person.create({
+      data: {
+        ...(body.id ? { id: body.id } : {}),
+        prenom,
+        nom,
+        fullName: `${prenom} ${nom}`,
+        role,
+        poste,
+        email,
+        phone: body.phone ?? null,
+        color,
+        initials: deriveInitials(prenom, nom),
+        authLevel: authLevelToDb(authLevel),
+        customPermissions: body.customPermissions ?? [],
+        canSign: body.canSign ?? false,
+        signatureDomains: body.signatureDomains ?? [],
+        responsibleCommissions: body.responsibleCommissions ?? [],
+        commissions: body.commissions ?? [],
+        hiddenModules: body.hiddenModules ?? [],
+        active: body.active ?? true,
+        startDate: body.startDate ? new Date(body.startDate) : null,
+      },
+    })
+    await tx.user.create({
+      data: {
+        id: `user-${person.id}`,
+        email,
+        name: person.fullName,
+        hashedPassword,
+        mustChangePassword: true,
+        personId: person.id,
+      },
+    })
+    return person
   })
-  return NextResponse.json(personFromDb(created))
+
+  // tempPassword renvoyé une seule fois pour que l'admin le transmette.
+  return NextResponse.json({ ...personFromDb(created), tempPassword })
 }

@@ -28,7 +28,7 @@ interface TeamContextValue {
   currentUserId: string
   currentUser: Person | null
   can: (perm: Permission) => boolean
-  createPerson: (data: NewPersonInput) => Person
+  createPerson: (data: NewPersonInput, onAccount?: (tempPassword: string) => void) => Person
   updatePerson: (id: string, patch: Partial<Person>) => void
   deletePerson: (id: string) => void
 }
@@ -68,7 +68,7 @@ export function TeamProvider({ children }: { children: React.ReactNode }) {
     [currentUser],
   )
 
-  const createPerson = useCallback((dataInput: NewPersonInput): Person => {
+  const createPerson = useCallback((dataInput: NewPersonInput, onAccount?: (tempPassword: string) => void): Person => {
     const id = `p-${Date.now()}-${Math.random().toString(36).slice(2, 5)}`
     const optimistic: Person = {
       ...dataInput,
@@ -85,13 +85,15 @@ export function TeamProvider({ children }: { children: React.ReactNode }) {
       body: JSON.stringify({ ...dataInput, id }),
     })
       .then((r) => (r.ok ? r.json() : Promise.reject(r)))
-      .then((saved: Person) => {
-        mutate((prev) => (prev ?? []).map((p) => (p.id === id ? saved : p)), { revalidate: false })
+      .then((saved: Person & { tempPassword?: string }) => {
+        const { tempPassword, ...person } = saved
+        mutate((prev) => (prev ?? []).map((p) => (p.id === id ? (person as Person) : p)), { revalidate: false })
+        if (tempPassword && onAccount) onAccount(tempPassword)
       })
       .catch((e) => {
         console.error('[TeamProvider] create error:', e)
         mutate(previous, { revalidate: false })
-        alert("Impossible de créer le membre (droits insuffisants ?).")
+        alert("Impossible de créer le membre (email déjà utilisé ou droits insuffisants).")
       })
 
     return optimistic

@@ -19,6 +19,7 @@ declare module 'next-auth' {
       id: string
       personId?: string
       authLevel?: string
+      mustChangePassword?: boolean
     } & DefaultSession['user']
   }
 }
@@ -65,6 +66,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             name: user.person?.fullName ?? user.name ?? undefined,
             personId: user.personId ?? undefined,
             authLevel: user.person?.authLevel ?? undefined,
+            mustChangePassword: user.mustChangePassword,
           }
         } catch (e) {
           console.error('[auth] DB error:', e)
@@ -74,10 +76,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
       if (user) {
         token.personId = (user as { personId?: string }).personId
         token.authLevel = (user as { authLevel?: string }).authLevel
+        token.mustChangePassword = (user as { mustChangePassword?: boolean }).mustChangePassword
+      }
+      // Sur update() (ex. après changement de mot de passe), on relit le drapeau
+      // depuis la base pour libérer la session du changement forcé.
+      if (trigger === 'update' && token.sub) {
+        const u = await db.user.findUnique({ where: { id: token.sub } })
+        token.mustChangePassword = u?.mustChangePassword ?? false
       }
       return token
     },
@@ -86,6 +95,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.id = token.sub ?? ''
         session.user.personId = token.personId as string | undefined
         session.user.authLevel = token.authLevel as string | undefined
+        session.user.mustChangePassword = (token.mustChangePassword as boolean | undefined) ?? false
       }
       return session
     },

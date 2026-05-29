@@ -45,6 +45,7 @@ export default function EquipePage() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [formOpen, setFormOpen] = useState(false)
   const [editingPerson, setEditingPerson] = useState<Person | null>(null)
+  const [newAccount, setNewAccount] = useState<{ name: string; tempPassword: string } | null>(null)
 
   // Permissions équipe par action (alignées sur les gardes serveur /api/persons).
   const canInvite = can('team.invite')
@@ -85,7 +86,9 @@ export default function EquipePage() {
     if (editingPerson) {
       updatePerson(editingPerson.id, data)
     } else {
-      const created = createPerson(data)
+      const created = createPerson(data, (tempPassword) =>
+        setNewAccount({ name: `${data.prenom} ${data.nom}`, tempPassword }),
+      )
       setSelectedId(created.id)
     }
   }
@@ -300,6 +303,33 @@ export default function EquipePage() {
         onDelete={editingPerson?.id && canDeactivate ? handleDelete : undefined}
         initial={editingPerson ?? undefined}
       />
+
+      {newAccount && (
+        <div
+          onClick={() => setNewAccount(null)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
+        >
+          <div onClick={e => e.stopPropagation()} style={{ background: '#fff', borderRadius: 12, padding: 24, maxWidth: 460, width: '100%', boxShadow: '0 12px 40px rgba(0,0,0,0.2)' }}>
+            <p style={{ fontSize: 16, fontWeight: 700, color: C.fg, marginBottom: 6 }}>Compte créé pour {newAccount.name}</p>
+            <p style={{ fontSize: 13, color: C.muted, marginBottom: 16, lineHeight: 1.5 }}>
+              Transmettez ce <strong>mot de passe temporaire</strong> à la personne (en main propre ou par un canal sûr).
+              Il devra le changer à sa première connexion. Il ne sera plus affiché.
+            </p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', background: C.bg, border: `1px solid ${C.border}`, borderRadius: 8, marginBottom: 16 }}>
+              <code style={{ flex: 1, fontSize: 18, fontWeight: 700, color: C.fg, fontFamily: "'JetBrains Mono', monospace", letterSpacing: '0.04em' }}>
+                {newAccount.tempPassword}
+              </code>
+              <Button size="sm" onClick={() => navigator.clipboard?.writeText(newAccount.tempPassword)}>Copier</Button>
+            </div>
+            <p style={{ fontSize: 12, color: C.subtle, marginBottom: 16 }}>
+              Identifiant de connexion : son adresse e-mail.
+            </p>
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <Button variant="primary" size="sm" onClick={() => setNewAccount(null)}>J&apos;ai noté le mot de passe</Button>
+            </div>
+          </div>
+        </div>
+      )}
     </Shell>
   )
 }

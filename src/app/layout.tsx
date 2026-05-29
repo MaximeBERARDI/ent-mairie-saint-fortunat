@@ -17,6 +17,7 @@ import '@/styles/globals.css'
 import { SettingsProvider } from '@/context/SettingsContext'
 import { AuthSessionProvider } from '@/components/providers/AuthSessionProvider'
 import { IdleTimeout } from '@/components/providers/IdleTimeout'
+import { ForcePasswordChange } from '@/components/providers/ForcePasswordChange'
 import { PwaRegister } from '@/components/providers/PwaRegister'
 import { TeamProvider } from '@/context/TeamContext'
 
@@ -41,6 +42,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AuthSessionProvider>
           <PwaRegister />
           <IdleTimeout />
+          <ForcePasswordChange />
           <TeamProvider>
             <SettingsProvider>
               <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>

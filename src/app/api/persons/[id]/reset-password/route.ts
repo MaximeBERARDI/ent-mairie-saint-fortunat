@@ -40,7 +40,7 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
 
   const tempPassword = genTempPassword()
   const hashedPassword = await bcrypt.hash(tempPassword, 10)
-  await db.user.update({ where: { id: user.id }, data: { hashedPassword } })
+  await db.user.update({ where: { id: user.id }, data: { hashedPassword, mustChangePassword: true } })
 
   return NextResponse.json({ tempPassword })
 }
