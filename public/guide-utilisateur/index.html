@@ -217,9 +217,11 @@ code{font-family:var(--font-mono);font-size:.85em;background:var(--slate-50);pad
     <a href="#premiers-pas">Premiers pas &amp; connexion</a>
     <a href="#navigation">Se repérer dans l'outil</a>
     <a href="#roles">Rôles &amp; autorisations</a>
+    <a href="#installer">Installer l'app (mobile)</a>
 
     <div class="grp">Au quotidien</div>
     <a href="#dashboard">Tableau de bord</a>
+    <a href="#calendrier">Calendrier</a>
     <a href="#taches">Tâches</a>
     <a href="#commissions">Commissions &amp; Conseil</a>
     <a href="#cr">Comptes rendus &amp; IA</a>
@@ -234,6 +236,7 @@ code{font-family:var(--font-mono);font-size:.85em;background:var(--slate-50);pad
     <div class="grp">Documents &amp; équipe</div>
     <a href="#bibliotheque">Bibliothèque (GED)</a>
     <a href="#equipe">Équipe &amp; accès</a>
+    <a href="#journal">Journal d'audit</a>
     <a href="#rapports">Rapports &amp; exports</a>
     <a href="#profil">Profil &amp; sécurité</a>
 
@@ -248,7 +251,7 @@ code{font-family:var(--font-mono);font-size:.85em;background:var(--slate-50);pad
 
 <!-- HERO -->
 <header class="hero" id="intro">
-  <span class="pill">● Guide de l'utilisateur · Version 1</span>
+  <span class="pill">● Guide de l'utilisateur · Version 2</span>
   <h1>Bien utiliser l'Espace Numérique de Travail de la commune</h1>
   <p>Ce guide vous accompagne pas à pas dans toutes les fonctions de l'ENT : tâches, finances, ressources humaines, commissions, comptes rendus et documents. Chaque module est expliqué, avec des tutoriels concrets.</p>
   <div class="meta">
@@ -295,8 +298,24 @@ code{font-family:var(--font-mono);font-size:.85em;background:var(--slate-50);pad
   <div class="callout warn"><svg class="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
   <p><b>Déconnexion automatique.</b> Par sécurité, vous êtes déconnecté après <b>30&nbsp;minutes d'inactivité</b> (aucune action souris/clavier). Vous verrez alors le message « Session expirée » sur la page de connexion : reconnectez-vous simplement, sans perte de données enregistrées.</p></div>
 
+  <div class="callout info"><svg class="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+  <p><b>Nouveau compte ou mot de passe réinitialisé&nbsp;?</b> Un <b>mot de passe temporaire</b> vous est remis par la mairie. À votre première connexion, l'outil vous amène automatiquement sur <b>Profil → Sécurité</b> et vous demande de <b>définir votre propre mot de passe</b> avant d'accéder au reste de l'application — c'est obligatoire.</p></div>
+
   <h3>Mot de passe oublié</h3>
   <p>L'ENT n'envoie pas (encore) d'e-mail de réinitialisation. En cas d'oubli, cliquez sur <span class="ui">Mot de passe oublié&nbsp;?</span> sous le formulaire : la page vous invite à contacter le <strong>secrétariat de mairie</strong>, qui réinitialisera votre accès et vous remettra un mot de passe temporaire. Vous le changerez ensuite vous-même.</p>
+
+  <h3 id="installer">Installer l'ENT comme une application</h3>
+  <p>L'ENT est une <strong>application installable</strong> (PWA) : vous pouvez l'ajouter à l'écran d'accueil de votre téléphone ou à votre bureau, avec l'icône de la mairie, et l'ouvrir comme une vraie appli (en plein écran, sans la barre du navigateur).</p>
+  <div class="tuto">
+    <div class="tuto__h"><span class="tag">Tutoriel</span> Installer l'ENT sur votre appareil</div>
+    <div class="who">Pour : tout le monde</div>
+    <ol>
+      <li><b>Android (Chrome)</b> : ouvrez l'ENT, touchez le menu <b>⋮</b> en haut à droite, puis <span class="ui">Installer l'application</span> (ou « Ajouter à l'écran d'accueil »).</li>
+      <li><b>iPhone / iPad (Safari)</b> : touchez le bouton <b>Partager</b> (carré avec une flèche), puis <span class="ui">Sur l'écran d'accueil</span>.</li>
+      <li><b>Ordinateur (Chrome / Edge)</b> : cliquez sur l'icône <b>d'installation</b> à droite de la barre d'adresse, puis <span class="ui">Installer</span>.</li>
+      <li>L'icône de la mairie apparaît sur votre appareil : un appui l'ouvre directement, comme une application classique.</li>
+    </ol>
+  </div>
 </section>
 
 <!-- ============ NAVIGATION ============ -->
@@ -308,13 +327,13 @@ code{font-family:var(--font-mono);font-size:.85em;background:var(--slate-50);pad
   <div class="frame">
     <div class="frame__bar"><i></i><i></i><i></i><span class="url">ent-mairie-saint-fortunat · /dashboard</span></div>
     <div class="frame__body">
-      <div class="row"><span class="badge b-slate">Menu</span><span class="t">Tableau de bord · Tâches · Commissions · Comptes rendus · RH · Finances · Équipe · Bibliothèque</span></div>
+      <div class="row"><span class="badge b-slate">Menu</span><span class="t">Tableau de bord · Calendrier · Tâches · Commissions · Comptes rendus · RH · Finances · Équipe · Bibliothèque</span></div>
       <div class="row"><span class="badge b-info">Haut</span><span class="t">🔎 Recherche globale · 🔔 Notifications · 👤 Profil / Déconnexion</span></div>
     </div>
   </div>
 
   <h3>Le menu latéral</h3>
-  <p>Il donne accès aux 8 grands modules. Un <strong>badge rouge</strong> sur <span class="ui">Tâches</span> indique le nombre de tâches qui vous sont assignées et non terminées. Le menu peut être affiché en mode « icônes » (compact) ou « libellés » — réglable dans votre profil.</p>
+  <p>Il donne accès aux grands modules. Un <strong>badge rouge</strong> sur <span class="ui">Tâches</span> indique le nombre de tâches qui vous sont assignées et non terminées. Le menu peut être affiché en mode « icônes » (compact) ou « libellés » — réglable dans votre profil.</p>
 
   <div class="callout info"><svg class="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
   <p><b>Vous ne voyez pas tous les modules&nbsp;?</b> C'est normal : l'affichage dépend de votre profil. Un administrateur peut masquer certains modules pour une personne, et certaines fonctions n'apparaissent qu'avec les droits correspondants.</p></div>
@@ -378,6 +397,35 @@ code{font-family:var(--font-mono);font-size:.85em;background:var(--slate-50);pad
       <li>Utilisez <b>Ctrl + P</b> (⌘ + P sur Mac) pour l'imprimer ou l'enregistrer en PDF, prêt à présenter en conseil.</li>
     </ol>
   </div>
+</section>
+
+<!-- ============ CALENDRIER ============ -->
+<section class="sec" id="calendrier">
+  <span class="kicker">Au quotidien</span>
+  <h2>Calendrier&nbsp;: tout ce qui arrive, au même endroit</h2>
+  <p class="lead">Le module <strong>Calendrier</strong> (juste sous « Tableau de bord » dans le menu) rassemble en une seule vue mensuelle les <strong>échéances de tâches</strong>, les <strong>réunions de commission</strong> et les <strong>congés approuvés</strong>.</p>
+
+  <div class="frame">
+    <div class="frame__bar"><i></i><i></i><i></i><span class="url">/calendrier</span></div>
+    <div class="frame__body">
+      <div class="row"><span class="dot" style="background:var(--warning)"></span><span class="t">Échéance — Préparer l'ordre du jour du conseil<small>Mar. 12</small></span></div>
+      <div class="row"><span class="dot" style="background:var(--info)"></span><span class="t">Réunion · Commission Travaux<small>Jeu. 14 · 18h00 · Salle du conseil</small></span></div>
+      <div class="row"><span class="dot" style="background:var(--accent)"></span><span class="t">Congé — Lucie Bernard<small>du 18 au 22</small></span></div>
+    </div>
+  </div>
+
+  <div class="tuto">
+    <div class="tuto__h"><span class="tag">Tutoriel</span> Consulter et filtrer le calendrier</div>
+    <div class="who">Pour : tout le monde</div>
+    <ol>
+      <li>Cliquez sur <span class="ui">Calendrier</span> dans le menu de gauche.</li>
+      <li>Naviguez entre les mois avec <span class="ui">‹</span> / <span class="ui">›</span>, ou revenez au mois courant avec <span class="ui">Aujourd'hui</span>.</li>
+      <li>Chaque évènement est <b>coloré par type</b> : tâches (orange), réunions (bleu), congés (terracotta).</li>
+      <li>Utilisez la <b>légende cliquable</b> (en haut à droite) pour <b>masquer/afficher</b> un type d'évènement.</li>
+      <li>Cliquez un évènement pour ouvrir le <b>module correspondant</b> (tâches, commissions, RH).</li>
+    </ol>
+  </div>
+  <p>Le calendrier est en <strong>lecture seule</strong> : il reflète automatiquement ce qui est saisi dans les autres modules. Pour ajouter une réunion ou une échéance, passez par Commissions ou Tâches.</p>
 </section>
 
 <!-- ============ TACHES ============ -->
@@ -579,9 +627,12 @@ code{font-family:var(--font-mono);font-size:.85em;background:var(--slate-50);pad
   <h3>Fiches agents, paies et missions</h3>
   <ul>
     <li><strong>Agents</strong> — fiche complète (contrat, grade, échelon, temps de travail, rémunération, soldes de congés, documents, missions). Cliquez <span class="ui">✎ Modifier</span> pour la mettre à jour (droits de gestion requis).</li>
-    <li><strong>Paies</strong> — sélectionnez un mois, cliquez <span class="ui green">🧾 Générer pour&nbsp;[mois]</span> : un bulletin au format fonction publique territoriale est créé pour chaque agent (cotisations CSG/CRDS, CNRACL ou IRCANTEC, RAFP…). Chaque bulletin s'imprime ou s'envoie par e-mail (icônes 🧾 / ✉).</li>
+    <li><strong>Paies</strong> — sélectionnez un mois, cliquez <span class="ui green">🧾 Générer pour&nbsp;[mois]</span> : un bulletin au format fonction publique territoriale est créé pour chaque agent (cotisations CSG/CRDS, CNRACL ou IRCANTEC, RAFP…). Chaque bulletin s'imprime ou s'envoie par e-mail (icônes 🧾 / ✉). Une bascule <span class="ui">Ce mois / Historique</span> permet de consulter <b>tous les bulletins déjà émis</b>, avec un filtre par agent.</li>
     <li><strong>Missions</strong> — créez une mission ponctuelle (agent, dates, lieu, intitulé) ; elle apparaît sur la fiche de l'agent.</li>
   </ul>
+
+  <div class="callout tip"><svg class="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+  <p><b>Chaque agent retrouve ses bulletins.</b> Un agent n'a pas besoin d'accéder au module RH : ses propres bulletins de paie apparaissent dans son <b>Profil → onglet « Bulletins de paie »</b>, téléchargeables en PDF. Pour des raisons de confidentialité, chacun ne voit que <b>les siens</b> (seul le secrétariat/RH voit tous les bulletins).</p></div>
 
   <div class="callout info"><svg class="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
   <p><b>Lien avec les finances.</b> La masse salariale s'impute sur le chapitre <b>012 — Charges de personnel</b> de la comptabilité M14. Le coût annualisé estimé en paie est à rapprocher du budget alloué à ce chapitre dans le module Finances.</p></div>
@@ -675,6 +726,7 @@ code{font-family:var(--font-mono);font-size:.85em;background:var(--slate-50);pad
       <li>Consultez ou ajoutez une relance via l'icône <span class="ui">📋</span> (canal, résultat, notes) — droit « gérer les relances » requis.</li>
     </ol>
   </div>
+  <p>La liste des quittances couvre <strong>toutes les périodes</strong> (la plus récente en haut). Filtrez par statut (Toutes / Impayés / Émises / Payées) <strong>et</strong> par <strong>locataire</strong> (menu déroulant « Tous les locataires ») pour retrouver l'historique des loyers d'une personne.</p>
 </section>
 
 <!-- ============ SUBVENTIONS ============ -->
@@ -758,7 +810,7 @@ code{font-family:var(--font-mono);font-size:.85em;background:var(--slate-50);pad
       <li>Onglet <b>Signature</b> : activez le pouvoir de signature et cochez les domaines concernés.</li>
       <li>Onglet <b>Délégations</b> : désignez les commissions dont la personne est référente.</li>
       <li>Onglet <b>Accès aux modules</b> : masquez éventuellement certains modules pour cette personne.</li>
-      <li>Cliquez <span class="ui green">Enregistrer</span>.</li>
+      <li>Cliquez <span class="ui green">Enregistrer</span>. À la création, l'outil crée la fiche <b>et son compte de connexion</b>, puis affiche un <b>mot de passe temporaire</b> (une seule fois, bouton « Copier ») : transmettez-le à la personne. Elle devra le changer à sa première connexion.</li>
     </ol>
   </div>
 
@@ -777,6 +829,29 @@ code{font-family:var(--font-mono);font-size:.85em;background:var(--slate-50);pad
   <p><b>Changer l'e-mail d'une personne.</b> Si vous modifiez l'adresse e-mail dans la fiche, c'est aussi son <b>identifiant de connexion</b> qui change : la personne devra désormais se connecter avec la nouvelle adresse.</p></div>
 
   <p>Pour retirer un accès, utilisez <span class="ui">⊘ Désactiver</span> (vous ne pouvez pas désactiver votre propre compte). La personne désactivée n'apparaît plus dans les listes actives mais reste liée à l'historique (tâches passées, etc.).</p>
+</section>
+
+<!-- ============ JOURNAL D'AUDIT ============ -->
+<section class="sec" id="journal">
+  <span class="kicker">Équipe &amp; accès</span>
+  <h2>Journal d'audit&nbsp;: qui a fait quoi, et quand</h2>
+  <p class="lead">Le <strong>journal d'audit</strong> conserve une trace horodatée des actions sensibles de l'application — pour la transparence et le contrôle. Réservé aux administrateurs.</p>
+
+  <p>Y sont enregistrées notamment : la <strong>création / modification de rôle / désactivation</strong> d'un compte et la réinitialisation de mot de passe, la <strong>validation, le paiement, le rejet et la suppression</strong> de factures, l'<strong>approbation / refus</strong> de congés, et la suppression de bulletins de paie. Chaque ligne indique <strong>l'acteur, l'action, l'objet concerné et la date</strong>.</p>
+
+  <div class="tuto">
+    <div class="tuto__h"><span class="tag">Tutoriel</span> Consulter le journal d'audit</div>
+    <div class="who">Pour : administrateurs</div>
+    <ol>
+      <li>Cliquez sur votre <b>avatar</b> en haut à droite pour ouvrir le menu.</li>
+      <li>Choisissez <span class="ui">📋 Journal d'audit</span>.</li>
+      <li>Parcourez les <b>300 évènements les plus récents</b> (du plus récent au plus ancien).</li>
+      <li>Utilisez le champ de <b>recherche</b> pour filtrer par acteur, action ou objet (ex. « facture », un nom…).</li>
+    </ol>
+  </div>
+
+  <div class="callout info"><svg class="ci" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+  <p><b>Confidentialité.</b> Le journal n'enregistre <b>pas</b> de données sensibles (montants détaillés des salaires, mots de passe…) — seulement la nature de l'action et la personne qui l'a réalisée.</p></div>
 </section>
 
 <!-- ============ RAPPORTS ============ -->
@@ -815,9 +890,20 @@ code{font-family:var(--font-mono);font-size:.85em;background:var(--slate-50);pad
     </ol>
   </div>
 
+  <div class="tuto">
+    <div class="tuto__h"><span class="tag">Tutoriel</span> Personnaliser son avatar (photo ou couleur)</div>
+    <div class="who">Pour : tout le monde</div>
+    <ol>
+      <li>Ouvrez <span class="path">/profil</span>. Votre avatar s'affiche en haut.</li>
+      <li>Pour une <b>photo</b> : cliquez le bouton 📷 sur l'avatar et choisissez une image. Elle est automatiquement réduite et enregistrée, puis visible <b>partout</b> (barre du haut, organigramme, listes…). « Retirer la photo » revient à l'icône colorée.</li>
+      <li>Sans photo, choisissez une <b>couleur</b> : palette proposée ou pastille « couleur personnalisée » pour n'importe quelle teinte.</li>
+    </ol>
+  </div>
+
   <h3>Informations &amp; préférences</h3>
   <ul>
     <li><strong>Informations</strong> — vous pouvez modifier votre <b>téléphone</b>. Le prénom, nom, e-mail et poste sont gérés par les administrateurs (module Équipe).</li>
+    <li><strong>Bulletins de paie</strong> <em>(agents)</em> — un onglet dédié regroupe <b>vos</b> bulletins, téléchargeables en PDF.</li>
     <li><strong>Notifications</strong> — cochez les événements pour lesquels vous souhaitez être prévenu (tâche assignée, validation, signature, facture, congés).</li>
     <li><strong>Affichage</strong> — le thème et le mode du menu (icônes ou libellés) se règlent dans les préférences.</li>
   </ul>
@@ -839,6 +925,10 @@ code{font-family:var(--font-mono);font-size:.85em;background:var(--slate-50);pad
   <details class="faq"><summary>Mon écriture comptable ne peut pas être enregistrée.</summary><div class="a"><p>Une écriture doit être équilibrée : le total des débits doit égaler le total des crédits. Tant que ce n'est pas le cas, le bouton d'enregistrement reste inactif et l'écart est affiché.</p></div></details>
 
   <details class="faq"><summary>J'ai oublié mon mot de passe.</summary><div class="a"><p>Sur la page de connexion, cliquez « Mot de passe oublié&nbsp;? ». La réinitialisation passe par le secrétariat de mairie, qui vous remet un mot de passe temporaire à changer ensuite.</p></div></details>
+
+  <details class="faq"><summary>À la connexion, on me demande de changer mon mot de passe — pourquoi&nbsp;?</summary><div class="a"><p>Votre compte vient d'être créé ou réinitialisé avec un mot de passe temporaire. Par sécurité, vous devez définir le vôtre avant de continuer. C'est une étape unique : ensuite, vous accédez normalement à l'application.</p></div></details>
+
+  <details class="faq"><summary>Puis-je installer l'ENT comme une application sur mon téléphone&nbsp;?</summary><div class="a"><p>Oui. Ouvrez l'ENT dans votre navigateur, puis « Ajouter à l'écran d'accueil » (Android/iPhone) ou l'icône d'installation dans la barre d'adresse (ordinateur). L'icône de la mairie apparaît et l'app s'ouvre en plein écran. Voir « Installer l'app » dans le sommaire.</p></div></details>
 
   <details class="faq"><summary>Mes données sont-elles en sécurité&nbsp;?</summary><div class="a"><p>Oui : connexion par identifiant et mot de passe chiffré, accès par profil, données hébergées en France/UE, et déconnexion automatique. Chacun ne voit que ce qui le concerne.</p></div></details>
 </section>
