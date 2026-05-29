@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Refonte UX — Modules Finances &amp; RH · ENT Mairie de Saint-Fortunat</title>
+<style>
+  /* ──────────────────────────────────────────────────────────────
+     Palette mairie (src/lib/theme.ts — thème « ardèche »)
+     Maquettes de réflexion : aucune ligne de code applicatif.
+     ────────────────────────────────────────────────────────────── */
+  :root {
+    --green:#6ab123; --green-dark:#3d7a14; --green-light:#f2f9e8; --green-mid:#c4e18a;
+    --slate:#4d5e6c; --slate-light:#f0f3f5; --slate-dark:#2e3b45;
+    --terra:#c4793a; --terra-dark:#8e552a; --terra-light:#fdf4ec;
+    --bg:#f4f6f1; --surface:#ffffff; --border:#dde4e9;
+    --fg:#1f2a31; --muted:#4d5e6c; --subtle:#5e7480; --ph:#e2e6e3;
+    --success:#2d9c6e; --success-dark:#1f7a52; --success-light:#e8f7f1;
+    --warning:#d4860a; --warning-dark:#8a560a; --warning-light:#fef5e4;
+    --danger:#c4393a; --danger-dark:#9c2d2e; --danger-light:#fdeaea;
+    --info:#2563a8; --info-dark:#1d4d85; --info-light:#eaf1fb;
+    --sidebar-active:rgba(106,177,35,0.25);
+  }
+  * { box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body {
+    margin:0; background:var(--bg); color:var(--fg);
+    font-family:'DM Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    line-height:1.6; font-size:16px; -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4 { line-height:1.25; margin:0; font-weight:700; letter-spacing:-0.01em; }
+  p { margin:0 0 12px; }
+  a { color:var(--green-dark); }
+
+  /* ── Bandeau supérieur de navigation du document ── */
+  .docnav {
+    position:sticky; top:0; z-index:50;
+    background:rgba(255,255,255,0.92); backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--border);
+    display:flex; align-items:center; gap:6px; flex-wrap:wrap;
+    padding:10px clamp(16px,4vw,40px);
+  }
+  .docnav .brand { font-weight:700; font-size:14px; margin-right:auto; display:flex; align-items:center; gap:8px; }
+  .docnav .brand .dot { width:10px; height:10px; border-radius:50%; background:var(--green); box-shadow:0 0 0 3px var(--green-light); }
+  .docnav a {
+    text-decoration:none; color:var(--muted); font-size:13px; font-weight:600;
+    padding:6px 12px; border-radius:8px; transition:background .2s, color .2s;
+  }
+  .docnav a:hover { background:var(--slate-light); color:var(--fg); }
+
+  .wrap { max-width:1120px; margin:0 auto; padding:0 clamp(16px,4vw,40px); }
+
+  /* ── Couverture ── */
+  .cover { padding:64px 0 40px; }
+  .kicker { display:inline-block; font-size:12px; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--green-dark); background:var(--green-light); padding:6px 12px; border-radius:20px; margin-bottom:20px; }
+  .cover h1 { font-size:clamp(30px,5vw,46px); }
+  .cover .lede { font-size:18px; color:var(--muted); max-width:62ch; margin-top:14px; }
+  .meta { margin-top:22px; font-size:13px; color:var(--subtle); display:flex; gap:18px; flex-wrap:wrap; }
+  .meta b { color:var(--fg); }
+
+  section { padding:40px 0; border-top:1px solid var(--border); }
+  section > .wrap > h2 { font-size:clamp(22px,3vw,30px); margin-bottom:6px; }
+  .section-sub { color:var(--muted); max-width:64ch; margin-bottom:28px; }
+
+  /* ── Cartes « problème » ── */
+  .grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  @media (max-width:860px){ .grid-3 { grid-template-columns:1fr; } }
+  .pcard { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; }
+  .pcard .n { font-size:13px; font-weight:700; color:var(--terra); }
+  .pcard h3 { font-size:17px; margin:6px 0 8px; }
+  .pcard p { font-size:14px; color:var(--muted); margin:0; }
+
+  /* ── En-tête de proposition ── */
+  .prop-head { display:flex; align-items:flex-start; gap:18px; margin-bottom:8px; }
+  .prop-badge {
+    flex:0 0 auto; width:54px; height:54px; border-radius:14px;
+    display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:800; color:#fff;
+  }
+  .prop-A .prop-badge { background:linear-gradient(135deg,var(--green),var(--green-dark)); }
+  .prop-B .prop-badge { background:linear-gradient(135deg,var(--info),var(--info-dark)); }
+  .prop-C .prop-badge { background:linear-gradient(135deg,var(--terra),var(--terra-dark)); }
+  .prop-head h2 { font-size:26px; }
+  .prop-head .concept { color:var(--muted); font-size:15px; margin-top:2px; }
+  .tag { display:inline-block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em;
+    padding:3px 9px; border-radius:20px; }
+  .tag-A { background:var(--green-light); color:var(--green-dark); }
+  .tag-B { background:var(--info-light); color:var(--info-dark); }
+  .tag-C { background:var(--terra-light); color:var(--terra-dark); }
+
+  .mock-label { font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--subtle);
+    margin:26px 0 10px; display:flex; align-items:center; gap:8px; }
+  .mock-label::before { content:""; width:18px; height:2px; background:var(--green); border-radius:2px; }
+
+  /* ── Cadre « écran » d'application ── */
+  .screen { border:1px solid var(--border); border-radius:12px; overflow:hidden; background:var(--surface);
+    box-shadow:0 12px 30px rgba(20,40,30,.07); }
+  .screen-bar { display:flex; align-items:center; gap:6px; padding:8px 12px; background:var(--slate-light);
+    border-bottom:1px solid var(--border); }
+  .screen-bar .dots { display:flex; gap:5px; }
+  .screen-bar .dots span { width:9px; height:9px; border-radius:50%; background:#cbd3d8; }
+  .screen-bar .url { margin-left:8px; font-size:11px; color:var(--subtle); background:var(--surface);
+    border:1px solid var(--border); border-radius:6px; padding:2px 10px; }
+  .app { display:flex; min-height:300px; }
+
+  /* Rail principal de l'ENT (sidebar existante, simplifiée) */
+  .rail { flex:0 0 150px; background:var(--slate-dark); color:rgba(255,255,255,.92); padding:10px 0; font-size:12px; }
+  .rail .logo { font-weight:700; font-size:12px; padding:4px 14px 12px; color:#fff; opacity:.95; display:flex; gap:7px; align-items:center;}
+  .rail .logo .lm { width:8px;height:8px;border-radius:50%;background:var(--green); }
+  .rail .item { display:flex; align-items:center; gap:9px; padding:7px 14px; color:rgba(255,255,255,.78); }
+  .rail .item svg { width:15px; height:15px; flex:0 0 auto; }
+  .rail .item.on { background:var(--sidebar-active); color:#fff; font-weight:600; box-shadow:inset 3px 0 0 var(--green); }
+  @media (max-width:680px){ .rail { flex-basis:48px; } .rail .logo span, .rail .item span { display:none; } }
+
+  .work { flex:1; min-width:0; padding:16px; background:var(--bg); }
+  .work-head { display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap; }
+  .work-head h4 { font-size:16px; }
+  .breadcrumb { font-size:12px; color:var(--subtle); }
+  .breadcrumb b { color:var(--fg); }
+  .spacer { flex:1; }
+
+  /* Onglets « avant » (état actuel) */
+  .tabs-old { display:flex; gap:3px; background:var(--ph); border-radius:9px; padding:4px; flex-wrap:wrap; }
+  .tabs-old span { font-size:12px; padding:5px 10px; border-radius:6px; color:var(--muted); }
+  .tabs-old span.on { background:#fff; color:var(--fg); font-weight:600; box-shadow:0 1px 2px rgba(0,0,0,.1); }
+
+  /* Grille de cartes-hub (Proposition A) */
+  .hub { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+  @media (max-width:680px){ .hub { grid-template-columns:1fr 1fr; } }
+  .hub-card { background:#fff; border:1px solid var(--border); border-radius:11px; padding:13px; position:relative;
+    transition:border-color .2s, box-shadow .2s; cursor:default; }
+  .hub-card:hover { border-color:var(--green-mid); box-shadow:0 4px 14px rgba(106,177,35,.12); }
+  .hub-card .ic { width:30px; height:30px; border-radius:8px; display:flex; align-items:center; justify-content:center;
+    background:var(--green-light); color:var(--green-dark); margin-bottom:9px; }
+  .hub-card .ic svg { width:17px; height:17px; }
+  .hub-card.acc-info .ic { background:var(--info-light); color:var(--info-dark); }
+  .hub-card.acc-terra .ic { background:var(--terra-light); color:var(--terra-dark); }
+  .hub-card.acc-slate .ic { background:var(--slate-light); color:var(--slate); }
+  .hub-card h5 { font-size:13px; margin:0 0 3px; }
+  .hub-card .desc { font-size:11px; color:var(--subtle); margin:0 0 9px; line-height:1.4; }
+  .kpis { display:flex; gap:10px; flex-wrap:wrap; }
+  .kpi { font-size:11px; }
+  .kpi .v { font-weight:700; font-size:15px; color:var(--fg); display:block; line-height:1.1; }
+  .kpi .v.warn { color:var(--warning-dark); }
+  .kpi .v.dgr { color:var(--danger-dark); }
+  .kpi .v.ok { color:var(--success-dark); }
+  .kpi .l { color:var(--subtle); }
+  .deep { margin-top:9px; display:flex; gap:6px; flex-wrap:wrap; }
+  .deep span { font-size:10px; color:var(--green-dark); background:var(--green-light); border-radius:5px; padding:2px 7px; }
+  .deep.info span { color:var(--info-dark); background:var(--info-light); }
+  .deep.terra span { color:var(--terra-dark); background:var(--terra-light); }
+
+  /* Sous-navigation latérale (Proposition B) */
+  .subnav { flex:0 0 168px; background:#fff; border-right:1px solid var(--border); padding:12px 8px; }
+  .subnav .grp { font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--subtle);
+    padding:10px 10px 5px; }
+  .subnav .sn { display:flex; align-items:center; gap:8px; font-size:12px; color:var(--muted); padding:6px 10px; border-radius:7px; }
+  .subnav .sn svg { width:14px; height:14px; flex:0 0 auto; opacity:.8; }
+  .subnav .sn.on { background:var(--green-light); color:var(--green-dark); font-weight:600; }
+  .subnav .sn .pill { margin-left:auto; font-size:9px; font-weight:700; background:var(--danger); color:#fff;
+    border-radius:9px; padding:0 6px; line-height:15px; }
+  @media (max-width:680px){ .subnav { flex-basis:120px; } }
+
+  /* Bloc/widget (Proposition C) */
+  .blocks { display:grid; grid-template-columns:1.3fr 1fr; gap:12px; }
+  @media (max-width:680px){ .blocks { grid-template-columns:1fr; } }
+  .block { background:#fff; border:1px solid var(--border); border-radius:11px; padding:12px; }
+  .block.span2 { grid-column:1 / -1; }
+  .block .bh { display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+  .block .bh h5 { font-size:13px; }
+  .block .bh .seeall { margin-left:auto; font-size:11px; color:var(--green-dark); font-weight:600; }
+  .block .bh .chip { font-size:10px; font-weight:700; border-radius:6px; padding:2px 7px; }
+  .chip.todo { background:var(--warning-light); color:var(--warning-dark); }
+  .chip.live { background:var(--success-light); color:var(--success-dark); }
+
+  .rolebar { display:inline-flex; background:var(--ph); border-radius:9px; padding:3px; gap:2px; }
+  .rolebar span { font-size:11px; padding:4px 11px; border-radius:6px; color:var(--muted); font-weight:600; }
+  .rolebar span.on { background:#fff; color:var(--fg); box-shadow:0 1px 2px rgba(0,0,0,.1); }
+
+  .alert { display:flex; align-items:center; gap:9px; background:var(--danger-light); border:1px solid #f3c9c9;
+    border-radius:9px; padding:9px 12px; font-size:12px; color:var(--danger-dark); margin-bottom:12px; }
+  .alert svg { width:16px; height:16px; flex:0 0 auto; }
+  .alert.warn { background:var(--warning-light); border-color:#f0d9a8; color:var(--warning-dark); }
+
+  /* listes/lignes génériques dans les blocs */
+  .row { display:flex; align-items:center; gap:9px; padding:7px 0; border-bottom:1px solid var(--border); font-size:12px; }
+  .row:last-child { border-bottom:none; }
+  .row .who { width:20px; height:20px; border-radius:50%; background:var(--green-mid); color:var(--green-dark);
+    font-size:9px; font-weight:700; display:flex; align-items:center; justify-content:center; flex:0 0 auto; }
+  .row .grow { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .row .amt { font-weight:700; }
+  .badge { font-size:10px; font-weight:700; border-radius:6px; padding:2px 7px; }
+  .b-warn { background:var(--warning-light); color:var(--warning-dark); }
+  .b-ok { background:var(--success-light); color:var(--success-dark); }
+  .b-info { background:var(--info-light); color:var(--info-dark); }
+  .b-dgr { background:var(--danger-light); color:var(--danger-dark); }
+
+  /* barres d'exécution budgétaire */
+  .bar-line { display:flex; align-items:center; gap:9px; font-size:11px; margin:7px 0; }
+  .bar-line .nm { width:118px; color:var(--muted); flex:0 0 auto; }
+  .bar { flex:1; height:8px; background:var(--slate-light); border-radius:5px; overflow:hidden; }
+  .bar i { display:block; height:100%; background:var(--green); border-radius:5px; }
+  .bar i.hi { background:var(--warning); }
+  .bar i.over { background:var(--danger); }
+  .bar-line .pc { width:38px; text-align:right; font-weight:700; flex:0 0 auto; }
+
+  /* mini-KPI ratios */
+  .ratios { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+  @media (max-width:680px){ .ratios { grid-template-columns:1fr 1fr; } }
+  .ratio { background:var(--slate-light); border-radius:9px; padding:9px; text-align:center; }
+  .ratio .v { font-size:17px; font-weight:800; color:var(--fg); }
+  .ratio .l { font-size:10px; color:var(--subtle); }
+  .ratio.good { background:var(--success-light); } .ratio.good .v { color:var(--success-dark); }
+  .ratio.bad { background:var(--danger-light); } .ratio.bad .v { color:var(--danger-dark); }
+
+  /* annotations / callouts */
+  .annot { margin-top:18px; display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  @media (max-width:760px){ .annot { grid-template-columns:1fr; } }
+  .solves, .limits { border-radius:11px; padding:16px 18px; font-size:14px; }
+  .solves { background:var(--green-light); border:1px solid var(--green-mid); }
+  .limits { background:#fff; border:1px dashed var(--border); }
+  .solves h4, .limits h4 { font-size:13px; text-transform:uppercase; letter-spacing:.05em; margin-bottom:8px; }
+  .solves h4 { color:var(--green-dark); }
+  .limits h4 { color:var(--subtle); }
+  .solves ul, .limits ul { margin:0; padding-left:18px; }
+  .solves li, .limits li { margin-bottom:5px; color:var(--muted); }
+  .solves li b { color:var(--green-dark); }
+
+  /* tableau comparatif */
+  table.cmp { width:100%; border-collapse:collapse; background:#fff; border:1px solid var(--border);
+    border-radius:12px; overflow:hidden; font-size:14px; }
+  table.cmp th, table.cmp td { padding:13px 14px; text-align:left; border-bottom:1px solid var(--border); }
+  table.cmp thead th { background:var(--slate-dark); color:#fff; font-size:13px; }
+  table.cmp tbody th { font-weight:600; color:var(--fg); width:26%; background:var(--slate-light); }
+  table.cmp td { color:var(--muted); vertical-align:top; }
+  .dotrate { font-weight:700; }
+  .r-hi { color:var(--success-dark); } .r-mid { color:var(--warning-dark); } .r-lo { color:var(--danger-dark); }
+
+  .reco { background:var(--slate-dark); color:#fff; border-radius:14px; padding:28px 30px; }
+  .reco h2 { color:#fff; }
+  .reco p { color:rgba(255,255,255,.85); }
+  .reco .pill { display:inline-block; background:var(--green); color:#fff; font-weight:700; font-size:13px;
+    border-radius:20px; padding:5px 14px; margin-bottom:14px; }
+  .reco ul { padding-left:20px; } .reco li { margin-bottom:6px; color:rgba(255,255,255,.88); }
+  .reco b { color:#fff; }
+
+  .note { font-size:13px; color:var(--subtle); background:var(--slate-light); border-left:3px solid var(--green);
+    border-radius:0 8px 8px 0; padding:12px 16px; margin-top:18px; }
+
+  footer { padding:30px 0 60px; color:var(--subtle); font-size:13px; }
+
+  @media print {
+    .docnav { display:none; }
+    section { break-inside:avoid; }
+    .screen { box-shadow:none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════ Bibliothèque d'icônes (Lucide-style, inline) ════════ -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-receipt" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z"/><path d="M8 7h8M8 11h8M8 15h5"/></symbol>
+  <symbol id="i-wallet" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V5a2 2 0 0 0-2-2H5a2 2 0 0 0 0 4h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5"/><path d="M16 13h.01"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l3-4 3 2 4-6"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10l9-7 9 7v9a2 2 0 0 1-2 2h-4v-6H9v6H5a2 2 0 0 1-2-2Z"/></symbol>
+  <symbol id="i-building" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="1"/><path d="M9 7h.01M15 7h.01M9 11h.01M15 11h.01M9 15h.01M15 15h.01"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></symbol>
+  <symbol id="i-ticket" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2 2 2 0 0 0 0 6 2 2 0 0 1-2 2H5a2 2 0 0 1-2-2 2 2 0 0 0 0-6Z"/><path d="M12 7v10" stroke-dasharray="2 2"/></symbol>
+  <symbol id="i-users" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13A4 4 0 0 1 16 11"/></symbol>
+  <symbol id="i-calendar" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h6"/></symbol>
+  <symbol id="i-briefcase" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></symbol>
+  <symbol id="i-leaf" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 4 13c0-6 5-9 16-10 1 11-4 16-9 17Z"/><path d="M9 17c2-4 5-6 8-7"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4M12 17h.01"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5Z"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+</svg>
+
+<!-- ════════ Navigation du document ════════ -->
+<nav class="docnav">
+  <span class="brand"><span class="dot"></span> Refonte UX — Finances &amp; RH</span>
+  <a href="#contexte">Contexte</a>
+  <a href="#propA">A · Hub</a>
+  <a href="#propB">B · Sous-nav</a>
+  <a href="#propC">C · Vue par rôle</a>
+  <a href="#comparatif">Comparatif</a>
+  <a href="#reco">Reco</a>
+</nav>
+
+<!-- ════════ Couverture ════════ -->
+<div class="wrap cover">
+  <span class="kicker">Document de réflexion · maquettes</span>
+  <h1>Repenser la navigation des modules<br/>Finances &amp; Ressources Humaines</h1>
+  <p class="lede">Trois directions UX distinctes pour rendre ces deux modules plus simples à parcourir,
+  faire remonter les fonctions aujourd'hui enfouies, et donner une hiérarchie claire « par où commencer ».
+  Aucune ligne de code applicatif — ce sont des maquettes pour décider ensemble.</p>
+  <div class="meta">
+    <span><b>Application</b> · ENT Mairie de Saint-Fortunat</span>
+    <span><b>Périmètre</b> · /finances &amp; /rh</span>
+    <span><b>Cible</b> · usage bureau (secrétaire / DGS)</span>
+    <span><b>Charte</b> · palette mairie conservée</span>
+    <span><b>Date</b> · 29 mai 2026</span>
+  </div>
+</div>
+
+<!-- ════════ Contexte & problèmes ════════ -->
+<section id="contexte">
+  <div class="wrap">
+    <h2>Le constat</h2>
+    <p class="section-sub">Les deux modules concentrent énormément de valeur, mais l'accès se fait par une
+    barre d'onglets qui s'est allongée — et certaines fonctions clés vivent <em>dans</em> un onglet, donc
+    invisibles depuis l'extérieur.</p>
+
+    <div class="mock-label">Aujourd'hui — Finances : 5 onglets, et le Budget en contient beaucoup d'autres</div>
+    <div class="screen">
+      <div class="screen-bar"><div class="dots"><span></span><span></span><span></span></div><span class="url">ent-mairie · /finances</span></div>
+      <div class="app">
+        <div class="rail">
+          <div class="logo"><span class="lm"></span><span>Mairie</span></div>
+          <div class="item"><svg><use href="#i-grid"/></svg><span>Tableau de bord</span></div>
+          <div class="item on"><svg><use href="#i-wallet"/></svg><span>Finances</span></div>
+          <div class="item"><svg><use href="#i-users"/></svg><span>RH</span></div>
+          <div class="item"><svg><use href="#i-list"/></svg><span>Tâches</span></div>
+        </div>
+        <div class="work">
+          <div class="work-head">
+            <div class="tabs-old">
+              <span class="on">🧾 Factures</span><span>💰 Budget</span><span>🏢 Fournisseurs</span>
+              <span>🏠 Parc immobilier</span><span>🎫 Subventions</span>
+            </div>
+          </div>
+          <div class="note" style="margin-top:4px">
+            ⓘ L'onglet <b>Budget</b> contient à lui seul : plan comptable M14, écritures, <b>ratios DGFiP</b>,
+            <b>historique pluriannuel</b>, <b>projets d'investissement</b> et <b>simulation « what-if »</b> 🧮.
+            Ces fonctions stratégiques sont invisibles tant qu'on n'est pas entré dans l'onglet.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-3" style="margin-top:28px">
+      <div class="pcard"><div class="n">Problème 1</div><h3>Trop d'onglets, navigation à plat</h3>
+        <p>Tout est au même niveau, côte à côte. Plus on ajoute de fonctions, plus la barre s'allonge et plus on hésite.</p></div>
+      <div class="pcard"><div class="n">Problème 2</div><h3>Fonctions enfouies</h3>
+        <p>Ratios, simulation, projets, historique : des outils à forte valeur cachés à l'intérieur d'un onglet, peu découvrables.</p></div>
+      <div class="pcard"><div class="n">Problème 3</div><h3>Pas de hiérarchie</h3>
+        <p>Aucun « par où commencer ». Rien ne distingue ce qui demande une action de ce qui est de la consultation.</p></div>
+    </div>
+
+    <div class="note" style="margin-top:24px">
+      <b>Principe directeur des 3 propositions</b> — on garde tout le contenu existant (rien n'est supprimé),
+      on ne change que <em>la manière d'y accéder et de le hiérarchiser</em>. Les maquettes utilisent les vrais
+      libellés de l'app et la palette mairie. Les icônes passent en SVG (cohérent avec l'audit a11y déjà mené).
+    </div>
+  </div>
+</section>
+
+<!-- ════════ PROPOSITION A — HUB À CARTES ════════ -->
+<section id="propA" class="prop-A">
+  <div class="wrap">
+    <div class="prop-head">
+      <div class="prop-badge">A</div>
+      <div>
+        <span class="tag tag-A">Direction A</span>
+        <h2>Hub à cartes d'entrée</h2>
+        <p class="concept">Ouvrir un module affiche d'abord un <b>tableau d'aiguillage</b> : des cartes « espaces »
+        qui portent chacune un titre, 2-3 chiffres-clés et des raccourcis profonds. On choisit une <em>intention</em>,
+        pas un onglet. Un fil d'Ariane ramène toujours au hub.</p>
+      </div>
+    </div>
+
+    <div class="mock-label">Finances — le hub remplace la barre d'onglets</div>
+    <div class="screen">
+      <div class="screen-bar"><div class="dots"><span></span><span></span><span></span></div><span class="url">ent-mairie · /finances</span></div>
+      <div class="app">
+        <div class="rail">
+          <div class="logo"><span class="lm"></span><span>Mairie</span></div>
+          <div class="item"><svg><use href="#i-grid"/></svg><span>Tableau de bord</span></div>
+          <div class="item on"><svg><use href="#i-wallet"/></svg><span>Finances</span></div>
+          <div class="item"><svg><use href="#i-users"/></svg><span>RH</span></div>
+          <div class="item"><svg><use href="#i-list"/></svg><span>Tâches</span></div>
+        </div>
+        <div class="work">
+          <div class="work-head"><h4>Finances</h4><span class="breadcrumb">— choisissez un espace</span></div>
+          <div class="hub">
+            <div class="hub-card">
+              <div class="ic"><svg><use href="#i-receipt"/></svg></div>
+              <h5>Dépenses &amp; factures</h5>
+              <p class="desc">Saisie, validation, mandatement</p>
+              <div class="kpis"><div class="kpi"><span class="v warn">3</span><span class="l">à valider</span></div>
+                <div class="kpi"><span class="v">2</span><span class="l">à payer</span></div></div>
+            </div>
+            <div class="hub-card acc-slate">
+              <div class="ic"><svg><use href="#i-wallet"/></svg></div>
+              <h5>Budget M14</h5>
+              <p class="desc">Plan comptable, écritures</p>
+              <div class="kpis"><div class="kpi"><span class="v">62 %</span><span class="l">exécuté</span></div>
+                <div class="kpi"><span class="v ok">équilibré</span><span class="l">CA</span></div></div>
+            </div>
+            <div class="hub-card acc-info">
+              <div class="ic"><svg><use href="#i-chart"/></svg></div>
+              <h5>Pilotage &amp; ratios</h5>
+              <p class="desc">Santé financière de la commune</p>
+              <div class="kpis"><div class="kpi"><span class="v">5,1 a.</span><span class="l">désendett.</span></div>
+                <div class="kpi"><span class="v ok">18 %</span><span class="l">épargne</span></div></div>
+              <div class="deep info"><span>Ratios DGFiP</span><span>Historique</span><span>Simulation 🧮</span></div>
+            </div>
+            <div class="hub-card acc-terra">
+              <div class="ic"><svg><use href="#i-home"/></svg></div>
+              <h5>Patrimoine &amp; loyers</h5>
+              <p class="desc">Biens, baux, quittances</p>
+              <div class="kpis"><div class="kpi"><span class="v">12</span><span class="l">biens</span></div>
+                <div class="kpi"><span class="v dgr">2</span><span class="l">impayés</span></div></div>
+            </div>
+            <div class="hub-card acc-info">
+              <div class="ic"><svg><use href="#i-target"/></svg></div>
+              <h5>Projets &amp; subventions</h5>
+              <p class="desc">Investissement pluriannuel</p>
+              <div class="kpis"><div class="kpi"><span class="v">4</span><span class="l">projets</span></div>
+                <div class="kpi"><span class="v">3</span><span class="l">subventions</span></div></div>
+            </div>
+            <div class="hub-card acc-slate">
+              <div class="ic"><svg><use href="#i-building"/></svg></div>
+              <h5>Fournisseurs</h5>
+              <p class="desc">Comptes &amp; engagements</p>
+              <div class="kpis"><div class="kpi"><span class="v">18</span><span class="l">actifs</span></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mock-label">RH — même logique de hub</div>
+    <div class="screen">
+      <div class="screen-bar"><div class="dots"><span></span><span></span><span></span></div><span class="url">ent-mairie · /rh</span></div>
+      <div class="app">
+        <div class="rail">
+          <div class="logo"><span class="lm"></span><span>Mairie</span></div>
+          <div class="item"><svg><use href="#i-grid"/></svg><span>Tableau de bord</span></div>
+          <div class="item"><svg><use href="#i-wallet"/></svg><span>Finances</span></div>
+          <div class="item on"><svg><use href="#i-users"/></svg><span>RH</span></div>
+          <div class="item"><svg><use href="#i-list"/></svg><span>Tâches</span></div>
+        </div>
+        <div class="work">
+          <div class="work-head"><h4>Ressources humaines</h4><span class="breadcrumb">— choisissez un espace</span></div>
+          <div class="hub">
+            <div class="hub-card">
+              <div class="ic"><svg><use href="#i-users"/></svg></div>
+              <h5>Agents &amp; contrats</h5>
+              <p class="desc">Fiches, grades, IFSE</p>
+              <div class="kpis"><div class="kpi"><span class="v">11</span><span class="l">agents</span></div></div>
+            </div>
+            <div class="hub-card acc-terra">
+              <div class="ic"><svg><use href="#i-leaf"/></svg></div>
+              <h5>Absences &amp; congés</h5>
+              <p class="desc">Demandes &amp; compteurs</p>
+              <div class="kpis"><div class="kpi"><span class="v warn">2</span><span class="l">à traiter</span></div></div>
+            </div>
+            <div class="hub-card acc-slate">
+              <div class="ic"><svg><use href="#i-clock"/></svg></div>
+              <h5>Temps &amp; pointage</h5>
+              <p class="desc">Présence, heures sup</p>
+              <div class="kpis"><div class="kpi"><span class="v ok">6</span><span class="l">présents</span></div>
+                <div class="kpi"><span class="v warn">1</span><span class="l">h. sup à valider</span></div></div>
+            </div>
+            <div class="hub-card acc-info">
+              <div class="ic"><svg><use href="#i-file"/></svg></div>
+              <h5>Paie</h5>
+              <p class="desc">Bulletins format FPT</p>
+              <div class="kpis"><div class="kpi"><span class="v">11</span><span class="l">bulletins / mois</span></div></div>
+            </div>
+            <div class="hub-card">
+              <div class="ic"><svg><use href="#i-briefcase"/></svg></div>
+              <h5>Missions</h5>
+              <p class="desc">Ordres &amp; frais</p>
+              <div class="kpis"><div class="kpi"><span class="v">3</span><span class="l">en cours</span></div></div>
+            </div>
+            <div class="hub-card acc-terra">
+              <div class="ic"><svg><use href="#i-calendar"/></svg></div>
+              <h5>Calendrier RH</h5>
+              <p class="desc">Congés, absences, vue mois</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="annot">
+      <div class="solves"><h4>Ce que ça résout</h4>
+        <ul>
+          <li><b>Onglets :</b> remplacés par 6 cartes lisibles d'un coup d'œil.</li>
+          <li><b>Fonctions enfouies :</b> « Pilotage &amp; ratios » devient un espace de plein droit — la simulation et l'historique remontent en surface.</li>
+          <li><b>Hiérarchie :</b> les chiffres-clés sur chaque carte montrent immédiatement où il y a une action (en orange/rouge).</li>
+        </ul>
+      </div>
+      <div class="limits"><h4>Points d'attention</h4>
+        <ul>
+          <li>Ajoute un « clic d'entrée » : pour l'utilisateur quotidien qui va toujours au même endroit, prévoir un accès direct (favori / dernier espace).</li>
+          <li>Demande de choisir de bons regroupements et de bons KPI — un travail de cadrage en amont.</li>
+          <li>Le hub doit rester court (6-7 cartes max) pour ne pas recréer un mur.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════ PROPOSITION B — SOUS-NAVIGATION LATÉRALE ════════ -->
+<section id="propB" class="prop-B">
+  <div class="wrap">
+    <div class="prop-head">
+      <div class="prop-badge">B</div>
+      <div>
+        <span class="tag tag-B">Direction B</span>
+        <h2>Sous-navigation latérale</h2>
+        <p class="concept">À l'entrée du module, une <b>2<sup>e</sup> colonne</b> apparaît à gauche : un menu
+        rangé en <b>sections repliables</b> avec sous-rubriques. La barre d'onglets horizontale disparaît,
+        toute l'arborescence est visible d'un coup et on garde le contenu pleine largeur à droite.</p>
+      </div>
+    </div>
+
+    <div class="mock-label">Finances — sous-menu groupé : Dépenses · Budget · Pilotage · Patrimoine</div>
+    <div class="screen">
+      <div class="screen-bar"><div class="dots"><span></span><span></span><span></span></div><span class="url">ent-mairie · /finances › pilotage › ratios</span></div>
+      <div class="app">
+        <div class="rail">
+          <div class="logo"><span class="lm"></span><span>Mairie</span></div>
+          <div class="item"><svg><use href="#i-grid"/></svg><span>Tableau de bord</span></div>
+          <div class="item on"><svg><use href="#i-wallet"/></svg><span>Finances</span></div>
+          <div class="item"><svg><use href="#i-users"/></svg><span>RH</span></div>
+          <div class="item"><svg><use href="#i-list"/></svg><span>Tâches</span></div>
+        </div>
+        <div class="subnav">
+          <div class="grp">Dépenses</div>
+          <div class="sn"><svg><use href="#i-receipt"/></svg> Factures <span class="pill">3</span></div>
+          <div class="sn"><svg><use href="#i-building"/></svg> Fournisseurs</div>
+          <div class="grp">Budget</div>
+          <div class="sn"><svg><use href="#i-book"/></svg> Plan M14</div>
+          <div class="sn"><svg><use href="#i-list"/></svg> Écritures</div>
+          <div class="grp">Pilotage</div>
+          <div class="sn on"><svg><use href="#i-chart"/></svg> Ratios DGFiP</div>
+          <div class="sn"><svg><use href="#i-clock"/></svg> Historique</div>
+          <div class="sn"><svg><use href="#i-target"/></svg> Projets</div>
+          <div class="sn"><svg><use href="#i-ticket"/></svg> Subventions</div>
+          <div class="sn"><svg><use href="#i-chart"/></svg> Simulation 🧮</div>
+          <div class="grp">Patrimoine</div>
+          <div class="sn"><svg><use href="#i-home"/></svg> Biens &amp; baux</div>
+        </div>
+        <div class="work">
+          <div class="work-head"><span class="breadcrumb">Finances › Pilotage › <b>Ratios DGFiP</b></span></div>
+          <div class="ratios">
+            <div class="ratio good"><div class="v">18 %</div><div class="l">Taux d'épargne brute</div></div>
+            <div class="ratio"><div class="v">5,1 a.</div><div class="l">Capacité désendett.</div></div>
+            <div class="ratio good"><div class="v">214 k€</div><div class="l">CAF brute</div></div>
+            <div class="ratio bad"><div class="v">0,82</div><div class="l">Rigidité charges</div></div>
+          </div>
+          <div class="note" style="margin-top:12px">ⓘ Ici, <b>chaque fonction du Budget devient une rubrique de menu</b> :
+            on voit « Ratios », « Simulation », « Projets »… sans avoir à entrer d'abord dans « Budget ».</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mock-label">RH — sous-menu groupé : Personnel · Temps · Absences · Paie</div>
+    <div class="screen">
+      <div class="screen-bar"><div class="dots"><span></span><span></span><span></span></div><span class="url">ent-mairie · /rh › temps › pointage</span></div>
+      <div class="app">
+        <div class="rail">
+          <div class="logo"><span class="lm"></span><span>Mairie</span></div>
+          <div class="item"><svg><use href="#i-grid"/></svg><span>Tableau de bord</span></div>
+          <div class="item"><svg><use href="#i-wallet"/></svg><span>Finances</span></div>
+          <div class="item on"><svg><use href="#i-users"/></svg><span>RH</span></div>
+          <div class="item"><svg><use href="#i-list"/></svg><span>Tâches</span></div>
+        </div>
+        <div class="subnav">
+          <div class="grp">Personnel</div>
+          <div class="sn"><svg><use href="#i-users"/></svg> Agents</div>
+          <div class="sn"><svg><use href="#i-calendar"/></svg> Calendrier</div>
+          <div class="grp">Temps</div>
+          <div class="sn on"><svg><use href="#i-clock"/></svg> Pointage</div>
+          <div class="sn"><svg><use href="#i-chart"/></svg> Heures sup <span class="pill">1</span></div>
+          <div class="grp">Absences</div>
+          <div class="sn"><svg><use href="#i-leaf"/></svg> Congés <span class="pill">2</span></div>
+          <div class="grp">Paie</div>
+          <div class="sn"><svg><use href="#i-file"/></svg> Bulletins</div>
+          <div class="sn"><svg><use href="#i-briefcase"/></svg> Missions</div>
+        </div>
+        <div class="work">
+          <div class="work-head"><span class="breadcrumb">RH › Temps › <b>Pointage</b></span></div>
+          <div class="block span2">
+            <div class="bh"><h5>Présence aujourd'hui</h5><span class="chip live">6 présents</span></div>
+            <div class="row"><span class="who">ML</span><span class="grow">Marie Laurent — entrée 08:42</span><span class="badge b-ok">présent</span></div>
+            <div class="row"><span class="who">PD</span><span class="grow">Paul Durand — entrée 09:01</span><span class="badge b-ok">présent</span></div>
+            <div class="row"><span class="who">SF</span><span class="grow">Sophie Fabre — congé</span><span class="badge b-info">absent</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="annot">
+      <div class="solves"><h4>Ce que ça résout</h4>
+        <ul>
+          <li><b>Onglets :</b> remplacés par un menu vertical groupé, scannable et extensible sans saturer.</li>
+          <li><b>Fonctions enfouies :</b> ratios, simulation, projets, heures sup deviennent des entrées de menu de 1<sup>er</sup> niveau.</li>
+          <li><b>Hiérarchie :</b> les sections (Dépenses / Pilotage…) donnent du sens ; des pastilles signalent ce qui attend une action.</li>
+        </ul>
+      </div>
+      <div class="limits"><h4>Points d'attention</h4>
+        <ul>
+          <li>Consomme de la largeur (≈ 170 px) — à gérer en mobile (menu rétractable / en accordéon).</li>
+          <li>Deux niveaux de sidebar côte à côte : soigner le contraste pour ne pas confondre menu principal et secondaire.</li>
+          <li>C'est la direction la plus proche d'un logiciel « métier » classique — efficace mais moins « moderne ».</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════ PROPOSITION C — VUE UNIQUE PILOTÉE PAR LE RÔLE ════════ -->
+<section id="propC" class="prop-C">
+  <div class="wrap">
+    <div class="prop-head">
+      <div class="prop-badge">C</div>
+      <div>
+        <span class="tag tag-C">Direction C</span>
+        <h2>Vue unique pilotée par le rôle</h2>
+        <p class="concept">Plus d'onglets par défaut : <b>une seule page composée de blocs</b> (widgets) classés
+        par priorité <b>selon le rôle</b>. La secrétaire/DGS voit d'abord ce qu'il y a à <em>traiter</em> ;
+        le maire voit d'abord la <em>synthèse</em>. Chaque bloc a un lien « tout voir » vers le détail complet.</p>
+      </div>
+    </div>
+
+    <div class="mock-label">Finances — vue « secrétaire / DGS » (priorité aux actions)</div>
+    <div class="screen">
+      <div class="screen-bar"><div class="dots"><span></span><span></span><span></span></div><span class="url">ent-mairie · /finances</span></div>
+      <div class="app">
+        <div class="rail">
+          <div class="logo"><span class="lm"></span><span>Mairie</span></div>
+          <div class="item"><svg><use href="#i-grid"/></svg><span>Tableau de bord</span></div>
+          <div class="item on"><svg><use href="#i-wallet"/></svg><span>Finances</span></div>
+          <div class="item"><svg><use href="#i-users"/></svg><span>RH</span></div>
+          <div class="item"><svg><use href="#i-list"/></svg><span>Tâches</span></div>
+        </div>
+        <div class="work">
+          <div class="work-head"><h4>Finances</h4><div class="spacer"></div>
+            <div class="rolebar"><span class="on">DGS</span><span>Maire</span><span>Agent</span></div></div>
+          <div class="alert"><svg><use href="#i-alert"/></svg> 1 ratio sous le seuil DGFiP (rigidité 0,82) · 2 factures en retard de paiement</div>
+          <div class="blocks">
+            <div class="block">
+              <div class="bh"><h5>À traiter</h5><span class="chip todo">5</span><span class="seeall">tout voir →</span></div>
+              <div class="row"><span class="grow">Facture EDF — 1 240 €</span><span class="badge b-warn">à valider</span></div>
+              <div class="row"><span class="grow">Facture Veolia — 680 €</span><span class="badge b-warn">à valider</span></div>
+              <div class="row"><span class="grow">Mandat fournisseur Berard</span><span class="badge b-dgr">à payer</span></div>
+            </div>
+            <div class="block">
+              <div class="bh"><h5>Indicateurs clés</h5><span class="seeall">ratios →</span></div>
+              <div class="ratios" style="grid-template-columns:1fr 1fr">
+                <div class="ratio good"><div class="v">18 %</div><div class="l">Épargne</div></div>
+                <div class="ratio"><div class="v">5,1 a.</div><div class="l">Désendett.</div></div>
+              </div>
+              <div class="deep" style="margin-top:9px"><span>Simulation 🧮</span><span>Projection N+5</span></div>
+            </div>
+            <div class="block span2">
+              <div class="bh"><h5>Exécution budgétaire</h5><span class="seeall">budget M14 →</span></div>
+              <div class="bar-line"><span class="nm">011 Charges gén.</span><div class="bar"><i style="width:58%"></i></div><span class="pc">58 %</span></div>
+              <div class="bar-line"><span class="nm">012 Personnel</span><div class="bar"><i class="hi" style="width:74%"></i></div><span class="pc">74 %</span></div>
+              <div class="bar-line"><span class="nm">65 Gestion cour.</span><div class="bar"><i class="over" style="width:96%"></i></div><span class="pc">96 %</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mock-label">RH — vue « secrétaire / DGS » (mêmes principes)</div>
+    <div class="screen">
+      <div class="screen-bar"><div class="dots"><span></span><span></span><span></span></div><span class="url">ent-mairie · /rh</span></div>
+      <div class="app">
+        <div class="rail">
+          <div class="logo"><span class="lm"></span><span>Mairie</span></div>
+          <div class="item"><svg><use href="#i-grid"/></svg><span>Tableau de bord</span></div>
+          <div class="item"><svg><use href="#i-wallet"/></svg><span>Finances</span></div>
+          <div class="item on"><svg><use href="#i-users"/></svg><span>RH</span></div>
+          <div class="item"><svg><use href="#i-list"/></svg><span>Tâches</span></div>
+        </div>
+        <div class="work">
+          <div class="work-head"><h4>Ressources humaines</h4><div class="spacer"></div>
+            <div class="rolebar"><span class="on">DGS</span><span>Maire</span><span>Agent</span></div></div>
+          <div class="blocks">
+            <div class="block">
+              <div class="bh"><h5>À traiter</h5><span class="chip todo">3</span><span class="seeall">tout voir →</span></div>
+              <div class="row"><span class="who">SF</span><span class="grow">Congé S. Fabre — 5 j.</span><span class="badge b-warn">à valider</span></div>
+              <div class="row"><span class="who">PD</span><span class="grow">Heures sup P. Durand — 4 h</span><span class="badge b-warn">à valider</span></div>
+              <div class="row"><span class="who">ML</span><span class="grow">Mission M. Laurent</span><span class="badge b-info">à signer</span></div>
+            </div>
+            <div class="block">
+              <div class="bh"><h5>Présence aujourd'hui</h5><span class="chip live">live</span></div>
+              <div class="ratios" style="grid-template-columns:1fr 1fr">
+                <div class="ratio good"><div class="v">6</div><div class="l">présents</div></div>
+                <div class="ratio"><div class="v">2</div><div class="l">en congé</div></div>
+              </div>
+            </div>
+            <div class="block span2">
+              <div class="bh"><h5>Paie du mois</h5><span class="seeall">bulletins →</span></div>
+              <div class="bar-line"><span class="nm">Bulletins générés</span><div class="bar"><i style="width:100%"></i></div><span class="pc">11/11</span></div>
+              <div class="bar-line"><span class="nm">Masse salariale</span><div class="bar"><i class="hi" style="width:42%"></i></div><span class="pc">42 % RRF</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="annot">
+      <div class="solves"><h4>Ce que ça résout</h4>
+        <ul>
+          <li><b>Onglets :</b> quasi supprimés — l'essentiel est sur une page ; le détail s'ouvre via « tout voir ».</li>
+          <li><b>Fonctions enfouies :</b> chaque fonction devient un bloc visible (simulation, ratios, paie…).</li>
+          <li><b>Hiérarchie :</b> la plus forte des trois — un bandeau d'alertes + un ordre des blocs <em>par rôle</em> répondent à « par où commencer ».</li>
+        </ul>
+      </div>
+      <div class="limits"><h4>Points d'attention</h4>
+        <ul>
+          <li>La page d'accueil peut devenir longue : limiter le nombre de blocs et soigner le « tout voir » vers les écrans détaillés (qui existent toujours).</li>
+          <li>Suppose une logique de priorisation par rôle à définir (qui voit quoi, dans quel ordre).</li>
+          <li>C'est la direction la plus ambitieuse — donc le plus gros chantier.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════ COMPARATIF ════════ -->
+<section id="comparatif">
+  <div class="wrap">
+    <h2>Comparatif</h2>
+    <p class="section-sub">Lecture rapide des trois directions face aux problèmes identifiés et au coût de mise en œuvre.</p>
+    <table class="cmp">
+      <thead><tr><th>Critère</th><th>A · Hub à cartes</th><th>B · Sous-nav latérale</th><th>C · Vue par rôle</th></tr></thead>
+      <tbody>
+        <tr><th>Réduit le nombre d'onglets</th>
+          <td><span class="dotrate r-hi">Oui ●●●</span> Cartes d'aiguillage</td>
+          <td><span class="dotrate r-hi">Oui ●●●</span> Menu groupé vertical</td>
+          <td><span class="dotrate r-hi">Oui ●●●</span> Onglets quasi supprimés</td></tr>
+        <tr><th>Fait remonter les fonctions enfouies</th>
+          <td><span class="dotrate r-mid">Bien ●●</span> Via une carte « Pilotage »</td>
+          <td><span class="dotrate r-hi">Excellent ●●●</span> Chaque fonction = entrée de menu</td>
+          <td><span class="dotrate r-hi">Excellent ●●●</span> Chaque fonction = bloc</td></tr>
+        <tr><th>Donne une hiérarchie « par où commencer »</th>
+          <td><span class="dotrate r-mid">Bien ●●</span> KPI sur les cartes</td>
+          <td><span class="dotrate r-mid">Moyen ●●</span> Sections + pastilles</td>
+          <td><span class="dotrate r-hi">Excellent ●●●</span> Alertes + ordre par rôle</td></tr>
+        <tr><th>Rapidité pour l'utilisateur quotidien</th>
+          <td><span class="dotrate r-mid">+1 clic</span> d'entrée (atténuable)</td>
+          <td><span class="dotrate r-hi">Direct</span> tout est visible</td>
+          <td><span class="dotrate r-hi">Direct</span> l'essentiel en page d'accueil</td></tr>
+        <tr><th>Adapté au bureau (DGS), grand écran</th>
+          <td><span class="dotrate r-hi">Très bon</span></td>
+          <td><span class="dotrate r-hi">Très bon</span></td>
+          <td><span class="dotrate r-hi">Très bon</span></td></tr>
+        <tr><th>Effort de développement</th>
+          <td><span class="dotrate r-hi">Faible ●</span> Une page d'accueil + routage</td>
+          <td><span class="dotrate r-mid">Moyen ●●</span> Composant de sous-nav + refonte légère</td>
+          <td><span class="dotrate r-lo">Élevé ●●●</span> Blocs + logique de rôle</td></tr>
+        <tr><th>Risque / rupture pour les habitués</th>
+          <td><span class="dotrate r-mid">Modéré</span></td>
+          <td><span class="dotrate r-hi">Faible</span> (proche d'un logiciel métier)</td>
+          <td><span class="dotrate r-lo">Plus fort</span> (paradigme nouveau)</td></tr>
+      </tbody>
+    </table>
+    <div class="note">Les trois sont <b>compatibles entre elles</b> : on peut combiner (ex. <b>B pour la navigation</b>
+      + <b>une page d'accueil de type C</b> comme premier écran de chaque module). Rien n'oblige à choisir une seule direction « pure ».</div>
+  </div>
+</section>
+
+<!-- ════════ RECOMMANDATION ════════ -->
+<section id="reco">
+  <div class="wrap">
+    <div class="reco">
+      <span class="pill">Piste recommandée à débattre</span>
+      <h2>B + une touche de C</h2>
+      <p>Pour un usage bureau (secrétaire/DGS) qui veut <b>se repérer vite</b> et <b>accéder aux fonctions sans les chercher</b>,
+      la <b>sous-navigation latérale (B)</b> apporte le plus gros gain pour un effort raisonnable : tout devient visible,
+      groupé et sans rupture brutale. On peut lui ajouter, en premier écran de chaque module, une <b>page d'accueil à blocs (C)</b>
+      avec le bandeau d'alertes et le « à traiter » — ce qui répond directement au « par où commencer ».</p>
+      <p style="margin-top:6px"><b>Prochaines étapes possibles :</b></p>
+      <ul>
+        <li>Tu choisis 1 direction (ou la combinaison) à partir de ces maquettes.</li>
+        <li>Je détaille l'arborescence retenue (sections, libellés, ordre) en validant les regroupements avec toi.</li>
+        <li>On prototype <b>un seul</b> module d'abord (Finances), on le teste, puis on réplique sur RH.</li>
+      </ul>
+    </div>
+    <footer>
+      Maquettes de réflexion — aucune modification du code applicatif. Palette et libellés issus de l'ENT Mairie de Saint-Fortunat.
+      Document généré le 29 mai 2026 · à itérer librement.
+    </footer>
+  </div>
+</section>
+
+</body>
+</html>
