@@ -73,7 +73,7 @@ export default function CompteRendusPage() {
   }, [])
 
   return (
-    <Shell title="Comptes rendus" notif={1}>
+    <Shell title="Comptes rendus">
       <div style={{ display: 'flex', gap: 8, marginBottom: 20, alignItems: 'center' }}>
         <div style={{ display: 'flex', gap: 4, background: C.ph, borderRadius: 8, padding: 3 }}>
           {([['liste', 'Vue liste'], ['wizard', 'Nouveau CR']] as [TabView, string][]).map(([v, label]) => (

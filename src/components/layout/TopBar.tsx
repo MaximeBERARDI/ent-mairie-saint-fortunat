@@ -27,10 +27,9 @@ const NAV_ITEMS = [
 
 interface TopBarProps {
   title: string
-  notif?: number
 }
 
-export function TopBar({ title, notif = 2 }: TopBarProps) {
+export function TopBar({ title }: TopBarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const { nav } = useSettings()

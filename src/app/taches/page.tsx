@@ -20,6 +20,7 @@ import type { Commission } from '@/lib/types'
 import { getPerson, getPersonName } from '@/lib/people'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { formatShortFR, formatLongFR, relativeBucket } from '@/lib/dateUtils'
+import { isMyActiveTask } from '@/lib/task-filters'
 import type { Task, TaskStatus } from '@/lib/types'
 
 type TaskView = 'liste' | 'kanban' | 'calendrier'
@@ -67,14 +68,14 @@ export default function TachesPage() {
 
   const counts = useMemo(() => ({
     toutes: tasks.length,
-    mes: tasks.filter(t => t.assigneeIds.includes(currentUserId) || t.validatorId === currentUserId).length,
+    mes: tasks.filter(t => isMyActiveTask(t, currentUserId)).length,
     enAttente: tasks.filter(t => t.status === 'En attente validation').length,
     terminees: tasks.filter(t => t.status === 'Terminé').length,
   }), [tasks, currentUserId])
 
   const filteredTasks = useMemo(() => {
     return tasks.filter(t => {
-      if (filter === 'mes') return t.assigneeIds.includes(currentUserId) || t.validatorId === currentUserId
+      if (filter === 'mes') return isMyActiveTask(t, currentUserId)
       if (filter === 'en-attente') return t.status === 'En attente validation'
       if (filter === 'terminees') return t.status === 'Terminé'
       return true
@@ -108,7 +109,7 @@ export default function TachesPage() {
 
   if (!hydrated) {
     return (
-      <Shell title="Mes tâches" notif={5}>
+      <Shell title="Mes tâches">
         <SkeletonKpis count={4} />
         <Card padding={14}>
           <SkeletonList rows={8} withAvatar />
@@ -118,7 +119,7 @@ export default function TachesPage() {
   }
 
   return (
-    <Shell title="Mes tâches" notif={5}>
+    <Shell title="Mes tâches">
       <div style={{ display: 'flex', gap: 8, marginBottom: 16, alignItems: 'center' }}>
         <div className="tabs-buttons" style={{ display: 'flex', gap: 4, background: C.ph, borderRadius: 8, padding: 3 }}>
           {TASK_VIEWS.map(([v, label]) => (

@@ -14,7 +14,6 @@ import { TopBar } from './TopBar'
 interface ShellProps {
   title: string
   children: ReactNode
-  notif?: number
 }
 
 export function Shell(props: ShellProps) {
@@ -25,7 +24,7 @@ export function Shell(props: ShellProps) {
   )
 }
 
-function ShellInner({ title, children, notif }: ShellProps) {
+function ShellInner({ title, children }: ShellProps) {
   const { nav } = useSettings()
   const isTopNav = nav === 'top'
   const isMobile = useIsMobile()
@@ -81,7 +80,7 @@ function ShellInner({ title, children, notif }: ShellProps) {
       )}
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
-        <TopBar title={title} notif={notif} />
+        <TopBar title={title} />
         <main id="main-content" tabIndex={-1} style={{ flex: 1, overflow: 'auto', padding: 'var(--content-pad)' }}>
           {/* En mode nav-haut, la TopBar n'affiche pas le titre : on fournit le
               h1 de page ici pour qu'il existe toujours exactement un h1 (RGAA). */}

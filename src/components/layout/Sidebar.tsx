@@ -10,6 +10,7 @@ import { ROLE_LABELS } from '@/lib/people'
 import { moduleKeyForHref } from '@/lib/modules'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { useTasks } from '@/hooks/useTasks'
+import { isMyActiveTask } from '@/lib/task-filters'
 
 type IconName = 'dashboard' | 'check' | 'users' | 'doc' | 'briefcase' | 'euro' | 'team' | 'folder'
 
@@ -67,9 +68,10 @@ export function Sidebar() {
   const isIcons = nav === 'icons'
   const w = isIcons ? 54 : 212
 
-  // Badge "Tâches" : mes tâches non terminées (assignées à moi).
+  // Badge "Tâches" : mes tâches actives (assignées à moi ou à valider, non
+  // terminées). Même définition que le filtre « Mes tâches » de /taches.
   const myOpenTaskCount = me
-    ? tasks.filter(t => t.assigneeIds.includes(me.id) && t.status !== 'Terminé').length
+    ? tasks.filter(t => isMyActiveTask(t, me.id)).length
     : 0
 
   // Filtrage par profil (config admin, persistée en DB sur Person.hiddenModules).

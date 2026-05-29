@@ -107,7 +107,7 @@ export default function DashboardPage() {
 
   if (!hydrated) {
     return (
-      <Shell title="Tableau de bord" notif={3}>
+      <Shell title="Tableau de bord">
         <SkeletonKpis count={4} />
         <Card padding={14}>
           <SkeletonList rows={8} withAvatar />
@@ -117,7 +117,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <Shell title="Tableau de bord" notif={3}>
+    <Shell title="Tableau de bord">
       {view === 'conseiller' && <DashConseiller tasks={tasks} updateTask={updateTask} currentUserId={currentUserId} />}
       {view === 'agent' && <DashAgent tasks={tasks} updateTask={updateTask} createTask={createTask} currentUserId={currentUserId} />}
       {view === 'maire' && <DashMaire tasks={tasks} currentUserId={currentUserId} createTask={createTask} />}
