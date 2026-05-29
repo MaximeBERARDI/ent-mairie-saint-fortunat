@@ -6,7 +6,8 @@
 // d'un leave Approuvé re-crédite les compteurs.
 
 import { NextResponse } from 'next/server'
-import { auth } from '@/lib/auth'
+import { getAuthContext } from '@/lib/authz'
+import { logAudit } from '@/lib/audit'
 import { db } from '@/lib/db'
 import { leaveFromDb } from '@/lib/rh-mapper'
 import type { LeaveType } from '@/lib/types'
@@ -37,9 +38,11 @@ interface PatchBody {
 }
 
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
-  const session = await auth()
-  if (!session?.user?.personId) {
-    return NextResponse.json({ error: 'Non authentifié.' }, { status: 401 })
+  const ctx = await getAuthContext()
+  if (!ctx) return NextResponse.json({ error: 'Non authentifié.' }, { status: 401 })
+  // Décisions de congés (approuver/refuser/rouvrir) : réservées aux valideurs RH.
+  if (!ctx.can('hr.validate-leaves')) {
+    return NextResponse.json({ error: 'Action non autorisée.' }, { status: 403 })
   }
 
   let body: PatchBody
@@ -58,7 +61,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 
       if (body.action === 'approve') {
         data.statut = 'approuvee'
-        data.decidedById = session.user.personId
+        data.decidedById = ctx.actor.id
         data.decidedAt = new Date()
         data.decisionMotif = null
         // Compteurs employé : crédite (sign +1)
@@ -78,7 +81,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
           }
         }
         data.statut = 'refusee'
-        data.decidedById = session.user.personId
+        data.decidedById = ctx.actor.id
         data.decidedAt = new Date()
         data.decisionMotif = body.decisionMotif.trim()
       } else if (body.action === 'reopen') {
@@ -101,6 +104,14 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
         include: { documents: { orderBy: { uploadedAt: 'asc' } } },
       })
     })
+    if (body.action) {
+      const labels: Record<string, string> = { approve: 'Approbation', reject: 'Refus', reopen: 'Réouverture' }
+      const requester = await db.person.findUnique({ where: { id: result.personId } })
+      await logAudit(ctx, {
+        action: `leave.${body.action}`, entity: 'leave', entityId: params.id,
+        summary: `${labels[body.action] ?? body.action} d'un congé — ${requester?.fullName ?? result.personId}`,
+      })
+    }
     return NextResponse.json(leaveFromDb(result))
   } catch (e) {
     const msg = (e as Error).message
@@ -113,8 +124,11 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 }
 
 export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
-  const session = await auth()
-  if (!session?.user) return NextResponse.json({ error: 'Non authentifié.' }, { status: 401 })
+  const ctx = await getAuthContext()
+  if (!ctx) return NextResponse.json({ error: 'Non authentifié.' }, { status: 401 })
+  if (!ctx.can('hr.validate-leaves')) {
+    return NextResponse.json({ error: 'Action non autorisée.' }, { status: 403 })
+  }
 
   try {
     await db.$transaction(async (tx) => {
@@ -129,6 +143,7 @@ export async function DELETE(_req: Request, { params }: { params: { id: string }
       }
       await tx.leaveRequest.delete({ where: { id: params.id } })
     })
+    await logAudit(ctx, { action: 'leave.delete', entity: 'leave', entityId: params.id, summary: 'Suppression d\'une demande de congé' })
     return NextResponse.json({ ok: true })
   } catch {
     return NextResponse.json({ error: 'Demande introuvable.' }, { status: 404 })

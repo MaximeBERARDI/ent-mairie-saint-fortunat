@@ -4,6 +4,7 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getAuthContext } from '@/lib/authz'
+import { logAudit } from '@/lib/audit'
 import { bulletinFromDb } from '@/lib/bulletin-mapper'
 import type { BulletinStatut } from '@/lib/types'
 
@@ -48,7 +49,11 @@ export async function DELETE(_req: Request, { params }: { params: { id: string }
   if (!canManagePayslips(ctx)) return NextResponse.json({ error: 'Action non autorisée.' }, { status: 403 })
 
   try {
-    await db.bulletinPaie.delete({ where: { id: params.id } })
+    const removed = await db.bulletinPaie.delete({ where: { id: params.id } })
+    await logAudit(ctx, {
+      action: 'bulletin.delete', entity: 'bulletin', entityId: params.id,
+      summary: `Suppression du bulletin ${removed.numero} (${removed.mois})`,
+    })
     return NextResponse.json({ ok: true })
   } catch {
     return NextResponse.json({ error: 'Bulletin introuvable.' }, { status: 404 })

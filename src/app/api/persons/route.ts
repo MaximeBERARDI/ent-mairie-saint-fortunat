@@ -7,6 +7,7 @@ import bcrypt from 'bcryptjs'
 import { auth } from '@/lib/auth'
 import { db } from '@/lib/db'
 import { getAuthContext } from '@/lib/authz'
+import { logAudit } from '@/lib/audit'
 import { genTempPassword } from '@/lib/temp-password'
 import { authLevelToDb, deriveInitials, personFromDb } from '@/lib/team-mapper'
 import type { PersonRole } from '@/lib/people'
@@ -110,6 +111,11 @@ export async function POST(req: Request) {
       },
     })
     return person
+  })
+
+  await logAudit(ctx, {
+    action: 'person.create', entity: 'person', entityId: created.id,
+    summary: `Création du compte de ${created.fullName} (${role})`,
   })
 
   // tempPassword renvoyé une seule fois pour que l'admin le transmette.

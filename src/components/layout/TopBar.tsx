@@ -190,6 +190,19 @@ export function TopBar({ title }: TopBarProps) {
                 <span style={{ fontSize: 14 }}>👤</span>
                 Voir mon profil
               </Link>
+              {can('team.edit-roles') && (
+                <Link
+                  href="/journal"
+                  onClick={() => setUserMenuOpen(false)}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px',
+                    textDecoration: 'none', color: C.fg, fontSize: 12, fontWeight: 600,
+                  }}
+                >
+                  <span style={{ fontSize: 14 }}>📋</span>
+                  Journal d&apos;audit
+                </Link>
+              )}
               <button
                 onClick={handleLogout}
                 style={{

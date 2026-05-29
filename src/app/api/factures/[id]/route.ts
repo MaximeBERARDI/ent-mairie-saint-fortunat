@@ -13,6 +13,7 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getAuthContext } from '@/lib/authz'
+import { logAudit } from '@/lib/audit'
 import { factureFromDb } from '@/lib/facture-mapper'
 import { recomputeFournisseurTotal } from '@/lib/fournisseur-total'
 
@@ -169,6 +170,16 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       for (const fid of affected) await recomputeFournisseurTotal(tx, fid)
       return f
     })
+    if (body.action) {
+      const labels: Record<string, string> = {
+        validate: 'Validation', reject: 'Rejet', reopen: 'Réouverture',
+        pay: 'Paiement (mandatement)', unpay: 'Annulation du paiement',
+      }
+      await logAudit(ctx, {
+        action: `facture.${body.action}`, entity: 'facture', entityId: params.id,
+        summary: `${labels[body.action] ?? body.action} — facture ${updated.numero} (${Math.round(Number(updated.montantTTC))} €)`,
+      })
+    }
     return NextResponse.json(factureFromDb(updated))
   } catch (e) {
     console.error('[api/factures PATCH]', e)
@@ -185,13 +196,17 @@ export async function DELETE(_req: Request, { params }: { params: { id: string }
 
   const existing = await db.facture.findUnique({
     where: { id: params.id },
-    select: { fournisseurId: true },
+    select: { fournisseurId: true, numero: true },
   })
 
   try {
     await db.$transaction(async (tx) => {
       await tx.facture.delete({ where: { id: params.id } })
       if (existing) await recomputeFournisseurTotal(tx, existing.fournisseurId)
+    })
+    await logAudit(ctx, {
+      action: 'facture.delete', entity: 'facture', entityId: params.id,
+      summary: `Suppression de la facture ${existing?.numero ?? params.id}`,
     })
     return NextResponse.json({ ok: true })
   } catch {

@@ -42,6 +42,21 @@ model User {
   @@map("users")
 }
 
+// Journal d'audit : trace des actions sensibles (accès, finances, RH…).
+model AuditLog {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  actorId   String?  // Person.id (snapshot ; pas de FK pour survivre aux suppressions)
+  actorName String
+  action    String   // ex. 'facture.validate', 'person.create'
+  entity    String   // ex. 'facture', 'person', 'leave'
+  entityId  String?
+  summary   String
+
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
 model Account {
   id                String  @id @default(cuid())
   userId            String

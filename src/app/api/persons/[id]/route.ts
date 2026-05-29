@@ -7,6 +7,7 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { getAuthContext } from '@/lib/authz'
+import { logAudit } from '@/lib/audit'
 import { authLevelToDb, deriveInitials, personFromDb } from '@/lib/team-mapper'
 import type { PersonRole } from '@/lib/people'
 import type { AuthLevel, Permission, SignatureDomain } from '@/lib/permissions'
@@ -102,6 +103,14 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       }
       return person
     })
+    const sensitive = ['role', 'authLevel', 'customPermissions', 'canSign', 'signatureDomains', 'active', 'hiddenModules', 'email']
+      .filter(k => k in data)
+    if (sensitive.length) {
+      await logAudit(ctx, {
+        action: 'person.update', entity: 'person', entityId: params.id,
+        summary: `Modification (${sensitive.join(', ')}) de ${updated.fullName}`,
+      })
+    }
     return NextResponse.json(personFromDb(updated))
   } catch (e) {
     // Collision d'email (contrainte @unique sur User.email ou Person.email).
@@ -124,6 +133,10 @@ export async function DELETE(_req: Request, { params }: { params: { id: string }
 
   try {
     const updated = await db.person.update({ where: { id: params.id }, data: { active: false } })
+    await logAudit(ctx, {
+      action: 'person.deactivate', entity: 'person', entityId: params.id,
+      summary: `Désactivation du compte de ${updated.fullName}`,
+    })
     return NextResponse.json(personFromDb(updated))
   } catch {
     return NextResponse.json({ error: 'Personne introuvable.' }, { status: 404 })

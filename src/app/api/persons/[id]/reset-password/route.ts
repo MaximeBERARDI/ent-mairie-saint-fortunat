@@ -13,6 +13,7 @@ import { NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { db } from '@/lib/db'
 import { getAuthContext } from '@/lib/authz'
+import { logAudit } from '@/lib/audit'
 
 // Alphabet sans caractères ambigus (pas de I, O, 0, 1) pour une dictée fiable.
 const ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
@@ -41,6 +42,12 @@ export async function POST(_req: Request, { params }: { params: { id: string } }
   const tempPassword = genTempPassword()
   const hashedPassword = await bcrypt.hash(tempPassword, 10)
   await db.user.update({ where: { id: user.id }, data: { hashedPassword, mustChangePassword: true } })
+
+  const target = await db.person.findUnique({ where: { id: params.id } })
+  await logAudit(ctx, {
+    action: 'person.reset-password', entity: 'person', entityId: params.id,
+    summary: `Réinitialisation du mot de passe de ${target?.fullName ?? params.id}`,
+  })
 
   return NextResponse.json({ tempPassword })
 }
