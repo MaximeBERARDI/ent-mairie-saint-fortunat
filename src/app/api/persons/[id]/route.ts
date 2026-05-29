@@ -87,9 +87,25 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   }
 
   try {
-    const updated = await db.person.update({ where: { id: params.id }, data })
+    // L'email de connexion vit sur User (interrogé par NextAuth), pas sur
+    // Person. Sans cette synchro, changer l'email d'une personne casse son
+    // login (elle resterait sur l'ancien email côté User).
+    const updated = await db.$transaction(async (tx) => {
+      const person = await tx.person.update({ where: { id: params.id }, data })
+      if (data.email !== undefined) {
+        await tx.user.updateMany({
+          where: { personId: params.id },
+          data: { email: String(data.email) },
+        })
+      }
+      return person
+    })
     return NextResponse.json(personFromDb(updated))
-  } catch {
+  } catch (e) {
+    // Collision d'email (contrainte @unique sur User.email ou Person.email).
+    if (e && typeof e === 'object' && (e as { code?: string }).code === 'P2002') {
+      return NextResponse.json({ error: 'Cet email est déjà utilisé par un autre compte.' }, { status: 409 })
+    }
     return NextResponse.json({ error: 'Personne introuvable.' }, { status: 404 })
   }
 }
