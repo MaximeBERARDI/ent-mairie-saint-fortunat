@@ -20,6 +20,7 @@ import {
 } from '@/lib/permissions'
 import { useTeam } from '@/hooks/useTeam'
 import { useTasks } from '@/hooks/useTasks'
+import { sortPeople } from '@/lib/team-order'
 import { PersonForm } from '@/components/team/PersonForm'
 import { formatLongFR } from '@/lib/dateUtils'
 
@@ -51,7 +52,7 @@ export default function EquipePage() {
   const canDeactivate = can('team.deactivate')
 
   const filtered = useMemo(() => {
-    return people.filter(p => {
+    const list = people.filter(p => {
       if (filter === 'elus' && p.role === 'agent') return false
       if (filter === 'agents' && p.role !== 'agent') return false
       if (filter === 'signataires' && !p.canSign) return false
@@ -63,6 +64,9 @@ export default function EquipePage() {
       }
       return true
     })
+    // Ordre de préséance (maire → adjoints par rang → conseillers → agents),
+    // pas alphabétique : cf. src/lib/team-order.
+    return sortPeople(list)
   }, [people, filter, search])
 
   const counts = useMemo(() => ({
@@ -183,6 +187,7 @@ export default function EquipePage() {
           value={search}
           onChange={e => setSearch(e.target.value)}
           placeholder="Rechercher…"
+          aria-label="Rechercher un membre par nom ou poste"
           style={{
             flex: 1, minWidth: 200, maxWidth: 280,
             border: `1px solid ${C.border}`, borderRadius: 20,
@@ -195,9 +200,16 @@ export default function EquipePage() {
         {canInvite && <Button variant="primary" size="sm" onClick={openCreate}>+ Nouveau membre</Button>}
       </div>
 
+      <style>{`
+        .team-list .team-row{background:#fff;transition:background-color .15s ease;}
+        .team-list .team-row:hover{background:${C.bg};}
+        .team-list .team-row[data-selected="true"]{background:${C.green}0e;}
+        .team-list .team-row:focus-visible{outline:2px solid ${C.green};outline-offset:-2px;}
+        @media(prefers-reduced-motion:reduce){.team-list .team-row{transition:none;}}
+      `}</style>
       <div style={{ display: 'flex', gap: 'var(--gap)' }}>
         {/* Liste */}
-        <div style={{ width: 320, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 'var(--gap)' }}>
+        <div className="team-list" style={{ width: 320, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 'var(--gap)' }}>
           {elus.length > 0 && (
             <Card padding={0}>
               <div style={{ padding: '8px 14px', background: C.bg, borderBottom: `1px solid ${C.border}` }}>
@@ -303,11 +315,14 @@ function PersonListRow({ person, selected, onSelect, currentUserId }: {
   return (
     <button
       onClick={onSelect}
+      className="team-row"
+      data-selected={selected}
+      aria-pressed={selected}
       style={{
         display: 'flex', alignItems: 'center', gap: 10,
         padding: '10px 14px', width: '100%',
-        background: selected ? `${C.green}08` : '#fff',
         border: 'none',
+        borderLeft: `3px solid ${selected ? C.green : 'transparent'}`,
         borderBottom: `1px solid ${C.border}`,
         cursor: 'pointer', textAlign: 'left',
         fontFamily: "'DM Sans', sans-serif",

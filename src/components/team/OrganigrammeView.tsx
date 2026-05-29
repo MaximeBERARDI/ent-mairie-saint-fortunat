@@ -6,16 +6,14 @@ import { Avatar } from '@/components/ui/Avatar'
 import { COLORS as C } from '@/lib/theme'
 import { ROLE_LABELS } from '@/lib/people'
 import type { Person } from '@/lib/people'
+import { sortPeople, isDGS } from '@/lib/team-order'
 
 // L'organigramme distingue deux branches qui partent toutes deux du maire :
 //  - la branche ÉLUE (conseil municipal : adjoints + conseillers)
 //  - la branche ADMINISTRATIVE (DGS → pôles de services)
 // La hiérarchie est dérivée du rôle et du poste (pas de table dédiée).
-
-function isDGS(p: Person): boolean {
-  const poste = p.poste.toLowerCase()
-  return poste.includes('dgs') || poste.includes('secrétaire de mairie')
-}
+// L'ordre (adjoints par rang, conseillers délégués d'abord, DGS en tête) vient
+// de comparePeople/sortPeople (cf. src/lib/team-order).
 
 type Pole = 'admin' | 'technique' | 'scolaire' | 'autre'
 
@@ -49,7 +47,7 @@ interface OrganigrammeViewProps {
 
 export function OrganigrammeView({ people, selectedId, onSelect }: OrganigrammeViewProps) {
   const tree = useMemo(() => {
-    const active = people.filter(p => p.active)
+    const active = sortPeople(people.filter(p => p.active))
     const maire = active.find(p => p.role === 'maire')
     const adjoints = active.filter(p => p.role === 'adjoint')
     const elus = active.filter(p => p.role === 'elu')
