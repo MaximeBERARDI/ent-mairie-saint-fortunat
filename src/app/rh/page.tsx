@@ -494,7 +494,7 @@ function DetailLine({ label, value, highlight }: { label: string; value: string;
   return (
     <div style={{ display: 'flex', gap: 8, padding: '6px 0', borderBottom: `1px solid ${C.border}` }}>
       <p style={{ fontSize: 12, color: C.subtle, width: 140, flexShrink: 0 }}>{label}</p>
-      <p style={{ fontSize: 12, color: highlight ? C.danger : C.fg, fontWeight: highlight ? 700 : 500 }}>{value}</p>
+      <p style={{ fontSize: 12, color: C.fg, fontWeight: highlight ? 700 : 500 }}>{value}</p>
     </div>
   )
 }
@@ -1264,7 +1264,7 @@ function PaiesView() {
       <div style={{ display: 'flex', gap: 'var(--gap)', marginBottom: 'var(--gap)' }}>
         <KpiCard label="Masse salariale brute" value={fmtMontant(liveStats.brut)} sub={`mensuel · ${moisLabel}`} color={C.slate} />
         <KpiCard label="Cotisations patronales" value={fmtMontant(liveStats.patronales)} sub="charges employeur" color={C.warning} />
-        <KpiCard label="Coût total mensuel" value={fmtMontant(liveStats.cout)} sub="brut + cotis. patronales" color={C.danger} />
+        <KpiCard label="Coût total mensuel" value={fmtMontant(liveStats.cout)} sub="brut + cotis. patronales" color={C.slate} />
         <KpiCard label="Coût annualisé" value={fmtMontant(liveStats.cout * 12)} sub="estimation 12 mois" />
       </div>
 
@@ -1438,7 +1438,7 @@ function PaiesView() {
           </div>
           <div>
             <p style={{ fontSize: 11, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Coût total employeur</p>
-            <p style={{ fontSize: 16, color: C.danger, fontWeight: 700 }}>{fmtMontant(liveStats.cout)}</p>
+            <p style={{ fontSize: 16, color: C.slate, fontWeight: 700 }}>{fmtMontant(liveStats.cout)}</p>
           </div>
         </Card>
       )}
