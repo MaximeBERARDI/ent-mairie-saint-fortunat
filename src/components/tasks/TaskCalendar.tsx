@@ -91,7 +91,7 @@ export function TaskCalendar({ tasks, onTaskClick, onCreateForDate }: TaskCalend
   }
 
   return (
-    <div style={{ display: 'flex', gap: 'var(--gap)' }}>
+    <div className="split" style={{ display: 'flex', gap: 'var(--gap)' }}>
       {/* Calendrier principal */}
       <Card style={{ flex: 3 }} padding={16}>
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: 14 }}>

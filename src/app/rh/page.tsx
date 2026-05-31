@@ -266,10 +266,10 @@ function AgentsView({ currentUserId, canViewAll, canManage }: { currentUserId: s
     <div>
       {canViewAll && <HRKpis records={records} leaves={leaves} people={people} />}
 
-      <div style={{ display: 'flex', gap: 'var(--gap)' }}>
+      <div className="split" data-open={(!canViewAll || selected) ? 'true' : 'false'} style={{ display: 'flex', gap: 'var(--gap)' }}>
         {/* Liste agents */}
         {canViewAll && (
-          <div style={{ width: 280, flexShrink: 0 }}>
+          <div className="split__aside" style={{ width: 280, flexShrink: 0 }}>
             <input
               type="text"
               value={search}
@@ -317,7 +317,8 @@ function AgentsView({ currentUserId, canViewAll, canManage }: { currentUserId: s
         )}
 
         {/* Détail agent */}
-        <div style={{ flex: 1 }}>
+        <div className="split__main" style={{ flex: 1 }}>
+          {canViewAll && <button type="button" className="split__back" onClick={() => setSelectedId(null)}>← Liste des agents</button>}
           {selected ? (
             <EmployeeDetail
               person={selected}
@@ -797,8 +798,8 @@ function DemandesView({ currentUserId, canValidate, canViewAll }: { currentUserI
     <div>
       <HRKpis records={records} leaves={leaves} people={people} />
 
-      <div style={{ display: 'flex', gap: 'var(--gap)' }}>
-        <div style={{ flex: 2 }}>
+      <div className="split" data-open={selected ? 'true' : 'false'} style={{ display: 'flex', gap: 'var(--gap)' }}>
+        <div className="split__aside" style={{ flex: 2 }}>
           <div style={{ display: 'flex', gap: 8, marginBottom: 12, alignItems: 'center', flexWrap: 'wrap' }}>
             {([
               ['En attente', `En attente (${counts['En attente']})`],
@@ -840,7 +841,7 @@ function DemandesView({ currentUserId, canValidate, canViewAll }: { currentUserI
             </Card>
           ) : (
             <Card padding={0}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1.4fr 0.6fr 0.9fr 0.8fr', padding: '8px 14px', background: C.bg, borderBottom: `1px solid ${C.border}` }}>
+              <div className="table-stack--head" style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1.4fr 0.6fr 0.9fr 0.8fr', padding: '8px 14px', background: C.bg, borderBottom: `1px solid ${C.border}` }}>
                 {['Agent', 'Type', 'Période', 'Jours', 'Statut', 'Action'].map(h => (
                   <p key={h} style={{ fontSize: 12, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</p>
                 ))}
@@ -852,6 +853,7 @@ function DemandesView({ currentUserId, canValidate, canViewAll }: { currentUserI
                   <div
                     key={l.id}
                     onClick={() => setSelectedId(l.id)}
+                    className="table-stack"
                     style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1.4fr 0.6fr 0.9fr 0.8fr', padding: '10px 14px', borderBottom: i < filtered.length - 1 ? `1px solid ${C.border}` : 'none', background: isSel ? `${C.green}06` : (l.statut === 'En attente' ? `${C.warning}06` : '#fff'), alignItems: 'center', cursor: 'pointer' }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -886,7 +888,8 @@ function DemandesView({ currentUserId, canValidate, canViewAll }: { currentUserI
         </div>
 
         {/* Détail demande sélectionnée */}
-        <Card style={{ flex: 1.3 }} padding={14}>
+        <Card className="split__main" style={{ flex: 1.3 }} padding={14}>
+          <button type="button" className="split__back" onClick={() => setSelectedId(null)}>← Liste des demandes</button>
           {selected ? (
             <LeaveDetailPanel
               leave={selected}

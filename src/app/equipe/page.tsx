@@ -210,9 +210,9 @@ export default function EquipePage() {
         .team-list .team-row:focus-visible{outline:2px solid ${C.green};outline-offset:-2px;}
         @media(prefers-reduced-motion:reduce){.team-list .team-row{transition:none;}}
       `}</style>
-      <div style={{ display: 'flex', gap: 'var(--gap)' }}>
+      <div className="split" data-open={selected ? 'true' : 'false'} style={{ display: 'flex', gap: 'var(--gap)' }}>
         {/* Liste */}
-        <div className="team-list" style={{ width: 320, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 'var(--gap)' }}>
+        <div className="team-list split__aside" style={{ width: 320, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 'var(--gap)' }}>
           {elus.length > 0 && (
             <Card padding={0}>
               <div style={{ padding: '8px 14px', background: C.bg, borderBottom: `1px solid ${C.border}` }}>
@@ -245,7 +245,8 @@ export default function EquipePage() {
         </div>
 
         {/* Fiche détail */}
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div className="split__main" style={{ flex: 1, minWidth: 0 }}>
+          {selected && <button type="button" className="split__back" onClick={() => setSelectedId(null)}>← Liste de l&apos;équipe</button>}
           {selected ? (
             <PersonDetail
               person={selected}

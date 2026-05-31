@@ -401,7 +401,7 @@ function GrilleView({
   return (
     <div>
       <SectionHeader title="Mes commissions" />
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--gap)', marginBottom: 'var(--gap)' }}>
+      <div className="grid-reflow" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 'var(--gap)', marginBottom: 'var(--gap)' }}>
         {commissions.map(com => {
           const responsibles = responsiblesByCommission.get(com.id) ?? []
           return (
@@ -528,8 +528,8 @@ function DetailView({
   const nextMeeting = meetings.find(m => m.date >= today) ?? meetings[meetings.length - 1]
 
   return (
-    <div style={{ display: 'flex', gap: 'var(--gap)', height: '100%' }}>
-      <div style={{ width: 220, flexShrink: 0 }}>
+    <div className="split" style={{ display: 'flex', gap: 'var(--gap)', height: '100%' }}>
+      <div className="split__aside" style={{ width: 220, flexShrink: 0 }}>
         <p style={{ fontSize: 12, color: C.subtle, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.08em' }}>Commissions</p>
         {allCommissions.map(c => (
           <button
@@ -549,7 +549,7 @@ function DetailView({
         ))}
       </div>
 
-      <div style={{ flex: 1, overflow: 'auto', minWidth: 0 }}>
+      <div className="split__main" style={{ flex: 1, overflow: 'auto', minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16 }}>
           <div>
             <button onClick={onBack} style={{ fontSize: 12, color: C.subtle, cursor: 'pointer', background: 'none', border: 'none', padding: '0 0 8px', fontFamily: "'DM Sans', sans-serif" }}>← Toutes les commissions</button>

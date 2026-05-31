@@ -187,9 +187,9 @@ function BibliothequeView() {
   }
 
   return (
-    <div style={{ display: 'flex', gap: 'var(--gap)' }}>
+    <div className="split" style={{ display: 'flex', gap: 'var(--gap)' }}>
       {/* Arbre des dossiers */}
-      <Card style={{ flex: '0 0 280px' }} padding={12}>
+      <Card className="split__aside" style={{ flex: '0 0 280px' }} padding={12}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
           <p style={{ fontSize: 11, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Dossiers</p>
           {canWrite && (
@@ -233,7 +233,7 @@ function BibliothequeView() {
       </Card>
 
       {/* Contenu du dossier sélectionné */}
-      <Card style={{ flex: 1 }} padding={14}>
+      <Card className="split__main" style={{ flex: 1 }} padding={14}>
         {!selectedFolder ? (
           <p style={{ fontSize: 12, color: C.subtle, padding: 20, textAlign: 'center' }}>
             Sélectionnez un dossier à gauche pour voir son contenu.

@@ -245,7 +245,7 @@ function DashConseiller({ tasks, updateTask, currentUserId }: { tasks: Task[]; u
         />
       </div>
 
-      <div style={{ display: 'flex', gap: 'var(--gap)' }}>
+      <div className="split" style={{ display: 'flex', gap: 'var(--gap)' }}>
         <Card style={{ flex: 2 }} padding={16}>
           <SectionHeader
             title="Mes tâches prioritaires"
@@ -413,7 +413,7 @@ function DashAgent({ tasks, updateTask, createTask, currentUserId }: { tasks: Ta
         </p>
       </div>
 
-      <div style={{ display: 'flex', gap: 'var(--gap)' }}>
+      <div className="split" style={{ display: 'flex', gap: 'var(--gap)' }}>
         <div style={{ flex: 2, display: 'flex', flexDirection: 'column', gap: 'var(--gap)' }}>
           <Card padding={16}>
             <SectionHeader
@@ -756,7 +756,7 @@ function DashMaire({ tasks, currentUserId, createTask }: { tasks: Task[]; curren
         accentLabel={postesEnAlerte.length > 0 ? 'À surveiller' : 'OK'}
         summary={`CAF ${fmtMontant(ratios.cafBrute)} · désend. ${ratios.cafBrute <= 0 ? '∞' : `${ratios.capaciteDesendettement} ans`}${postesEnAlerte.length > 0 ? ` · ${postesEnAlerte.length} en alerte` : ''}`}
       >
-        <div style={{ display: 'flex', gap: 'var(--gap)', flexWrap: 'wrap' }}>
+        <div className="split" style={{ display: 'flex', gap: 'var(--gap)', flexWrap: 'wrap' }}>
         {/* Suivi budgétaire réel par chapitre M14 */}
         <Card glass style={{ flex: 3, minWidth: 280 }} padding={16}>
           <SectionHeader title="Suivi budgétaire — top chapitres M14" actions={<Link href="/finances"><Button size="sm">Plan comptable complet</Button></Link>} />
@@ -819,7 +819,7 @@ function DashMaire({ tasks, currentUserId, createTask }: { tasks: Task[]; curren
         accentLabel={totalLate > 0 ? 'Retard' : 'OK'}
         summary={`${totalActive} active${totalActive > 1 ? 's' : ''}${totalLate > 0 ? ` · ${totalLate} en retard` : ''}`}
       >
-        <div style={{ display: 'flex', gap: 'var(--gap)', flexWrap: 'wrap' }}>
+        <div className="split" style={{ display: 'flex', gap: 'var(--gap)', flexWrap: 'wrap' }}>
         <Card glass style={{ flex: 2, minWidth: 280 }} padding={14}>
           <SectionHeader title="État des commissions" />
           {commissionStats.map((c, i) => (
@@ -859,7 +859,7 @@ function DashMaire({ tasks, currentUserId, createTask }: { tasks: Task[]; curren
         accentLabel={absentToday.length > 0 ? `${absentToday.length} absent${absentToday.length > 1 ? 's' : ''}` : 'Tous présents'}
         summary={`${records.length - absentToday.length}/${records.length} présents · ${missionsEnCours.length} mission${missionsEnCours.length > 1 ? 's' : ''} en cours`}
       >
-        <div style={{ display: 'flex', gap: 'var(--gap)', flexWrap: 'wrap' }}>
+        <div className="split" style={{ display: 'flex', gap: 'var(--gap)', flexWrap: 'wrap' }}>
         {/* RH : qui est absent aujourd'hui */}
         <Card glass style={{ flex: 1, minWidth: 280 }} padding={14}>
           <SectionHeader title="Absences du jour" actions={<Link href="/rh"><Button size="sm">RH</Button></Link>} />

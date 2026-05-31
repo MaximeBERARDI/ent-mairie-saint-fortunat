@@ -309,7 +309,7 @@ function MaPointageView({
   }
 
   return (
-    <div style={{ display: 'flex', gap: 'var(--gap)' }}>
+    <div className="split" style={{ display: 'flex', gap: 'var(--gap)' }}>
       {/* Boutons de pointage */}
       <Card style={{ flex: 1.2 }} padding={20}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 18 }}>
@@ -472,7 +472,7 @@ function EquipePointageView({
 }) {
   return (
     <Card padding={0}>
-      <div style={{ display: 'grid', gridTemplateColumns: '2fr 70px 90px 90px 110px 110px 80px', gap: 10, padding: '8px 14px', background: C.bg, borderBottom: `1px solid ${C.border}` }}>
+      <div className="table-stack--head" style={{ display: 'grid', gridTemplateColumns: '2fr 70px 90px 90px 110px 110px 80px', gap: 10, padding: '8px 14px', background: C.bg, borderBottom: `1px solid ${C.border}` }}>
         {['Agent', 'Statut', 'Réf.', 'Sem. en cours', 'HSup semaine', 'HSup mois', 'Alerte'].map(h => (
           <p key={h} style={{ fontSize: 12, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</p>
         ))}
@@ -485,7 +485,7 @@ function EquipePointageView({
         const hsupMensuel = hSupMensuel(a.id, currentMonth, r)
         const enAlerte = hsupMensuel > config.seuilAlerteMensuel || hsupHebdo > config.seuilAlerteHebdo
         return (
-          <div key={a.id} style={{ display: 'grid', gridTemplateColumns: '2fr 70px 90px 90px 110px 110px 80px', gap: 10, padding: '10px 14px', borderBottom: i < agents.length - 1 ? `1px solid ${C.border}` : 'none', alignItems: 'center', fontSize: 12, background: enAlerte ? `${C.danger}06` : '#fff' }}>
+          <div key={a.id} className="table-stack" style={{ display: 'grid', gridTemplateColumns: '2fr 70px 90px 90px 110px 110px 80px', gap: 10, padding: '10px 14px', borderBottom: i < agents.length - 1 ? `1px solid ${C.border}` : 'none', alignItems: 'center', fontSize: 12, background: enAlerte ? `${C.danger}06` : '#fff' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <Avatar initials={a.initials} size={26} color={present ? C.success : C.subtle} />
               <div>
@@ -540,7 +540,7 @@ function ValidationView({
 
   return (
     <Card padding={0}>
-      <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 100px 130px 2fr 1fr 200px', gap: 10, padding: '8px 14px', background: C.bg, borderBottom: `1px solid ${C.border}` }}>
+      <div className="table-stack--head" style={{ display: 'grid', gridTemplateColumns: '1.5fr 100px 130px 2fr 1fr 200px', gap: 10, padding: '8px 14px', background: C.bg, borderBottom: `1px solid ${C.border}` }}>
         {['Agent', 'Type', 'Date / Heure', 'Motif', 'Saisi le', 'Action'].map(h => (
           <p key={h} style={{ fontSize: 12, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</p>
         ))}
@@ -549,7 +549,7 @@ function ValidationView({
         const agent = people.find(x => x.id === p.personId)
         return (
           <div key={p.id}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 100px 130px 2fr 1fr 200px', gap: 10, padding: '10px 14px', borderBottom: refusing === p.id ? 'none' : (i < enAttente.length - 1 ? `1px solid ${C.border}` : 'none'), alignItems: 'center', fontSize: 12, background: `${C.warning}06` }}>
+            <div className="table-stack" style={{ display: 'grid', gridTemplateColumns: '1.5fr 100px 130px 2fr 1fr 200px', gap: 10, padding: '10px 14px', borderBottom: refusing === p.id ? 'none' : (i < enAttente.length - 1 ? `1px solid ${C.border}` : 'none'), alignItems: 'center', fontSize: 12, background: `${C.warning}06` }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 {agent && <Avatar initials={agent.initials} size={26} color={agent.color} />}
                 <p style={{ color: C.fg, fontWeight: 500 }}>{agent?.fullName ?? '—'}</p>

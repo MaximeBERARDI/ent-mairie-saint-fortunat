@@ -249,8 +249,8 @@ function FacturesView() {
         <KpiCard label="Rejetées" value={String(kpis.rejeteesCount)} sub={kpis.rejeteesCount > 0 ? 'commentaire requis' : '—'} color={C.danger} />
       </div>
 
-      <div style={{ display: 'flex', gap: 'var(--gap)' }}>
-        <div style={{ flex: 3 }}>
+      <div className="split" data-open={selected ? 'true' : 'false'} style={{ display: 'flex', gap: 'var(--gap)' }}>
+        <div className="split__aside" style={{ flex: 3 }}>
           <div style={{ display: 'flex', gap: 8, marginBottom: 12, alignItems: 'center', flexWrap: 'wrap' }}>
             {([
               ['toutes', `Toutes (${counts.toutes})`],
@@ -372,7 +372,8 @@ function FacturesView() {
         </div>
 
         {/* Panneau détail */}
-        <Card style={{ flex: 1.8 }} padding={14}>
+        <Card className="split__main" style={{ flex: 1.8 }} padding={14}>
+          <button type="button" className="split__back" onClick={() => setSelectedId(null)}>← Liste des factures</button>
           {selected ? (
             <FactureDetailPanel
               facture={selected}
@@ -865,9 +866,9 @@ function FournisseursView() {
   }
 
   return (
-    <div style={{ display: 'flex', gap: 'var(--gap)', height: 'calc(100vh - 160px)' }}>
+    <div className="split" data-open={selected ? 'true' : 'false'} style={{ display: 'flex', gap: 'var(--gap)', height: 'calc(100vh - 160px)' }}>
       {/* Liste fournisseurs */}
-      <div style={{ width: 260, flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
+      <div className="split__aside" style={{ width: 260, flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
         <input
           type="text"
           value={search}
@@ -901,7 +902,8 @@ function FournisseursView() {
       </div>
 
       {/* Détail fournisseur */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 'var(--gap)', overflow: 'auto' }}>
+      <div className="split__main" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 'var(--gap)', overflow: 'auto' }}>
+        <button type="button" className="split__back" onClick={() => setSelectedId(null)}>← Liste des fournisseurs</button>
         {showNewForm && (
           <NewFournisseurForm
             postes={postes}

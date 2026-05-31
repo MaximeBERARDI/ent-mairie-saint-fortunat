@@ -292,7 +292,7 @@ function BiensTab({
         </Card>
       ) : (
         <Card padding={0}>
-          <div style={{ display: 'grid', gridTemplateColumns: '90px 1.5fr 1fr 70px 100px 120px 120px', gap: 10, padding: '8px 14px', background: C.bg, borderBottom: `1px solid ${C.border}` }}>
+          <div className="table-stack--head" style={{ display: 'grid', gridTemplateColumns: '90px 1.5fr 1fr 70px 100px 120px 120px', gap: 10, padding: '8px 14px', background: C.bg, borderBottom: `1px solid ${C.border}` }}>
             {['Réf.', 'Nom', 'Type', 'Surface', 'Loyer + charges', 'Locataire', 'Actions'].map(h => (
               <p key={h} style={{ fontSize: 12, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</p>
             ))}
@@ -300,7 +300,7 @@ function BiensTab({
           {filtered.map((b, i) => {
             const bail = baux.find(x => x.bienId === b.id && x.statut === 'En cours')
             return (
-              <div key={b.id} style={{ display: 'grid', gridTemplateColumns: '90px 1.5fr 1fr 70px 100px 120px 120px', gap: 10, padding: '10px 14px', borderBottom: i < filtered.length - 1 ? `1px solid ${C.border}` : 'none', alignItems: 'center', fontSize: 12, opacity: b.active ? 1 : 0.6 }}>
+              <div key={b.id} className="table-stack" style={{ display: 'grid', gridTemplateColumns: '90px 1.5fr 1fr 70px 100px 120px 120px', gap: 10, padding: '10px 14px', borderBottom: i < filtered.length - 1 ? `1px solid ${C.border}` : 'none', alignItems: 'center', fontSize: 12, opacity: b.active ? 1 : 0.6 }}>
                 <p style={{ fontFamily: "'JetBrains Mono', monospace", color: C.subtle, fontSize: 12 }}>{b.reference}</p>
                 <div style={{ minWidth: 0 }}>
                   <p style={{ color: C.fg, fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{b.nom}</p>

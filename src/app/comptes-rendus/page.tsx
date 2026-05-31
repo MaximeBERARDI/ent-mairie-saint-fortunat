@@ -118,7 +118,7 @@ function ListeView() {
     : []
 
   return (
-    <div style={{ display: 'flex', gap: 'var(--gap)', height: 'calc(100vh - 180px)' }}>
+    <div className="split" style={{ display: 'flex', gap: 'var(--gap)', height: 'calc(100vh - 180px)' }}>
       <Card style={{ flex: 2 }} padding={0}>
         <div style={{ padding: '12px 16px', borderBottom: `1px solid ${C.border}`, display: 'flex', alignItems: 'center', gap: 8 }}>
           <p style={{ fontSize: 14, color: C.fg, fontWeight: 600, flex: 1 }}>
@@ -304,7 +304,7 @@ function UploadStep({
   const canProceed = !!wizard.pdfBase64
 
   return (
-    <div style={{ display: 'flex', gap: 'var(--gap)' }}>
+    <div className="split" style={{ display: 'flex', gap: 'var(--gap)' }}>
       <Card style={{ flex: 2 }} padding={16}>
         <SectionHeader title="Importer un compte rendu" />
 
@@ -453,7 +453,7 @@ function ExtractionStep({
   }, [wizard.extracting, wizard.extractedTasks.length, wizard.extractError, startExtraction])
 
   return (
-    <div style={{ display: 'flex', gap: 'var(--gap)' }}>
+    <div className="split" style={{ display: 'flex', gap: 'var(--gap)' }}>
       <Card style={{ flex: 1 }} padding={16}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
           <div style={{ width: 32, height: 32, borderRadius: '50%', background: C.greenLight, border: `2px solid ${C.green}`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -583,7 +583,7 @@ function ValidationStep({
   })
 
   return (
-    <div style={{ display: 'flex', gap: 'var(--gap)' }}>
+    <div className="split" style={{ display: 'flex', gap: 'var(--gap)' }}>
       <Card style={{ flex: 3 }} padding={16}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, padding: '10px 12px', background: C.greenLight, borderRadius: 8 }}>
           <div style={{ width: 28, height: 28, borderRadius: '50%', background: C.green, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

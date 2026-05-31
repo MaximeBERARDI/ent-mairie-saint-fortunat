@@ -355,3 +355,78 @@ textarea:focus {
   .login__secure--card svg { width: 14px; height: 14px; color: #2d9c6e; flex-shrink: 0; }
 }
 
+/* ─── Layout maître-détail responsive (.split) ───────────────────────
+ * Utilitaire pour les vues « liste latérale + panneau détail » (Agents,
+ * Fournisseurs, Équipe, Bibliothèque, Commissions détail, etc.). Desktop :
+ * deux colonnes (la largeur de l'aside reste posée en inline). Mobile :
+ * empilement vertical, la liste passe pleine largeur. Remplace les layouts
+ * desktop-first sans point de rupture (cf. docs/audit-mobile-2026-05.html).
+ */
+.split { display: flex; gap: var(--gap); }
+.split__main { flex: 1; min-width: 0; }
+@media (max-width: 767px) {
+  /* Empilement vertical. Tout enfant direct du conteneur passe pleine largeur
+     et perd sa largeur/ratio/hauteur fixés en inline pour le desktop
+     (width:280, flex:3/1.8, height:calc(100vh-N)). Il suffit donc de poser
+     className="split" sur le conteneur — les enfants se réinitialisent seuls. */
+  .split { flex-direction: column; height: auto !important; }
+  .split > * { flex: none !important; width: 100% !important; min-width: 0; }
+}
+
+/* ─── Grilles responsive (cf. docs/audit-mobile-2026-05.html) ────────── */
+@media (max-width: 767px) {
+  /* Grilles de cartes / champs : repassent en une seule colonne. */
+  .grid-reflow { grid-template-columns: 1fr !important; }
+
+  /* Tableaux construits en CSS grid (largeurs de colonnes fixes) : on empile
+     chaque cellule en liste verticale et on masque la ligne d'en-tête, qui
+     n'a plus de sens. Évite le débordement horizontal. */
+  .table-stack { grid-template-columns: 1fr !important; gap: 2px 0 !important; padding-top: 10px !important; padding-bottom: 10px !important; }
+  .table-stack--head { display: none !important; }
+}
+
+/* Barres de KPI : retour à la ligne automatique sur tout écran (les <KpiCard>
+   ont flex:1 1 200px ; sans wrap, 4-5 cartes débordent sur mobile). Cible le
+   conteneur flex dont un enfant direct est une KpiCard. */
+.kpi-bar, :where(div):has(> [style*="1 1 200px"]) { flex-wrap: wrap; }
+
+/* ─── Kanban : défilement horizontal assumé sur mobile ──────────────────
+ * Desktop : colonnes à largeur égale. Mobile : on défile horizontalement
+ * entre les colonnes (pattern attendu d'un tableau Kanban), chaque colonne
+ * occupant ~80% de la largeur, avec accroche au défilement. */
+.kanban { display: flex; gap: var(--gap); }
+@media (max-width: 767px) {
+  .kanban {
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+    height: auto !important; padding-bottom: 8px;
+    scroll-snap-type: x proximity;
+  }
+  .kanban__col { flex: 0 0 80vw !important; max-width: 300px; scroll-snap-align: start; }
+}
+
+/* ─── Master-detail : une vue à la fois sur mobile ──────────────────────
+ * Sur mobile, empiler le détail SOUS la liste n'est pas pratique. Quand la
+ * page pose data-open="true" sur le conteneur .split (un élément est
+ * sélectionné), le détail prend tout l'écran et la liste est masquée ; sinon
+ * on voit la liste. Le bouton .split__back (visible en mobile) revient à la
+ * liste. La page reste responsable de poser data-open et de déselectionner. */
+.split__back { display: none; }
+@media (max-width: 767px) {
+  .split[data-open="true"] > .split__aside { display: none !important; }
+  .split[data-open="false"] > .split__main { display: none !important; }
+  .split__back {
+    display: inline-flex; align-items: center; gap: 6px;
+    margin-bottom: 12px; padding: 8px 14px; min-height: 44px;
+    background: #f0f3f5; border: 1px solid #dde4e9; border-radius: 8px;
+    color: #1f2a31; font-size: 14px; font-weight: 600; cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+  }
+}
+
+/* ─── Cibles tactiles (Lot 4) ───────────────────────────────────────────
+ * .tap garantit une cible d'au moins 44x44 px sur mobile (boutons d'action
+ * de tableaux, icônes), conformément à WCAG 2.5.5. */
+@media (max-width: 767px) {
+  .tap { min-height: 44px !important; min-width: 44px !important; }
+}
+

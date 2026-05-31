@@ -396,7 +396,7 @@ export default function ProfilPage() {
       {tab === 'infos' && (
         <Card padding={20}>
           <SectionHeader title="Informations personnelles" />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+          <div className="grid-reflow" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
             <Field label="Prénom">
               <input type="text" value={currentUser.prenom} disabled style={{ ...inputStyle, background: C.bg }} />
             </Field>

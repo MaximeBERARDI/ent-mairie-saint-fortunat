@@ -264,8 +264,8 @@ function ListeView({
           </button>
         ))}
       </div>
-      <div style={{ display: 'flex', gap: 'var(--gap)' }}>
-        <Card style={{ flex: 3 }} padding={0}>
+      <div className="split" data-open={selected ? 'true' : 'false'} style={{ display: 'flex', gap: 'var(--gap)' }}>
+        <Card className="split__aside" style={{ flex: 3 }} padding={0}>
           <div style={{ display: 'flex', gap: 0, padding: '8px 14px', borderBottom: `1px solid ${C.border}`, background: C.bg }}>
             {['Tâche', 'Commission', 'Assigné à', 'Échéance', 'Priorité', 'Statut'].map((h, i) => (
               <span key={i} style={{ flex: [3, 1.5, 1.6, 1.2, 1, 1.4][i], fontSize: 12, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em' }}>{h}</span>
@@ -335,7 +335,8 @@ function ListeView({
         </Card>
 
         {selected ? (
-          <Card style={{ flex: 1.8 }} padding={16}>
+          <Card className="split__main" style={{ flex: 1.8 }} padding={16}>
+            <button type="button" className="split__back" onClick={() => setSelected(null)}>← Liste des tâches</button>
             <TaskDetailContent
               task={selected}
               currentUserId={currentUserId}
@@ -350,7 +351,7 @@ function ListeView({
             />
           </Card>
         ) : (
-          <Card style={{ flex: 1.8 }} padding={20}>
+          <Card className="split__main" style={{ flex: 1.8 }} padding={20}>
             <p style={{ fontSize: 12, color: C.subtle, textAlign: 'center', padding: '20px 0' }}>
               Sélectionnez une tâche pour voir le détail.
             </p>
@@ -380,11 +381,11 @@ function KanbanView({
   ]
 
   return (
-    <div style={{ display: 'flex', gap: 'var(--gap)', height: 'calc(100vh - 220px)' }}>
+    <div className="kanban" style={{ display: 'flex', gap: 'var(--gap)', height: 'calc(100vh - 220px)' }}>
       {COLUMNS.map(col => {
         const columnTasks = tasks.filter(t => t.status === col.status)
         return (
-          <div key={col.status} style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+          <div key={col.status} className="kanban__col" style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
               <div style={{ width: 8, height: 8, borderRadius: '50%', background: col.color }} />
               <p style={{ fontSize: 12, color: C.fg, fontWeight: 600 }}>{col.status}</p>

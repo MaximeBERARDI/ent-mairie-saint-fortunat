@@ -85,7 +85,7 @@ export default function JournalPage() {
       </div>
 
       <Card padding={0}>
-        <div style={{ display: 'grid', gridTemplateColumns: '150px 160px 120px 1fr', gap: 0, padding: '10px 14px', borderBottom: `1px solid ${C.border}`, background: C.bg }}>
+        <div className="table-stack--head" style={{ display: 'grid', gridTemplateColumns: '150px 160px 120px 1fr', gap: 0, padding: '10px 14px', borderBottom: `1px solid ${C.border}`, background: C.bg }}>
           {['Date', 'Acteur', 'Type', 'Action'].map(h => (
             <span key={h} style={{ fontSize: 11, fontWeight: 700, color: C.subtle, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{h}</span>
           ))}
@@ -94,7 +94,7 @@ export default function JournalPage() {
           <p style={{ padding: 24, textAlign: 'center', fontSize: 12, color: C.subtle }}>Aucun évènement.</p>
         )}
         {filtered.map(r => (
-          <div key={r.id} style={{ display: 'grid', gridTemplateColumns: '150px 160px 120px 1fr', gap: 0, padding: '9px 14px', borderBottom: `1px solid ${C.border}`, alignItems: 'center' }}>
+          <div key={r.id} className="table-stack" style={{ display: 'grid', gridTemplateColumns: '150px 160px 120px 1fr', gap: 0, padding: '9px 14px', borderBottom: `1px solid ${C.border}`, alignItems: 'center' }}>
             <span style={{ fontSize: 11.5, color: C.muted, fontFamily: "'JetBrains Mono', monospace" }}>
               {new Date(r.createdAt).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: '2-digit', hour: '2-digit', minute: '2-digit' })}
             </span>

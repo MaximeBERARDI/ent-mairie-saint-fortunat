@@ -122,9 +122,9 @@ export default function CalendrierPage() {
       <Card padding={16}>
         {/* Barre de navigation du mois */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14, flexWrap: 'wrap' }}>
-          <button onClick={() => go(-1)} aria-label="Mois précédent" style={navBtn}>‹</button>
-          <button onClick={() => go(1)} aria-label="Mois suivant" style={navBtn}>›</button>
-          <button onClick={() => setCursor({ y: now.getFullYear(), m: now.getMonth() })} style={{ ...navBtn, width: 'auto', padding: '0 12px', fontSize: 12 }}>Aujourd&apos;hui</button>
+          <button onClick={() => go(-1)} aria-label="Mois précédent" className="tap" style={navBtn}>‹</button>
+          <button onClick={() => go(1)} aria-label="Mois suivant" className="tap" style={navBtn}>›</button>
+          <button onClick={() => setCursor({ y: now.getFullYear(), m: now.getMonth() })} className="tap" style={{ ...navBtn, width: 'auto', padding: '0 12px', fontSize: 12 }}>Aujourd&apos;hui</button>
           <h2 style={{ fontSize: 18, fontWeight: 700, color: C.fg, textTransform: 'capitalize', marginLeft: 6 }}>
             {FRENCH_MONTHS[cursor.m]} {cursor.y}
           </h2>
