@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Refonte UX — Page de connexion sur smartphone · ENT Mairie de Saint-Fortunat</title>
+<style>
+  :root {
+    --green:#6ab123; --green-dark:#3d7a14; --green-light:#f2f9e8; --green-mid:#c4e18a;
+    --slate:#4d5e6c; --slate-light:#f0f3f5; --slate-dark:#2e3b45;
+    --terra:#c4793a; --terra-dark:#8e552a; --terra-light:#fdf4ec;
+    --bg:#f4f6f1; --surface:#ffffff; --border:#dde4e9;
+    --fg:#1f2a31; --muted:#4d5e6c; --subtle:#5e7480; --ph:#e2e6e3;
+    --success:#2d9c6e; --success-dark:#1f7a52; --success-light:#e8f7f1;
+    --warning:#d4860a; --warning-dark:#8a560a; --warning-light:#fef5e4;
+    --danger:#c4393a; --danger-dark:#9c2d2e; --danger-light:#fdeaea;
+    --info:#2563a8; --info-dark:#1d4d85; --info-light:#eaf1fb;
+  }
+  * { box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body {
+    margin:0; background:var(--bg); color:var(--fg);
+    font-family:'DM Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    line-height:1.6; font-size:16px; -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,h4,h5 { line-height:1.25; margin:0; font-weight:700; letter-spacing:-0.01em; }
+  p { margin:0 0 12px; }
+
+  .docnav {
+    position:sticky; top:0; z-index:50;
+    background:rgba(255,255,255,0.92); backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--border);
+    display:flex; align-items:center; gap:6px; flex-wrap:wrap;
+    padding:10px clamp(16px,4vw,40px);
+  }
+  .docnav .brand { font-weight:700; font-size:14px; margin-right:auto; display:flex; align-items:center; gap:8px; }
+  .docnav .brand .dot { width:10px; height:10px; border-radius:50%; background:var(--green); box-shadow:0 0 0 3px var(--green-light); }
+  .docnav a { text-decoration:none; color:var(--muted); font-size:13px; font-weight:600; padding:6px 12px; border-radius:8px; transition:background .2s, color .2s; }
+  .docnav a:hover { background:var(--slate-light); color:var(--fg); }
+
+  .wrap { max-width:1120px; margin:0 auto; padding:0 clamp(16px,4vw,40px); }
+
+  .cover { padding:60px 0 36px; }
+  .kicker { display:inline-block; font-size:12px; font-weight:700; letter-spacing:.12em; text-transform:uppercase; color:var(--green-dark); background:var(--green-light); padding:6px 12px; border-radius:20px; margin-bottom:18px; }
+  .cover h1 { font-size:clamp(28px,5vw,42px); }
+  .cover .lede { font-size:18px; color:var(--muted); max-width:60ch; margin-top:14px; }
+  .meta { margin-top:22px; font-size:13px; color:var(--subtle); display:flex; gap:18px; flex-wrap:wrap; }
+  .meta b { color:var(--fg); }
+
+  section { padding:38px 0; border-top:1px solid var(--border); }
+  section > .wrap > h2 { font-size:clamp(22px,3vw,30px); margin-bottom:6px; }
+  .section-sub { color:var(--muted); max-width:64ch; margin-bottom:26px; }
+
+  /* Cartes problème */
+  .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  @media (max-width:820px){ .grid-2,.grid-3 { grid-template-columns:1fr; } }
+  .pcard { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:18px; }
+  .pcard .n { font-size:12px; font-weight:700; color:var(--terra); }
+  .pcard h3 { font-size:16px; margin:6px 0 8px; }
+  .pcard p { font-size:14px; color:var(--muted); margin:0; }
+  .pcard code { background:var(--slate-light); border-radius:4px; padding:1px 5px; font-size:12px; color:var(--danger-dark); }
+
+  /* En-tête de proposition */
+  .prop-head { display:flex; align-items:flex-start; gap:18px; margin-bottom:18px; }
+  .prop-badge { flex:0 0 auto; width:54px; height:54px; border-radius:14px; display:flex; align-items:center; justify-content:center; font-size:24px; font-weight:800; color:#fff; }
+  .prop-A .prop-badge { background:linear-gradient(135deg,var(--green),var(--green-dark)); }
+  .prop-B .prop-badge { background:linear-gradient(135deg,var(--terra),var(--terra-dark)); }
+  .prop-C .prop-badge { background:linear-gradient(135deg,var(--slate),var(--slate-dark)); }
+  .prop-head h2 { font-size:26px; }
+  .prop-head .concept { color:var(--muted); font-size:15px; margin-top:2px; max-width:70ch; }
+  .tag { display:inline-block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; padding:3px 9px; border-radius:20px; }
+  .tag-A { background:var(--green-light); color:var(--green-dark); }
+  .tag-B { background:var(--terra-light); color:var(--terra-dark); }
+  .tag-C { background:var(--slate-light); color:var(--slate); }
+
+  .showcase { display:flex; gap:30px; align-items:flex-start; flex-wrap:wrap; }
+  .showcase .phone-wrap { flex:0 0 auto; }
+  .showcase .notes { flex:1; min-width:260px; }
+
+  /* ── Cadre smartphone ── */
+  .phone { width:288px; border:11px solid #161d24; border-radius:36px; background:#161d24; box-shadow:0 22px 50px rgba(20,40,30,.20); }
+  .phone .screen { position:relative; height:580px; border-radius:26px; overflow:hidden; background:var(--bg); display:flex; flex-direction:column; }
+  .statusbar { height:30px; flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; padding:0 16px; font-size:12px; font-weight:600; color:var(--fg); position:relative; z-index:3; }
+  .statusbar.on-dark { color:#fff; }
+  .statusbar .sb-ic { display:flex; gap:4px; align-items:center; }
+  .statusbar .sb-ic span { display:inline-block; width:15px; height:9px; border-radius:2px; background:currentColor; opacity:.85; }
+  .statusbar .sb-ic .bat { width:20px; height:10px; border:1.5px solid currentColor; border-radius:3px; background:transparent; position:relative; }
+  .statusbar .sb-ic .bat::after { content:""; position:absolute; inset:2px; right:6px; background:currentColor; border-radius:1px; }
+  .notch { position:absolute; top:0; left:50%; transform:translateX(-50%); width:120px; height:22px; background:#161d24; border-radius:0 0 14px 14px; z-index:4; }
+
+  .scr-body { flex:1; min-height:0; display:flex; flex-direction:column; }
+
+  /* Élements de formulaire (maquette) */
+  .logo-chip { width:40px; height:40px; border-radius:9px; background:var(--green); display:flex; align-items:center; justify-content:center; color:#fff; font-weight:800; font-size:13px; flex:0 0 auto; }
+  .field { margin-bottom:13px; }
+  .field .lab { font-size:12.5px; font-weight:600; color:var(--muted); margin-bottom:5px; display:block; }
+  .inp { height:46px; border:1.5px solid var(--border); border-radius:10px; background:#fff; display:flex; align-items:center; gap:9px; padding:0 12px; font-size:15px; color:var(--subtle); }
+  .inp.focus { border-color:var(--green); box-shadow:0 0 0 3px var(--green-light); color:var(--fg); }
+  .inp svg { width:17px; height:17px; flex:0 0 auto; color:var(--subtle); }
+  .inp .eye { margin-left:auto; }
+  .inp .dots { letter-spacing:3px; }
+  .btn-primary { height:48px; border-radius:10px; background:var(--green-dark); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:15px; }
+  .link-sm { font-size:12.5px; color:var(--muted); text-align:right; }
+  .secure { display:flex; align-items:center; gap:7px; font-size:11.5px; }
+  .secure svg { width:14px; height:14px; flex:0 0 auto; }
+  .secure .dot-ok { width:7px; height:7px; border-radius:50%; background:var(--success); flex:0 0 auto; }
+
+  /* paysage évoquant la commune (placeholder de la vraie photo) */
+  .commune-photo { position:relative; background:
+      linear-gradient(180deg,#bcd6e8 0%, #d8e7d2 42%),
+      radial-gradient(120% 80% at 70% 120%, #5d8a3f 0%, #3d6b2c 60%, #2f5523 100%);
+    background-blend-mode:normal; }
+  .commune-photo::before { content:""; position:absolute; left:0; right:0; bottom:0; height:58%;
+    background:linear-gradient(180deg, #6f9a4d 0%, #4a7a32 70%, #3a6328 100%);
+    clip-path:polygon(0 38%, 18% 22%, 38% 40%, 58% 18%, 78% 36%, 100% 20%, 100% 100%, 0 100%); }
+  .commune-photo .cap { position:absolute; left:0; right:0; bottom:0; z-index:2; padding:14px 14px 12px; background:linear-gradient(transparent, rgba(0,0,0,0.72)); }
+  .commune-photo .cap b { color:#fff; font-size:12.5px; display:block; }
+  .commune-photo .cap span { color:rgba(255,255,255,.78); font-size:10.5px; }
+
+  .phone-caption { text-align:center; font-size:12px; color:var(--subtle); margin-top:10px; font-weight:600; }
+  .phone-caption.bad { color:var(--danger-dark); }
+
+  .annot { margin-top:4px; }
+  .solves, .limits { border-radius:11px; padding:15px 17px; font-size:14px; margin-bottom:12px; }
+  .solves { background:var(--green-light); border:1px solid var(--green-mid); }
+  .limits { background:#fff; border:1px dashed var(--border); }
+  .solves h4, .limits h4 { font-size:12.5px; text-transform:uppercase; letter-spacing:.05em; margin-bottom:7px; }
+  .solves h4 { color:var(--green-dark); } .limits h4 { color:var(--subtle); }
+  .solves ul, .limits ul { margin:0; padding-left:18px; } .solves li, .limits li { margin-bottom:5px; color:var(--muted); }
+  .solves li b { color:var(--green-dark); }
+  .best-for { font-size:13.5px; color:var(--muted); background:var(--slate-light); border-left:3px solid var(--green); border-radius:0 8px 8px 0; padding:10px 14px; }
+  .best-for b { color:var(--fg); }
+
+  table.cmp { width:100%; border-collapse:collapse; background:#fff; border:1px solid var(--border); border-radius:12px; overflow:hidden; font-size:14px; }
+  table.cmp th, table.cmp td { padding:12px 14px; text-align:left; border-bottom:1px solid var(--border); }
+  table.cmp thead th { background:var(--slate-dark); color:#fff; font-size:13px; }
+  table.cmp tbody th { font-weight:600; color:var(--fg); width:28%; background:var(--slate-light); }
+  table.cmp td { color:var(--muted); vertical-align:top; }
+  .r-hi { color:var(--success-dark); font-weight:700; } .r-mid { color:var(--warning-dark); font-weight:700; } .r-lo { color:var(--danger-dark); font-weight:700; }
+
+  .reco { background:var(--slate-dark); color:#fff; border-radius:14px; padding:26px 28px; }
+  .reco h2 { color:#fff; } .reco p { color:rgba(255,255,255,.85); }
+  .reco .pill { display:inline-block; background:var(--green); color:#fff; font-weight:700; font-size:13px; border-radius:20px; padding:5px 14px; margin-bottom:14px; }
+  .reco ul { padding-left:20px; } .reco li { margin-bottom:6px; color:rgba(255,255,255,.88); } .reco b { color:#fff; }
+
+  .note { font-size:13px; color:var(--subtle); background:var(--slate-light); border-left:3px solid var(--green); border-radius:0 8px 8px 0; padding:12px 16px; margin-top:18px; }
+  footer { padding:28px 0 56px; color:var(--subtle); font-size:13px; }
+
+  @media print { .docnav { display:none; } section { break-inside:avoid; } .phone { box-shadow:none; } }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-mail" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m2 7 10 6 10-6"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></symbol>
+</svg>
+
+<nav class="docnav">
+  <span class="brand"><span class="dot"></span> Refonte — Connexion mobile</span>
+  <a href="#constat">Constat</a>
+  <a href="#propA">A · Bandeau</a>
+  <a href="#propB">B · Hero photo</a>
+  <a href="#propC">C · Épuré</a>
+  <a href="#comparatif">Comparatif</a>
+  <a href="#reco">Reco</a>
+</nav>
+
+<div class="wrap cover">
+  <span class="kicker">Document de réflexion · maquettes</span>
+  <h1>Repenser la page de connexion<br/>sur smartphone</h1>
+  <p class="lede">La page <code>/login</code> est conçue pour le grand écran et n'a aucune adaptation mobile : sur téléphone, elle se casse. Voici le diagnostic et trois directions pour la refaire, mobile-first, en gardant la charte mairie. Maquettes pour décider — aucun code applicatif modifié.</p>
+  <div class="meta">
+    <span><b>Page</b> · /login</span>
+    <span><b>Cible</b> · smartphone (≈ 375 px)</span>
+    <span><b>Charte</b> · palette mairie conservée</span>
+    <span><b>Réf.</b> · WCAG AA, cibles 44 px, texte ≥ 16 px</span>
+  </div>
+</div>
+
+<!-- ════════ CONSTAT ════════ -->
+<section id="constat">
+  <div class="wrap">
+    <h2>Le constat&nbsp;: pourquoi c'est cassé sur mobile</h2>
+    <p class="section-sub">La page utilise un <strong>split fixe deux colonnes</strong> (branding 45&nbsp;% / formulaire 55&nbsp;%) en <code>display:flex; height:100vh</code>, <strong>sans aucune media query</strong>. Ces proportions desktop sont appliquées telles quelles au téléphone.</p>
+
+    <div class="showcase" style="margin-bottom:8px">
+      <div class="phone-wrap">
+        <div class="phone">
+          <div class="screen">
+            <div class="notch"></div>
+            <div class="statusbar"><span>9:41</span><span class="sb-ic"><span></span><span class="bat"></span></span></div>
+            <div class="scr-body" style="flex-direction:row">
+              <!-- panneau gauche 45% qui ne s'efface pas -->
+              <div style="width:45%; background:var(--slate-dark); padding:12px 8px; display:flex; flex-direction:column; gap:8px;">
+                <div style="display:flex; align-items:center; gap:5px;"><div style="width:22px;height:22px;border-radius:5px;background:var(--green);"></div><div style="font-size:8px;color:#fff;font-weight:700;line-height:1.2;">Mairie de<br/><span style="opacity:.6;font-weight:400;">Saint-Fortunat…</span></div></div>
+                <div style="flex:1; border-radius:8px; background:linear-gradient(180deg,#bcd6e8,#4a7a32); min-height:0;"></div>
+                <div style="font-size:7px;color:rgba(255,255,255,.7);">● Connexion sécurisée</div>
+              </div>
+              <!-- panneau droit écrasé, padding 40 -->
+              <div style="flex:1; background:var(--bg); padding:40px 8px; display:flex; align-items:center;">
+                <div style="width:100%;">
+                  <div style="font-size:12px;font-weight:700;color:var(--fg);">Connexion</div>
+                  <div style="font-size:7px;color:var(--subtle);margin:3px 0 10px;line-height:1.3;">Veuillez vous identifier…</div>
+                  <div style="height:26px;border:1px solid var(--border);border-radius:4px;background:#fff;margin-bottom:7px;"></div>
+                  <div style="height:26px;border:1px solid var(--border);border-radius:4px;background:#fff;margin-bottom:7px;"></div>
+                  <div style="height:28px;border-radius:4px;background:var(--green-dark);"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="phone-caption bad">Rendu actuel ≈ 375 px</p>
+      </div>
+      <div class="notes">
+        <div class="grid-2" style="grid-template-columns:1fr;">
+          <div class="pcard"><div class="n">Problème 1</div><h3>Le split 45/55 ne s'effondre pas</h3><p>Le branding garde <code>45%</code> de la largeur. Le formulaire est comprimé dans ~55&nbsp;% — moins le <code>padding:40px</code> de chaque côté, il reste à peine la place pour les champs.</p></div>
+          <div class="pcard"><div class="n">Problème 2</div><h3>Champs sous 16&nbsp;px → zoom iOS</h3><p>Les inputs sont en <code>13px</code>, les libellés en <code>11px</code>. Sous 16&nbsp;px, iOS <strong>zoome automatiquement</strong> au focus et désaligne la page.</p></div>
+          <div class="pcard"><div class="n">Problème 3</div><h3><code>height:100vh</code> + photo verticale</h3><p>Le <code>100vh</code> passe sous la barre d'adresse iOS (contenu coupé), et la photo de la commune devient une lamelle verticale illisible.</p></div>
+          <div class="pcard"><div class="n">Problème 4</div><h3>Détails tactiles manquants</h3><p>Pas de bouton « afficher le mot de passe », pas de prise en compte des <em>safe areas</em> (encoche), padding desktop trop large pour le pouce.</p></div>
+        </div>
+      </div>
+    </div>
+    <div class="note"><b>Principe des 3 propositions</b> — on garde le <strong>desktop tel quel</strong> (le split deux colonnes y est très bien) et on ne change que le comportement <strong>sous 768&nbsp;px</strong>. Toutes corrigent les 4 problèmes : empilement vertical, inputs ≥ 16&nbsp;px, espacements au pouce, bouton « afficher le mot de passe », <em>safe areas</em>, focus visibles. Palette et libellés réels conservés.</div>
+  </div>
+</section>
+
+<!-- ════════ A — BANDEAU CONDENSÉ ════════ -->
+<section id="propA" class="prop-A">
+  <div class="wrap">
+    <div class="prop-head">
+      <div class="prop-badge">A</div>
+      <div>
+        <span class="tag tag-A">Direction A</span>
+        <h2>Bandeau condensé, empilé</h2>
+        <p class="concept">On <b>réorganise verticalement</b> exactement les mêmes éléments : un bandeau slate compact en haut (logo + nom de la commune + une bande photo courte avec sa légende), puis le formulaire en pleine largeur en dessous. Le plus proche de l'existant — zéro perte de contenu, juste un reflux propre.</p>
+      </div>
+    </div>
+    <div class="showcase">
+      <div class="phone-wrap">
+        <div class="phone">
+          <div class="screen">
+            <div class="notch"></div>
+            <div class="statusbar"><span>9:41</span><span class="sb-ic"><span></span><span class="bat"></span></span></div>
+            <div class="scr-body">
+              <div style="background:var(--slate-dark); padding:14px 16px 0;">
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:12px;">
+                  <div class="logo-chip">SFE</div>
+                  <div><div style="font-size:14px;color:#fff;font-weight:700;line-height:1.2;">Mairie de Saint-Fortunat</div><div style="font-size:11px;color:rgba(255,255,255,.6);">sur-Eyrieux · Ardèche</div></div>
+                </div>
+              </div>
+              <div class="commune-photo" style="height:120px;">
+                <div class="cap"><b>Vallée de l'Eyrieux · Ardèche</b><span>ENT — réservé aux élus et agents</span></div>
+              </div>
+              <div style="flex:1; background:var(--bg); padding:18px 16px; display:flex; flex-direction:column;">
+                <div style="font-size:20px;font-weight:700;color:var(--fg);">Connexion</div>
+                <div style="font-size:13px;color:var(--subtle);margin:3px 0 16px;">Identifiez-vous pour accéder à l'ENT.</div>
+                <div class="field"><span class="lab">Adresse e-mail</span><div class="inp"><svg><use href="#i-mail"/></svg>prenom.nom@…</div></div>
+                <div class="field"><span class="lab">Mot de passe</span><div class="inp focus"><svg><use href="#i-lock"/></svg><span class="dots">••••••••</span><svg class="eye"><use href="#i-eye"/></svg></div></div>
+                <div class="link-sm" style="margin-bottom:14px;">Mot de passe oublié ?</div>
+                <div class="btn-primary">Se connecter</div>
+                <div style="flex:1;"></div>
+                <div class="secure" style="color:var(--subtle); justify-content:center; margin-top:14px;"><span class="dot-ok"></span>Connexion sécurisée · Hébergement France</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="phone-caption">Proposition A</p>
+      </div>
+      <div class="notes">
+        <div class="solves"><h4>Ce que ça résout</h4><ul>
+          <li><b>Reflux complet :</b> branding et photo passent en bandeau haut, le formulaire prend toute la largeur.</li>
+          <li><b>Garde tout :</b> logo, nom, photo, légende, mention « sécurisée » — rien ne disparaît.</li>
+          <li><b>Confort :</b> inputs 16&nbsp;px, bouton 48&nbsp;px, œil « afficher mot de passe », espacements au pouce.</li>
+        </ul></div>
+        <div class="limits"><h4>Points d'attention</h4><ul>
+          <li>La photo reste chargée sur mobile (poids data) — prévoir une image légère / lazy.</li>
+          <li>Sur très petits écrans, le bandeau + photo peuvent pousser le bouton sous la ligne de flottaison (scroll léger).</li>
+        </ul></div>
+        <p class="best-for"><b>Idéal si :</b> on veut le changement le plus sûr et fidèle à l'identité actuelle, sans rien retirer.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════ B — HERO PHOTO ════════ -->
+<section id="propB" class="prop-B">
+  <div class="wrap">
+    <div class="prop-head">
+      <div class="prop-badge">B</div>
+      <div>
+        <span class="tag tag-B">Direction B</span>
+        <h2>Hero photo plein écran + carte</h2>
+        <p class="concept">La <b>photo de la commune occupe tout le fond</b>, assombrie par un dégradé ; le logo et le nom flottent en haut, et une <b>carte blanche arrondie</b> (façon feuille du bas) porte le formulaire. Immersif, « app-like », fort sentiment d'appartenance au territoire.</p>
+      </div>
+    </div>
+    <div class="showcase">
+      <div class="phone-wrap">
+        <div class="phone">
+          <div class="screen commune-photo">
+            <div class="notch"></div>
+            <div class="statusbar on-dark"><span>9:41</span><span class="sb-ic"><span></span><span class="bat"></span></span></div>
+            <div class="scr-body" style="position:relative; z-index:2;">
+              <div style="padding:14px 18px; display:flex; align-items:center; gap:10px;">
+                <div class="logo-chip">SFE</div>
+                <div><div style="font-size:13px;color:#fff;font-weight:700;line-height:1.2;text-shadow:0 1px 3px rgba(0,0,0,.5);">Mairie de Saint-Fortunat</div><div style="font-size:10.5px;color:rgba(255,255,255,.85);text-shadow:0 1px 2px rgba(0,0,0,.5);">Vallée de l'Eyrieux · Ardèche</div></div>
+              </div>
+              <div style="flex:1;"></div>
+              <div style="background:#fff; border-radius:22px 22px 0 0; padding:22px 18px 18px; box-shadow:0 -8px 24px rgba(0,0,0,.18);">
+                <div style="width:36px;height:4px;border-radius:3px;background:var(--border);margin:0 auto 16px;"></div>
+                <div style="font-size:20px;font-weight:700;color:var(--fg);">Connexion</div>
+                <div style="font-size:12.5px;color:var(--subtle);margin:3px 0 16px;">Accès réservé aux élus et agents.</div>
+                <div class="field"><span class="lab">Adresse e-mail</span><div class="inp"><svg><use href="#i-mail"/></svg>prenom.nom@…</div></div>
+                <div class="field"><span class="lab">Mot de passe</span><div class="inp focus"><svg><use href="#i-lock"/></svg><span class="dots">••••••••</span><svg class="eye"><use href="#i-eye"/></svg></div></div>
+                <div class="link-sm" style="margin-bottom:14px;">Mot de passe oublié ?</div>
+                <div class="btn-primary">Se connecter</div>
+                <div class="secure" style="color:var(--subtle); justify-content:center; margin-top:13px;"><svg style="color:var(--success)"><use href="#i-shield"/></svg>Connexion sécurisée · France</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="phone-caption">Proposition B</p>
+      </div>
+      <div class="notes">
+        <div class="solves"><h4>Ce que ça résout</h4><ul>
+          <li><b>Plein écran maîtrisé :</b> la photo devient un atout (fond), plus une lamelle ; la carte gère le <code>100vh</code> proprement.</li>
+          <li><b>Hiérarchie claire :</b> identité en haut, action (le formulaire) mise en avant dans la carte.</li>
+          <li><b>Confort :</b> mêmes acquis (16&nbsp;px, 48&nbsp;px, œil, safe areas) dans une carte qui « monte » au focus clavier.</li>
+        </ul></div>
+        <div class="limits"><h4>Points d'attention</h4><ul>
+          <li>Le plus exigeant côté <b>contraste</b> : il faut un dégradé sombre suffisant pour garantir la lisibilité du texte blanc (WCAG AA).</li>
+          <li>Dépend d'une <b>belle photo</b> et de son poids (optimisation indispensable).</li>
+          <li>S'éloigne le plus du rendu desktop actuel.</li>
+        </ul></div>
+        <p class="best-for"><b>Idéal si :</b> on veut une connexion mémorable, moderne, qui valorise le territoire.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════ C — ÉPURÉ ════════ -->
+<section id="propC" class="prop-C">
+  <div class="wrap">
+    <div class="prop-head">
+      <div class="prop-badge">C</div>
+      <div>
+        <span class="tag tag-C">Direction C</span>
+        <h2>Épuré, formulaire d'abord</h2>
+        <p class="concept">Mobile minimaliste : <b>pas de photo sur téléphone</b> (réservée au desktop). Juste le logo, le nom de la commune centré, beaucoup de blanc, puis le formulaire. Le plus rapide à charger, le plus accessible, « je me connecte et j'y vais » — pensé pour un agent sur le terrain en 4G.</p>
+      </div>
+    </div>
+    <div class="showcase">
+      <div class="phone-wrap">
+        <div class="phone">
+          <div class="screen">
+            <div class="notch"></div>
+            <div class="statusbar"><span>9:41</span><span class="sb-ic"><span></span><span class="bat"></span></span></div>
+            <div class="scr-body" style="background:var(--bg); padding:20px 20px 18px; display:flex; flex-direction:column;">
+              <div style="height:4px;width:46px;border-radius:3px;background:var(--green);margin-top:6px;"></div>
+              <div style="flex:0 0 26px;"></div>
+              <div style="display:flex; flex-direction:column; align-items:center; text-align:center; margin-bottom:22px;">
+                <div class="logo-chip" style="width:54px;height:54px;border-radius:14px;font-size:17px;margin-bottom:12px;">SFE</div>
+                <div style="font-size:18px;font-weight:700;color:var(--fg);line-height:1.25;">Mairie de<br/>Saint-Fortunat-sur-Eyrieux</div>
+                <div style="font-size:12.5px;color:var(--subtle);margin-top:6px;">Espace Numérique de Travail</div>
+              </div>
+              <div class="field"><span class="lab">Adresse e-mail</span><div class="inp"><svg><use href="#i-mail"/></svg>prenom.nom@…</div></div>
+              <div class="field"><span class="lab">Mot de passe</span><div class="inp focus"><svg><use href="#i-lock"/></svg><span class="dots">••••••••</span><svg class="eye"><use href="#i-eye"/></svg></div></div>
+              <div class="link-sm" style="margin-bottom:16px;">Mot de passe oublié ?</div>
+              <div class="btn-primary">Se connecter</div>
+              <div style="flex:1;"></div>
+              <div class="secure" style="color:var(--subtle); justify-content:center;"><svg style="color:var(--success)"><use href="#i-shield"/></svg>Connexion sécurisée · Hébergement souverain France</div>
+            </div>
+          </div>
+        </div>
+        <p class="phone-caption">Proposition C</p>
+      </div>
+      <div class="notes">
+        <div class="solves"><h4>Ce que ça résout</h4><ul>
+          <li><b>Le plus robuste :</b> aucune image lourde sur mobile → chargement instantané, idéal en zone à faible débit.</li>
+          <li><b>Accessibilité maximale :</b> contraste élevé, structure simple, focus net — colle au style « gouvernemental » recommandé.</li>
+          <li><b>Concentration :</b> rien ne distrait de l'unique action — se connecter.</li>
+        </ul></div>
+        <div class="limits"><h4>Points d'attention</h4><ul>
+          <li>Moins « chaleureux » : on perd la photo de la commune sur mobile (conservée sur desktop).</li>
+          <li>Identité plus discrète — repose surtout sur le logo et le nom.</li>
+        </ul></div>
+        <p class="best-for"><b>Idéal si :</b> la priorité est la rapidité, la sobriété et l'accessibilité avant l'esthétique.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════ COMPARATIF ════════ -->
+<section id="comparatif">
+  <div class="wrap">
+    <h2>Comparatif</h2>
+    <p class="section-sub">Les trois corrigent intégralement les problèmes mobiles. Elles diffèrent surtout par l'ambition visuelle, le poids et le risque.</p>
+    <table class="cmp">
+      <thead><tr><th>Critère</th><th>A · Bandeau</th><th>B · Hero photo</th><th>C · Épuré</th></tr></thead>
+      <tbody>
+        <tr><th>Corrige le rendu mobile cassé</th><td class="r-hi">Oui ●●●</td><td class="r-hi">Oui ●●●</td><td class="r-hi">Oui ●●●</td></tr>
+        <tr><th>Fidélité à l'identité actuelle</th><td class="r-hi">Très forte</td><td class="r-mid">Réinterprétée</td><td class="r-mid">Sobre</td></tr>
+        <tr><th>Valorisation du territoire (photo)</th><td class="r-mid">Bande courte</td><td class="r-hi">Plein écran</td><td class="r-lo">Absente (mobile)</td></tr>
+        <tr><th>Performance / faible débit</th><td class="r-mid">Photo allégée</td><td class="r-mid">Photo optimisée</td><td class="r-hi">Excellente</td></tr>
+        <tr><th>Accessibilité (contraste, focus)</th><td class="r-hi">Très bonne</td><td class="r-mid">À surveiller (texte sur photo)</td><td class="r-hi">Maximale</td></tr>
+        <tr><th>Effort de développement</th><td class="r-hi">Faible ●</td><td class="r-mid">Moyen ●●</td><td class="r-hi">Faible ●</td></tr>
+        <tr><th>Écart vs desktop actuel</th><td class="r-hi">Faible</td><td class="r-lo">Important</td><td class="r-mid">Modéré</td></tr>
+      </tbody>
+    </table>
+    <div class="note">Les trois sont <b>purement responsives</b> : le desktop ne change pas, seul l'affichage <code>&lt; 768px</code> diffère. On peut aussi <b>combiner</b> — p. ex. la sobriété de C avec une fine bande photo de A.</div>
+  </div>
+</section>
+
+<!-- ════════ RECO ════════ -->
+<section id="reco">
+  <div class="wrap">
+    <div class="reco">
+      <span class="pill">Piste recommandée à débattre</span>
+      <h2>A — Bandeau condensé</h2>
+      <p>C'est le meilleur rapport bénéfice / risque : elle corrige <b>tous</b> les problèmes mobiles, <b>conserve l'intégralité</b> de l'identité actuelle (logo, nom, photo de la commune, mention « hébergement souverain »), et reste cohérente avec le desktop. La photo, en bande courte, garde le sentiment de territoire sans casser la lisibilité ni alourdir excessivement.</p>
+      <p>Si l'accessibilité et la vitesse priment (agents en mobilité, réseau faible), <b>C</b> est l'option la plus sûre. <b>B</b> est la plus marquante mais demande une belle photo optimisée et une vigilance contraste.</p>
+      <p style="margin-top:6px"><b>Prochaines étapes :</b></p>
+      <ul>
+        <li>Tu choisis une direction (ou une combinaison) à partir de ces maquettes.</li>
+        <li>J'implémente en responsive dans <code>src/app/login/page.tsx</code> : media query <code>&lt; 768px</code>, inputs ≥ 16&nbsp;px, bouton « afficher le mot de passe », <em>safe areas</em>, desktop inchangé.</li>
+        <li>On vérifie en réel sur mobile (DevTools 375&nbsp;px + un vrai téléphone), puis on commit.</li>
+      </ul>
+    </div>
+    <footer>Maquettes de réflexion — aucune modification du code applicatif. Le paysage des maquettes est un visuel d'illustration ; la vraie photo de la commune (<code>/images/saint-fortunat.jpg</code>) sera utilisée à l'implémentation. Palette et libellés issus de l'ENT Mairie de Saint-Fortunat.</footer>
+  </div>
+</section>
+
+</body>
+</html>
