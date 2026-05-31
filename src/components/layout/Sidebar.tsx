@@ -11,6 +11,7 @@ import { moduleKeyForHref } from '@/lib/modules'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { useTasks } from '@/hooks/useTasks'
 import { isMyActiveTask } from '@/lib/task-filters'
+import { PwaInstallButton } from '@/components/layout/PwaInstallButton'
 
 type IconName = 'dashboard' | 'calendar' | 'check' | 'users' | 'doc' | 'briefcase' | 'euro' | 'team' | 'folder'
 
@@ -180,6 +181,9 @@ export function Sidebar() {
           )
         })}
       </nav>
+
+      {/* Raccourci d'installation de la PWA, au-dessus du guide. */}
+      <PwaInstallButton isIcons={isIcons} />
 
       {/* Guide d'utilisateur — page statique servie depuis /public, ouverte en
           plein écran dans un nouvel onglet (design system propre, hors shell). */}
