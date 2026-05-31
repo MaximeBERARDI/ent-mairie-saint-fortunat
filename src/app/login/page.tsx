@@ -6,7 +6,6 @@ import Link from 'next/link'
 import { signIn, getSession } from 'next-auth/react'
 import { Button } from '@/components/ui/Button'
 import { FormError } from '@/components/ui/FormError'
-import { COLORS as C } from '@/lib/theme'
 
 // Photo locale (cf. public/images/README.md). Servie depuis /public, aucun
 // hotlink externe : conformité RGPD + résilience (pas de dépendance à
@@ -18,6 +17,7 @@ export default function LoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [timedOut, setTimedOut] = useState(false)
@@ -66,146 +66,104 @@ export default function LoginPage() {
   }
 
   return (
-    <div style={{ display: 'flex', height: '100vh', fontFamily: "'DM Sans', sans-serif" }}>
-      {/* Panneau gauche — Branding + photo */}
-      <div style={{
-        width: '45%',
-        background: C.slateDark,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 24,
-        padding: '40px 44px',
-        position: 'relative',
-        flexShrink: 0,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{
-            width: 52, height: 52, borderRadius: 10,
-            background: C.green,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            flexShrink: 0,
-          }}>
-            <span style={{ fontSize: 16, color: '#fff', fontWeight: 700 }}>SFE</span>
-          </div>
+    <div className="login">
+      {/* Branding + photo — colonne gauche en desktop, fond plein écran en mobile */}
+      <aside className="login__brand">
+        <div className="login__brand-header">
+          <div className="login__logo">SFE</div>
           <div>
-            <p style={{ fontSize: 17, color: '#fff', fontWeight: 700, lineHeight: 1.3 }}>Mairie de</p>
-            <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', lineHeight: 1.3 }}>Saint-Fortunat-sur-Eyrieux</p>
+            <p className="login__brand-title">Mairie de</p>
+            <p className="login__brand-sub">Saint-Fortunat-sur-Eyrieux</p>
           </div>
         </div>
 
-        {/* Photo de la commune */}
-        <div style={{
-          flex: 1,
-          minHeight: 0,
-          borderRadius: 16,
-          overflow: 'hidden',
-          border: '1px solid rgba(255,255,255,0.12)',
-          position: 'relative',
-        }}>
+        <div className="login__photo-frame">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
+            className="login__photo"
             src={COMMUNE_PHOTO}
             onError={(e) => { (e.currentTarget as HTMLImageElement).src = COMMUNE_PHOTO_FALLBACK }}
             alt="Saint-Fortunat-sur-Eyrieux — vue de la commune"
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              display: 'block',
-            }}
           />
-          <div style={{
-            position: 'absolute',
-            bottom: 0, left: 0, right: 0,
-            padding: '20px 16px 14px',
-            background: 'linear-gradient(transparent, rgba(0,0,0,0.7))',
-          }}>
-            <p style={{ fontSize: 13, color: '#fff', fontWeight: 700 }}>Vallée de l'Eyrieux · Ardèche</p>
-            <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>
-              Espace Numérique de Travail — réservé aux élus et agents municipaux
-            </p>
+          <div className="login__photo-caption">
+            <b>Vallée de l'Eyrieux · Ardèche</b>
+            <span>Espace Numérique de Travail — réservé aux élus et agents municipaux</span>
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <div style={{ width: 6, height: 6, borderRadius: '50%', background: C.success }} />
-          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.78)' }}>
-            Connexion sécurisée · Hébergement souverain France
-          </span>
+        <div className="login__secure">
+          <span className="login__secure-dot" />
+          <span>Connexion sécurisée · Hébergement souverain France</span>
         </div>
-      </div>
+      </aside>
 
-      {/* Panneau droit — Formulaire */}
-      <div style={{
-        flex: 1,
-        background: C.bg,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 40,
-      }}>
-        <form onSubmit={handleSubmit} style={{ width: '100%', maxWidth: 400 }}>
-          <h1 style={{ fontSize: 24, color: C.fg, fontWeight: 700, marginBottom: 6 }}>Connexion</h1>
-          <p style={{ fontSize: 13, color: C.subtle, marginBottom: 28 }}>
-            Veuillez vous identifier pour accéder à l'ENT.
-          </p>
+      {/* Formulaire — colonne droite en desktop, carte ancrée en bas en mobile */}
+      <main className="login__main">
+        <form onSubmit={handleSubmit} className="login__card">
+          <div className="login__card-handle" aria-hidden="true" />
+          <h1 className="login__title">Connexion</h1>
+          <p className="login__subtitle">Veuillez vous identifier pour accéder à l'ENT.</p>
 
-          <div style={{ marginBottom: 16 }}>
-            <label style={{ fontSize: 11, color: C.muted, fontWeight: 600, display: 'block', marginBottom: 6 }}>
-              Adresse e-mail
-            </label>
+          <div className="login__field">
+            <label htmlFor="login-email" className="login__label">Adresse e-mail</label>
             <input
+              id="login-email"
+              className="login__input"
               type="email"
               required
               value={email}
               onChange={e => setEmail(e.target.value)}
               autoComplete="username"
-              style={{
-                width: '100%', height: 42, padding: '0 12px',
-                border: `1px solid ${C.border}`, borderRadius: 6,
-                background: '#fff', fontSize: 13, color: C.fg,
-                fontFamily: "'DM Sans', sans-serif",
-                boxSizing: 'border-box',
-              }}
+              inputMode="email"
+              autoCapitalize="none"
+              autoCorrect="off"
             />
           </div>
 
-          <div style={{ marginBottom: 8 }}>
-            <label style={{ fontSize: 11, color: C.muted, fontWeight: 600, display: 'block', marginBottom: 6 }}>
-              Mot de passe
-            </label>
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              autoComplete="current-password"
-              style={{
-                width: '100%', height: 42, padding: '0 12px',
-                border: `1px solid ${C.border}`, borderRadius: 6,
-                background: '#fff', fontSize: 13, color: C.fg,
-                fontFamily: "'DM Sans', sans-serif",
-                boxSizing: 'border-box',
-              }}
-            />
+          <div className="login__field">
+            <label htmlFor="login-password" className="login__label">Mot de passe</label>
+            <div className="login__password">
+              <input
+                id="login-password"
+                className="login__input"
+                type={showPassword ? 'text' : 'password'}
+                required
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                autoComplete="current-password"
+              />
+              <button
+                type="button"
+                className="login__eye"
+                onClick={() => setShowPassword(v => !v)}
+                aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                aria-pressed={showPassword}
+              >
+                {showPassword ? (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+                    <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+                    <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+                    <line x1="2" x2="22" y1="2" y2="22" />
+                  </svg>
+                ) : (
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                )}
+              </button>
+            </div>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 18 }}>
-            <Link href="/auth/mot-de-passe-oublie" style={{ fontSize: 11, color: C.muted, textDecoration: 'none' }}>
-              Mot de passe oublié ?
-            </Link>
+          <div className="login__forgot">
+            <Link href="/auth/mot-de-passe-oublie">Mot de passe oublié ?</Link>
           </div>
 
           {timedOut && !error && (
-            <div style={{
-              marginBottom: 16, padding: '10px 14px',
-              background: '#fdf3e7', border: `1px solid ${C.warning}40`,
-              borderRadius: 8, fontSize: 12, color: C.muted,
-            }}>
-              <strong style={{ color: C.warning, fontWeight: 600 }}>Session expirée</strong>
-              <p style={{ marginTop: 4 }}>
-                Vous avez été déconnecté après 30 minutes d'inactivité. Veuillez vous reconnecter.
-              </p>
+            <div className="login__timeout">
+              <strong>Session expirée</strong>
+              <p>Vous avez été déconnecté après 30 minutes d'inactivité. Veuillez vous reconnecter.</p>
             </div>
           )}
 
@@ -215,12 +173,19 @@ export default function LoginPage() {
             variant="primary"
             type="submit"
             disabled={submitting}
-            style={{ width: '100%', justifyContent: 'center', height: 44, fontSize: 14 }}
+            style={{ width: '100%', justifyContent: 'center', height: 48, fontSize: 16 }}
           >
             {submitting ? 'Connexion…' : 'Se connecter'}
           </Button>
+
+          <div className="login__secure login__secure--card">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" />
+            </svg>
+            <span>Connexion sécurisée · Hébergement souverain France</span>
+          </div>
         </form>
-      </div>
+      </main>
     </div>
   )
 }
