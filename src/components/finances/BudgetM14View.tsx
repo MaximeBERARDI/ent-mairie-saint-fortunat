@@ -965,7 +965,7 @@ function RatiosView({
   ]
 
   return (
-    <div style={{ display: 'flex', gap: 'var(--gap)' }}>
+    <div className="split" style={{ display: 'flex', gap: 'var(--gap)' }}>
       <div style={{ flex: 3 }}>
         {/* Indicateurs d'analyse financière */}
         <Card padding={14} style={{ marginBottom: 'var(--gap)' }}>
