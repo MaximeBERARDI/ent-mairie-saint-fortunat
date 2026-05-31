@@ -988,7 +988,7 @@ function RatiosView({
               >Enregistrer</Button>
             </div>
           )}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+          <div className="grid-reflow" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
             <RatioBlock helpKey="epargneGestion" label="Épargne de gestion" value={fmtMontant(ratios.epargneGestion)} sub="RRF (hors except.) − DRF (hors except. & int.)" color={ratios.epargneGestion >= 0 ? C.success : C.danger} />
             <RatioBlock helpKey="cafBrute" label="CAF brute" value={fmtMontant(ratios.cafBrute)} sub="RRF − DRF" color={ratios.cafBrute >= 0 ? C.success : C.danger} />
             <RatioBlock helpKey="cafNette" label="CAF nette" value={fmtMontant(ratios.cafNette)} sub="CAF brute − remb. capital" color={ratios.cafNette >= 0 ? C.success : C.warning} />
@@ -1016,7 +1016,7 @@ function RatiosView({
           <p style={{ fontSize: 12, color: C.subtle, marginBottom: 12 }}>
             Ratios à publier en annexe au compte administratif et au budget primitif. Population : {ratios.population} hab.
           </p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
+          <div className="grid-reflow" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
             {ratioCards.map(r => {
               const status = ratioStatus(r.key, ratios[r.key] as number)
               const color = status === 'good' ? C.success : status === 'warning' ? C.warning : C.danger

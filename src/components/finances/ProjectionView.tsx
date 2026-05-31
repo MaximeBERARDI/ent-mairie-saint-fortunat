@@ -92,9 +92,9 @@ export function ProjectionView({ baseRatios }: ProjectionViewProps) {
         />
       )}
 
-      <div style={{ display: 'flex', gap: 'var(--gap)' }}>
+      <div className="split" data-open={selected ? 'true' : 'false'} style={{ display: 'flex', gap: 'var(--gap)' }}>
         {/* Liste des projets */}
-        <div style={{ width: 260, flexShrink: 0 }}>
+        <div className="split__aside" style={{ width: 260, flexShrink: 0 }}>
           <p style={{ fontSize: 12, color: C.subtle, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
             Projets en simulation ({projets.length})
           </p>
@@ -135,7 +135,8 @@ export function ProjectionView({ baseRatios }: ProjectionViewProps) {
         </div>
 
         {/* Projection */}
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div className="split__main" style={{ flex: 1, minWidth: 0 }}>
+          {selected && <button type="button" className="split__back" onClick={() => setSelectedId(null)}>← Liste des projets</button>}
           {selected ? (
             <ProjetProjection
               projet={selected}
@@ -234,13 +235,13 @@ function ProjetProjection({
       {/* Détail financements */}
       <SectionHeader title="Plan de financement" />
       <Card padding={0} style={{ marginBottom: 16, background: C.bg }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1.2fr 90px', gap: 10, padding: '8px 14px', borderBottom: `1px solid ${C.border}` }}>
+        <div className="table-stack--head" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1.2fr 90px', gap: 10, padding: '8px 14px', borderBottom: `1px solid ${C.border}` }}>
           {['Source', 'Organisme', 'Montant', 'Détail', 'Versement'].map(h => (
             <p key={h} style={{ fontSize: 11, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</p>
           ))}
         </div>
         {projet.financements.map((f, i) => (
-          <div key={f.id} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1.2fr 90px', gap: 10, padding: '8px 14px', borderBottom: i < projet.financements.length - 1 ? `1px solid ${C.border}` : 'none', alignItems: 'center', fontSize: 12 }}>
+          <div key={f.id} className="table-stack" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1.2fr 90px', gap: 10, padding: '8px 14px', borderBottom: i < projet.financements.length - 1 ? `1px solid ${C.border}` : 'none', alignItems: 'center', fontSize: 12 }}>
             <Tag label={f.source} color={f.source === 'Emprunt' ? C.danger : f.source === 'FCTVA' ? C.info : f.source === 'Autofinancement' ? C.slate : C.success} />
             <span style={{ color: C.subtle, fontSize: 12 }}>{f.organisme ?? '—'}</span>
             <span style={{ color: C.fg, fontWeight: 600 }}>{fmtMontant(f.montant)}</span>
@@ -308,7 +309,7 @@ function ProjetProjection({
       )}
 
       {/* Graphes */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--gap)', marginBottom: 'var(--gap)' }}>
+      <div className="grid-reflow" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--gap)', marginBottom: 'var(--gap)' }}>
         <Card padding={14}>
           <SectionHeader title="Encours de dette projeté" />
           <p style={{ fontSize: 12, color: C.subtle, marginBottom: 8 }}>En milliers d'euros</p>
@@ -376,13 +377,13 @@ function ProjetProjection({
       {/* Tableau détaillé */}
       <SectionHeader title="Détail année par année" />
       <Card padding={0}>
-        <div style={{ display: 'grid', gridTemplateColumns: '60px 1fr 1fr 1fr 1fr 1fr 1fr 90px', gap: 8, padding: '8px 12px', background: C.bg, borderBottom: `1px solid ${C.border}` }}>
+        <div className="table-stack--head" style={{ display: 'grid', gridTemplateColumns: '60px 1fr 1fr 1fr 1fr 1fr 1fr 90px', gap: 8, padding: '8px 12px', background: C.bg, borderBottom: `1px solid ${C.border}` }}>
           {['Année', 'Dép. équip.', 'Recettes inv.', 'Intérêts', 'Capital remb.', 'Encours fin', 'CAF brute', 'Désendet.'].map(h => (
             <p key={h} style={{ fontSize: 11, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{h}</p>
           ))}
         </div>
         {projection.map((p, i) => (
-          <div key={p.annee} style={{ display: 'grid', gridTemplateColumns: '60px 1fr 1fr 1fr 1fr 1fr 1fr 90px', gap: 8, padding: '8px 12px', borderBottom: i < projection.length - 1 ? `1px solid ${C.border}` : 'none', alignItems: 'center', fontSize: 12 }}>
+          <div key={p.annee} className="table-stack" style={{ display: 'grid', gridTemplateColumns: '60px 1fr 1fr 1fr 1fr 1fr 1fr 90px', gap: 8, padding: '8px 12px', borderBottom: i < projection.length - 1 ? `1px solid ${C.border}` : 'none', alignItems: 'center', fontSize: 12 }}>
             <span style={{ color: C.fg, fontWeight: 700, fontFamily: "'JetBrains Mono', monospace" }}>{p.annee}</span>
             <span style={{ color: p.depEquipement > 0 ? C.warning : C.subtle }}>{p.depEquipement > 0 ? fmtMontantK(p.depEquipement) : '—'}</span>
             <span style={{ color: p.recettesInvest > 0 ? C.success : C.subtle }}>{p.recettesInvest > 0 ? fmtMontantK(p.recettesInvest) : '—'}</span>
@@ -454,7 +455,7 @@ function ProjetForm({ initial, onSubmit, onCancel }: {
         </Field>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 10, marginTop: 10 }}>
+      <div className="grid-reflow" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 10, marginTop: 10 }}>
         <Field label="Coût total TTC (€) *">
           <input type="number" min="0" value={coutTotal} onChange={e => setCoutTotal(e.target.value)} style={inputStyle} />
         </Field>
@@ -488,7 +489,7 @@ function ProjetForm({ initial, onSubmit, onCancel }: {
         </p>
       )}
       {financements.map((f, idx) => (
-        <div key={f.id} style={{ display: 'grid', gridTemplateColumns: '1.5fr 1.5fr 100px 80px 80px 90px 100px 30px', gap: 6, marginBottom: 6, alignItems: 'center' }}>
+        <div key={f.id} className="grid-reflow" style={{ display: 'grid', gridTemplateColumns: '1.5fr 1.5fr 100px 80px 80px 90px 100px 30px', gap: 6, marginBottom: 6, alignItems: 'center' }}>
           <select value={f.source} onChange={e => updateFinancement(f.id, { source: e.target.value as SourceFinancement })} style={{ ...inputStyle, fontSize: 12 }}>
             {SOURCE_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
           </select>

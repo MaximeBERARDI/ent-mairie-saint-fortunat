@@ -107,9 +107,9 @@ export function SimulationView({ baseRatios }: SimulationViewProps) {
         </p>
       </div>
 
-      <div style={{ display: 'flex', gap: 'var(--gap)', alignItems: 'flex-start' }}>
+      <div className="split" style={{ display: 'flex', gap: 'var(--gap)', alignItems: 'flex-start' }}>
         {/* ─── Panneau leviers ─── */}
-        <div style={{ width: 330, flexShrink: 0 }}>
+        <div className="split__aside" style={{ width: 330, flexShrink: 0 }}>
           <Card padding={14}>
             <SectionHeader title="Leviers de simulation" />
 
@@ -230,7 +230,7 @@ export function SimulationView({ baseRatios }: SimulationViewProps) {
         </div>
 
         {/* ─── Résultats ─── */}
-        <div style={{ flex: 1, minWidth: 0 }}>
+        <div className="split__main" style={{ flex: 1, minWidth: 0 }}>
           <p style={{ fontSize: 12, color: C.muted, fontWeight: 700, marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             Impact immédiat (an 1) vs situation actuelle
           </p>
@@ -249,7 +249,7 @@ export function SimulationView({ baseRatios }: SimulationViewProps) {
               color={impDesend > 0 && impDesend <= 8 ? C.success : C.warning} />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--gap)', marginBottom: 'var(--gap)' }}>
+          <div className="grid-reflow" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--gap)', marginBottom: 'var(--gap)' }}>
             <Card padding={14}>
               <SectionHeader title="CAF brute — référence vs scénario" />
               <p style={{ fontSize: 12, color: C.subtle, marginBottom: 8 }}>En milliers d&apos;euros</p>
@@ -299,13 +299,13 @@ export function SimulationView({ baseRatios }: SimulationViewProps) {
           {/* Tableau détaillé du scénario */}
           <SectionHeader title="Trajectoire du scénario — année par année" />
           <Card padding={0}>
-            <div style={{ display: 'grid', gridTemplateColumns: '70px 1fr 1fr 1fr 1fr 90px', gap: 8, padding: '8px 12px', background: C.bg, borderBottom: `1px solid ${C.border}` }}>
+            <div className="table-stack--head" style={{ display: 'grid', gridTemplateColumns: '70px 1fr 1fr 1fr 1fr 90px', gap: 8, padding: '8px 12px', background: C.bg, borderBottom: `1px solid ${C.border}` }}>
               {['Année', 'RRF', 'DRF', 'CAF brute', 'Encours dette', 'Désendet.'].map(h => (
                 <p key={h} style={{ fontSize: 11, color: C.subtle, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{h}</p>
               ))}
             </div>
             {scnProj.map((p, i) => (
-              <div key={p.annee} style={{ display: 'grid', gridTemplateColumns: '70px 1fr 1fr 1fr 1fr 90px', gap: 8, padding: '8px 12px', borderBottom: i < scnProj.length - 1 ? `1px solid ${C.border}` : 'none', alignItems: 'center', fontSize: 12 }}>
+              <div key={p.annee} className="table-stack" style={{ display: 'grid', gridTemplateColumns: '70px 1fr 1fr 1fr 1fr 90px', gap: 8, padding: '8px 12px', borderBottom: i < scnProj.length - 1 ? `1px solid ${C.border}` : 'none', alignItems: 'center', fontSize: 12 }}>
                 <span style={{ color: C.fg, fontWeight: 700, fontFamily: "'JetBrains Mono', monospace" }}>{p.annee}</span>
                 <span style={{ color: C.fg }}>{fmtMontant(p.rrf)}</span>
                 <span style={{ color: C.fg }}>{fmtMontant(p.drf)}</span>
