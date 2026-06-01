@@ -113,6 +113,28 @@ export default function RapportPage() {
   const subTotVerse = subventions.reduce((s, x) => s + (x.montantVerse ?? 0), 0)
 
   const commName = (id?: string) => commissions.find(c => c.id === id)?.name ?? 'Commission'
+
+  // Compteurs par commission (mêmes jointures que la page /commissions) :
+  // tâches actives via t.commissionIds, membres via p.commissions.
+  const commStats = useMemo(() => {
+    const map = new Map<string, { tasks: number; members: number }>()
+    commissions.forEach(c => map.set(c.id, { tasks: 0, members: 0 }))
+    tasks.forEach(t => {
+      if (t.status === 'Terminé') return
+      t.commissionIds.forEach(cid => {
+        const s = map.get(cid)
+        if (s) s.tasks += 1
+      })
+    })
+    people.forEach(p => {
+      if (!p.active) return
+      ;(p.commissions ?? []).forEach(cid => {
+        const s = map.get(cid)
+        if (s) s.members += 1
+      })
+    })
+    return map
+  }, [commissions, tasks, people])
   const upcoming = [...meetings].filter(m => m.date >= today).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 8)
   const recentDelibs = [...deliberations].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 6)
   const histSorted = [...exercices].sort((a, b) => a.exercice - b.exercice)
@@ -415,13 +437,16 @@ export default function RapportPage() {
           <table className="rpt-table">
             <thead><tr><th>Commission</th><th className="r">Tâches actives</th><th className="r">Membres</th></tr></thead>
             <tbody>
-              {commissions.filter(c => c.id !== 'conseil-municipal').map(c => (
-                <tr key={c.id}>
-                  <td>{c.name}</td>
-                  <td className="r">{c.tasks}</td>
-                  <td className="r">{c.members}</td>
-                </tr>
-              ))}
+              {commissions.filter(c => c.id !== 'conseil-municipal').map(c => {
+                const s = commStats.get(c.id)
+                return (
+                  <tr key={c.id}>
+                    <td>{c.name}</td>
+                    <td className="r">{s?.tasks ?? 0}</td>
+                    <td className="r">{s?.members ?? 0}</td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </section>

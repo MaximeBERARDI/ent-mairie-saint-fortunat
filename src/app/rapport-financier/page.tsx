@@ -66,8 +66,24 @@ function RapportFinancierContent() {
   const enriched = useMemo(() => postes.map((p) => computePosteWithConsumption(p, factures, ecritures)),
     [postes, factures, ecritures, computePosteWithConsumption])
 
+  // Population & encours dette : mêmes paramètres que la page Finances
+  // (localStorage ent-mairie:ratios-cfg:v1). encoursDette à 0 → proxy auto
+  // dans computeRatios (10 × remboursement annuel).
+  const [population, setPopulation] = useState(900)
+  const [encoursDette, setEncoursDette] = useState(0)
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem('ent-mairie:ratios-cfg:v1')
+      if (raw) {
+        const p = JSON.parse(raw)
+        if (typeof p.population === 'number') setPopulation(p.population)
+        if (typeof p.encoursDette === 'number') setEncoursDette(p.encoursDette)
+      }
+    } catch {}
+  }, [])
+
   const exerciceN = new Date().getFullYear()
-  const ratios = useMemo(() => computeRatios(enriched, 900, 0), [enriched])
+  const ratios = useMemo(() => computeRatios(enriched, population, encoursDette || undefined), [enriched, population, encoursDette])
 
   const tresorerie = useMemo(() => computeTresorerie(ecritures, ratios.drf), [ecritures, ratios.drf])
   const controle = useMemo(() => computeFactureControle(factures, new Date().toISOString().slice(0, 10)), [factures])
@@ -87,7 +103,7 @@ function RapportFinancierContent() {
     let cancelled = false
     const payload = buildAnalysePayload({
       exerciceN,
-      population: 900,
+      population,
       ratios,
       sections: Array.from(activeSections) as AnalyseSectionKey[],
       pointsAttention: activeSections.has('att') ? pointsAttention : undefined,
@@ -207,7 +223,7 @@ function RapportFinancierContent() {
               <Kpi label="Dépenses réelles fonctionnement" value={fmtMontantInt(ratios.drf)} sub="DRF" />
               <Kpi label="CAF brute" value={fmtMontantInt(ratios.cafBrute)} sub="capacité d'autofinancement" color={ratios.cafBrute >= 0 ? '#2d9c6e' : '#c43c2f'} />
               <Kpi label="CAF nette" value={fmtMontantInt(ratios.cafNette)} sub="après remboursement capital" color={ratios.cafNette >= 0 ? '#2d9c6e' : '#c43c2f'} />
-              <Kpi label="Encours de la dette" value={fmtMontantInt(ratios.encoursDette)} sub={`${Math.round(ratios.encoursDette / 900)} €/hab`} />
+              <Kpi label="Encours de la dette" value={fmtMontantInt(ratios.encoursDette)} sub={`${Math.round(ratios.encoursDette / (population || 1))} €/hab`} />
               <Kpi label="Capacité de désendettement" value={`${ratios.capaciteDesendettement.toFixed(1)} ans`} sub="CAF brute → dette" color={ratios.capaciteDesendettement >= 12 ? '#c43c2f' : ratios.capaciteDesendettement >= 10 ? '#d4860a' : '#2d9c6e'} />
             </div>
           </section>
