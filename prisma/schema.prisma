@@ -604,6 +604,9 @@ model BienImmobilier {
   loyerMensuel       Decimal  @db.Decimal(10, 2)
   chargesMensuelles  Decimal  @db.Decimal(10, 2)
   notes              String?  @db.Text
+  codeInsee          String?
+  sectionCadastrale  String?
+  numeroParcelle     String?
   documents          Document[]
   active             Boolean  @default(true)
   baux               Bail[]

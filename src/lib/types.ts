@@ -445,6 +445,9 @@ export interface BienImmobilier {
   loyerMensuel: number          // € hors charges (loyer du bien — peut être surchargé par bail)
   chargesMensuelles: number     // € (provisions sur charges)
   notes?: string
+  codeInsee?: string            // code INSEE de la commune (BAN) — pour le cadastre
+  sectionCadastrale?: string    // ex: 'AB'
+  numeroParcelle?: string       // ex: '0123'
   documents?: TaskDocument[]    // bail-type, photos, état des lieux…
   active: boolean               // false = sorti du parc
   createdAt: string

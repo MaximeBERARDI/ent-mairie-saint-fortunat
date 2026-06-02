@@ -9,6 +9,9 @@ import { Tag } from '@/components/ui/Tag'
 import { Avatar } from '@/components/ui/Avatar'
 import { SectionHeader } from '@/components/ui/SectionHeader'
 import { Separator } from '@/components/ui/Separator'
+import { AddressAutocomplete } from '@/components/ui/AddressAutocomplete'
+import { fetchParcelles } from '@/lib/gouv/cadastre'
+import { fetchDvfCommune, type DvfCommune } from '@/lib/gouv/dvf'
 import { COLORS as C } from '@/lib/theme'
 import { useParcImmobilier } from '@/hooks/useParcImmobilier'
 import { useEcritures } from '@/hooks/useEcritures'
@@ -349,9 +352,41 @@ function BienForm({ initial, onSubmit, onCancel }: {
   const [chargesMensuelles, setChargesMensuelles] = useState(String(initial?.chargesMensuelles ?? ''))
   const [notes, setNotes] = useState(initial?.notes ?? '')
   const [active, setActive] = useState(initial?.active ?? true)
+  const [codeInsee, setCodeInsee] = useState(initial?.codeInsee ?? '')
+  const [sectionCadastrale, setSectionCadastrale] = useState(initial?.sectionCadastrale ?? '')
+  const [numeroParcelle, setNumeroParcelle] = useState(initial?.numeroParcelle ?? '')
+  const [cadastre, setCadastre] = useState<{ text: string; ok: boolean } | null>(null)
+  const [cadastreLoading, setCadastreLoading] = useState(false)
+  const [dvf, setDvf] = useState<DvfCommune | null>(null)
 
+  useEffect(() => {
+    if (!codeInsee) { setDvf(null); return }
+    let active = true
+    fetchDvfCommune(codeInsee).then(d => { if (active) setDvf(d) })
+    return () => { active = false }
+  }, [codeInsee])
+
+  const fmtEur = (v: number) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(v)
   const num = (s: string) => Number.isNaN(parseFloat(s)) ? 0 : parseFloat(s)
   const valid = nom.trim() && adresse.trim() && num(loyerMensuel) > 0
+
+  const lookupCadastre = async () => {
+    if (!codeInsee || !sectionCadastrale.trim() || !numeroParcelle.trim()) return
+    setCadastreLoading(true); setCadastre(null)
+    const parcelles = await fetchParcelles({
+      codeInsee,
+      section: sectionCadastrale.trim().toUpperCase(),
+      numero: numeroParcelle.trim().padStart(4, '0'),
+    })
+    setCadastreLoading(false)
+    const p = parcelles.find(x => x.contenance != null) ?? parcelles[0]
+    if (!p || p.contenance == null) {
+      setCadastre({ text: 'Parcelle introuvable. Vérifiez la section et le numéro.', ok: false })
+      return
+    }
+    setSurface(String(p.contenance))
+    setCadastre({ text: `Parcelle trouvée : ${p.contenance} m² — surface mise à jour.`, ok: true })
+  }
 
   return (
     <Card padding={14} style={{ marginBottom: 12, background: C.greenLight, borderColor: C.green }}>
@@ -370,7 +405,13 @@ function BienForm({ initial, onSubmit, onCancel }: {
         </Field>
       </div>
       <Field label="Adresse *">
-        <input type="text" value={adresse} onChange={e => setAdresse(e.target.value)} style={inputStyle} />
+        <AddressAutocomplete
+          value={adresse}
+          onChange={setAdresse}
+          onSelect={(s) => { if (s.citycode) setCodeInsee(s.citycode) }}
+          inputStyle={inputStyle}
+          ariaLabel="Adresse du bien"
+        />
       </Field>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginTop: 10 }}>
         <Field label="Surface (m²) *">
@@ -385,6 +426,37 @@ function BienForm({ initial, onSubmit, onCancel }: {
         <Field label="Charges mensuelles (€)">
           <input type="number" min="0" step="0.01" value={chargesMensuelles} onChange={e => setChargesMensuelles(e.target.value)} style={inputStyle} />
         </Field>
+      </div>
+      <div style={{ marginTop: 10 }}>
+        <Field label="Référence cadastrale (facultatif)">
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+            <input type="text" placeholder="Section (ex: AB)" value={sectionCadastrale} onChange={e => setSectionCadastrale(e.target.value)} style={{ ...inputStyle, width: 130 }} />
+            <input type="text" placeholder="N° parcelle (ex: 123)" value={numeroParcelle} onChange={e => setNumeroParcelle(e.target.value)} style={{ ...inputStyle, width: 170 }} />
+            <Button
+              size="sm"
+              disabled={!codeInsee || !sectionCadastrale.trim() || !numeroParcelle.trim() || cadastreLoading}
+              onClick={lookupCadastre}
+            >
+              {cadastreLoading ? 'Recherche…' : '🔎 Surface cadastrale'}
+            </Button>
+          </div>
+        </Field>
+        {!codeInsee && (
+          <p style={{ fontSize: 11, color: C.subtle, marginTop: 4 }}>
+            Sélectionnez l&apos;adresse dans la liste proposée pour activer la recherche (code commune requis).
+          </p>
+        )}
+        {cadastre && (
+          <p style={{ fontSize: 11, color: cadastre.ok ? C.greenDark : C.dangerDark, marginTop: 4 }}>{cadastre.text}</p>
+        )}
+        {dvf && (dvf.prixMedianMaison || dvf.prixMedianAppart) && (
+          <p style={{ fontSize: 11, color: C.subtle, marginTop: 6 }}>
+            💶 Prix médians sur la commune (DVF{dvf.periode ? ` ${dvf.periode.replace('_', '–')}` : ''}) :
+            {dvf.prixMedianMaison ? ` maison ${fmtEur(dvf.prixMedianMaison)}` : ''}
+            {dvf.prixMedianAppart ? ` · appartement ${fmtEur(dvf.prixMedianAppart)}` : ''}
+            {dvf.ventesParAn ? ` · ~${Math.round(dvf.ventesParAn)} ventes/an` : ''}. <i>Indicatif.</i>
+          </p>
+        )}
       </div>
       <div style={{ marginTop: 10 }}>
         <Field label="Notes (facultatif)">
@@ -411,6 +483,9 @@ function BienForm({ initial, onSubmit, onCancel }: {
             loyerMensuel: num(loyerMensuel),
             chargesMensuelles: num(chargesMensuelles),
             notes: notes.trim() || undefined,
+            codeInsee: codeInsee || undefined,
+            sectionCadastrale: sectionCadastrale.trim() || undefined,
+            numeroParcelle: numeroParcelle.trim() || undefined,
             active,
             documents: initial?.documents,
           })}
@@ -535,7 +610,7 @@ function LocataireForm({ initial, onSubmit, onCancel }: {
       </div>
       <div style={{ marginTop: 10 }}>
         <Field label="Adresse de facturation (si différente du bien loué)">
-          <input type="text" value={adresseFacturation} onChange={e => setAdresseFacturation(e.target.value)} style={inputStyle} />
+          <AddressAutocomplete value={adresseFacturation} onChange={setAdresseFacturation} inputStyle={inputStyle} ariaLabel="Adresse de facturation" />
         </Field>
       </div>
       <div style={{ marginTop: 10 }}>

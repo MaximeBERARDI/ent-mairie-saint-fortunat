@@ -34,6 +34,9 @@ interface CreateBody {
   loyerMensuel?: number
   chargesMensuelles?: number
   notes?: string
+  codeInsee?: string
+  sectionCadastrale?: string
+  numeroParcelle?: string
   active?: boolean
   documents?: DocumentInput[]
 }
@@ -60,6 +63,9 @@ export async function POST(req: Request) {
       loyerMensuel: body.loyerMensuel,
       chargesMensuelles: body.chargesMensuelles,
       notes: body.notes?.trim() || null,
+      codeInsee: body.codeInsee?.trim() || null,
+      sectionCadastrale: body.sectionCadastrale?.trim() || null,
+      numeroParcelle: body.numeroParcelle?.trim() || null,
       active: body.active ?? true,
       documents: body.documents && body.documents.length > 0
         ? { create: body.documents.map((d) => ({ name: d.name, size: d.size, type: d.type, dataUrl: d.dataUrl })) }

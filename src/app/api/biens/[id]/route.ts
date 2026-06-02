@@ -25,6 +25,9 @@ interface PatchBody {
   loyerMensuel?: number
   chargesMensuelles?: number
   notes?: string | null
+  codeInsee?: string | null
+  sectionCadastrale?: string | null
+  numeroParcelle?: string | null
   active?: boolean
   documents?: DocumentInput[]
 }
@@ -46,6 +49,9 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   if (body.loyerMensuel !== undefined) data.loyerMensuel = body.loyerMensuel
   if (body.chargesMensuelles !== undefined) data.chargesMensuelles = body.chargesMensuelles
   if (body.notes !== undefined) data.notes = body.notes?.trim() || null
+  if (body.codeInsee !== undefined) data.codeInsee = body.codeInsee?.trim() || null
+  if (body.sectionCadastrale !== undefined) data.sectionCadastrale = body.sectionCadastrale?.trim() || null
+  if (body.numeroParcelle !== undefined) data.numeroParcelle = body.numeroParcelle?.trim() || null
   if (body.active !== undefined) data.active = body.active
 
   try {
