@@ -4,7 +4,7 @@
 // réunions de commission et les congés approuvés. Lecture seule (chaque
 // évènement renvoie vers son module). Données dérivées des hooks existants.
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Shell } from '@/components/layout/Shell'
 import { Card } from '@/components/ui/Card'
@@ -14,9 +14,10 @@ import { useMeetings } from '@/hooks/useMeetings'
 import { useLeaveRequests } from '@/hooks/useLeaveRequests'
 import { useCommissions } from '@/hooks/useCommissions'
 import { useTeam } from '@/hooks/useTeam'
+import { fetchJoursFeries, type JoursFeries } from '@/lib/gouv/jours-feries'
 import { isoDate, parseISO, FRENCH_MONTHS } from '@/lib/dateUtils'
 
-type EventType = 'tache' | 'reunion' | 'conge'
+type EventType = 'tache' | 'reunion' | 'conge' | 'ferie'
 
 interface CalEvent {
   date: string
@@ -31,6 +32,7 @@ const TYPE_META: Record<EventType, { label: string; color: string }> = {
   tache: { label: 'Échéances de tâches', color: C.warning },
   reunion: { label: 'Réunions', color: C.info },
   conge: { label: 'Congés', color: C.terra },
+  ferie: { label: 'Jours fériés', color: C.success },
 }
 
 const WEEKDAYS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
@@ -45,7 +47,17 @@ export default function CalendrierPage() {
 
   const now = new Date()
   const [cursor, setCursor] = useState({ y: now.getFullYear(), m: now.getMonth() })
-  const [active, setActive] = useState<Set<EventType>>(new Set<EventType>(['tache', 'reunion', 'conge']))
+  const [active, setActive] = useState<Set<EventType>>(new Set<EventType>(['tache', 'reunion', 'conge', 'ferie']))
+  const [feries, setFeries] = useState<JoursFeries>({})
+
+  // Jours fériés de l'année affichée (API gouv, en cache côté serveur).
+  // On accumule les années déjà chargées pour ne pas refetch en naviguant.
+  const loadedYears = useMemo(() => new Set<number>(), [])
+  useEffect(() => {
+    if (loadedYears.has(cursor.y)) return
+    loadedYears.add(cursor.y)
+    fetchJoursFeries(cursor.y).then(data => setFeries(prev => ({ ...prev, ...data })))
+  }, [cursor.y, loadedYears])
 
   const events = useMemo<CalEvent[]>(() => {
     const out: CalEvent[] = []
@@ -78,8 +90,11 @@ export default function CalendrierPage() {
         })
       }
     })
+    Object.entries(feries).forEach(([date, label]) => {
+      out.push({ date, type: 'ferie', label, color: C.success, href: '' })
+    })
     return out
-  }, [tasks, meetings, leaves, commissions, people])
+  }, [tasks, meetings, leaves, commissions, people, feries])
 
   const eventsByDay = useMemo(() => {
     const map = new Map<string, CalEvent[]>()
@@ -184,7 +199,7 @@ export default function CalendrierPage() {
                 {dayEvents.slice(0, 3).map((e, k) => (
                   <button
                     key={k}
-                    onClick={() => router.push(e.href)}
+                    onClick={() => { if (e.href) router.push(e.href) }}
                     title={e.sub ? `${e.label} — ${e.sub}` : e.label}
                     style={{
                       display: 'flex', alignItems: 'center', gap: 5, width: '100%',

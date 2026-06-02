@@ -26,6 +26,7 @@ import type { Facture, FactureStatut, Fournisseur, PosteBudget, TaskDocument } f
 import { BudgetM14View, type BudgetTab } from '@/components/finances/BudgetM14View'
 import { ParcImmobilierView } from '@/components/finances/ParcImmobilierView'
 import { SubventionsView } from '@/components/finances/SubventionsView'
+import { EntrepriseLookup } from '@/components/gouv/EntrepriseLookup'
 
 const BUDGET_PREFIX = 'budget:'
 
@@ -1022,6 +1023,17 @@ function NewFournisseurForm({
   return (
     <Card padding={14} style={{ background: C.greenLight, borderColor: C.green }}>
       <SectionHeader title="Nouveau fournisseur" />
+      <div style={{ marginBottom: 12 }}>
+        <Field label="🔎 Rechercher dans l'annuaire des entreprises (SIRENE)">
+          <EntrepriseLookup
+            inputStyle={inputStyle}
+            onPick={(e) => { setNom(e.nom); if (e.siret) setSiret(e.siret) }}
+          />
+        </Field>
+        <p style={{ fontSize: 11, color: C.subtle, marginTop: 4 }}>
+          Saisissez une raison sociale ou un SIRET : le nom et le SIRET se remplissent automatiquement.
+        </p>
+      </div>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
         <Field label="Nom *">
           <input type="text" value={nom} onChange={e => setNom(e.target.value)} style={inputStyle} />
