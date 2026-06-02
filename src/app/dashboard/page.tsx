@@ -25,6 +25,7 @@ import { useMissions } from '@/hooks/useMissions'
 import { useTeam } from '@/hooks/useTeam'
 import { useCurrentUser } from '@/hooks/useCurrentUser'
 import { AgentQuickActions } from '@/components/dashboard/AgentQuickActions'
+import { ServicePublicCard } from '@/components/gouv/ServicePublicCard'
 import { computeRatios } from '@/lib/ratios'
 import { InfoTooltip } from '@/components/ui/InfoTooltip'
 import { CHAPITRES_M14 } from '@/lib/m14-plan'
@@ -120,6 +121,7 @@ export default function DashboardPage() {
       {view === 'conseiller' && <DashConseiller tasks={tasks} updateTask={updateTask} currentUserId={currentUserId} />}
       {view === 'agent' && <DashAgent tasks={tasks} updateTask={updateTask} createTask={createTask} currentUserId={currentUserId} />}
       {view === 'maire' && <DashMaire tasks={tasks} currentUserId={currentUserId} createTask={createTask} />}
+      <ServicePublicCard />
     </Shell>
   )
 }
