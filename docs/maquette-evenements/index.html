@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maquette — Module Événements · Mairie de Saint-Fortunat</title>
+<style>
+  /* Palette reprise de src/lib/theme.ts (COLORS) */
+  :root{
+    --green:#6ab123; --greenDark:#3d7a14; --greenLight:#f2f9e8; --greenMid:#c4e18a;
+    --slate:#4d5e6c; --slateLight:#f0f3f5; --slateDark:#2e3b45;
+    --terra:#c4793a; --terraDark:#8e552a; --terraLight:#fdf4ec;
+    --bg:#f4f6f1; --white:#fff; --border:#dde4e9;
+    --fg:#1f2a31; --muted:#4d5e6c; --subtle:#5e7480; --ph:#e2e6e3;
+    --success:#2d9c6e; --successDark:#1f7a52; --successLight:#e8f7f1;
+    --warning:#d4860a; --warningDark:#8a560a; --warningLight:#fef5e4;
+    --danger:#c4393a; --dangerDark:#9c2d2e; --dangerLight:#fdeaea;
+    --info:#2563a8; --infoDark:#1d4d85; --infoLight:#eaf1fb;
+    --gap:14px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'DM Sans','Segoe UI',-apple-system,system-ui,sans-serif;background:var(--bg);color:var(--fg);-webkit-font-smoothing:antialiased}
+  button{font-family:inherit;cursor:pointer}
+  a{color:inherit}
+
+  /* Shell : sidebar + zone contenu, calqué sur le Shell de l'app */
+  .layout{display:flex;min-height:100vh}
+  .sidebar{width:212px;flex-shrink:0;background:var(--slateDark);color:rgba(255,255,255,.92);display:flex;flex-direction:column;padding:14px 10px}
+  .sidebar .brand{display:flex;align-items:center;gap:9px;padding:6px 8px 16px}
+  .sidebar .brand .logo{width:30px;height:30px;border-radius:7px;background:var(--green);display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:15px}
+  .sidebar .brand b{font-size:13px;line-height:1.2}
+  .sidebar .brand span{font-size:10.5px;color:rgba(255,255,255,.7)}
+  .nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:7px;font-size:13px;color:rgba(255,255,255,.78);margin-bottom:1px;text-decoration:none}
+  .nav-item .ico{width:16px;text-align:center;opacity:.9}
+  .nav-item.active{background:rgba(106,177,35,.25);color:#fff;font-weight:600}
+  .nav-sep{font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,.45);padding:14px 10px 6px}
+
+  .main{flex:1;min-width:0;display:flex;flex-direction:column}
+  .topbar{height:54px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 22px;gap:12px}
+  .topbar h1{font-size:18px;font-weight:700}
+  .topbar .crumb{font-size:12px;color:var(--subtle)}
+  .topbar .spacer{flex:1}
+  .topbar .me{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+  .topbar .me .av{width:30px;height:30px;border-radius:50%;background:var(--terra);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+  .content{padding:22px;flex:1}
+
+  /* Bandeau "maquette" */
+  .demo-banner{background:linear-gradient(90deg,var(--terraLight),#fff);border:1px dashed var(--terra);color:var(--terraDark);border-radius:10px;padding:10px 14px;font-size:12.5px;margin-bottom:18px;display:flex;align-items:center;gap:8px}
+  .demo-banner b{color:var(--terraDark)}
+
+  /* Cartes / UI primitives */
+  .card{background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px}
+  .row-actions{display:flex;gap:8px;align-items:center}
+  .btn{display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:0 13px;border-radius:7px;border:1px solid var(--border);background:#fff;color:var(--fg);font-size:13px;font-weight:500}
+  .btn:hover{background:var(--slateLight)}
+  .btn.primary{background:var(--green);border-color:var(--green);color:#fff}
+  .btn.primary:hover{background:var(--greenDark)}
+  .btn.sm{min-height:30px;font-size:12px;padding:0 10px}
+  .btn.ghost{background:transparent;border-color:transparent;color:var(--subtle)}
+
+  .badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;line-height:1.5;white-space:nowrap}
+  .b-default{background:var(--slateLight);color:var(--slate)}
+  .b-green{background:var(--greenLight);color:var(--greenDark)}
+  .b-info{background:var(--infoLight);color:var(--infoDark)}
+  .b-terra{background:var(--terraLight);color:var(--terraDark)}
+  .b-success{background:var(--successLight);color:var(--successDark)}
+  .b-warning{background:var(--warningLight);color:var(--warningDark)}
+  .b-danger{background:var(--dangerLight);color:var(--dangerDark)}
+
+  .seg{display:inline-flex;gap:4px;background:var(--ph);border-radius:9px;padding:3px}
+  .seg button{min-height:34px;padding:5px 14px;border-radius:6px;background:transparent;border:none;color:var(--muted);font-size:12.5px;font-weight:500}
+  .seg button.on{background:#fff;color:var(--fg);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.1)}
+
+  .toolbar{display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+  .toolbar .spacer{flex:1}
+  select,input[type=text],input[type=date]{height:34px;border:1px solid var(--border);border-radius:7px;padding:0 10px;font-family:inherit;font-size:12.5px;color:var(--fg);background:#fff}
+
+  .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--gap);margin-bottom:18px}
+  .kpi{background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px}
+  .kpi .v{font-size:26px;font-weight:800;line-height:1}
+  .kpi .l{font-size:11.5px;color:var(--subtle);margin-top:6px}
+  .kpi .sub{font-size:11px;color:var(--muted);margin-top:3px}
+
+  /* Grille événements */
+  .ev-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--gap)}
+  .ev-card{background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden;cursor:pointer;transition:.12s;display:flex;flex-direction:column}
+  .ev-card:hover{box-shadow:0 8px 24px rgba(0,0,0,.08);transform:translateY(-2px)}
+  .ev-card .cover{height:78px;display:flex;align-items:flex-end;justify-content:space-between;padding:10px 12px;color:#fff;position:relative}
+  .ev-card .cover .em{position:absolute;top:10px;left:12px;font-size:26px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.25))}
+  .ev-card .body{padding:13px 14px;flex:1;display:flex;flex-direction:column;gap:9px}
+  .ev-card h3{font-size:14.5px;font-weight:700}
+  .ev-card .meta{font-size:12px;color:var(--subtle);display:flex;flex-direction:column;gap:3px}
+  .ev-card .meta b{color:var(--muted);font-weight:600}
+  .progress{height:7px;border-radius:6px;background:var(--ph);overflow:hidden}
+  .progress > div{height:100%;border-radius:6px}
+  .ev-card .foot{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border);padding-top:10px;margin-top:auto}
+  .ev-card .foot .mini{font-size:11px;color:var(--subtle)}
+  .ev-card .foot .mini b{font-size:13px;color:var(--fg);font-weight:700;display:block}
+
+  .add-card{border:2px dashed var(--border);border-radius:10px;display:flex;align-items:center;justify-content:center;min-height:240px;color:var(--subtle);font-size:13px}
+  .add-card:hover{border-color:var(--green);color:var(--greenDark);background:var(--greenLight)}
+
+  .section-title{font-size:12px;font-weight:700;color:var(--subtle);text-transform:uppercase;letter-spacing:.07em;margin:24px 0 12px}
+
+  /* Détail */
+  .back-link{background:none;border:none;color:var(--subtle);font-size:12.5px;padding:0;margin-bottom:12px}
+  .detail-head{border-radius:12px;color:#fff;padding:22px 24px;margin-bottom:18px;position:relative;overflow:hidden}
+  .detail-head .em{position:absolute;right:18px;top:50%;transform:translateY(-50%);font-size:90px;opacity:.22}
+  .detail-head .tag{display:inline-block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;background:rgba(255,255,255,.22);padding:3px 10px;border-radius:20px;margin-bottom:8px}
+  .detail-head h2{font-size:24px;font-weight:800;margin-bottom:6px}
+  .detail-head .sub{font-size:13.5px;opacity:.95;display:flex;gap:16px;flex-wrap:wrap}
+
+  .tabs{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:18px;overflow-x:auto}
+  .tabs button{min-height:38px;padding:8px 16px;border:none;background:none;border-bottom:2px solid transparent;color:var(--muted);font-size:13.5px;font-weight:500;white-space:nowrap}
+  .tabs button.on{color:var(--fg);font-weight:700}
+
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap)}
+  .grid3{display:grid;grid-template-columns:2fr 1fr;gap:var(--gap)}
+
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--subtle);font-weight:700;padding:8px 10px;border-bottom:1px solid var(--border)}
+  td{padding:9px 10px;border-bottom:1px solid var(--border);color:var(--fg)}
+  tr:last-child td{border-bottom:none}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+
+  .task-row{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid var(--border)}
+  .task-row:last-child{border-bottom:none}
+  .chk{width:18px;height:18px;border-radius:5px;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:#fff}
+  .chk.done{background:var(--success);border-color:var(--success)}
+  .chk.prog{border-color:var(--warning)}
+  .task-row .tx{flex:1;min-width:0}
+  .task-row .tx .t{font-size:13px;font-weight:500}
+  .task-row .tx .t.done{text-decoration:line-through;color:var(--subtle)}
+  .task-row .tx .s{font-size:11.5px;color:var(--subtle);margin-top:2px}
+  .phase{font-size:11px;font-weight:700;color:var(--subtle);text-transform:uppercase;letter-spacing:.06em;margin:16px 0 4px;display:flex;align-items:center;gap:8px}
+  .phase::after{content:"";flex:1;height:1px;background:var(--border)}
+
+  .av{width:24px;height:24px;border-radius:50%;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+  .av-stack{display:flex}
+  .av-stack .av{margin-left:-6px;border:2px solid #fff}
+  .av-stack .av:first-child{margin-left:0}
+
+  .pill-list{display:flex;flex-direction:column;gap:8px}
+  .pill{display:flex;align-items:center;gap:10px;padding:9px 11px;border:1px solid var(--border);border-radius:8px}
+  .pill .n{flex:1;font-size:12.5px}
+  .pill .n b{display:block}
+  .pill .n span{font-size:11px;color:var(--subtle)}
+
+  .mini-cal{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+  .mini-cal .h{font-size:10px;font-weight:700;color:var(--subtle);text-align:center;text-transform:uppercase}
+  .mini-cal .d{min-height:46px;border:1px solid var(--border);border-radius:7px;padding:4px;font-size:11px;color:var(--muted)}
+  .mini-cal .d.has{border-color:var(--green);background:var(--greenLight)}
+  .mini-cal .d .dot{width:6px;height:6px;border-radius:50%;background:var(--green);display:inline-block}
+
+  .note{background:var(--terraLight);border-left:3px solid var(--terra);border-radius:0 8px 8px 0;padding:12px 14px;font-size:12.5px;color:var(--terraDark);line-height:1.55}
+  .note b{color:var(--terraDark)}
+
+  .timeline-bars .lane{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+  .timeline-bars .lane .name{width:150px;flex-shrink:0;font-size:12px;font-weight:600}
+  .timeline-bars .track{flex:1;height:24px;background:var(--slateLight);border-radius:6px;position:relative}
+  .timeline-bars .bar{position:absolute;top:3px;height:18px;border-radius:5px;display:flex;align-items:center;padding:0 7px;font-size:10px;font-weight:600;color:#fff;overflow:hidden;white-space:nowrap}
+  .months{display:flex;padding-left:160px;margin-bottom:6px}
+  .months span{flex:1;font-size:10px;color:var(--subtle);text-align:center}
+
+  .hidden{display:none}
+  @media(max-width:900px){.ev-grid,.kpis{grid-template-columns:1fr 1fr}.grid2,.grid3{grid-template-columns:1fr}.sidebar{display:none}}
+</style>
+</head>
+<body>
+<div class="layout">
+  <!-- Sidebar (statique, pour le contexte visuel) -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="logo">SF</div>
+      <div><b>Saint-Fortunat</b><br><span>Espace mairie</span></div>
+    </div>
+    <a class="nav-item"><span class="ico">▦</span> Tableau de bord</a>
+    <a class="nav-item"><span class="ico">▦</span> Calendrier</a>
+    <a class="nav-item"><span class="ico">✔</span> Tâches</a>
+    <a class="nav-item"><span class="ico">▣</span> Commissions</a>
+    <a class="nav-item active"><span class="ico">★</span> Événements</a>
+    <a class="nav-item"><span class="ico">€</span> Finances</a>
+    <a class="nav-item"><span class="ico">☺</span> Équipe</a>
+    <a class="nav-item"><span class="ico">⛢</span> RH</a>
+    <div class="nav-sep">Ressources</div>
+    <a class="nav-item"><span class="ico">▤</span> Bibliothèque</a>
+    <a class="nav-item"><span class="ico">✎</span> Comptes rendus</a>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div>
+        <h1>Événements</h1>
+        <div class="crumb">Commission Animation &amp; Événements</div>
+      </div>
+      <div class="spacer"></div>
+      <div class="me">
+        <span>Sophie Renaud · Adjointe aux événements</span>
+        <div class="av">SR</div>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="demo-banner">
+        ⚠️ <span><b>Maquette d'aperçu</b> — données fictives, aucune connexion à la base. Objectif : valider l'ergonomie du module avant de coder le back-end.</span>
+      </div>
+
+      <!-- ============ VUE LISTE ============ -->
+      <div id="view-list">
+        <div class="toolbar">
+          <div class="seg">
+            <button class="on" data-listview="grille">Grille</button>
+            <button data-listview="calendrier">Calendrier annuel</button>
+            <button data-listview="planning">Rétroplanning global</button>
+          </div>
+          <div class="spacer"></div>
+          <select id="filter-cat">
+            <option value="">Toutes les catégories</option>
+            <option>Fêtes &amp; festivités</option>
+            <option>Cérémonies officielles</option>
+            <option>Culturel &amp; associatif</option>
+            <option>Sportif &amp; loisirs</option>
+          </select>
+          <select id="filter-status">
+            <option value="">Tous les statuts</option>
+            <option>Idée</option><option>Planifié</option><option>En préparation</option>
+            <option>Confirmé</option><option>Terminé</option><option>Annulé</option>
+          </select>
+          <button class="btn primary">+ Nouvel événement</button>
+        </div>
+
+        <div class="kpis" id="kpis"></div>
+
+        <!-- Sous-vue Grille -->
+        <div id="sub-grille">
+          <div class="section-title">À venir &amp; en préparation</div>
+          <div class="ev-grid" id="grid-upcoming"></div>
+          <div class="section-title">Événements passés</div>
+          <div class="ev-grid" id="grid-past"></div>
+        </div>
+
+        <!-- Sous-vue Calendrier annuel -->
+        <div id="sub-calendrier" class="hidden">
+          <div class="card">
+            <div style="font-size:15px;font-weight:700;margin-bottom:14px">Calendrier des événements — 2026</div>
+            <div id="year-cal"></div>
+          </div>
+        </div>
+
+        <!-- Sous-vue Rétroplanning global -->
+        <div id="sub-planning" class="hidden">
+          <div class="card">
+            <div style="font-size:15px;font-weight:700;margin-bottom:6px">Charge de préparation — 2ᵉ semestre 2026</div>
+            <div style="font-size:12px;color:var(--subtle);margin-bottom:16px">Vue Gantt : fenêtre de préparation de chaque événement (idée → jour J).</div>
+            <div class="months"><span>Juil</span><span>Août</span><span>Sept</span><span>Oct</span><span>Nov</span><span>Déc</span></div>
+            <div class="timeline-bars" id="gantt"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ VUE DÉTAIL ============ -->
+      <div id="view-detail" class="hidden"></div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- Données fictives Saint-Fortunat ---------- */
+const CAT = {
+  'Fêtes & festivités':      {color:'#6ab123', badge:'b-green'},
+  'Cérémonies officielles':  {color:'#2563a8', badge:'b-info'},
+  'Culturel & associatif':   {color:'#c4793a', badge:'b-terra'},
+  'Sportif & loisirs':       {color:'#2d9c6e', badge:'b-success'},
+};
+const STATUS = {
+  'Idée':           'b-default',
+  'Planifié':       'b-info',
+  'En préparation': 'b-warning',
+  'Confirmé':       'b-green',
+  'Terminé':        'b-default',
+  'Annulé':         'b-danger',
+};
+const TASK_STATUS = {fait:'done', cours:'prog', afaire:''};
+
+function av(name,color){const i=name.split(' ').map(w=>w[0]).slice(0,2).join('');return `<span class="av" style="background:${color}" title="${name}">${i}</span>`}
+
+const EVENTS = [
+  {
+    id:'fete-village', titre:'Fête du village 2026', cat:'Fêtes & festivités', emoji:'🎪',
+    statut:'En préparation', date:'2026-07-12', dateLabel:'samedi 12 juillet 2026',
+    lieu:'Place de la Mairie & parc municipal', horaire:'10 h → 23 h',
+    resp:[['Sophie Renaud','#c4793a'],['Marc Aubert','#6ab123']],
+    desc:"Journée festive annuelle : marché des producteurs, animations enfants, repas partagé, bal et feu d'artifice en clôture.",
+    budgetPrevu:8500, budgetReel:6120, freqAttendue:'≈ 600 pers.',
+    benevoles:14, benevolesCibles:18, materiel:9,
+    com:4,
+    taches:[
+      {ph:"J-90 · Cadrage",        t:"Délibération budget en commission",            who:[['Sophie Renaud','#c4793a']], due:'18 avr.', st:'fait'},
+      {ph:"J-90 · Cadrage",        t:"Réserver le parc municipal + place",            who:[['Marc Aubert','#6ab123']],   due:'25 avr.', st:'fait'},
+      {ph:"J-60 · Logistique",     t:"Devis podium + sonorisation (3 prestataires)",  who:[['Marc Aubert','#6ab123']],   due:'15 mai',  st:'fait'},
+      {ph:"J-60 · Logistique",     t:"Commander le feu d'artifice (artificier agréé)",who:[['Sophie Renaud','#c4793a']], due:'20 mai',  st:'fait'},
+      {ph:"J-60 · Logistique",     t:"Arrêté municipal — fermeture de rue + débit de boissons", who:[['Claire Maury','#2563a8']], due:'30 mai', st:'cours'},
+      {ph:"J-45 · Sécurité",       t:"Déclaration en préfecture + plan de sécurité",  who:[['Claire Maury','#2563a8']],  due:'01 juin', st:'cours'},
+      {ph:"J-45 · Sécurité",       t:"Demande passage gendarmerie / dispositif",      who:[['Claire Maury','#2563a8']],  due:'05 juin', st:'afaire'},
+      {ph:"J-30 · Communication",  t:"Affiche + tract (graphiste) à valider",         who:[['Sophie Renaud','#c4793a']], due:'12 juin', st:'cours'},
+      {ph:"J-30 · Communication",  t:"Publication site + bulletin + réseaux",         who:[['Léa Fontaine','#2d9c6e']],  due:'15 juin', st:'afaire'},
+      {ph:"J-15 · Mobilisation",   t:"Confirmer les 18 bénévoles + plannings",        who:[['Marc Aubert','#6ab123']],   due:'28 juin', st:'afaire'},
+      {ph:"J-15 · Mobilisation",   t:"Récupérer tables/bancs (prêt intercommunal)",   who:[['Marc Aubert','#6ab123']],   due:'02 juil.',st:'afaire'},
+      {ph:"Jour J",                t:"Montage 7 h + briefing bénévoles 9 h",          who:[['Sophie Renaud','#c4793a'],['Marc Aubert','#6ab123']], due:'12 juil.', st:'afaire'},
+      {ph:"Après",                 t:"Démontage + état des lieux + remerciements",    who:[['Marc Aubert','#6ab123']],   due:'13 juil.',st:'afaire'},
+    ],
+    budget:[
+      ['Sonorisation & podium','Logistique',2800,2750,'Devis SonoArdèche signé'],
+      ['Feu d\'artifice','Animation',2500,2500,'Acompte 30 % versé'],
+      ['Repas / buvette (denrées)','Restauration',1500,490,'Achats en cours'],
+      ['Animations enfants (manège, structures)','Animation',900,0,'Devis attendu'],
+      ['Affiches, tracts, impression','Communication','450',380,'Imprimeur local'],
+      ['Assurance & frais divers','Administratif',350,0,'À provisionner'],
+    ],
+    benevolesList:[
+      ['Marc Aubert','Coordination générale','#6ab123'],
+      ['Julie Bertrand','Buvette','#c4793a'],
+      ['Paul Girard','Buvette','#2563a8'],
+      ['Nadia Lopez','Stand enfants','#2d9c6e'],
+      ['Thomas Roy','Montage / logistique','#6ab123'],
+      ['+ 9 inscrits','Voir la liste complète','#5e7480'],
+    ],
+    materielList:[
+      ['Tables (40) + bancs (80)','Prêt CC — confirmé','b-success'],
+      ['Barnums 3×3 (6)','Réservés','b-success'],
+      ['Podium 6×4 m','Loué — SonoArdèche','b-success'],
+      ['Groupe électrogène','À confirmer','b-warning'],
+      ['Barrières Vauban (20)','Demande préfecture','b-warning'],
+    ],
+    comList:[
+      ['Affiche A3 + tract A5','Validation graphiste','b-warning','12 juin'],
+      ['Article bulletin municipal','À rédiger','b-default','15 juin'],
+      ['Publication site + actu ENT','À programmer','b-default','15 juin'],
+      ['Panneau lumineux entrée village','Planifié','b-info','01 juil.'],
+    ],
+    bilan:null,
+  },
+  {
+    id:'marche-noel', titre:'Marché de Noël', cat:'Fêtes & festivités', emoji:'🎄',
+    statut:'Planifié', date:'2026-12-13', dateLabel:'dimanche 13 décembre 2026',
+    lieu:'Salle des fêtes', horaire:'14 h → 19 h',
+    resp:[['Sophie Renaud','#c4793a']],
+    desc:"Marché d'artisans, chorale de l'école, vin chaud et visite du Père Noël.",
+    budgetPrevu:2200, budgetReel:0, freqAttendue:'≈ 250 pers.',
+    benevoles:0, benevolesCibles:10, materiel:4, com:3,
+    taches:[
+      {ph:"J-60",t:"Appel à exposants (artisans locaux)",who:[['Sophie Renaud','#c4793a']],due:'15 oct.',st:'afaire'},
+      {ph:"J-45",t:"Réserver la salle des fêtes",who:[['Marc Aubert','#6ab123']],due:'30 oct.',st:'afaire'},
+      {ph:"J-30",t:"Commander chalets + décorations",who:[['Marc Aubert','#6ab123']],due:'15 nov.',st:'afaire'},
+      {ph:"J-15",t:"Communication + affichage",who:[['Léa Fontaine','#2d9c6e']],due:'28 nov.',st:'afaire'},
+    ],
+    budget:[['Chalets bois (location)','Logistique',900,0,''],['Décorations & illuminations','Animation',600,0,''],['Vin chaud & gourmandises','Restauration',400,0,''],['Communication','Communication',300,0,'']],
+    benevolesList:[['—','Recrutement à lancer','#5e7480']],
+    materielList:[['Chalets (6)','À réserver','b-default'],['Sapin + décorations','Stock mairie','b-success'],['Tables & nappes','Stock mairie','b-success'],['Marmite à vin chaud','À louer','b-default']],
+    comList:[['Affiche','À créer','b-default','20 nov.'],['Bulletin + site','À rédiger','b-default','28 nov.'],['Flyers écoles','À distribuer','b-default','01 déc.']],
+    bilan:null,
+  },
+  {
+    id:'voeux', titre:'Vœux du Maire', cat:'Cérémonies officielles', emoji:'🥂',
+    statut:'Idée', date:'2027-01-10', dateLabel:'samedi 10 janvier 2027',
+    lieu:'Salle des fêtes', horaire:'18 h 30',
+    resp:[['Claire Maury','#2563a8']],
+    desc:"Cérémonie des vœux à la population : rétrospective, projets de l'année, galette.",
+    budgetPrevu:1200, budgetReel:0, freqAttendue:'≈ 150 pers.',
+    benevoles:0, benevolesCibles:4, materiel:2, com:2,
+    taches:[{ph:"J-30",t:"Préparer le discours + diaporama bilan",who:[['Claire Maury','#2563a8']],due:'20 déc.',st:'afaire'},{ph:"J-15",t:"Commander galettes + cidre",who:[['Sophie Renaud','#c4793a']],due:'02 janv.',st:'afaire'},{ph:"J-10",t:"Invitations (élus, associations, personnel)",who:[['Léa Fontaine','#2d9c6e']],due:'28 déc.',st:'afaire'}],
+    budget:[['Galettes & boissons','Restauration',700,0,''],['Sonorisation','Logistique',300,0,''],['Impression invitations','Communication',200,0,'']],
+    benevolesList:[['—','Personnel municipal','#5e7480']],
+    materielList:[['Vidéoprojecteur + écran','Stock mairie','b-success'],['Sono portative','Stock mairie','b-success']],
+    comList:[['Cartons d\'invitation','À créer','b-default','28 déc.'],['Annonce site + bulletin','À rédiger','b-default','02 janv.']],
+    bilan:null,
+  },
+  {
+    id:'concert-ete', titre:"Concert d'été — fanfare", cat:'Culturel & associatif', emoji:'🎺',
+    statut:'Confirmé', date:'2026-08-22', dateLabel:'samedi 22 août 2026',
+    lieu:'Kiosque du parc', horaire:'20 h 30',
+    resp:[['Sophie Renaud','#c4793a'],['Léa Fontaine','#2d9c6e']],
+    desc:"Concert en plein air avec l'harmonie intercommunale, en partenariat avec l'association Musique en Ardèche.",
+    budgetPrevu:1800, budgetReel:1650, freqAttendue:'≈ 200 pers.',
+    benevoles:6, benevolesCibles:6, materiel:3, com:2,
+    taches:[{ph:"J-60",t:"Convention avec l'association musicale",who:[['Sophie Renaud','#c4793a']],due:'20 juin',st:'fait'},{ph:"J-45",t:"Réserver scène + sono",who:[['Marc Aubert','#6ab123']],due:'05 juil.',st:'fait'},{ph:"J-30",t:"Arrêté bruit + autorisation kiosque",who:[['Claire Maury','#2563a8']],due:'20 juil.',st:'fait'},{ph:"J-15",t:"Communication",who:[['Léa Fontaine','#2d9c6e']],due:'05 août',st:'cours'},{ph:"Jour J",t:"Installation buvette",who:[['Marc Aubert','#6ab123']],due:'22 août',st:'afaire'}],
+    budget:[['Cachet harmonie','Animation',1000,1000,'Convention signée'],['Sono & scène','Logistique',600,650,'Facturé'],['Buvette','Restauration',200,0,'']],
+    benevolesList:[['Marc Aubert','Logistique','#6ab123'],['Julie Bertrand','Buvette','#c4793a'],['+ 4 inscrits','Complet','#2d9c6e']],
+    materielList:[['Scène mobile','Réservée','b-success'],['Sonorisation','Réservée','b-success'],['Éclairage','Réservé','b-success']],
+    comList:[['Affiche','Diffusée','b-success','05 août'],['Site + réseaux','En cours','b-warning','10 août']],
+    bilan:null,
+  },
+  {
+    id:'commemoration-8mai', titre:'Commémoration du 8 mai', cat:'Cérémonies officielles', emoji:'🇫🇷',
+    statut:'Terminé', date:'2026-05-08', dateLabel:'vendredi 8 mai 2026',
+    lieu:'Monument aux morts', horaire:'11 h',
+    resp:[['Claire Maury','#2563a8']],
+    desc:"Cérémonie commémorative : dépôt de gerbe, lecture du message officiel, Marseillaise par les enfants de l'école.",
+    budgetPrevu:450, budgetReel:410, freqAttendue:'≈ 80 pers.',
+    benevoles:3, benevolesCibles:3, materiel:2, com:2,
+    taches:[{ph:"Préparation",t:"Commander la gerbe",who:[['Claire Maury','#2563a8']],due:'28 avr.',st:'fait'},{ph:"Préparation",t:"Inviter anciens combattants + porte-drapeaux",who:[['Claire Maury','#2563a8']],due:'30 avr.',st:'fait'},{ph:"Préparation",t:"Sonorisation + chaises",who:[['Marc Aubert','#6ab123']],due:'05 mai',st:'fait'},{ph:"Jour J",t:"Mise en place + accueil",who:[['Marc Aubert','#6ab123']],due:'08 mai',st:'fait'}],
+    budget:[['Gerbe','Cérémonie',280,260,'Fleuriste local'],['Sonorisation','Logistique',120,120,''],['Pot républicain','Restauration',50,30,'']],
+    benevolesList:[['Marc Aubert','Logistique','#6ab123'],['Paul Girard','Sonorisation','#2563a8'],['Nadia Lopez','Accueil','#2d9c6e']],
+    materielList:[['Sonorisation','Utilisée','b-success'],['Chaises (40)','Utilisées','b-success']],
+    comList:[['Avis population','Diffusé','b-success','01 mai'],['Article bulletin','Publié','b-success','—']],
+    bilan:{participants:'≈ 85 personnes', satisfaction:'Très bonne', depasse:false,
+      points:["Participation des enfants de l'école très appréciée","Sonorisation à renforcer pour le monument (vent)","Prévoir un abri en cas de pluie l'an prochain"],
+      total:410},
+  },
+  {
+    id:'course', titre:'Course de la Saint-Fortunat', cat:'Sportif & loisirs', emoji:'🏃',
+    statut:'Annulé', date:'2026-06-21', dateLabel:'dimanche 21 juin 2026',
+    lieu:'Sentiers communaux', horaire:'9 h',
+    resp:[['Léa Fontaine','#2d9c6e']],
+    desc:"Course nature 10 km — annulée faute de bénévoles suffisants pour la sécurité du parcours. Reportée à 2027.",
+    budgetPrevu:1500, budgetReel:120, freqAttendue:'—',
+    benevoles:4, benevolesCibles:15, materiel:0, com:1,
+    taches:[{ph:"Annulé",t:"Décision d'annulation actée en commission",who:[['Léa Fontaine','#2d9c6e']],due:'10 mai',st:'fait'}],
+    budget:[['Dossards (commandés)','Logistique',120,120,'Non remboursable'],['Récompenses','Animation',400,0,'Annulé'],['Sécurité / signaleurs','Logistique',980,0,'Annulé']],
+    benevolesList:[['—','4 inscrits sur 15 requis','#c4393a']],
+    materielList:[['—','Sans objet','b-default']],
+    comList:[['Communiqué d\'annulation','Publié','b-danger','12 mai']],
+    bilan:{participants:'Annulé', satisfaction:'—', depasse:false,
+      points:["Manque critique de bénévoles signaleurs (4/15)","Anticiper le recrutement dès janvier pour 2027","Envisager un partenariat avec un club de course"],
+      total:120},
+  },
+];
+
+/* ---------- Helpers ---------- */
+const eur = n => (typeof n==='number'?n:Number(n)).toLocaleString('fr-FR')+' €';
+const byId = id => EVENTS.find(e=>e.id===id);
+function pct(ev){const d=ev.taches.filter(t=>t.st==='fait').length;return Math.round(d/ev.taches.length*100)}
+
+/* ---------- KPIs ---------- */
+function renderKpis(){
+  const upcoming = EVENTS.filter(e=>!['Terminé','Annulé'].includes(e.statut));
+  const enprep = EVENTS.filter(e=>e.statut==='En préparation').length;
+  const budgetEngage = EVENTS.filter(e=>!['Annulé'].includes(e.statut)).reduce((s,e)=>s+e.budgetPrevu,0);
+  const benevoles = upcoming.reduce((s,e)=>s+e.benevolesCibles,0);
+  document.getElementById('kpis').innerHTML = [
+    {v:upcoming.length, l:'Événements à venir', sub:enprep+' en préparation', c:'var(--green)'},
+    {v:eur(budgetEngage), l:'Budget prévisionnel 2026', sub:'toutes manifestations', c:'var(--info)'},
+    {v:benevoles, l:'Bénévoles à mobiliser', sub:'sur les prochains événements', c:'var(--terra)'},
+    {v:'4', l:'Catégories suivies', sub:'fêtes · cérémonies · culturel · sport', c:'var(--slate)'},
+  ].map(k=>`<div class="kpi"><div class="v" style="color:${k.c}">${k.v}</div><div class="l">${k.l}</div><div class="sub">${k.sub}</div></div>`).join('');
+}
+
+/* ---------- Carte événement ---------- */
+function evCard(ev){
+  const c = CAT[ev.cat], p = pct(ev);
+  const done = ['Terminé','Annulé'].includes(ev.statut);
+  return `<div class="ev-card" onclick="openDetail('${ev.id}')">
+    <div class="cover" style="background:linear-gradient(135deg,${c.color},${c.color}cc)">
+      <span class="em">${ev.emoji}</span>
+      <span class="badge ${STATUS[ev.statut]}" style="background:rgba(255,255,255,.9)">${ev.statut}</span>
+      <span class="badge" style="background:rgba(255,255,255,.22);color:#fff">${ev.cat.split(' ')[0]}</span>
+    </div>
+    <div class="body">
+      <h3>${ev.titre}</h3>
+      <div class="meta">
+        <span>📅 <b>${ev.dateLabel}</b></span>
+        <span>📍 ${ev.lieu}</span>
+      </div>
+      ${done?'':`<div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--subtle);margin-bottom:4px"><span>Préparation</span><span><b style="color:var(--fg)">${p}%</b></span></div>
+        <div class="progress"><div style="width:${p}%;background:${p>66?'var(--success)':p>33?'var(--warning)':'var(--danger)'}"></div></div>
+      </div>`}
+      <div class="foot">
+        <div class="mini"><b>${eur(ev.budgetPrevu)}</b>budget prévu</div>
+        <div class="mini" style="text-align:center"><b>${ev.benevolesCibles||'—'}</b>bénévoles</div>
+        <div class="av-stack">${ev.resp.map(r=>av(r[0],r[1])).join('')}</div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderGrid(){
+  const cat = document.getElementById('filter-cat').value;
+  const st = document.getElementById('filter-status').value;
+  const match = e => (!cat||e.cat===cat) && (!st||e.statut===st);
+  const up = EVENTS.filter(e=>match(e) && !['Terminé','Annulé'].includes(e.statut));
+  const past = EVENTS.filter(e=>match(e) && ['Terminé','Annulé'].includes(e.statut));
+  document.getElementById('grid-upcoming').innerHTML = up.map(evCard).join('') +
+    `<div class="add-card" onclick="alert('Maquette — la création d\\'événement sera connectée à la base.')">+ Nouvel événement</div>`;
+  document.getElementById('grid-past').innerHTML = past.length?past.map(evCard).join(''):'<p style="font-size:12px;color:var(--subtle)">Aucun événement passé pour ce filtre.</p>';
+}
+
+/* ---------- Calendrier annuel ---------- */
+function renderYearCal(){
+  const months=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  const evByMonth={};
+  EVENTS.forEach(e=>{const m=Number(e.date.slice(5,7))-1+ (e.date.slice(0,4)==='2027'?12:0);(evByMonth[m]=evByMonth[m]||[]).push(e)});
+  let html='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">';
+  for(let m=0;m<12;m++){
+    const evs=evByMonth[m]||[];
+    html+=`<div style="border:1px solid var(--border);border-radius:9px;padding:11px;min-height:96px;${evs.length?'background:#fff':'background:var(--bg);opacity:.7'}">
+      <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:7px">${months[m]}</div>
+      ${evs.map(e=>`<div onclick="openDetail('${e.id}')" style="cursor:pointer;display:flex;align-items:center;gap:6px;padding:4px 6px;border-radius:6px;background:${CAT[e.cat].color}14;margin-bottom:4px">
+        <span style="width:7px;height:7px;border-radius:50%;background:${CAT[e.cat].color};flex-shrink:0"></span>
+        <span style="font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.emoji} ${e.titre}</span></div>`).join('')||'<span style="font-size:11px;color:var(--subtle)">—</span>'}
+    </div>`;
+  }
+  html+='</div>';
+  document.getElementById('year-cal').innerHTML=html;
+}
+
+/* ---------- Gantt rétroplanning ---------- */
+function renderGantt(){
+  // fenêtres approximatives (col départ, largeur) sur juil→déc = 6 mois = 100%
+  const lanes=[
+    ['Fête du village','#6ab123',5,28],     // début mi-mars… on borne sur juil
+    ["Concert d'été",'#c4793a',8,28],
+    ['Marché de Noël','#6ab123',58,38],
+    ['Vœux du Maire (prép.)','#2563a8',82,18],
+  ];
+  document.getElementById('gantt').innerHTML = lanes.map(l=>`
+    <div class="lane"><div class="name">${l[0]}</div>
+      <div class="track"><div class="bar" style="left:${l[2]}%;width:${l[3]}%;background:${l[1]}">préparation</div></div>
+    </div>`).join('');
+}
+
+/* ---------- Détail ---------- */
+let curTab='apercu';
+function openDetail(id){
+  const ev=byId(id); curTab='apercu';
+  document.getElementById('view-list').classList.add('hidden');
+  const v=document.getElementById('view-detail'); v.classList.remove('hidden');
+  const c=CAT[ev.cat];
+  const tabs=['apercu','retroplanning','budget','benevoles','communication'];
+  if(ev.bilan) tabs.push('bilan');
+  const tabLabels={apercu:'Aperçu',retroplanning:'Rétroplanning',budget:'Budget',benevoles:'Bénévoles & matériel',communication:'Communication',bilan:'Bilan'};
+  v.innerHTML=`
+    <button class="back-link" onclick="closeDetail()">← Tous les événements</button>
+    <div class="detail-head" style="background:linear-gradient(120deg,${c.color},${c.color}cc)">
+      <span class="em">${ev.emoji}</span>
+      <span class="tag">${ev.cat}</span>
+      <span class="badge ${STATUS[ev.statut]}" style="background:rgba(255,255,255,.92);margin-left:8px;vertical-align:middle">${ev.statut}</span>
+      <h2>${ev.titre}</h2>
+      <div class="sub"><span>📅 ${ev.dateLabel}</span><span>🕒 ${ev.horaire}</span><span>📍 ${ev.lieu}</span><span>👥 ${ev.freqAttendue}</span></div>
+    </div>
+    <div class="tabs" id="detail-tabs">
+      ${tabs.map(t=>`<button data-tab="${t}" class="${t===curTab?'on':''}" style="${t===curTab?`border-bottom-color:${c.color};color:${c.color}`:''}">${tabLabels[t]}</button>`).join('')}
+    </div>
+    <div id="tab-body"></div>`;
+  v.querySelectorAll('#detail-tabs button').forEach(b=>b.onclick=()=>{
+    curTab=b.dataset.tab;
+    v.querySelectorAll('#detail-tabs button').forEach(x=>{x.className='';x.style.borderBottomColor='';x.style.color=''});
+    b.className='on';b.style.borderBottomColor=c.color;b.style.color=c.color;
+    renderTab(ev);
+  });
+  renderTab(ev);
+  window.scrollTo(0,0);
+}
+function closeDetail(){
+  document.getElementById('view-detail').classList.add('hidden');
+  document.getElementById('view-list').classList.remove('hidden');
+}
+
+function renderTab(ev){
+  const c=CAT[ev.cat]; const body=document.getElementById('tab-body');
+  if(curTab==='apercu') body.innerHTML=apercuTab(ev,c);
+  else if(curTab==='retroplanning') body.innerHTML=retroTab(ev);
+  else if(curTab==='budget') body.innerHTML=budgetTab(ev);
+  else if(curTab==='benevoles') body.innerHTML=benevolesTab(ev);
+  else if(curTab==='communication') body.innerHTML=comTab(ev);
+  else if(curTab==='bilan') body.innerHTML=bilanTab(ev);
+}
+
+function apercuTab(ev,c){
+  const p=pct(ev);
+  return `<div class="grid3">
+    <div style="display:flex;flex-direction:column;gap:var(--gap)">
+      <div class="card">
+        <div style="font-size:12px;font-weight:700;color:var(--subtle);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Présentation</div>
+        <p style="font-size:13.5px;line-height:1.6;color:var(--fg)">${ev.desc}</p>
+      </div>
+      <div class="card">
+        <div style="font-size:12px;font-weight:700;color:var(--subtle);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">Avancement de la préparation</div>
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px">
+          <div style="font-size:34px;font-weight:800;color:${p>66?'var(--success)':p>33?'var(--warning)':'var(--danger)'}">${p}%</div>
+          <div style="flex:1"><div class="progress" style="height:10px"><div style="width:${p}%;background:${p>66?'var(--success)':p>33?'var(--warning)':'var(--danger)'}"></div></div>
+          <div style="font-size:11.5px;color:var(--subtle);margin-top:6px">${ev.taches.filter(t=>t.st==='fait').length} / ${ev.taches.length} tâches terminées</div></div>
+        </div>
+        <button class="btn sm" onclick="document.querySelector('[data-tab=retroplanning]').click()">Voir le rétroplanning →</button>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:var(--gap)">
+      <div class="card">
+        <div style="font-size:12px;font-weight:700;color:var(--subtle);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">Chiffres clés</div>
+        ${miniStat('Budget prévu',eur(ev.budgetPrevu))}
+        ${miniStat('Engagé / dépensé',eur(ev.budgetReel),ev.budgetReel>ev.budgetPrevu?'var(--danger)':'var(--success)')}
+        ${miniStat('Bénévoles',ev.benevoles+' / '+ev.benevolesCibles, ev.benevoles>=ev.benevolesCibles?'var(--success)':'var(--warning)')}
+        ${miniStat('Matériel suivi',ev.materiel+' postes')}
+        ${miniStat('Affluence attendue',ev.freqAttendue)}
+      </div>
+      <div class="card">
+        <div style="font-size:12px;font-weight:700;color:var(--subtle);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Responsables</div>
+        <div class="pill-list">${ev.resp.map(r=>`<div class="pill">${av(r[0],r[1])}<div class="n"><b>${r[0]}</b><span>Pilote de l'événement</span></div></div>`).join('')}</div>
+        <div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn sm">📅 Ajouter au calendrier</button>
+          <button class="btn sm">🔗 Lier au budget M14</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+function miniStat(l,v,col){return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-size:12.5px;color:var(--muted)">${l}</span><b style="font-size:14px;color:${col||'var(--fg)'}">${v}</b></div>`}
+
+function retroTab(ev){
+  const phases=[...new Set(ev.taches.map(t=>t.ph))];
+  let html=`<div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <div style="font-size:15px;font-weight:700">Rétroplanning — check-list</div>
+      <button class="btn primary sm">+ Ajouter une tâche</button>
+    </div>
+    <p style="font-size:12px;color:var(--subtle);margin-bottom:8px">Chaque tâche peut devenir une vraie tâche du module <b>Tâches</b>, affectée et suivie. Les phases sont organisées par échéance (J-90 → jour J → après).</p>`;
+  phases.forEach(ph=>{
+    html+=`<div class="phase">${ph}</div>`;
+    ev.taches.filter(t=>t.ph===ph).forEach(t=>{
+      const cls=TASK_STATUS[t.st];
+      const mark=t.st==='fait'?'✓':t.st==='cours'?'•':'';
+      html+=`<div class="task-row">
+        <div class="chk ${cls}">${mark}</div>
+        <div class="tx"><div class="t ${t.st==='fait'?'done':''}">${t.t}</div>
+          <div class="s">${t.st==='cours'?'<span class="badge b-warning">En cours</span> · ':t.st==='fait'?'<span class="badge b-success">Fait</span> · ':'<span class="badge b-default">À faire</span> · '}échéance ${t.due}</div></div>
+        <div class="av-stack">${t.who.map(w=>av(w[0],w[1])).join('')}</div>
+      </div>`;
+    });
+  });
+  html+='</div>';
+  return html;
+}
+
+function budgetTab(ev){
+  const totP=ev.budget.reduce((s,b)=>s+Number(b[2]),0);
+  const totR=ev.budget.reduce((s,b)=>s+Number(b[3]),0);
+  const ecart=totP-totR;
+  return `<div class="grid2" style="margin-bottom:var(--gap)">
+    <div class="kpi"><div class="v" style="color:var(--info)">${eur(totP)}</div><div class="l">Budget prévisionnel</div></div>
+    <div class="kpi"><div class="v" style="color:${totR>totP?'var(--danger)':'var(--success)'}">${eur(totR)}</div><div class="l">Engagé / dépensé · reste ${eur(ecart)}</div></div>
+  </div>
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="font-size:15px;font-weight:700">Postes budgétaires</div>
+      <div class="row-actions"><button class="btn sm">🔗 Rattacher à un article M14</button><button class="btn primary sm">+ Poste</button></div>
+    </div>
+    <table>
+      <thead><tr><th>Poste</th><th>Catégorie</th><th class="num">Prévu</th><th class="num">Réalisé</th><th>Note</th></tr></thead>
+      <tbody>
+        ${ev.budget.map(b=>`<tr><td><b>${b[0]}</b></td><td><span class="badge b-default">${b[1]}</span></td><td class="num">${eur(Number(b[2]))}</td><td class="num" style="color:${Number(b[3])>Number(b[2])?'var(--danger)':'var(--fg)'}">${eur(Number(b[3]))}</td><td style="font-size:11.5px;color:var(--subtle)">${b[4]||'—'}</td></tr>`).join('')}
+        <tr style="background:var(--slateLight)"><td colspan="2"><b>Total</b></td><td class="num"><b>${eur(totP)}</b></td><td class="num"><b>${eur(totR)}</b></td><td></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="note" style="margin-top:var(--gap)">💡 <b>Intégration M14 prévue :</b> chaque poste pourra être rattaché à un article du budget communal (ex. <i>6232 — Fêtes et cérémonies</i>) pour générer l'engagement comptable et suivre la consommation réelle directement depuis le module Finances.</div>`;
+}
+
+function benevolesTab(ev){
+  return `<div class="grid2">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div style="font-size:15px;font-weight:700">Bénévoles &amp; affectations</div>
+        <button class="btn primary sm">+ Inviter</button>
+      </div>
+      <div style="font-size:12px;color:var(--subtle);margin-bottom:12px">${ev.benevoles} confirmé(s) sur ${ev.benevolesCibles} souhaité(s)</div>
+      <div class="progress" style="margin-bottom:14px"><div style="width:${Math.min(100,Math.round(ev.benevoles/ev.benevolesCibles*100))}%;background:${ev.benevoles>=ev.benevolesCibles?'var(--success)':'var(--warning)'}"></div></div>
+      <div class="pill-list">
+        ${ev.benevolesList.map(b=>`<div class="pill">${av(b[0]==='—'||b[0].startsWith('+')?'?':b[0], b[2])}<div class="n"><b>${b[0]}</b><span>${b[1]}</span></div></div>`).join('')}
+      </div>
+    </div>
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="font-size:15px;font-weight:700">Matériel &amp; logistique</div>
+        <button class="btn primary sm">+ Matériel</button>
+      </div>
+      <div class="pill-list">
+        ${ev.materielList.map(m=>`<div class="pill"><div class="n"><b>${m[0]}</b><span>${m[1]}</span></div><span class="badge ${m[2]}">${m[2]==='b-success'?'OK':m[2]==='b-warning'?'En attente':'À faire'}</span></div>`).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+
+function comTab(ev){
+  return `<div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="font-size:15px;font-weight:700">Plan de communication</div>
+      <button class="btn primary sm">+ Support</button>
+    </div>
+    <table>
+      <thead><tr><th>Support</th><th>Statut</th><th>Échéance</th><th></th></tr></thead>
+      <tbody>
+        ${ev.comList.map(x=>`<tr><td><b>${x[0]}</b></td><td><span class="badge ${x[1]==='À créer'||x[1]==='À rédiger'||x[1]==='À distribuer'||x[1]==='À programmer'?'b-default':x[2]}">${x[1]}</span></td><td>${x[3]}</td><td style="text-align:right"><button class="btn sm">Ouvrir</button></td></tr>`).join('')}
+      </tbody>
+    </table>
+    <div class="note" style="margin-top:16px">📣 <b>Canaux disponibles :</b> site internet de la commune, bulletin municipal, panneau lumineux, réseaux sociaux, affichage, application ENT. La date de publication peut générer automatiquement une tâche pour le service communication.</div>
+  </div>`;
+}
+
+function bilanTab(ev){
+  const b=ev.bilan;
+  return `<div class="grid2" style="margin-bottom:var(--gap)">
+    <div class="kpi"><div class="v" style="color:var(--info)">${b.participants}</div><div class="l">Fréquentation constatée</div></div>
+    <div class="kpi"><div class="v" style="color:${ev.budgetReel>ev.budgetPrevu?'var(--danger)':'var(--success)'}">${eur(b.total)}</div><div class="l">Coût réel · budget ${eur(ev.budgetPrevu)}</div></div>
+  </div>
+  <div class="card">
+    <div style="font-size:15px;font-weight:700;margin-bottom:6px">Bilan post-événement</div>
+    <p style="font-size:12px;color:var(--subtle);margin-bottom:14px">Capitalisation : ce qui a marché, les points d'amélioration pour la prochaine édition.</p>
+    <div style="font-size:12px;font-weight:700;color:var(--subtle);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Retours &amp; enseignements</div>
+    <ul style="list-style:none;display:flex;flex-direction:column;gap:8px">
+      ${b.points.map(p=>`<li style="display:flex;gap:9px;font-size:13px;line-height:1.5"><span style="color:var(--green)">▸</span><span>${p}</span></li>`).join('')}
+    </ul>
+    <div class="note" style="margin-top:16px">📋 <b>Réutilisable :</b> ce bilan pourra servir de modèle pré-rempli pour l'édition suivante (check-list, budget, bénévoles) — on ne repart pas de zéro chaque année.</div>
+  </div>`;
+}
+
+/* ---------- Bascule des sous-vues liste ---------- */
+document.querySelectorAll('[data-listview]').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('[data-listview]').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');
+  ['grille','calendrier','planning'].forEach(v=>document.getElementById('sub-'+v).classList.toggle('hidden',v!==b.dataset.listview));
+});
+document.getElementById('filter-cat').onchange=renderGrid;
+document.getElementById('filter-status').onchange=renderGrid;
+
+/* ---------- Init ---------- */
+renderKpis(); renderGrid(); renderYearCal(); renderGantt();
+</script>
+</body>
+</html>
